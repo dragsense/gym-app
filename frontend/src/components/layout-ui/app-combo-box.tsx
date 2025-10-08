@@ -1,0 +1,218 @@
+import { useState, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+export interface AppComboBoxProps<T> {
+  value: T | T[];
+  onChange: (value: T | T[]) => void;
+  items: T[];
+  loading?: boolean;
+  error?: string | null;
+  placeholder?: string;
+  getLabel: (item: T) => string;
+  getKey: (item: T) => string;
+  getValue: (item: T) => T;
+  onSearchChange: (search: string) => void;
+  search: string;
+  multiple?: boolean;
+  searchType?: "local" | "api";
+  disabled?: boolean;
+  modal?: boolean;
+  shouldFilter?: boolean
+}
+
+export function AppComboBox<T>({
+  value,
+  onChange,
+  items,
+  loading,
+  error,
+  placeholder = "Select...",
+  getLabel,
+  getKey,
+  search,
+  onSearchChange,
+  multiple = false,
+  disabled,
+  modal = false,
+  getValue,
+  shouldFilter = true
+}: AppComboBoxProps<T>) {
+  const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  const [popoverWidth, setPopoverWidth] = useState<number | undefined>(undefined);
+  const handleOpenChange = (nextOpen: boolean) => {
+    setOpen(nextOpen);
+    if (nextOpen && triggerRef.current) {
+      setPopoverWidth(triggerRef.current.offsetWidth);
+    }
+  };
+
+  // Multi-select logic - work with values, not keys
+  const selectedValues: T[] = multiple
+    ? (Array.isArray(value) ? value : [])
+    : [];
+
+
+  const maxTags = 5;
+  const extraCount = multiple ? selectedValues.length - maxTags : 0;
+
+
+  return (
+    <Popover open={open} onOpenChange={handleOpenChange} modal={modal}>
+      <PopoverTrigger asChild>
+        <Button
+          ref={triggerRef}
+          variant="outline"
+          className="w-full justify-between min-h-[40px] h-auto flex-nowrap overflow-hidden"
+          disabled={disabled}
+          style={{ textAlign: "left" }}
+        >
+          <span className="flex flex-wrap gap-1 items-center w-full">
+            {multiple ? (
+              <>
+                {selectedValues.length === 0 && (
+                  <span className="text-muted-foreground">{placeholder}</span>
+                )}
+                {selectedValues.slice(0, maxTags).map((item) => (
+                  <Badge
+                    key={getKey(item)}
+                    variant="secondary"
+                    className="truncate"
+                    title={getLabel(item)}
+                  >
+                    {getLabel(item)}
+                  </Badge>
+                )
+                )}
+                {extraCount > 0 && (
+                  <Badge
+                    variant="secondary"
+                    className="truncate"
+                    title={selectedValues.slice(maxTags).map(getLabel).join(", ")}
+                  >
+                    +{extraCount} more
+                  </Badge>
+                )}
+              </>
+            ) : (
+              <span>{getLabel(value as T)}</span>
+            )}
+          </span>
+          <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50 shrink-0" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="p-0"
+        style={popoverWidth ? { width: popoverWidth } : {}}
+        align="start"
+      >
+        <Command shouldFilter={shouldFilter}>
+          <CommandInput
+            placeholder="Search..."
+            value={search}
+            onValueChange={onSearchChange}
+            disabled={disabled}
+          />
+
+
+          <CommandList>
+            {loading ? (
+              <div className="flex items-center justify-center p-4">
+                Loading...
+              </div>
+            ) : error ? (
+              <CommandEmpty className="py-6 text-center text-destructive">
+                {error}
+              </CommandEmpty>
+            ) : items.length === 0 ? (
+              <CommandEmpty>No results found</CommandEmpty>
+            ) : (
+              <div style={{ maxHeight: "300px", overflow: "auto" }}>
+                <CommandGroup>
+                  {items.map((item) => (
+                    <CommandItem
+                      key={getKey(item)}
+                      onSelect={() => {
+                        if (multiple) {
+                          const itemValue = getValue(item);
+                          const isSelected = selectedValues.some((val) => {
+                            if (typeof val === 'object' && typeof itemValue === 'object') {
+                              return JSON.stringify(val) === JSON.stringify(itemValue);
+                            }
+                            return val === itemValue;
+                          });
+
+                          if (isSelected) {
+                            const filtered = selectedValues.filter((val) => {
+                              if (typeof val === 'object' && typeof itemValue === 'object') {
+                                return JSON.stringify(val) !== JSON.stringify(itemValue);
+                              }
+                              return val !== itemValue;
+                            });
+                            onChange(filtered as T[]);
+                          } else {
+                            onChange([...selectedValues, itemValue] as T[]);
+                          }
+                        } else {
+                          onChange(getValue(item));
+                          setOpen(false);
+                        }
+                      }}
+                      className="cursor-pointer"
+                    >
+                      {multiple && (
+                        <Checkbox
+                          checked={selectedValues.some((val) => {
+                            const itemValue = getValue(item);
+                            if (typeof val === 'object' && typeof itemValue === 'object') {
+                              return JSON.stringify(val) === JSON.stringify(itemValue);
+                            }
+                            return val === itemValue;
+                          })}
+                          className="pointer-events-none"
+                        />
+                      )}
+                      <span className="ml-2">{getLabel(item)}</span>
+                      {!multiple && (
+                        <Check
+                          className={cn(
+                            "ml-auto h-4 w-4",
+                            (() => {
+                              const itemValue = getValue(item);
+                              if (typeof value === 'object' && typeof itemValue === 'object') {
+                                return JSON.stringify(value) === JSON.stringify(itemValue);
+                              }
+                              return value === itemValue;
+                            })() ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                      )}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </div>
+            )}
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}

@@ -1,0 +1,33 @@
+// Common base routes
+export const ROOT_ROUTE = "/" as const;
+export type RootRoute = typeof ROOT_ROUTE;
+
+// Public routes
+export const PUBLIC_ROUTES = {
+  LOGIN: "/login",
+  SIGNUP: "/signup",
+  FORGOT_PASSWORD: "/forgot-password",
+  RESET_PASSWORD: "/reset-password",
+} as const;
+export type PublicRoute = keyof typeof PUBLIC_ROUTES;
+
+
+// Admin-specific routes
+export const ADMIN_ROUTES = {
+  USERS: "/users",
+
+} as const;
+export type AdminRoute = keyof typeof ADMIN_ROUTES;
+
+
+// Common routes
+export const COMMON_ROUTES = {
+  NOT_FOUND: "*",
+  UNAUTHORIZED: "/unauthorized",
+} as const;
+export type CommonRoute = keyof typeof COMMON_ROUTES;
+
+
+export const ROUTE_TITLES: Record<string, string> = {
+    [ADMIN_ROUTES.USERS]: "Users"
+};
