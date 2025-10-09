@@ -2,10 +2,10 @@
 import React, { useState } from 'react';
 
 // Types
-import type { TAuthResetPasswordData } from '@shared/types/auth.type';
-import type { IMessageResponse } from '@shared/interfaces/api/response.interface';
-import type { TFormHandlerStore } from '@/stores';
-import type { THandlerComponentProps } from '@/@types/handler-types';
+import { type TAuthResetPasswordData } from '@shared/types/auth.type';
+import { type IMessageResponse } from '@shared/interfaces/api/response.interface';
+import { type TFormHandlerStore } from '@/stores';
+import { type THandlerComponentProps } from '@/@types/handler-types';
 
 // External Libraries
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
@@ -19,12 +19,7 @@ import { Form } from '@/components/form-ui/form';
 import { type FormInputs, useInput } from '@/hooks/use-input';
 
 // Stores
-import { useStore } from 'zustand';
 import { AppCard } from '../layout-ui/app-card';
-import type { TFieldConfigObject } from '@/@types/form/field-config.type';
-import { FormErrors } from '../shared-ui/form-errors';
-import { ResetPasswordWithTokenDto } from '@shared/dtos';
-import { dtoToFields } from '@/lib/fields/dto-to-feilds';
 
 interface IResetPasswordFormProps extends THandlerComponentProps<TFormHandlerStore<TAuthResetPasswordData, IMessageResponse, any>> {
 }
@@ -37,12 +32,15 @@ const ResetPasswordForm = React.memo(function ResetPasswordForm({
     return `Form store "${storeKey}" not found. Did you forget to register it?`;
   }
 
-  const isSubmitting = useStore(store, state => state.isSubmitting);
+  const isSubmitting = store(state => state.isSubmitting);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const fields = dtoToFields(ResetPasswordWithTokenDto, {
+  const originalFields = store(state => state.fields);
+  const fields = {
+    ...originalFields,
     password: {
+      ...originalFields.password,
       type: showPassword ? 'text' : 'password',
       endAdornment: (
         <button
@@ -55,6 +53,7 @@ const ResetPasswordForm = React.memo(function ResetPasswordForm({
       )
     },
     confirmPassword: {
+      ...originalFields.confirmPassword,
       type: showConfirmPassword ? 'text' : 'password',
       endAdornment: (
         <button
@@ -66,10 +65,10 @@ const ResetPasswordForm = React.memo(function ResetPasswordForm({
         </button>
       )
     }
-  }) as TFieldConfigObject<TAuthResetPasswordData>;
+  };
 
   const inputs = useInput<TAuthResetPasswordData>({
-    fields,
+    fields: fields as any,
     showRequiredAsterisk: true
   }) as FormInputs<TAuthResetPasswordData>;
  
@@ -93,7 +92,7 @@ const ResetPasswordForm = React.memo(function ResetPasswordForm({
             <div className="text-center">
               <p className="text-sm text-muted-foreground">
                 Remember your password?{' '}
-                <Link to="/login" className="text-secondary hover:underline">
+                <Link to="/login" className="hover:underline">
                   Login
                 </Link>
               </p>
@@ -105,7 +104,6 @@ const ResetPasswordForm = React.memo(function ResetPasswordForm({
           {inputs.password}
           {inputs.confirmPassword}
         </div>
-        <FormErrors />
       </AppCard>
     </Form>
   );

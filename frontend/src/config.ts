@@ -4,5 +4,5 @@ export const config = {
   baseUrl: import.meta.env.VITE_BASE_URL,
   environment: import.meta.env.VITE_NODE_ENV,
   encryptionKey: import.meta.env.VITE_ENCRYPTION_KEY,
-
+  encryptionAlgorithm: import.meta.env.VITE_ENCRYPTION_ALGORITHM,
 };

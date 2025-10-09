@@ -1,4 +1,4 @@
-import { LoginDto, ForgotPasswordDto, ResetPasswordWithTokenDto, SignupDto } from '../dtos';
+import { LoginDto, ForgotPasswordDto, ResetPasswordWithTokenDto, SignupDto, VerifyOtpDto } from '../dtos';
 
 export type TLoginData = {} & LoginDto;
 
@@ -8,3 +8,5 @@ export type TForgotPasswordData = ForgotPasswordDto;
 
 export type TAuthResetPasswordData = ResetPasswordWithTokenDto;
 
+
+export type TVerifyOtpData = VerifyOtpDto;  

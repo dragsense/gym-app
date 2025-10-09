@@ -8,6 +8,7 @@ import {
   Min,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
+import { FieldType } from '../../decorators/field.decorator';
 
 export class PaginationDto<T> {
   @IsOptional()
@@ -37,21 +38,26 @@ export class PaginationDto<T> {
 export class ListQueryDto<T = any> extends PaginationDto<T> {
     @IsOptional()
     @IsString()
+    @FieldType('text', false)
     search?: string;
   
     @IsOptional()
     @IsDateString()
+    @FieldType('date', false)
     createdAfter?: string;
   
     @IsOptional()
     @IsDateString()
+    @FieldType('date', false)
     createdBefore?: string;
   
     @IsOptional()
     @IsDateString()
+    @FieldType('date', false)
     updatedAfter?: string;
   
     @IsOptional()
     @IsDateString()
+    @FieldType('date', false)
     updatedBefore?: string;
   }

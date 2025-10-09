@@ -10,6 +10,7 @@ function base64ToUint8Array(base64: string): Uint8Array {
 }
 
 export const ENCRYPTION_KEY = config.encryptionKey;
+export const ENCRYPTION_ALGORITHM = 'AES-GCM'; // Web Crypto API uses uppercase
 
 export interface EncryptedResponse {
   encrypted: boolean;
@@ -26,7 +27,7 @@ export interface DecryptedData {
 }
 
 export class DecryptionService {
-  private readonly algorithm = 'AES-GCM';
+  private readonly algorithm = ENCRYPTION_ALGORITHM;
   private readonly keyLength = 256;
   private readonly ivLength = 16;
   private readonly tagLength = 16;
@@ -46,6 +47,7 @@ export class DecryptionService {
    */
   async decrypt(encryptedData: string): Promise<any> {
     try {
+
 
       if (!ENCRYPTION_KEY) {
         throw new Error('Encryption key not configured');
@@ -87,7 +89,7 @@ export class DecryptionService {
         {
           name: this.algorithm,
           iv: ivBuffer,
-          additionalData: new TextEncoder().encode('STIM-API'),
+          additionalData: new TextEncoder().encode('WEB-API'),
           tagLength: this.tagLength * 8
         },
         cryptoKey,
@@ -155,6 +157,7 @@ export class DecryptionService {
 
       return decryptedData.data;
     } catch (error) {
+      console.log("decryptedData", error);
 
       throw error;
     }

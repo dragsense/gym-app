@@ -8,7 +8,8 @@ import {
   IsBoolean,
   ValidateNested,
   IsNumber,
-  Min
+  Min,
+  IsDateString
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional, PartialType} from '@nestjs/swagger';
 import { CreateProfileDto, ProfileDto, UpdateProfileDto } from './profile.dto';
@@ -90,6 +91,15 @@ export class UserPaginatedDto extends PaginationMetaDto {
 }
 
 export class UserListDto extends ListQueryDto<IUser> {
+
+  @ApiProperty({ example: '2024-01-01T00:00:00.000Z', description: 'Creation date' })
+  @IsOptional()
+  @IsDateString()
+  @FieldType('date', false)
+  dueDate?: string;
+
+
+
 }
 
 
@@ -116,5 +126,14 @@ export class UserDto {
   @ApiProperty({ type: () => ProfileDto })
   @Type(() => ProfileDto)
   profile: ProfileDto;
+
+  @ApiPropertyOptional({ example: 'securePass123', description: 'User password' })
+  @IsOptional()
+  @IsString()
+  password?: string;
+
+
+  createdAt: Date;
+  updatedAt: Date;
 }
 

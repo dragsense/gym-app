@@ -18,7 +18,7 @@ export default registerAs('app', () => ({
   apiPrefix: process.env.API_PREFIX || 'api/v1',
   encryption: {
     key: process.env.ENCRYPTION_KEY || 'xbe7dpAvSe4mDMyHWIJDy3rUuxxa4Md4zMlay9DSY6A=',
-    algorithm: 'aes-256-gcm',
+    algorithm: process.env.ENCRYPTION_ALGORITHM || 'aes-256-gcm',
     keyLength: 32,
     ivLength: 16,
     tagLength: 16,

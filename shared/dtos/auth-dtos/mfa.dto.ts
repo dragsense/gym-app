@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsBoolean, IsOptional, IsString, Length } from 'class-validator';
+import { FieldType } from '../../decorators/field.decorator';
 
 export class VerifyOtpDto {
   @ApiProperty({

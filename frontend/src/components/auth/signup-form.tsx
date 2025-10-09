@@ -2,10 +2,10 @@
 import React, { useState } from 'react';
 
 // Types
-import type{ TSignupData } from '@shared/types/auth.type';
-import type { IMessageResponse } from '@shared/interfaces/api/response.interface';
-import type { TFormHandlerStore } from '@/stores';
-import type { THandlerComponentProps } from '@/@types/handler-types';
+import { type TSignupData } from '@shared/types/auth.type';
+import { type IMessageResponse } from '@shared/interfaces/api/response.interface';
+import { type TFormHandlerStore } from '@/stores';
+import { type THandlerComponentProps } from '@/@types/handler-types';
 
 // External Libraries
 import { Eye, EyeOff, Mail, Loader2, User } from 'lucide-react';
@@ -19,11 +19,7 @@ import { Form } from '@/components/form-ui/form';
 import { type FormInputs, useInput } from '@/hooks/use-input';
 
 // Stores
-import { useStore } from 'zustand';
 import { AppCard } from '../layout-ui/app-card';
-import type { TFieldConfigObject } from '@/@types/form/field-config.type';
-import { SignupDto } from '@shared/dtos';
-import { dtoToFields } from '@/lib/fields/dto-to-feilds';
 
 interface ISignupFormProps extends THandlerComponentProps<TFormHandlerStore<TSignupData, IMessageResponse, any>> {
 }
@@ -36,12 +32,15 @@ const SignupForm = React.memo(function SignupForm({
     return `Form store "${storeKey}" not found. Did you forget to register it?`;
   }
 
-  const isSubmitting = useStore(store, state => state.isSubmitting);
+  const isSubmitting = store(state => state.isSubmitting);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const fields = dtoToFields(SignupDto, {
+  const originalFields = store(state => state.fields);
+  const fields = {
+    ...originalFields,
     password: {
+      ...originalFields.password,
       type: showPassword ? 'text' : 'password',
       endAdornment: (
         <button
@@ -54,6 +53,7 @@ const SignupForm = React.memo(function SignupForm({
       )
     },
     confirmPassword: {
+      ...originalFields.confirmPassword,
       type: showConfirmPassword ? 'text' : 'password',
       endAdornment: (
         <button
@@ -66,18 +66,21 @@ const SignupForm = React.memo(function SignupForm({
       )
     },
     email: {
+      ...originalFields.email,
       startAdornment: <Mail className="h-4 w-4 text-muted-foreground" />
     },
     firstName: {
+      ...originalFields.firstName,
       startAdornment: <User className="h-4 w-4 text-muted-foreground" />
     },
     lastName: {
+      ...originalFields.lastName,
       startAdornment: <User className="h-4 w-4 text-muted-foreground" />
     }
-  }) as TFieldConfigObject<TSignupData>;
+  };
 
   const inputs = useInput<TSignupData>({
-    fields,
+    fields: fields as any,
     showRequiredAsterisk: true
   }) as FormInputs<TSignupData>;
 
@@ -101,7 +104,7 @@ const SignupForm = React.memo(function SignupForm({
             <div className="text-center">
               <p className="text-sm text-muted-foreground">
                 Already have an account?{' '}
-                <Link to="/login" className="text-secondary hover:underline">
+                <Link to="/login" className="hover:underline">
                   Login
                 </Link>
               </p>

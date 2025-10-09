@@ -1,8 +1,8 @@
 // React & Hooks
-import React, { type ReactNode, useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 
 // External Libraries
-import { type FieldValues, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 
 
 // Types
@@ -24,8 +24,12 @@ import { toast } from "sonner";
 import { type TQueryParams } from "@shared/types/api/param.type";
 import { useShallow } from "zustand/shallow";
 import { getDirtyData, pickKeys } from "@/utils";
-import { type ClassConstructor } from "class-transformer";
 import { classValidatorResolver } from "@/lib/validation";
+import { dtoToFields } from "@/lib/fields/dto-to-feilds";
+import { type ClassConstructor } from "class-transformer";
+import { type TFieldConfigObject } from "@/@types/form/field-config.type";
+
+
 
 
 export interface IFormHandlerProps<TFormData, TResponse, TExtraProps extends Record<string, any> = {}> {
@@ -41,13 +45,13 @@ export interface IFormHandlerProps<TFormData, TResponse, TExtraProps extends Rec
   onError?: (error: Error) => void;
   initialValues: Readonly<TFormData>;
   validationMode?: EVALIDATION_MODES;
-  dto: ClassConstructor<any>;
+  dto: ClassConstructor<object>;
   storeKey: string;
 
 }
 
 
-export function FormHandler<TFormData extends FieldValues, TResponse = any, TExtraProps extends Record<string, any> = {}>({
+export function FormHandler<TFormData, TResponse = any, TExtraProps extends Record<string, any> = {}>({
   initialParams = {},
   mutationFn,
   FormComponent,
@@ -63,10 +67,14 @@ export function FormHandler<TFormData extends FieldValues, TResponse = any, TExt
 
   const formStoreKey = storeKey + "-form";
 
+  const fields = useMemo(() => {
+    return dtoToFields(dto);
+  }, [dto]);
 
-  let store = useRegisteredStore<TFormHandlerStore<TFormData, TResponse, TExtraProps>>(formStoreKey,);
+
+  let store = useRegisteredStore<TFormHandlerStore<TFormData, TResponse, TExtraProps>>(formStoreKey);
   if (!store) {
-    store = useFormHandlerStore<TFormData, TResponse, TExtraProps>(initialValues, formProps || {} as TExtraProps, isEditing);
+    store = useFormHandlerStore<TFormData, TResponse, TExtraProps>(initialValues, formProps || {} as TExtraProps, isEditing, fields as TFieldConfigObject<TFormData>);
     registerStore<TFormHandlerStore<TFormData, TResponse, TExtraProps>>(formStoreKey, store);
   }
 
@@ -74,13 +82,13 @@ export function FormHandler<TFormData extends FieldValues, TResponse = any, TExt
   ));
 
 
-  const form = useForm<TFormData>({
+  const form = useForm({
     resolver: classValidatorResolver(dto),
     defaultValues: async () => initialValues,
     mode: validationMode,
   });
 
-  const handleSubmit = async (formData: TFormData) => {
+  const handleSubmit = async (formData: any) => {
 
     const isEditing = store.getState().isEditing;
 
@@ -132,20 +140,13 @@ export function FormHandler<TFormData extends FieldValues, TResponse = any, TExt
 
 
 
-
-  const FormWrapper = ({ children }: { children: ReactNode }) => <Form {...form}>
-
-    {children}
-  </Form>;
-
-
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
-      <FormWrapper>
+      <Form {...form}>
         <FormComponent
           storeKey={storeKey}
           store={store} />
-      </FormWrapper>
+      </Form>
     </ErrorBoundary >
   );
 }

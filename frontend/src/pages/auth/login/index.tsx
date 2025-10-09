@@ -16,9 +16,14 @@ import { LoginForm } from "@/components/auth";
 // Services
 import { login } from "@/services/auth.api";
 import { LoginDto } from "@shared/dtos";
+import { ADMIN_ROUTES } from "@/config/routes.config";
+import { useNavigate } from "react-router-dom";
+import { buildRoutePath } from "@/lib/utils";
+import { PUBLIC_ROUTES } from "@/config/routes.config";
 
 
 export default function LoginPage() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const LOGIN_INITIAL_VALUES: TLoginData = {
@@ -33,9 +38,16 @@ export default function LoginPage() {
       initialValues={LOGIN_INITIAL_VALUES}
       validationMode={EVALIDATION_MODES.OnChange}
       dto={LoginDto}
-      onSuccess={() => {
-        toast.success('Login successful');
-        queryClient.invalidateQueries({ queryKey: ["me"] });
+      onSuccess={(res: unknown) => {
+
+        const result: ILoginResponse = res as ILoginResponse;
+        if (result.requiredOtp)
+          navigate(buildRoutePath(PUBLIC_ROUTES.VERIFY_OTP, undefined, { token: result.token || '' }));
+        else {
+          toast.success('Login successful')
+          queryClient.invalidateQueries({ queryKey: ["me"] });
+          navigate(ADMIN_ROUTES.USERS);
+        }
       }}
       onError={(error) => toast.error('Login failed: ' + error?.message)}
       storeKey="login"

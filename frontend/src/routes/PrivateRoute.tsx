@@ -24,7 +24,6 @@ export default function PrivateRoute() {
     );
   }
 
-
   return (
     <Suspense fallback={<AppLoader />}>
       <Outlet />

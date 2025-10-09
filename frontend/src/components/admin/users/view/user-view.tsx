@@ -15,10 +15,14 @@ import { type IUser } from "@shared/interfaces/user.interface";
 
 // Stores
 import { type TSingleHandlerStore } from "@/stores";
+import { type THandlerComponentProps } from "@/@types/handler-types";
 
-interface IUserViewProps {
-    storeKey: string;
-    store: TSingleHandlerStore<IUser, any>;
+
+export type TUserViewExtraProps = {
+   level: number;
+}
+
+interface IUserViewProps extends THandlerComponentProps<TSingleHandlerStore<IUser, TUserViewExtraProps>> {
 }
 
 export default function UserView({ storeKey, store }: IUserViewProps) {

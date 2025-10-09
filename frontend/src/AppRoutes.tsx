@@ -28,7 +28,7 @@ const appRouter = createBrowserRouter([
         children: [
           {
             index: true,
-            element: <Navigate to={ADMIN_ROUTES.DASHBOARD} replace />,
+            element: <Navigate to={ADMIN_ROUTES.USERS} replace />,
           },
           {
             element: <DashboardLayoutWrapper />,

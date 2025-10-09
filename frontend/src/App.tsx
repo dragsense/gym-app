@@ -8,10 +8,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import appRouter from "./AppRoutes";
 import { AuthUserProvider } from "./hooks/use-auth-user";
 
-// Styles
-import "./App.css";
-
-
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

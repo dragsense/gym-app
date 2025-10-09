@@ -1,11 +1,12 @@
 // React & Hooks
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 // External libraries
 import { List, Plus, Table } from "lucide-react";
 
 // Types
-import type { IUser } from "@shared/interfaces/user.interface";
+import { type IUser } from "@shared/interfaces/user.interface";
 
 // UI Components
 import { Button } from "@/components/ui/button";
@@ -22,14 +23,23 @@ import { AppCard } from "@/components/layout-ui/app-card";
 import { itemViews } from "./user-item-views";
 
 // Stores
-import type { TListHandlerStore, TSingleHandlerStore } from "@/stores";
-import { useRegisteredStore } from "@/stores";
+import { type TListHandlerStore, type TSingleHandlerStore } from "@/stores";
+
+
+// Config
+import { type TListHandlerComponentProps } from "@/@types/handler-types";
+import type { TUserListData } from "@shared/types";
+import type { TUserViewExtraProps } from "../view/user-view";
 
 
 
-interface IUserListProps {
-  storeKey: string;
-  store: TListHandlerStore<IUser, any>;
+export interface IUserListExtraProps {
+  level: number;
+}
+
+
+interface IUserListProps extends TListHandlerComponentProps<TListHandlerStore<IUser, TUserListData, IUserListExtraProps>,
+  TSingleHandlerStore<IUser, TUserViewExtraProps>> {
 }
 
 export type ViewType = "table" | "list";
@@ -37,55 +47,22 @@ export type ViewType = "table" | "list";
 
 export default function UserList({
   storeKey,
-  store
+  store,
+  singleStore
 }: IUserListProps) {
-
-
-  const singelStoreKey = storeKey + "-single";
 
   if (!store) {
     return (`List store "${storeKey}" not found. Did you forget to register it?`);
   }
 
-  const singleStore = useRegisteredStore<TSingleHandlerStore<IUser, any>>(singelStoreKey);
-
   if (!singleStore) {
     return `Single store "${singleStore}" not found. Did you forget to register it?`;
   }
 
-  const setAction = singleStore(state => state.setAction);  
-  const setListFilters = store(state => state.setFilters);
+  const setAction = singleStore(state => state.setAction);
+
 
   const [currentView, setCurrentView] = useState<ViewType>("table");
-
-  const [filters, setFilters] = useState<Record<string, any>>({});
-  const handleFilterChange = (key: string, value?: any) => {
-    const newFilters = { ...filters };
-    if (value) {
-      newFilters[key] = value;
-    } else {
-      delete newFilters[key];
-    }
-    setFilters(newFilters);
-  };
-
-  useEffect(() => {
-    let timer = null;
-
-    timer = setTimeout(() => {
-      setListFilters(filters);
-    }, 500);
-
-    return () => {
-      if (timer) {
-        clearTimeout(timer);
-      }
-    };
-  }, [filters]);
-
-  const handleClearFilters = () => {
-    setFilters({});
-  };
 
   const handleCreate = () => {
     setAction('createOrUpdate');
@@ -99,17 +76,17 @@ export default function UserList({
     setAction('delete', id);
   }
 
-  const handleView = (id: number) => {
-    setAction('view', id);
+  const handleView = (trainerId: number) => {
+    setAction('view', trainerId);
   }
-
 
   const { columns, listItem } = itemViews({
     handleEdit,
     handleDelete,
-    handleView,
+    handleView
   }
   );
+
 
 
   const renderViewToggle = () => (
@@ -136,36 +113,34 @@ export default function UserList({
     <Tabs value={currentView} onValueChange={(value) => setCurrentView(value as ViewType)}>
 
 
-        <div className="flex flex-1 justify-between items-start md:items-center gap-2 flex-wrap">
-          <UserFilters
-            filters={filters}
-            onFilterChange={handleFilterChange}
-            onClearFilters={handleClearFilters}
-          />
-          {renderViewToggle()}
-          <Button
-            onClick={handleCreate}
-          >
-            <Plus /> <span className="hidden sm:inline capitalize">Add User</span>
-          </Button>
-        </div>
-      
+      <div className="flex flex-1 justify-between items-start md:items-center gap-2 flex-wrap">
+        <UserFilters
+          store={store}
+        />
+        {renderViewToggle()}
+        <Button
+          onClick={handleCreate}
+        >
+          <Plus /> <span className="hidden sm:inline capitalize">Add User</span>
+        </Button>
+      </div>
 
 
 
-      <TabsContent value="table">  
+
+      <TabsContent value="table">
         <AppCard>
           <TTable<IUser>
-        listStore={store}
-        columns={columns}
-        emptyMessage="No trainers found."
-        showPagination={true}
-      /></AppCard>
+            listStore={store}
+            columns={columns}
+            emptyMessage="No trainers found."
+            showPagination={true}
+          /></AppCard>
       </TabsContent>
 
 
       <TabsContent value="list">
-        <div>  
+        <div>
           <TList<IUser>
             listStore={store}
             emptyMessage="No trainers found."

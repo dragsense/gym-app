@@ -3,11 +3,12 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
 // Types 
-import type{ IListHandlerBaseState, IListHandlerState } from '@/@types/handler-types/list.type';
-import type { IListPaginationState } from '@shared/interfaces/api/response.interface';
+import { type IListHandlerBaseState, type IListHandlerState } from '@/@types/handler-types/list.type';
+import { type IListPaginationState } from '@shared/interfaces/api/response.interface';
 
 // Config
 import { config } from '@/config';
+import { type TFieldConfigObject } from '@/@types/form/field-config.type';
 
 const initialPaginationState: IListPaginationState = {
   page: 1,
@@ -18,8 +19,8 @@ const initialPaginationState: IListPaginationState = {
   hasPrevPage: false
 };
 
-export const useListHandlerStore = <TResponse, TExtra extends Record<string, any> = {}>(initialFilters: Record<string, any> = {}, initialExtra: TExtra = {} as TExtra) => {
-  return create<IListHandlerState<TResponse, TExtra>>()(
+export const useListHandlerStore = <TResponse, TUserListData = any, TExtra extends Record<string, any> = {}>(initialFilters: Record<string, any> = {}, initialExtra: TExtra = {} as TExtra, filteredFields: TFieldConfigObject<TUserListData> = {} as TFieldConfigObject<TUserListData>) => {
+  return create<IListHandlerState<TResponse, TUserListData, TExtra>>()(
     devtools(
       (set) => ({
         // Base state
@@ -28,9 +29,10 @@ export const useListHandlerStore = <TResponse, TExtra extends Record<string, any
         response: null,
         isSuccess: false,
         pagination: initialPaginationState,
-        itemAction: null,
+        action: '',
 
         extra: initialExtra,
+        filteredFields: filteredFields,
 
         // Query state
         filters: initialFilters,
@@ -40,6 +42,7 @@ export const useListHandlerStore = <TResponse, TExtra extends Record<string, any
 
         // Setters
         setFilters: (filters) => set({ filters }),
+        setFilteredFields: (fields) => set({ filteredFields: fields }),
         setSort: (sortBy, sortOrder) => set({ sortBy, sortOrder }),
         setSearch: (search) => set({ search }),
         setPagination: (pagination) => set((state) => ({
@@ -50,7 +53,7 @@ export const useListHandlerStore = <TResponse, TExtra extends Record<string, any
         setResponse: (response) => set({ response }),
 
         // Item action setter 
-        setItemAction: (action) => set({ itemAction: action }),
+        setAction: (action) => set({ action }),
 
         setExtra: (key, value) =>
           set((state) => ({
@@ -98,7 +101,7 @@ export const useListHandlerStore = <TResponse, TExtra extends Record<string, any
         enabled: config.environment === 'development'
       }
     )
-  );
+    );
 };
 
-export type TListHandlerStore<TResponse, TExtra extends Record<string, any>> = ReturnType<typeof useListHandlerStore<TResponse, TExtra>>;
+export type TListHandlerStore<TResponse, TUserListData, TExtra extends Record<string, any>> = ReturnType<typeof useListHandlerStore<TResponse, TUserListData, TExtra>>;

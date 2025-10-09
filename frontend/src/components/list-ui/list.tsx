@@ -14,13 +14,13 @@ import { cn } from "@/lib/utils";
 import type { TListHandlerStore } from "@/stores";
 import { useShallow } from "zustand/shallow";
 
-interface IListProps<TData, TExtra extends Record<string, unknown> = any> {
+interface IListProps<TData, TListData = any, TExtra extends Record<string, unknown> = any> {
   className?: string;
   limit?: number;
   children?: ReactNode;
   renderItem: (item: TData, index: number) => React.ReactNode;
   emptyMessage?: string;
-  listStore: TListHandlerStore<TData, TExtra>;
+  listStore: TListHandlerStore<TData, TListData, TExtra>;
   // Pagination props
   showPagination?: boolean;
   pageSizeOptions?: number[];
@@ -28,7 +28,7 @@ interface IListProps<TData, TExtra extends Record<string, unknown> = any> {
   colClassName?: string;
 }
 
-export function List<TData, TExtra extends Record<string, unknown> = any>({
+export function List<TData, TListData = any, TExtra extends Record<string, unknown> = any>({
 
   renderItem,
   className,
@@ -41,7 +41,7 @@ export function List<TData, TExtra extends Record<string, unknown> = any>({
 
 
   colClassName = "",
-}: IListProps<TData, TExtra>) {
+}: IListProps<TData, TListData, TExtra>) {
   const {
     response: data,
     isLoading: loading,

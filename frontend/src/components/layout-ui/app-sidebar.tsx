@@ -34,8 +34,6 @@ import { useLogout } from "@/hooks/use-logout";
 // Assets
 import logo from "@/assets/logos/logo.png";
 
-// Components
-
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   themeClass?: string;
 }
@@ -81,6 +79,128 @@ export function AppSidebar({
     }));
   };
 
+  const renderSidebarHeader = (showCloseButton: boolean = false) => (
+    <SidebarHeader>
+      <div className={showCloseButton ? "flex items-center justify-between p-4" : ""}>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild className="hover:bg-transparent">
+              <Link to={ROOT_ROUTE} className="h-13">
+                <img src={logo} className="h-full object-contain" />
+                <span className="text-900 text-xl uppercase">Web Template</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+        {showCloseButton && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setOpenMobile(false)}
+            className="h-8 w-8 p-0 hover:bg-muted/50"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+    </SidebarHeader>
+  );
+
+  const renderNavItems = () => (
+    <SidebarContent className="mt-2">
+      <SidebarGroup>
+        <SidebarGroupContent className="flex flex-col gap-2">
+          <SidebarMenu className="gap-3">
+            {navItems.map((item) => {
+              const hasChildren = item.children && item.children.length > 0;
+              const isExpanded = expandedItems[item.title];
+
+              if (hasChildren) {
+                return (
+                  <Collapsible
+                    key={item.title}
+                    open={isExpanded}
+                    onOpenChange={() => toggleExpanded(item.title)}
+                  >
+                    <SidebarMenuItem>
+                      <CollapsibleTrigger asChild>
+                        <SidebarMenuButton
+                          isActive={item.urls?.some((url) =>
+                            matchRoutePath(url, location.pathname)
+                          )}
+                          tooltip={item.title}
+                          className="group cursor-pointer text-muted-foreground/50 p-6 rounded-xl hover:bg-muted/50 transition-all duration-200"
+                        >
+                          {item.icon && <item.icon className="group-data-[active=true]:text-background h-6 w-6" />}
+                          <span className="font-medium">{item.title}</span>
+                        </SidebarMenuButton>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <SidebarMenuSub className="ml-4 border-l border-sidebar-border pl-4">
+                          {item.children?.map((child) => (
+                            <SidebarMenuSubItem key={child.title}>
+                              <SidebarMenuSubButton
+                                asChild
+                                isActive={location.pathname === child.url}
+                                className="group cursor-pointer text-muted-foreground/50 p-4 rounded-xl hover:bg-muted/50 transition-all duration-200"
+                              >
+                                <Link to={child.url}>
+                                  {child.icon && (
+                                    <child.icon className="group-data-[active=true]:text-background hover:text-background h-5 w-5" />
+                                  )}
+                                  <span className="font-medium">{child.title}</span>
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          ))}
+                        </SidebarMenuSub>
+                      </CollapsibleContent>
+                    </SidebarMenuItem>
+                  </Collapsible>
+                );
+              }
+
+              return (
+                <SidebarMenuItem key={item.title}>
+                  <Link to={item.urls[0]}>
+                    <SidebarMenuButton
+                      isActive={item.urls?.some((url) =>
+                        matchRoutePath(url, location.pathname)
+                      )}
+                      tooltip={item.title}
+                      className="group cursor-pointer text-muted-foreground/50 p-6 rounded-xl hover:bg-muted/50 transition-all duration-200"
+                    >
+                      {item.icon && <item.icon className="group-data-[active=true]:text-background hover:text-background h-6 w-6" />}
+                      <span className="font-medium">{item.title}</span>
+                    </SidebarMenuButton>
+                  </Link>
+                </SidebarMenuItem>
+              );
+            })}
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+    </SidebarContent>
+  );
+
+  const renderSidebarFooter = () => (
+    <SidebarFooter>
+      <Button
+        onClick={logout}
+        variant="secondary"
+        className="justify-start gap-2 mb-2 hover:bg-destructive/10 hover:text-destructive transition-all duration-200"
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <LogOutIcon className="h-4 w-4" />
+        )}
+        {isLoading ? "Logging out..." : "Log out"} 
+      </Button>
+    </SidebarFooter>
+  );
+
   return (
     <>
       {/* Desktop Sidebar */}
@@ -90,107 +210,9 @@ export function AppSidebar({
           themeClass={themeClass} 
           {...props}
         >
-          <SidebarHeader>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild className="hover:bg-transparent">
-                  <Link to={ROOT_ROUTE} className="h-13">
-                    <img src={logo} className="h-full object-contain" />
-                    <span className="text-900 text-xl uppercase">Formance</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarHeader>
-          <SidebarContent className="mt-2">
-            <SidebarGroup>
-              <SidebarGroupContent className="flex flex-col gap-2">
-                <SidebarMenu className="gap-3">
-                  {navItems.map((item) => {
-                    const hasChildren = item.children && item.children.length > 0;
-                    const isExpanded = expandedItems[item.title];
-
-                    if (hasChildren) {
-                      return (
-                        <Collapsible
-                          key={item.title}
-                          open={isExpanded}
-                          onOpenChange={() => toggleExpanded(item.title)}
-                        >
-                          <SidebarMenuItem>
-                            <CollapsibleTrigger asChild>
-                              <SidebarMenuButton
-                                isActive={item.urls?.some((url) =>
-                                  matchRoutePath(url, location.pathname)
-                                )}
-                                tooltip={item.title}
-                                className="group cursor-pointer text-muted-foreground/50 p-6 rounded-xl hover:bg-muted/50 transition-all duration-200"
-                              >
-                                {item.icon && <item.icon className="group-data-[active=true]:text-background h-6 w-6" />}
-                                <span className="font-medium">{item.title}</span>
-                              </SidebarMenuButton>
-                            </CollapsibleTrigger>
-                            <CollapsibleContent>
-                              <SidebarMenuSub className="ml-4 border-l border-sidebar-border pl-4">
-                                {item.children?.map((child) => (
-                                  <SidebarMenuSubItem key={child.title}>
-                                    <SidebarMenuSubButton
-                                      asChild
-                                      isActive={location.pathname === child.url}
-                                      className="group cursor-pointer text-muted-foreground/50 p-4 rounded-xl hover:bg-muted/50 transition-all duration-200"
-                                    >
-                                      <Link to={child.url}>
-                                        {child.icon && (
-                                          <child.icon className="group-data-[active=true]:text-background hover:text-background h-5 w-5" />
-                                        )}
-                                        <span className="font-medium">{child.title}</span>
-                                      </Link>
-                                    </SidebarMenuSubButton>
-                                  </SidebarMenuSubItem>
-                                ))}
-                              </SidebarMenuSub>
-                            </CollapsibleContent>
-                          </SidebarMenuItem>
-                        </Collapsible>
-                      );
-                    }
-
-                    return (
-                      <SidebarMenuItem key={item.title}>
-                        <Link to={item.urls[0]}>
-                          <SidebarMenuButton
-                            isActive={item.urls?.some((url) =>
-                              matchRoutePath(url, location.pathname)
-                            )}
-                            tooltip={item.title}
-                            className="group cursor-pointer text-muted-foreground/50 p-6 rounded-xl hover:bg-muted/50 transition-all duration-200"
-                          >
-                            {item.icon && <item.icon className="group-data-[active=true]:text-background hover:text-background h-6 w-6" />}
-                            <span className="font-medium">{item.title}</span>
-                          </SidebarMenuButton>
-                        </Link>
-                      </SidebarMenuItem>
-                    );
-                  })}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </SidebarContent>
-          <SidebarFooter>
-            <Button
-              onClick={logout}
-              variant="secondary"
-              className="justify-start gap-2 mb-2 hover:bg-destructive/10 hover:text-destructive transition-all duration-200"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <LogOutIcon className="h-4 w-4" />
-              )}
-              {isLoading ? "Logging out..." : "Log out"} 
-            </Button>
-          </SidebarFooter>
+          {renderSidebarHeader()}
+          {renderNavItems()}
+          {renderSidebarFooter()}
         </Sidebar>
       </div>
 
@@ -201,117 +223,9 @@ export function AppSidebar({
           themeClass={themeClass} 
           {...props}
         >
-          <SidebarHeader>
-            <div className="flex items-center justify-between p-4">
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild className="hover:bg-transparent">
-                    <Link to={ROOT_ROUTE} className="h-13">
-                      <img src={logo} className="h-full object-contain" />
-                      <span className="text-900 text-xl uppercase">Formance</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setOpenMobile(false)}
-                className="h-8 w-8 p-0 hover:bg-muted/50"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          </SidebarHeader>
-          <SidebarContent className="mt-2">
-            <SidebarGroup>
-              <SidebarGroupContent className="flex flex-col gap-2">
-                <SidebarMenu className="gap-3">
-                  {navItems.map((item) => {
-                    const hasChildren = item.children && item.children.length > 0;
-                    const isExpanded = expandedItems[item.title];
-
-                    if (hasChildren) {
-                      return (
-                        <Collapsible
-                          key={item.title}
-                          open={isExpanded}
-                          onOpenChange={() => toggleExpanded(item.title)}
-                        >
-                          <SidebarMenuItem>
-                            <CollapsibleTrigger asChild>
-                              <SidebarMenuButton
-                                isActive={item.urls?.some((url) =>
-                                  matchRoutePath(url, location.pathname)
-                                )}
-                                tooltip={item.title}
-                                className="group cursor-pointer text-muted-foreground/50 p-6 rounded-xl hover:bg-muted/50 transition-all duration-200"
-                              >
-                                {item.icon && <item.icon className="group-data-[active=true]:text-background h-6 w-6" />}
-                                <span className="font-medium">{item.title}</span>
-                              </SidebarMenuButton>
-                            </CollapsibleTrigger>
-                            <CollapsibleContent>
-                              <SidebarMenuSub className="ml-4 border-l border-sidebar-border pl-4">
-                                {item.children?.map((child) => (
-                                  <SidebarMenuSubItem key={child.title}>
-                                    <SidebarMenuSubButton
-                                      asChild
-                                      isActive={location.pathname === child.url}
-                                      className="group cursor-pointer text-muted-foreground/50 p-4 rounded-xl hover:bg-muted/50 transition-all duration-200"
-                                    >
-                                      <Link to={child.url}>
-                                        {child.icon && (
-                                          <child.icon className="group-data-[active=true]:text-background hover:text-background h-5 w-5" />
-                                        )}
-                                        <span className="font-medium">{child.title}</span>
-                                      </Link>
-                                    </SidebarMenuSubButton>
-                                  </SidebarMenuSubItem>
-                                ))}
-                              </SidebarMenuSub>
-                            </CollapsibleContent>
-                          </SidebarMenuItem>
-                        </Collapsible>
-                      );
-                    }
-
-                    return (
-                      <SidebarMenuItem key={item.title}>
-                        <Link to={item.urls[0]}>
-                          <SidebarMenuButton
-                            isActive={item.urls?.some((url) =>
-                              matchRoutePath(url, location.pathname)
-                            )}
-                            tooltip={item.title}
-                            className="group cursor-pointer text-muted-foreground/50 p-6 rounded-xl hover:bg-muted/50 transition-all duration-200"
-                          >
-                            {item.icon && <item.icon className="group-data-[active=true]:text-background hover:text-background h-6 w-6" />}
-                            <span className="font-medium">{item.title}</span>
-                          </SidebarMenuButton>
-                        </Link>
-                      </SidebarMenuItem>
-                    );
-                  })}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </SidebarContent>
-          <SidebarFooter>
-            <Button
-              onClick={logout}
-              variant="secondary"
-              className="justify-start gap-2 mb-2 hover:bg-destructive/10 hover:text-destructive transition-all duration-200"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <LogOutIcon className="h-4 w-4" />
-              )}
-              {isLoading ? "Logging out..." : "Log out"} 
-            </Button>
-          </SidebarFooter>
+          {renderSidebarHeader(true)}
+          {renderNavItems()}
+          {renderSidebarFooter()}
         </Sidebar>
       </div>
     </>

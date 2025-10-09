@@ -21,6 +21,9 @@ import { EUserLevels, EUserRole } from "@shared/enums/user.enum";
 
 // Layouts
 import { PageInnerLayout } from "@/layouts";
+import { UserListDto } from "@shared/dtos";
+import type { TUserViewExtraProps } from "@/components/admin/users/view/user-view";
+import type { TUserListData } from "@shared/types";
 
 
 export default function UsersPage() {
@@ -31,7 +34,7 @@ export default function UsersPage() {
 
   return (
     <PageInnerLayout Header={<Header />}>
-      <SingleHandler<IUser, TUserExtraProps>
+      <SingleHandler<IUser, TUserViewExtraProps>
         queryFn={fetchUser}
         deleteFn={deleteUser}
         storeKey={STORE_KEY}
@@ -41,17 +44,17 @@ export default function UsersPage() {
           {
             action: 'createOrUpdate',
             comp: UserForm
-          },
-          ,
+          }
         ]}
         singleProps={{
           level: EUserLevels[EUserRole.USER],
         }}
       />
 
-      <ListHandler<IUser>
+      <ListHandler<IUser, TUserListData, TUserExtraProps, IUser, TUserViewExtraProps>
         queryFn={(params) => fetchUsers(params, EUserLevels[EUserRole.USER])}
         ListComponent={UserList}
+        dto={UserListDto}
         storeKey={STORE_KEY}
         listProps={{
           level: EUserLevels[EUserRole.USER],

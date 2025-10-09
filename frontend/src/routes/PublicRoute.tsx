@@ -19,9 +19,10 @@ export default function PublicRoute() {
 
   if (isLoading) return <AppLoader />;
 
-    if (user) {
+
+  if (user) {
     return <Navigate to={ADMIN_ROUTES.USERS} replace />;
-  }  
+  }
 
   return (
     <Suspense fallback={<AppLoader />}>

@@ -125,7 +125,7 @@ export class EnvironmentVariables {
   @IsOptional()
   ENCRYPTION_KEY: string;
 
-
+  
   // OTP
   @IsString()
   @IsOptional()

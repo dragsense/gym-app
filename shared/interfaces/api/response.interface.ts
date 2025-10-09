@@ -14,6 +14,7 @@ export interface IListPaginationState {
   lastPage: number;
   hasNextPage: boolean;
   hasPrevPage: boolean;
+  
 }
 
 export interface IPaginatedResponse<T> extends IListPaginationState {

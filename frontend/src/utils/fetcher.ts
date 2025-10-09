@@ -105,6 +105,7 @@ const fetcher = async <T>(config: AxiosRequestConfig): Promise<T> => {
 
     if (payload && typeof payload === 'object' && payload.encrypted) {
       try {
+
         const decryptedData = await decryptionService.decryptResponse(payload);
 
         return decryptedData as T;
@@ -153,22 +154,6 @@ export const apiFileRequest = async <T>(
     data,
   });
 };
-
-
-export const downloadExcelFile = async (path: string, name?: string) => {
-  const res = await fetcher<any>({
-    url: path, method: "GET",
-    responseType: "arraybuffer",
-  });
-  const blob = new Blob([res.data], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-  const link = document.createElement("a");
-  link.href = window.URL.createObjectURL(blob);
-  link.download = `${name || "file"}_${Date.now()}.xlsx`;
-  link.click();
-
-  window.URL.revokeObjectURL(link.href);
-};
-
 
 
 export const downloadFile = async (path: string, fileName?: string) => {

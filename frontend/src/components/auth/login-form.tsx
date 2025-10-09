@@ -2,10 +2,10 @@
 import React, { useState } from 'react';
 
 // Types
-import type { TLoginData } from '@shared/types/auth.type';
-import type { ILoginResponse } from '@shared/interfaces/auth.interface';
-import type { TFormHandlerStore } from '@/stores';
-import type { THandlerComponentProps } from '@/@types/handler-types';
+import { type TLoginData } from '@shared/types/auth.type';
+import { type ILoginResponse } from '@shared/interfaces/auth.interface';
+import { type TFormHandlerStore } from '@/stores';
+import { type THandlerComponentProps } from '@/@types/handler-types';
 
 // External Libraries
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
@@ -17,13 +17,10 @@ import { Form } from '@/components/form-ui/form';
 
 // Hooks
 import { type FormInputs, useInput } from '@/hooks/use-input';
+import { AppCard } from '../layout-ui/app-card';
+import { type TFieldConfigObject } from '@/@types/form/field-config.type';
 
 // Stores
-import { useStore } from 'zustand';
-import { AppCard } from '../layout-ui/app-card';
-import type { TFieldConfigObject } from '@/@types/form/field-config.type';
-import { LoginDto } from '@shared/dtos';
-import { dtoToFields } from '@/lib/fields/dto-to-feilds';
 
 interface ILoginFormProps extends THandlerComponentProps<TFormHandlerStore<TLoginData, ILoginResponse, any>> {
 }
@@ -36,29 +33,39 @@ const LoginForm = React.memo(function LoginForm({
     return `Form store "${storeKey}" not found. Did you forget to register it?`;
   }
 
-  const isSubmitting = useStore(store, state => state.isSubmitting);
+  const isSubmitting = store(state => state.isSubmitting);
   const [showPassword, setShowPassword] = useState(false);
 
-  const fields = dtoToFields(LoginDto, {
+  const originalFields = store(state => state.fields);
+  const fields = {
+    ...originalFields,
     password: {
-      type: showPassword ? 'text' : 'password',
+      ...originalFields.password,
+      type: showPassword ? "text" : "password",
       endAdornment: (
-        <div className='inline-block cursor-pointer' onClick={() => setShowPassword(!showPassword)}>
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          className="text-muted-foreground hover:text-foreground"
+        >
           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-        </div>
+        </button>
       ),
       bottomAdornment: (
-        <span className="text-right inline-block cursor-pointer">
-          <Link to="/forgot-password" className="text-sm hover:underline">
-            Forgot password?
+        <p className="text-sm text-muted-foreground">
+          Forgot your password?{' '}
+          <Link to="/forgot-password" className="hover:underline">
+            Reset Password
           </Link>
-        </span>
+        </p>
       )
     }
-  }) as TFieldConfigObject<TLoginData>;
+  };
+
+
 
   const inputs = useInput<TLoginData>({
-    fields,
+    fields: fields as TFieldConfigObject<TLoginData>,
     showRequiredAsterisk: true,
   }) as FormInputs<TLoginData>;
 
@@ -82,7 +89,7 @@ const LoginForm = React.memo(function LoginForm({
             <div className="text-center">
               <p className="text-sm text-muted-foreground">
                 Don't have an account?{' '}
-                <Link to="/signup" className="text-secondary hover:underline">
+                <Link to="/signup" className="hover:underline">
                   Sign up
                 </Link>
               </p>

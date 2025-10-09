@@ -32,4 +32,8 @@ export class LoginResponseDto {
 
   @ApiProperty()
   message: string;
+
+  @ApiProperty()
+  requiredOtp: boolean;
+
 }

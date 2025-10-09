@@ -67,6 +67,7 @@ export class UsersService {
       createdBefore,
       updatedAfter,
       updatedBefore,
+      dueDate,
       ...filters
     } = queryDto;
 
@@ -186,7 +187,7 @@ export class UsersService {
       const userData: DeepPartial<User> = {
         email: createUserDto.email,
         password: createUserDto.password,
-        isActive: false,
+        isActive: true,
         profile: profileData,
       };
 

@@ -21,11 +21,11 @@ import type { TListHandlerStore } from "@/stores";
 import { useShallow } from "zustand/shallow";
 
 
-interface ITableProps<TData, TExtra extends Record<string, unknown> = any> {
+interface ITableProps<TData, TListData = any, TExtra extends Record<string, unknown> = any> {
   MainClassName?: string;
   error?: string | null;
   columns: ColumnDef<TData>[];
-  listStore: TListHandlerStore<TData, TExtra>;
+  listStore: TListHandlerStore<TData, TListData, TExtra>;
   onRowClick?: (row: TData) => void;
   pageSizeOptions?: number[];
   rowClassName?: (row: TData, index: number) => string;
@@ -37,7 +37,7 @@ interface ITableProps<TData, TExtra extends Record<string, unknown> = any> {
   showHeader?: boolean;
 }
 
-export function Table<TData, TExtra extends Record<string, unknown> = any>({
+export function Table<TData, TListData = any, TExtra extends Record<string, unknown> = any>({
   columns,
   MainClassName,
   listStore,
@@ -50,7 +50,7 @@ export function Table<TData, TExtra extends Record<string, unknown> = any>({
   rowClassName,
   colClassName = "",
   showHeader = true,
-}: ITableProps<TData, TExtra>) {
+}: ITableProps<TData, TListData, TExtra>) {
 
   const {
     response: data,
@@ -64,6 +64,7 @@ export function Table<TData, TExtra extends Record<string, unknown> = any>({
     error: state.error,
     pagination: state.pagination,
     setPagination: state.setPagination,
+    filteredFields: state.filteredFields,
   }))
   );
 

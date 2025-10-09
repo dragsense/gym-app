@@ -2,10 +2,10 @@
 import React from 'react';
 
 // Types
-import type { TForgotPasswordData } from '@shared/types/auth.type';
-import type { IMessageResponse } from '@shared/interfaces/api/response.interface';
-import type { TFormHandlerStore } from '@/stores';
-import type { THandlerComponentProps } from '@/@types/handler-types';
+import { type TForgotPasswordData } from '@shared/types/auth.type';
+import { type IMessageResponse } from '@shared/interfaces/api/response.interface';
+import { type TFormHandlerStore } from '@/stores';
+import { type THandlerComponentProps } from '@/@types/handler-types';
 
 // External Libraries
 import { Loader2 } from 'lucide-react';
@@ -19,13 +19,9 @@ import { Form } from '@/components/form-ui/form';
 import { type FormInputs, useInput } from '@/hooks/use-input';
 
 // Stores
-import { useStore } from 'zustand';
 import { AppCard } from '../layout-ui/app-card';
-import type { TFieldConfigObject } from '@/@types/form/field-config.type';
-import { ForgotPasswordDto } from '@shared/dtos/auth-dtos/forgot-password.dto';
-import { dtoToFields } from '@/lib/fields/dto-to-feilds';
 
-interface IForgotPasswordFormProps extends THandlerComponentProps<TFormHandlerStore<TForgotPasswordData, IMessageResponse, Record<string, any>>> {
+interface IForgotPasswordFormProps extends THandlerComponentProps<TFormHandlerStore<TForgotPasswordData, IMessageResponse, any>> {
 }
 
 const ForgotPasswordForm = React.memo(function ForgotPasswordForm({
@@ -36,12 +32,11 @@ const ForgotPasswordForm = React.memo(function ForgotPasswordForm({
     return `Form store "${storeKey}" not found. Did you forget to register it?`;
   }
 
-  const isSubmitting = useStore(store, state => state.isSubmitting);
-
-  const fields = dtoToFields(ForgotPasswordDto, {}) as TFieldConfigObject<TForgotPasswordData>;
+  const isSubmitting = store(state => state.isSubmitting);
+  const fields = store(state => state.fields);
 
   const inputs = useInput<TForgotPasswordData>({
-    fields,
+    fields: fields as any,
     showRequiredAsterisk: true,
   }) as FormInputs<TForgotPasswordData>;
 
@@ -65,7 +60,7 @@ const ForgotPasswordForm = React.memo(function ForgotPasswordForm({
             <div className="text-center">
               <p className="text-sm text-muted-foreground">
                 Remember your password?{' '}
-                <Link to="/login" className="text-secondary hover:underline">
+                <Link to="/login" className="hover:underline">
                   Login
                 </Link>
               </p>

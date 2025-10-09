@@ -30,7 +30,7 @@ import { CreateUserDto, UpdateUserDto } from "@shared/dtos";
 
 
 export type TUserExtraProps = {
-    level: number
+  level: number;
 }
 
 interface IUserFormProps extends THandlerComponentProps<TSingleHandlerStore<IUser, TUserExtraProps>> {
@@ -76,21 +76,17 @@ export default function UserForm({
     const INITIAL_VALUES: TUserData = {
 
         email: "",
-        level: extra.level,
         isActive: true,
 
         profile: {
             firstName: "",
             lastName: "",
             phoneNumber: "",
-            bio: "",
             dateOfBirth: new Date(
                 new Date().setFullYear(new Date().getFullYear() - 12)
             ).toISOString(),
             address: "",
-            gender: EUserGender.MALE,
-            specialties: [],
-            experience: 0
+            gender: EUserGender.MALE
         }
     };
 
@@ -124,7 +120,7 @@ export default function UserForm({
                     setCredentialModalContent({
                         open: true,
                         email: response.user.email,
-                        password: response.user.password
+                        password: response.user.password || ""
                     })
                 }
 
@@ -132,7 +128,6 @@ export default function UserForm({
             formProps={{
                 open: action === 'createOrUpdate',
                 onClose: handleClose,
-                level: extra.level,
             }}
         />
 

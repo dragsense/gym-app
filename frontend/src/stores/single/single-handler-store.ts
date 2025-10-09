@@ -3,8 +3,8 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
 // Types 
-import  type { ISingleHandlerState } from '@/@types/handler-types/single.type';
-import type { TQueryParams } from '@shared/types/api/param.type';
+import { type ISingleHandlerState } from '@/@types/handler-types/single.type';
+import { type TQueryParams } from '@shared/types/api/param.type';
 
 // Config
 import { config } from '@/config';

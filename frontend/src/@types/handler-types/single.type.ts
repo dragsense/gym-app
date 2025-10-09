@@ -1,6 +1,6 @@
 // Types
 import type { StoreApi } from "zustand";
-import type { TQueryParams } from "@shared/types/api/param.type";
+import { type TQueryParams } from "@shared/types/api/param.type";
 
 export interface ISingleHandlerBaseState<TResponse> {
   response?: TResponse | null;
@@ -34,4 +34,3 @@ export interface ISingleHandlerState<TResponse, TExtra extends Record<string, an
 }
 
 export type ISingleStoreApi<TResponse, TExtra extends Record<string, any>> = StoreApi<ISingleHandlerState<TResponse, TExtra>>;
-

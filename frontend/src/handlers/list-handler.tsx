@@ -1,5 +1,5 @@
 // React & Hooks
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 
 // Types
 import { type IPaginatedResponse } from "@shared/interfaces/api/response.interface";
@@ -19,39 +19,84 @@ import { ErrorFallback } from "@/components/shared-ui/error-fallback";
 import { registerStore, deregisterStore, type TListHandlerStore, useListHandlerStore, useRegisteredStore, type TSingleHandlerStore } from "@/stores";
 import { useShallow } from "zustand/shallow";
 import { pickKeys } from "@/utils";
+import { ListActionComponentHandler } from "./list-action-handler";
+import { type IListActionComponent } from "@/@types/handler-types";
+import { type ClassConstructor } from "class-transformer";
+import { dtoToFields } from "@/lib/fields/dto-to-feilds";
+import { type TFieldConfigObject } from "@/@types/form/field-config.type";
+import { useForm } from "react-hook-form";
+import { Form } from "@/components/ui/form";
+
 
 
 interface IListHandlerProps<
   TData,
+  TUserListData,
   TExtraProps extends Record<string, any> = {},
+  TSingleData = never,
+  TSingleExtraProps extends Record<string, any> = {},
 > {
   storeKey: string;
   queryFn: (params: IListQueryParams) => Promise<IPaginatedResponse<TData>>;
-  ListComponent: React.ComponentType<{ storeKey: string, store: TListHandlerStore<TData, TExtraProps> }>;
+  ListComponent: React.ComponentType<{
+    storeKey: string,
+    store: TListHandlerStore<TData, TUserListData, TExtraProps>,
+    singleStore?: TSingleHandlerStore<TSingleData, TSingleExtraProps>
+  }>;
   listProps?: TExtraProps;
   initialParams?: IListQueryParams;
+  actionComponents?: IListActionComponent<TListHandlerStore<TData, TUserListData, TExtraProps>, TSingleHandlerStore<TSingleData, TSingleExtraProps>>[];
+  dto?: ClassConstructor<object>;
 };
 
 export function ListHandler<
   TData,
+  TUserListData,
   TExtraProps extends Record<string, any> = {},
+  TSingleData = never,
+  TSingleExtraProps extends Record<string, any> = {},
 >({
   queryFn,
   ListComponent,
   initialParams = {},
-  listProps,
-  storeKey
+  listProps = {} as TExtraProps,
+  storeKey,
+  actionComponents = [],
+  dto
 }: IListHandlerProps<
   TData,
-  TExtraProps
+  TUserListData,
+  TExtraProps,
+  TSingleData,
+  TSingleExtraProps
 >) {
   const listStoreKey = storeKey + "-list"
+  const singelStoreKey = storeKey + "-single";
 
-  let store = useRegisteredStore<TListHandlerStore<TData, TExtraProps>>(listStoreKey);
+  const singleStore = useRegisteredStore<TSingleHandlerStore<TSingleData, TSingleExtraProps>>(singelStoreKey);
+
+
+  const filteredFields = useMemo(() => {
+    if (!dto) return {};
+    return dtoToFields(dto);
+  }, [dto]);
+
+  const defaultFormValues = useMemo(() => {
+    const defaults = Object.keys(filteredFields).reduce((acc, key) => {
+      acc[key] = '';
+      return acc;
+    }, {} as any);
+    
+    return { ...defaults, ...initialParams.filters || {} };
+  }, [filteredFields, initialParams.filters]);
+
+
+  let store = useRegisteredStore<TListHandlerStore<TData, TUserListData, TExtraProps>>(listStoreKey);
   if (!store) {
-    store = useListHandlerStore<TData, TExtraProps>(initialParams, listProps || {} as TExtraProps);
-    registerStore<TListHandlerStore<TData, TExtraProps>>(listStoreKey, store);
+    store = useListHandlerStore<TData, TUserListData, TExtraProps>(initialParams, listProps, filteredFields as TFieldConfigObject<TUserListData>);
+    registerStore<TListHandlerStore<TData, TUserListData, TExtraProps>>(listStoreKey, store);
   }
+
 
   useEffect(() => {
     registerStore(listStoreKey, store);
@@ -89,7 +134,7 @@ export function ListHandler<
         isLoading: false,
         error: null,
         isSuccess: true,
-        filters: params.filters || {},
+        // Don't update filters here - they're managed by the form
         sortBy: params.sortBy || 'createdAt',
         sortOrder: params.sortOrder || 'DESC',
         search: params.search || ''
@@ -110,7 +155,7 @@ export function ListHandler<
         isLoading: false,
         error: err,
         isSuccess: false,
-        filters: {},
+        // Don't reset filters on error - keep user's input
         sortBy: 'createdAt',
         sortOrder: 'DESC',
         search: ''
@@ -129,21 +174,118 @@ export function ListHandler<
     }
   });
 
+
+  const form = useForm({
+    defaultValues: defaultFormValues,
+  });
+
+
+
+  const isUpdatingFromStoreRef = React.useRef(false);
+
   useEffect(() => {
-    const unsub = store.subscribe((state) => {
-      setPage(state.pagination.page);
-      setLimit(state.pagination.limit);
-      setFilters(state.filters);
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    // Subscribe to form changes - updates flow from form → query
+    const formCallback = form.subscribe({
+      formState: {
+        values: true,
+      },
+      callback: ({ values }) => {
+        // Skip if update is from store (form reset/setValue from store)
+        if (isUpdatingFromStoreRef.current) {
+          return;
+        }
+
+        if (timer) {
+          clearTimeout(timer);
+        }
+
+        timer = setTimeout(() => {
+          // Filter out empty string values before updating
+          const cleanedValues = Object.keys(values).reduce((acc, key) => {
+            if (values[key] !== '' && values[key] !== null && values[key] !== undefined) {
+              acc[key] = values[key];
+            }
+            return acc;
+          }, {} as any);
+
+          // Update store to keep it in sync
+          store.setState({ filters: cleanedValues });
+          // Update query to trigger API call
+          setFilters(cleanedValues);
+        }, 1000);
+      },
     });
-    return unsub;
-  }, [store, setPage, setLimit, setFilters, ]);
+
+    // Subscribe to store changes - updates flow from store → form
+    const storeUnsub = store.subscribe((state, prevState) => {
+      // Update pagination
+      if (state.pagination.page !== prevState.pagination.page) {
+        setPage(state.pagination.page);
+      }
+      if (state.pagination.limit !== prevState.pagination.limit) {
+        setLimit(state.pagination.limit);
+      }
+
+      // Handle filter changes from store (e.g., Clear Filters button)
+      if (state.filters !== prevState.filters) {
+        const currentValues = form.getValues();
+        const hasChanges = JSON.stringify(currentValues) !== JSON.stringify(state.filters);
+        
+        if (hasChanges) {
+          isUpdatingFromStoreRef.current = true;
+          
+          // Clear form if filters are empty
+          if (Object.keys(state.filters).length === 0) {
+            form.reset();
+            setFilters({});
+          } else {
+            // Update form with new filter values
+            Object.keys(state.filters).forEach(key => {
+              form.setValue(key as any, state.filters[key]);
+            });
+            setFilters(state.filters);
+          }
+          
+          // Reset flag after a tick to allow form to update
+          setTimeout(() => {
+            isUpdatingFromStoreRef.current = false;
+          }, 100);
+        }
+      }
+    });
+
+    return () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+      formCallback();
+      storeUnsub();
+    };
+  }, [form, store, setPage, setLimit, setFilters]);
 
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
-      <ListComponent
-        storeKey={storeKey}
-        store={store}
-      />
+      <Form {...form}>
+        {ListComponent && <ListComponent
+          storeKey={storeKey}
+          store={store}
+          singleStore={singleStore}
+        />}
+
+
+        <ListActionComponentHandler<
+          TData,
+          TExtraProps,
+          TSingleData,
+          TSingleExtraProps>
+          actionComponents={actionComponents}
+          storeKey={storeKey}
+          store={store}
+          singleStore={singleStore}
+        />
+      </Form>
     </ErrorBoundary>
   );
 }

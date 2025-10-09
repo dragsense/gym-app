@@ -8,6 +8,7 @@ export const PUBLIC_ROUTES = {
   SIGNUP: "/signup",
   FORGOT_PASSWORD: "/forgot-password",
   RESET_PASSWORD: "/reset-password",
+  VERIFY_OTP: "/verify-otp",
 } as const;
 export type PublicRoute = keyof typeof PUBLIC_ROUTES;
 
