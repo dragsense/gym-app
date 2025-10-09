@@ -1,22 +1,23 @@
 // auth/token.service.ts
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { RefreshToken } from '@/modules/v1/auth/entities/tokens.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { LoggerService } from '@/common/logger/logger.service';
 
 @Injectable()
 export class TokenService {
-    private readonly logger = new Logger(TokenService.name);
+    private readonly logger = new LoggerService(TokenService.name);
 
     constructor(
         private jwtService: JwtService,
         private configService: ConfigService, 
         @InjectRepository(RefreshToken)
         private refreshTokenRepo: Repository<RefreshToken>,
-    ) { }
+    ) {}
 
 
     async generateTokens(payload: any) {

@@ -6,14 +6,23 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { LoggerService } from '@/common/logger/logger.service';
 
 @Catch()
 export class ExceptionsFilter implements ExceptionFilter {
+  private readonly logger = new LoggerService('ExceptionsFilter');
+
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const req = ctx.getRequest<Request>();
     const res = ctx.getResponse<Response>();
 
+    const isDevelopment = process.env.NODE_ENV === 'development';
+
+    // Log errors in development only
+    if (isDevelopment && exception instanceof Error) {
+      //this.logger.error('Exception caught', exception.stack);
+    }
 
     const isBrowserNavigation =
       req.method === 'GET' &&
@@ -25,10 +34,25 @@ export class ExceptionsFilter implements ExceptionFilter {
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    const message =
-      exception instanceof HttpException
-        ? exception.getResponse()
-        : 'Internal Server Error';
+    // Extract the actual error message properly
+    let message: string | string[] = 'Internal Server Error';
+    let errorResponse: any = null;
+    let stack: string | undefined;
+
+    if (exception instanceof HttpException) {
+      const response = exception.getResponse();
+      errorResponse = response;
+      
+      if (typeof response === 'string') {
+        message = response;
+      } else if (typeof response === 'object' && response !== null) {
+        message = (response as any).message || (response as any).error || 'Internal Server Error';
+      }
+    } else if (exception instanceof Error) {
+      // In production, hide internal error details
+      message = isDevelopment ? exception.message : 'Internal Server Error';
+      stack = isDevelopment ? exception.stack : undefined;
+    }
 
     if (isBrowserNavigation) {
       res.status(status).type('html');
@@ -48,7 +72,8 @@ export class ExceptionsFilter implements ExceptionFilter {
           <body>
             <h1>Error ${status}</h1>
             <p>While requesting <code>${req.url}</code></p>
-            <pre>${JSON.stringify(message, null, 2)}</pre>
+            ${isDevelopment ? `<pre>${JSON.stringify(message, null, 2)}</pre>` : `<p>${typeof message === 'string' ? message : 'An error occurred'}</p>`}
+            ${stack && isDevelopment ? `<pre>${stack}</pre>` : ''}
             <p><a href="/api/docs">API Docs</a></p>
           </body>
         </html>
@@ -56,10 +81,28 @@ export class ExceptionsFilter implements ExceptionFilter {
     }
 
     // Default JSON error for API clients
-    res.status(status).json({
+    const errorPayload: any = {
       statusCode: status,
+      message: message,
       path: req.url,
-      error: message,
-    });
+      timestamp: new Date().toISOString(),
+    };
+
+    // Include validation errors if present
+    if (errorResponse && typeof errorResponse === 'object' && errorResponse.error) {
+      errorPayload.error = errorResponse.error;
+    }
+
+    // Include stack trace and additional details only in development
+    if (isDevelopment) {
+      if (stack) {
+        errorPayload.stack = stack;
+      }
+      if (exception instanceof Error && exception.name) {
+        errorPayload.exceptionType = exception.name;
+      }
+    }
+
+    res.status(status).json(errorPayload);
   }
 }

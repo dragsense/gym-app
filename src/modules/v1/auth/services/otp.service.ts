@@ -1,14 +1,15 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { OtpCode } from '@/modules/v1/auth/entities/otp-code.entity';
 import { LessThan, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '@/modules/v1/users/entities/user.entity';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { LoggerService } from '@/common/logger/logger.service';
 
 @Injectable()
 export class OtpService {
-  private readonly logger = new Logger(OtpService.name);
+  private readonly logger = new LoggerService(OtpService.name);
 
   constructor(
     private readonly configService: ConfigService,

@@ -90,11 +90,13 @@ api.interceptors.response.use(
 );
 
 // Generic fetcher with decryption
-const fetcher = async <T>(config: AxiosRequestConfig): Promise<T> => {
-  try {
-    const res = await api.request(config);
+const fetcher = async <T>(fetchConfig: AxiosRequestConfig): Promise<T> => {
+  const isDevelopment = config.environment === 'development';
 
-    if (config.responseType === "arraybuffer" || config.responseType === "blob") {
+  try {
+    const res = await api.request(fetchConfig);
+
+    if (fetchConfig.responseType === "arraybuffer" || fetchConfig.responseType === "blob") {
       return res as unknown as T;
     }
 
@@ -102,29 +104,61 @@ const fetcher = async <T>(config: AxiosRequestConfig): Promise<T> => {
 
     const payload = res.data;
 
-
     if (payload && typeof payload === 'object' && payload.encrypted) {
       try {
-
         const decryptedData = await decryptionService.decryptResponse(payload);
-
         return decryptedData as T;
       } catch (decryptError) {
-
         throw new Error("Failed to decrypt response data");
       }
     }
 
     return payload as T;
   } catch (error: any) {
+    // Log full error in development only
+    if (isDevelopment) {
+      console.error('API Error:', error);
+      console.error('Response data:', error.response?.data);
+      if (error.response?.data?.stack) {
+        console.error('Stack trace:', error.response.data.stack);
+      }
+    }
 
-
+    // Extract error message
     const message =
-      error.response?.data?.error?.message ||
       error.response?.data?.message ||
+      error.response?.data?.error?.message ||
       error.message ||
       "Something went wrong";
-    throw new Error(`API Error: ${message} (Status: ${error.response?.status})`);
+
+    // In development, show detailed error with status code and stack
+    if (isDevelopment) {
+      const statusCode = error.response?.status;
+      const stack = error.response?.data?.stack;
+      const exceptionType = error.response?.data?.exceptionType;
+      
+      let errorMessage = message;
+      
+      if (statusCode) {
+        errorMessage += ` (Status: ${statusCode})`;
+      }
+      
+      if (exceptionType) {
+        errorMessage += ` [${exceptionType}]`;
+      }
+      
+      const detailedError = new Error(errorMessage);
+      
+      // Attach stack trace if available
+      if (stack) {
+        detailedError.stack = `${detailedError.stack}\n\nServer Stack:\n${stack}`;
+      }
+      
+      throw detailedError;
+    }
+
+    // In production, only show the error message without technical details
+    throw new Error(message);  
   }
 };
 

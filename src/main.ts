@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
+import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as hpp from 'hpp';
 
@@ -13,13 +13,19 @@ import * as csurf from 'csurf';
 import { ResponseEncryptionInterceptor } from './interceptors/response-encryption-interceptor';
 import { BrowserHtmlInterceptor } from './interceptors/BrowserHtmlInterceptor';
 import { ExceptionsFilter } from './exceptions/exceptions-filter';
+import { LoggerService } from './common/logger/logger.service';
+import { LoggerInterceptor } from './common/logger/logger.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     rawBody: true,
   });
   const configService = app.get(ConfigService);
-  const logger = new Logger('Bootstrap');
+
+  // Use custom logger globally
+  const loggerService = app.get(LoggerService);
+  loggerService.setContext('Bootstrap');
+  app.useLogger(loggerService);
 
   // Security middleware
   app.use(helmet({
@@ -91,18 +97,29 @@ async function bootstrap() {
       },
     });
 
-    logger.log(
+    loggerService.log(
       `API documentation available at: http://localhost:${port}/api/docs`,
     );
   }
-  const encryptionInterceptor = app.get(ResponseEncryptionInterceptor);
 
-  app.useGlobalInterceptors(
-    new BrowserHtmlInterceptor(),
-    encryptionInterceptor,
-  );
+  // Build interceptors array based on environment
+  const interceptors: any[] = [new BrowserHtmlInterceptor()];
 
-  
+  // Only use encryption in production
+  if (process.env.NODE_ENV === 'production') {
+    const encryptionInterceptor = app.get(ResponseEncryptionInterceptor);
+    interceptors.push(encryptionInterceptor);
+    loggerService.log('✅ Encryption interceptor enabled');
+  } else {
+    loggerService.warn('⚠️ Encryption disabled (development mode)');
+  }
+
+  const loggerInterceptor = app.get(LoggerInterceptor);
+  interceptors.push(loggerInterceptor);
+
+  app.useGlobalInterceptors(...interceptors);
+
+
 
   app.useGlobalFilters(new ExceptionsFilter());
 
@@ -135,8 +152,7 @@ async function bootstrap() {
 
   await app.listen(port);
 
-  logger.log(`Application is running on: http://localhost:${port}`);
-  logger.log(`API documentation available at: http://localhost:${port}/api/docs`);
+  loggerService.log(`Application is running on: http://localhost:${port}`);
 }
 
 bootstrap();

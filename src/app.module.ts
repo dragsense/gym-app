@@ -16,6 +16,9 @@ import { AppService } from './app.service';
 import { UsersModule } from './modules/v1/users/users.module';
 import { AuthModule } from './modules/v1/auth/auth.module';
 
+// Common modules
+import { LoggerModule } from './common/logger/logger.module';
+
 // Entities for dashboard stats
 import { ServerGateway } from './gateways/server.gateway';
 import { join } from 'path';
@@ -68,6 +71,9 @@ import { EncryptionService } from './lib/encryption.service';
       ttl: 60000, // 1 minute
       limit: 60,  // 60 requests per minute
     }]),
+
+    // Common modules
+    LoggerModule,
 
     // Feature modules
     UsersModule,

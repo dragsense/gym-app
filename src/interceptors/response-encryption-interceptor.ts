@@ -52,8 +52,6 @@ export class ResponseEncryptionInterceptor implements NestInterceptor {
                         /^\/api\/auth\/refresh/,
                         /^\/api\/auth\/resend-otp/,
                         /^\/api\/billings\/list\/export$/,
-                        /^\/api\/billings\/list\/\d+\/export\/audit-logs$/,
-                        /^\/api\/users\/\d+\/export\/receivable-aging$/,
                         /^\/api\/files\/\d+\/download$/,
 
                     ];

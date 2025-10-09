@@ -1,7 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MailerService } from '@nestjs-modules/mailer';
 import { User } from  '@/modules/v1/users/entities/user.entity';
+import { LoggerService } from '@/common/logger/logger.service';
 
 export interface OnboardingEmailContext {
   user: User;
@@ -25,7 +26,7 @@ interface EmailTemplateData {
 
 @Injectable()
 export class UserEmailService {
-  private readonly logger = new Logger(UserEmailService.name);
+  private readonly logger = new LoggerService(UserEmailService.name);
   private readonly appConfig: any;
 
   constructor(

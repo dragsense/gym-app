@@ -4,13 +4,14 @@ import {
   InsertEvent,
   DataSource,
 } from 'typeorm';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { User } from '@/modules/v1/users/entities/user.entity';
+import { LoggerService } from '@/common/logger/logger.service';
 
 @EventSubscriber()
 @Injectable()
 export class UserSubscriber implements EntitySubscriberInterface<User> {
-  private readonly logger = new Logger(UserSubscriber.name);
+  private readonly logger = new LoggerService(UserSubscriber.name);
 
   constructor(private readonly dataSource: DataSource,
 

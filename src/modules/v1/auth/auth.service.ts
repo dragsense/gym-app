@@ -14,16 +14,18 @@ import { ConfigService } from '@nestjs/config';
 import { IMessageResponse } from 'shared/interfaces';
 import { ResetPasswordWithTokenDto, SignupDto } from 'shared/dtos';
 import { UsersService } from '../users/users.service';
+import { LoggerService } from '@/common/logger/logger.service';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new LoggerService(AuthService.name);
+
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly mailerService: MailerService,
     private readonly userService: UsersService,
-
-  ) { }
+  ) {}
 
   async signup(
     signupDto: SignupDto,
@@ -151,7 +153,7 @@ export class AuthService {
         });
 
       } catch (error) {
-        console.error('Error sending reset email:', error);
+        this.logger.error('Error sending reset email', error.stack);
         throw new HttpException(
           'Failed to send reset email. Please try again later.',
           HttpStatus.INTERNAL_SERVER_ERROR,

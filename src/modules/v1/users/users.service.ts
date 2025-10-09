@@ -18,9 +18,12 @@ import { ResetPasswordDto } from 'shared/dtos/user-dtos/reset-password.dto';
 import { PasswordService } from './services/password.service';
 import { TokenService } from '../auth/services/tokens.service';
 import { UserEmailService } from './services/user-email.service';
+import { LoggerService } from '@/common/logger/logger.service';
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new LoggerService(UsersService.name);
+
   constructor(
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
@@ -29,8 +32,7 @@ export class UsersService {
     private readonly passwordService: PasswordService,
     private readonly userEmailService: UserEmailService,
     private tokenService: TokenService,
-
-  ) { }
+  ) {}
 
   async findOne(
     where: FindOptionsWhere<User>,
@@ -63,6 +65,8 @@ export class UsersService {
       page = 1,
       limit = 10,
       search,
+      sortBy,
+      sortOrder,
       createdAfter,
       createdBefore,
       updatedAfter,
@@ -75,7 +79,6 @@ export class UsersService {
     const query = this.userRepo.createQueryBuilder('user')
       .leftJoinAndSelect('user.profile', 'profile')
       .leftJoinAndSelect('profile.image', 'image')
-      .leftJoinAndSelect('user.owner', 'owner');
 
     // Apply filters
     if (search) {
@@ -93,7 +96,10 @@ export class UsersService {
       }
     });
 
-    query.orderBy('user.createdAt', 'DESC');
+    // Apply sorting
+    const sortColumn = sortBy || 'createdAt';
+    const sortDirection = (sortOrder?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC') as 'ASC' | 'DESC';
+    query.orderBy(`user.${sortColumn}`, sortDirection);
 
     if (createdAfter) query.andWhere('user.createdAt >= :createdAfter', { createdAfter });
     if (createdBefore) query.andWhere('user.createdAt <= :createdBefore', { createdBefore });
@@ -183,16 +189,16 @@ export class UsersService {
         phoneNumber: profile.phoneNumber,
       };
 
-      // Create user
-      const userData: DeepPartial<User> = {
+      // Create user (use userData.password which has the temp password if generated)
+      const userDataToSave: DeepPartial<User> = {
         email: createUserDto.email,
-        password: createUserDto.password,
+        password: userData.password, // Use the modified password (could be temp password)
         isActive: true,
         profile: profileData,
       };
 
       // Track created by is handled through audit columns
-      const user = manager.create(User, userData);
+      const user = manager.create(User, userDataToSave);
       await manager.save(user);
 
       if (tempPassword) {
@@ -200,7 +206,7 @@ export class UsersService {
           user,
           tempPassword,
         }).catch((error) =>
-          console.error('Onboarding email failed', error),
+          this.logger.error('Onboarding email failed', error.stack),
         );
         user.password = tempPassword;
       }
@@ -297,7 +303,7 @@ export class UsersService {
 
     // Send password reset confirmation email
     this.userEmailService.sendPasswordResetConfirmation(user).catch((error) =>
-      console.error('Password reset confirmation email failed', error),
+      this.logger.error('Password reset confirmation email failed', error.stack),
     );
 
     return {

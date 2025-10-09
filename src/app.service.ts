@@ -1,13 +1,12 @@
-import { Injectable, Logger } from '@nestjs/common';
-
-
+import { Injectable } from '@nestjs/common';
 import { UseInterceptors } from '@nestjs/common';
 import { CacheInterceptor } from '@nestjs/cache-manager';
+import { LoggerService } from '@/common/logger/logger.service';
 
 @Injectable()
 @UseInterceptors(CacheInterceptor)
 export class AppService {
-  private readonly logger = new Logger(AppService.name);
+  private readonly logger = new LoggerService(AppService.name);
 
   constructor() { }
 

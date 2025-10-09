@@ -7,14 +7,14 @@ import {
     OnGatewayInit,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Logger } from '@nestjs/common';
+import { LoggerService } from '@/common/logger/logger.service';
 
 @WebSocketGateway({ cors: { origin: '*' } })
 export class ServerGateway implements OnGatewayInit {
     @WebSocketServer()
     server: Server;
 
-    private readonly logger = new Logger(ServerGateway.name);
+    private readonly logger = new LoggerService(ServerGateway.name);
     private static instance: ServerGateway;
 
     afterInit(server: Server) { 

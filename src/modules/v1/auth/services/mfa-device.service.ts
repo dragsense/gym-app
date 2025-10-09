@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { OtpService } from './otp.service';
 import { ConfigService } from '@nestjs/config';
@@ -8,10 +8,11 @@ import { TrustedDevice } from '@/modules/v1/auth/entities/trusted-device.entity'
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '@/modules/v1/users/entities/user.entity';
+import { LoggerService } from '@/common/logger/logger.service';
 
 @Injectable()
 export class MfaService {
-  private readonly logger = new Logger(MfaService.name); // 👈 logger instance with context
+  private readonly logger = new LoggerService(MfaService.name);
 
   constructor(
     private readonly configService: ConfigService,
@@ -22,8 +23,7 @@ export class MfaService {
     private trustedDeviceRepo: Repository<TrustedDevice>,
     @InjectRepository(User)
     private userRepo: Repository<User>,
-
-  ) { }
+  ) {}
 
   async generateEmailOtp(email: string, deviceId?: string): Promise<string> {
 
