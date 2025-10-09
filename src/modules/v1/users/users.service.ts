@@ -71,7 +71,6 @@ export class UsersService {
       createdBefore,
       updatedAfter,
       updatedBefore,
-      dueDate,
       ...filters
     } = queryDto;
 

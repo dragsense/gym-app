@@ -19,13 +19,13 @@ export abstract class GeneralBaseEntity extends BaseEntity {
     example: '2024-02-12T14:30:00.000Z',
     description: 'Timestamp when the entity was created',
   })
-  @CreateDateColumn({ type: 'timestamp' })
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 
   @ApiProperty({
     example: '2024-02-13T10:45:00.000Z',
     description: 'Timestamp when the entity was last updated',
   })
-  @UpdateDateColumn({ type: 'timestamp' })
+  @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date;
 }

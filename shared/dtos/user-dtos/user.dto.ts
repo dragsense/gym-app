@@ -91,15 +91,6 @@ export class UserPaginatedDto extends PaginationMetaDto {
 }
 
 export class UserListDto extends ListQueryDto<IUser> {
-
-  @ApiProperty({ example: '2024-01-01T00:00:00.000Z', description: 'Creation date' })
-  @IsOptional()
-  @IsDateString()
-  @FieldType('date', false)
-  dueDate?: string;
-
-
-
 }
 
 
