@@ -2,6 +2,7 @@ import { ADMIN_ROUTES } from "@/config/routes.config";
 import UsersPage from "./users";
 import ActivityLogsPage from "./activity-logs";
 import FilesPage from "./files";
+import SchedulesPage from "./schedules";
 
 const adminRoutes = [
   {
@@ -15,6 +16,10 @@ const adminRoutes = [
   {
     path: ADMIN_ROUTES.FILES,
     element: <FilesPage />,
+  },
+  {
+    path: ADMIN_ROUTES.SCHEDULES,
+    element: <SchedulesPage />,
   },
 ];
 

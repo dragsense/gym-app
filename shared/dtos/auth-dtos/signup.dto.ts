@@ -1,7 +1,6 @@
 import { IsString, IsNotEmpty, MinLength, Validate, ValidatorConstraint, ValidatorConstraintInterface, ValidationArguments, Length, IsEmail } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-  import { FieldOptions, FieldType } from '../../decorators/field.decorator';
-import { EUserRole } from '../../enums/user.enum';
+import {  FieldType } from '../../decorators/field.decorator';
 
 @ValidatorConstraint({ name: 'passwordMatch', async: false })
 class PasswordMatchConstraint implements ValidatorConstraintInterface {

@@ -38,13 +38,17 @@ const refreshApi = axios.create({
   withCredentials: true,
 });
 
-// Request interceptor: set CSRF token
+// Request interceptor: set CSRF token and timezone
 api.interceptors.request.use(async (config) => {
   const csrfToken = await getCsrfToken();
 
   // Ensure headers is AxiosHeaders
   if (!config.headers) config.headers = new AxiosHeaders();
   (config.headers as AxiosHeaders).set("X-CSRF-Token", csrfToken);
+  
+  // Add user timezone to all requests
+  const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  (config.headers as AxiosHeaders).set("X-Timezone", userTimezone);
 
   return config;
 });

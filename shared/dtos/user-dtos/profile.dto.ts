@@ -49,7 +49,7 @@ export class CreateProfileDto {
   @IsOptional()
   @IsEnum(EUserGender)
   @FieldType("select")
-  @FieldOptions(Object.values(EUserGender).map(v => ({ value: v, label: v })))
+  @FieldOptions(Object.values(EUserGender).map(v => ({ value: v, label: v.charAt(0) + v.slice(1).toLowerCase() })))
   gender?: EUserGender;
 
   @ApiProperty({ example: '123 Main Street, New York' })
@@ -91,7 +91,7 @@ export class CreateProfileDto {
   @IsEnum(EUserSkill, { each: true })
   @ArrayMaxSize(10)
   @FieldType("multiSelect")
-  @FieldOptions(Object.values(EUserSkill).map(v => ({ value: v as string, label: v as string })))
+  @FieldOptions(Object.values(EUserSkill).map(v => ({ value: v as string, label: v.charAt(0) + v.slice(1).toLowerCase() as string })))
   skills?: EUserSkill[];
 }
 

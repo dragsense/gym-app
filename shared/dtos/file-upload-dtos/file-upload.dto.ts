@@ -24,7 +24,7 @@ export class CreateFileUploadDto {
   @ApiProperty({ example: EFileType.IMAGE, enum: EFileType })
   @IsEnum(EFileType)
   @FieldType("select")
-  @FieldOptions(Object.values(EFileType).map(v => ({ value: v, label: v })))
+  @FieldOptions(Object.values(EFileType).map(v => ({ value: v, label: v.charAt(0) + v.slice(1).toLowerCase()  })))
   type: EFileType;
 
   @ApiPropertyOptional({ example: 'http://localhost:3001/uploads/profile/123.jpg' })
@@ -54,7 +54,7 @@ export class FileListDto extends ListQueryDto<IFileUpload> {
   @IsOptional()
   @IsEnum(EFileType)
   @FieldType("select")
-  @FieldOptions(Object.values(EFileType).map(v => ({ value: v, label: v })))
+  @FieldOptions(Object.values(EFileType).map(v => ({ value: v, label: v.charAt(0) + v.slice(1).toLowerCase() })))
   type?: EFileType;
 
   @ApiPropertyOptional({ example: 1 })

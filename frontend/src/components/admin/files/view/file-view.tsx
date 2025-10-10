@@ -139,13 +139,7 @@ function FileDetailContent({ file }: IFileDetailContentProps) {
                                 <p className="font-medium">{file.folder || 'general'}</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <div className="text-muted-foreground"><File className="w-4 h-4" /></div>
-                            <div className="flex-1">
-                                <span className="text-sm text-muted-foreground">Path:</span>
-                                <p className="font-medium text-xs break-all">{file.path}</p>
-                            </div>
-                        </div>
+                  
                         {file.url && (
                             <div className="flex items-center gap-3">
                                 <div className="text-muted-foreground"><File className="w-4 h-4" /></div>

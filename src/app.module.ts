@@ -18,6 +18,7 @@ import { AuthModule } from './modules/v1/auth/auth.module';
 
 import { FileUploadModule } from './common/file-upload/file-upload.module';
 import { ActivityLogsModule } from './common/activity-logs/activity-logs.module';
+import { ScheduleModule } from './common/schedule/schedule.module';
 // Common modules
 import { LoggerModule } from './common/logger/logger.module';
 
@@ -79,6 +80,7 @@ import { EncryptionService } from './lib/encryption.service';
     LoggerModule,
     FileUploadModule,
     ActivityLogsModule,
+    ScheduleModule,
 
     // Feature modules
     UsersModule,

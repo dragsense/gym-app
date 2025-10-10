@@ -1,4 +1,4 @@
-import {Activity, type LucideIcon, UserCheck, FileText } from "lucide-react";
+import {Activity, type LucideIcon, UserCheck, FileText, CalendarClock } from "lucide-react";
 import { ADMIN_ROUTES } from "./routes.config";
 
 // Separate settings configuration object
@@ -28,6 +28,11 @@ export const navItems: {
             title: "Files",
             urls: [ADMIN_ROUTES.FILES],
             icon: FileText,
+        },
+        {
+            title: "Schedules",
+            urls: [ADMIN_ROUTES.SCHEDULES],
+            icon: CalendarClock,
         },
     ];
 

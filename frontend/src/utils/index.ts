@@ -1,5 +1,7 @@
 import { formatValue } from "@shared/lib/utils";
 
+export * from './date-format';
+
 export function pickKeys<T extends object, K extends keyof T>(
   obj: T,
   keys: K[]

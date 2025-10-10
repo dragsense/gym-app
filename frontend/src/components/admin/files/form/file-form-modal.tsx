@@ -14,7 +14,6 @@ import type { IMessageResponse } from "@shared/interfaces/api/response.interface
 import { Button } from "@/components/ui/button";
 import { ModalForm } from "@/components/form-ui/modal-form";
 import type { TFileUploadData } from "@shared/types";
-import { FormErrors } from "@/components/shared-ui/form-errors";
 
 export interface IFileFormModalExtraProps {
   open: boolean;
@@ -94,7 +93,6 @@ const FileCreateFormModal = React.memo(function FileCreateModal({
             {inputs.url}
           </div>
         </div>
-    <FormErrors />
       </div>
     </ModalForm>
   );
