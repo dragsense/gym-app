@@ -3,12 +3,14 @@ import {
   Column,
   OneToOne,
   ManyToOne,
+  ManyToMany,
+  JoinTable,
 } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { User } from '@/modules/v1/users/entities/user.entity';
-import { FileUpload } from '@/modules/v1/file-upload/entities/file-upload.entity';
+import { FileUpload } from '@/common/file-upload/entities/file-upload.entity';
 import { GeneralBaseEntity } from '@/common/entities';
-import { EUserGender } from 'shared/enums/user.enum';
+import { EUserGender, EUserSkill } from 'shared/enums/user.enum';
 
 @Entity('profiles')
 export class Profile extends GeneralBaseEntity {
@@ -61,4 +63,31 @@ export class Profile extends GeneralBaseEntity {
     onDelete: 'SET NULL',
   })
   image?: FileUpload | null;
+
+  @ApiPropertyOptional({
+    description: 'Documents uploaded by the user (max 10)',
+    type: () => [FileUpload],
+  })
+  @ManyToMany(() => FileUpload, {
+    cascade: true,
+    eager: true,
+  })
+  @JoinTable({
+    name: 'profile_documents',
+    joinColumn: { name: 'profile_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'document_id', referencedColumnName: 'id' },
+  })
+  documents?: FileUpload[];
+
+  @ApiPropertyOptional({
+    enum: EUserSkill,
+    isArray: true,
+    example: [EUserSkill.JAVASCRIPT, EUserSkill.REACT],
+    description: 'User skills',
+  })
+  @Column({
+    type: 'simple-array',
+    nullable: true,
+  })
+  skills?: EUserSkill[];
 }

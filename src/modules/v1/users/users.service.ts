@@ -41,7 +41,7 @@ export class UsersService {
       relations?: string[];
     }
   ): Promise<User> {
-    const { select = ['email', 'id', 'isActive'], relations = ['profile'] } = options || {};
+    const { select = [], relations = ['profile'] } = options || {};
 
     const user = await this.userRepo.findOne({
       where,

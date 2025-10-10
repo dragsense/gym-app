@@ -54,8 +54,22 @@ export class ActivityLogDto {
     @ApiPropertyOptional({ example: 200, description: 'HTTP status code' })
     statusCode?: number;
 
-    @ApiPropertyOptional({ example: '{"id": 1, "name": "John"}', description: 'Request payload or response data' })
-    metadata?: Record<string, any>;
+    @ApiPropertyOptional({ 
+        example: {
+            duration: 150,
+            responseSize: 1024,
+            timestamp: '2024-01-01T00:00:00.000Z',
+            bodyKeys: ['email', 'profile.firstName', 'profile.lastName']
+        },
+        description: 'Request metadata including duration, size, and body keys'
+    })
+    metadata?: {
+        duration?: number;
+        responseSize?: number;
+        timestamp?: string;
+        bodyKeys?: string[];
+        [key: string]: any;
+    };
 
     @ApiPropertyOptional({ example: 'Error message if failed', description: 'Error message if activity failed' })
     errorMessage?: string;

@@ -3,4 +3,5 @@ export enum EFileType {
     DOCUMENT = 'document',
     VIDEO = 'video',
     AUDIO = 'audio',
+    OTHER = 'other',
   }

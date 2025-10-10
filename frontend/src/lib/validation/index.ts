@@ -7,19 +7,49 @@ export function classValidatorResolver<T extends object>(
   dtoClass: ClassConstructor<T>
 ): Resolver<T> {
   return async (values) => {
+    // Separate File objects and arrays of Files from regular values before transformation
+    const regularValues: any = {};
+    const fileValues: any = {};
+    
+    Object.keys(values).forEach(key => {
+      const value = (values as any)[key];
+      
+      // Check if it's a single File
+      if (typeof File !== 'undefined' && value instanceof File) {
+        fileValues[key] = value;
+      } 
+      // Check if it's an array of Files
+      else if (Array.isArray(value) && value.length > 0 && value.every(item => item instanceof File)) {
+        fileValues[key] = value;
+      }
+      // Check if it's a Blob
+      else if (typeof Blob !== 'undefined' && value instanceof Blob) {
+        fileValues[key] = value;
+      }
+      // Otherwise it's a regular value
+      else {
+        regularValues[key] = value;
+      }
+    });
 
-    const dto = plainToInstance(dtoClass, values, {
+    // Transform only regular values (not Files/Blobs)
+    const dto = plainToInstance(dtoClass, regularValues, {
       enableImplicitConversion: true,
       excludeExtraneousValues: false,
     });
 
+    // Add File/Blob objects back to DTO without transformation
+    Object.keys(fileValues).forEach(key => {
+      (dto as any)[key] = fileValues[key];
+    });
 
+    // Now validate everything together
     const errors = await validate(dto, {
-      skipMissingProperties: true,
+      skipMissingProperties: false,
       whitelist: true,
       forbidNonWhitelisted: false,
-      skipUndefinedProperties: true,
-      skipNullProperties: true,
+      skipUndefinedProperties: false,
+      skipNullProperties: false,
       validationError: { target: false },
     });
 

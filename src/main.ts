@@ -15,7 +15,7 @@ import { BrowserHtmlInterceptor } from './interceptors/BrowserHtmlInterceptor';
 import { ExceptionsFilter } from './exceptions/exceptions-filter';
 import { LoggerService } from './common/logger/logger.service';
 import { LoggerInterceptor } from './common/logger/interceptors/logger.interceptor';
-import { ActivityLogInterceptor } from './activity-logs/interceptors/activity-log.interceptor';
+import { ActivityLogInterceptor } from './common/activity-logs/interceptors/activity-log.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {

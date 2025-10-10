@@ -38,6 +38,11 @@ export function strictDeepMerge<T extends Record<string, any>>(target: T, source
   return result;
 }
 
+// Helper function to check if array contains Files or Blobs
+function isFileOrBlobArray(arr: any[]): boolean {
+  return arr.length > 0 && arr.every((item: any) => item instanceof File || item instanceof Blob);
+}
+
 export function getDirtyData<T>(
   formData: T & Record<string, any>,
   initialValues: T,
@@ -45,19 +50,34 @@ export function getDirtyData<T>(
 ): Partial<T> {
   const result: Partial<T> = {};
 
-  for (const key in initialValues) {
-    if (!formData.hasOwnProperty(key)) continue;
-    
-    const value = formData[key];
-    const initialValue = initialValues[key];
+  // Get all keys from both formData and initialValues
+  const allKeys = new Set([...Object.keys(initialValues as object), ...Object.keys(formData as object)]);
+
+  for (const key of allKeys) {
+    const value = (formData as any)[key];
+    const initialValue = (initialValues as any)[key];
+
+    // Skip if value doesn't exist in formData
+    if (!(key in formData)) continue;
 
     // Deep equality check with circular reference protection
     if (isDeepEqual(value, initialValue, seen)) continue;
 
     if (typeof value === "object" && value !== null) {
-      if (Array.isArray(value)) {
-        // Handle arrays - include if not deeply equal
-        result[key] = value;
+      // Handle File, Blob, Date objects as values, not nested objects
+      if ((value as any) instanceof File || (value as any) instanceof Blob || (value as any) instanceof Date) {
+        (result as any)[key] = value;
+      } 
+      // Handle arrays
+      else if (Array.isArray(value)) {
+        // Check if it's an array of Files or Blobs
+        if (isFileOrBlobArray(value)) {
+          // Treat file arrays as atomic values
+          (result as any)[key] = value;
+        } else {
+          // Handle regular arrays - include if not deeply equal
+          (result as any)[key] = value;
+        }
       } else {
         // Nested object → recurse
         const nestedDirty = getDirtyData(
@@ -68,12 +88,12 @@ export function getDirtyData<T>(
         
         // Only include if nested object has dirty fields
         if (Object.keys(nestedDirty).length > 0) {
-          result[key] = nestedDirty as any;
+          (result as any)[key] = nestedDirty as any;
         }
       }
     } else {
       // Primitive value → assign directly
-      result[key] = value;
+      (result as any)[key] = value;
     }
   }
 
@@ -91,10 +111,27 @@ function isDeepEqual(a: any, b: any, seen = new WeakMap<object, object>()): bool
   // Type mismatch
   if (typeof a !== typeof b) return false;
   
+  // Handle Date objects
+  if (a instanceof Date && b instanceof Date) {
+    return a.getTime() === b.getTime();
+  }
+  
+  // Handle File and Blob objects - only equal if same reference
+  if ((a instanceof File && b instanceof File) || (a instanceof Blob && b instanceof Blob)) {
+    return false; // Files/Blobs are always considered different unless same reference (already checked above)
+  }
+  
   // Array comparison
   if (Array.isArray(a) && Array.isArray(b)) {
     if (a.length !== b.length) return false;
     
+    // Check if it's an array of Files or Blobs
+    if (isFileOrBlobArray(a) || isFileOrBlobArray(b)) {
+      // File arrays are always considered different (unless same reference, already checked)
+      return false;
+    }
+    
+    // Regular array comparison
     for (let i = 0; i < a.length; i++) {
       if (!isDeepEqual(a[i], b[i], seen)) return false;
     }

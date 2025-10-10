@@ -16,7 +16,8 @@ export type PublicRoute = keyof typeof PUBLIC_ROUTES;
 // Admin-specific routes
 export const ADMIN_ROUTES = {
   USERS: "/users",
-  ACTIVITY_LOGS: '/activity_logs'
+  ACTIVITY_LOGS: '/activity_logs',
+  FILES: '/files'
 
 } as const;
 export type AdminRoute = keyof typeof ADMIN_ROUTES;
@@ -32,5 +33,6 @@ export type CommonRoute = keyof typeof COMMON_ROUTES;
 
 export const ROUTE_TITLES: Record<string, string> = {
     [ADMIN_ROUTES.USERS]: "Users",
-    [ADMIN_ROUTES.ACTIVITY_LOGS]: "Activiy Logs"
+    [ADMIN_ROUTES.ACTIVITY_LOGS]: "Activiy Logs",
+    [ADMIN_ROUTES.FILES]: "Files"
 };

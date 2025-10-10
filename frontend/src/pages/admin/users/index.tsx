@@ -9,7 +9,7 @@ import { ListHandler, SingleHandler } from "@/handlers";
 
 // Custom UI Components
 import { UserList, UserView } from "@/components/admin";
-import { UserForm, type TUserExtraProps } from "@/page-components";
+import { ProfileForm, UserForm, type TUserExtraProps } from "@/page-components";
 
 
 // API
@@ -44,6 +44,10 @@ export default function UsersPage() {
           {
             action: 'createOrUpdate',
             comp: UserForm
+          },
+          {
+            action: 'updateProfile',
+            comp: ProfileForm
           }
         ]}
         singleProps={{

@@ -68,11 +68,11 @@ export class ActivityLog extends GeneralBaseEntity {
   @Column({ type: 'text', nullable: true })
   errorMessage?: string;
 
-  @ApiProperty({ example: 1, description: 'User who performed the activity' })
-  @Column({ type: 'int' })
-  userId: number;
+  @ApiPropertyOptional({ example: 1, description: 'User who performed the activity' })
+  @Column({ type: 'int', nullable: true })
+  userId?: number;
 
   @ManyToOne(() => User, { eager: true })
   @JoinColumn({ name: 'userId' })
-  user: User;
+  user?: User;
 }

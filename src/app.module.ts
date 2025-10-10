@@ -15,8 +15,9 @@ import { AppService } from './app.service';
 // Feature modules
 import { UsersModule } from './modules/v1/users/users.module';
 import { AuthModule } from './modules/v1/auth/auth.module';
-import { ActivityLogsModule } from './activity-logs/activity-logs.module';
 
+import { FileUploadModule } from './common/file-upload/file-upload.module';
+import { ActivityLogsModule } from './common/activity-logs/activity-logs.module';
 // Common modules
 import { LoggerModule } from './common/logger/logger.module';
 
@@ -24,7 +25,7 @@ import { LoggerModule } from './common/logger/logger.module';
 import { ServerGateway } from './gateways/server.gateway';
 import { join } from 'path';
 import { ResponseEncryptionInterceptor } from './interceptors/response-encryption-interceptor';
-import { ActivityLogInterceptor } from './activity-logs/interceptors/activity-log.interceptor';
+
 import { EncryptionService } from './lib/encryption.service';
 
 
@@ -76,10 +77,12 @@ import { EncryptionService } from './lib/encryption.service';
 
     // Common modules
     LoggerModule,
+    FileUploadModule,
+    ActivityLogsModule,
+
     // Feature modules
     UsersModule,
     AuthModule,
-    ActivityLogsModule,
   ],
   controllers: [AppController],
   providers: [

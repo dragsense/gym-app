@@ -1,0 +1,98 @@
+// External Libraries
+import { useShallow } from 'zustand/shallow';
+import { Loader2 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+
+// Handlers
+import { FormHandler } from "@/handlers";
+
+// Types
+import { EVALIDATION_MODES } from "@/enums/form.enums";
+import { type THandlerComponentProps } from "@/@types/handler-types";
+import { type IFileUpload } from "@shared/interfaces/file-upload.interface";
+import { type IMessageResponse } from "@shared/interfaces/api/response.interface";
+
+// Store
+import { type TSingleHandlerStore } from "@/stores";
+
+// Components
+import { FileFormModal, type IFileFormModalExtraProps } from "@/components/admin";
+
+// Services
+import { createFile, updateFile } from "@/services/file.api";
+import { strictDeepMerge } from "@/utils";
+import { CreateFileUploadDto, UpdateFileUploadDto } from "@shared/dtos";
+import { EFileType } from "@shared/enums";
+import type { TFileUploadData } from '@shared/types';
+
+export type TFileExtraProps = {};
+
+interface IFileFormProps extends THandlerComponentProps<TSingleHandlerStore<IFileUpload, TFileExtraProps>> {}
+
+export default function FileForm({
+    storeKey,
+    store,
+}: IFileFormProps) {
+
+    const queryClient = useQueryClient();
+
+    if (!store) {
+        return <div>Single store "{storeKey}" not found. Did you forget to register it?</div>;
+    }
+
+    const { action, response, isLoading, setAction, reset } = store(useShallow(state => ({
+        action: state.action,
+        response: state.response,
+        isLoading: state.isLoading,
+        setAction: state.setAction,
+        reset: state.reset
+    })));
+
+    if (isLoading) {
+        return (
+            <div className="absolute inset-0 z-30 flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+        );
+    }
+
+
+    const INITIAL_VALUES: TFileUploadData = {
+        name: "",
+        url: "",
+        type: EFileType.OTHER,
+        file: undefined,
+        folder: "general",
+    };
+
+    const initialValues = strictDeepMerge<TFileUploadData>(INITIAL_VALUES, response ?? {});
+
+    const handleClose = () => {
+        reset();
+        setAction('none');
+    };
+
+    const isEditing = !!response?.id;
+    const mutationFn = isEditing ? updateFile(response.id) : createFile;
+    const dto = isEditing ? UpdateFileUploadDto : CreateFileUploadDto;
+
+    return (
+        <FormHandler<TFileUploadData, IMessageResponse, IFileFormModalExtraProps>
+            mutationFn={mutationFn}
+            FormComponent={FileFormModal}
+            storeKey={storeKey}
+            initialValues={initialValues}
+            dto={dto}
+            validationMode={EVALIDATION_MODES.OnSubmit}
+            isEditing={isEditing}
+            onSuccess={() => {
+                queryClient.invalidateQueries({ queryKey: [storeKey + "-list"] });
+            }}
+            formProps={{
+                open: action === 'createOrUpdate',
+                onClose: handleClose,
+            }}
+        />
+    );
+}
+

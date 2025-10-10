@@ -13,7 +13,9 @@ import { User } from '@/modules/v1/users/entities/user.entity';
 
 
 import { UpdateProfileDto } from 'shared/dtos/user-dtos/profile.dto';
-import { FileUploadService } from '../../file-upload/file-upload.service';
+import { FileUploadService } from '@/common/file-upload/file-upload.service';
+import { FileUpload } from '@/common/file-upload/entities/file-upload.entity';
+import { EFileType } from 'shared';
 
 @Injectable()
 export class ProfilesService {
@@ -30,7 +32,7 @@ export class ProfilesService {
 
     const profile = await this.profileRepo.findOne({
       where: { user: { id: userId } },
-      relations: ['image']
+      relations: ['image', 'documents']
     });
 
     if (!profile) {
@@ -40,18 +42,26 @@ export class ProfilesService {
     return profile;
   }
 
-  async update(id: number, updateProfileDto: UpdateProfileDto, profileImage?: Express.Multer.File): Promise<IMessageResponse> {
+  async update(
+    id: number, 
+    updateProfileDto: UpdateProfileDto, 
+    profileImage?: Express.Multer.File,
+    documents?: Express.Multer.File[]
+  ): Promise<IMessageResponse> {
 
+
+    console.log(updateProfileDto);
 
     const {
       image,
+      documents: _,
       ...profileData
     } = updateProfileDto;
 
 
     const profile = await this.profileRepo.findOne({
       where: { id },
-      relations: ['image'],
+      relations: ['image', 'documents'],
     });
 
 
@@ -64,23 +74,59 @@ export class ProfilesService {
 
 
     if (profileImage) {
-      const uploaded = await this.fileUploadService.updateFile(
-        profileImage,
-        profile.image,
-        'profile',
-      );
+      let uploaded: FileUpload;
+      if (profile.image) {
+        uploaded = await this.fileUploadService.updateFile(
+          profile.image.id,
+          {
+            name: profileImage.originalname,
+            type: EFileType.IMAGE,
+          },
+          profileImage
+        );
+
+      } else {
+        uploaded = await this.fileUploadService.createFile(
+          {
+            name: profileImage.originalname,
+            type: EFileType.IMAGE,
+          },
+          profileImage
+        );
+      }
 
       profile.image = uploaded;
     }
 
-    if (profileImage) {
-      const uploaded = await this.fileUploadService.updateFile(
-        profileImage,
-        profile.image,
-        'profile',
-      );
+    // Handle documents upload (up to 10 files)
+    if (documents && documents.length > 0) {
+      // Limit to 10 documents
+      const filesToUpload = documents.slice(0, 10);
+      
+      const uploadedDocuments: FileUpload[] = [];
+      
+      for (const doc of filesToUpload) {
+        const uploaded = await this.fileUploadService.createFile(
+          {
+            name: doc.originalname,
+            type: EFileType.DOCUMENT,
+          },
+          doc
+        );
+        uploadedDocuments.push(uploaded);
+      }
 
-      profile.image = uploaded;
+      // Append new documents to existing ones (if any)
+      if (profile.documents) {
+        profile.documents = [...profile.documents, ...uploadedDocuments];
+      } else {
+        profile.documents = uploadedDocuments;
+      }
+
+      // Ensure we don't exceed 10 documents total
+      if (profile.documents.length > 10) {
+        profile.documents = profile.documents.slice(-10);
+      }
     }
 
 

@@ -281,12 +281,6 @@ export const CustomField = React.memo(function CustomField({
         return value;
     };
 
-    const commonClass = cn(
-        field.startAdornment && "pl-10",
-        field.endAdornment && "pr-10",
-        field.className
-    );
-
     return (
         <FormFieldWrapper
             field={field}
@@ -300,6 +294,75 @@ export const CustomField = React.memo(function CustomField({
                     onChange={(value) => controllerField.onChange(onChangeHandler(value))}
                     disabled={isDisabled} /> : null;
             }}
+        </FormFieldWrapper>
+    );
+});
+
+export const FileField = React.memo(function FileField({
+    field,
+    fieldName,
+    showRequiredAsterisk,
+    layout = "vertical"
+}: BaseFieldProps) {
+    const onChangeHandler = (file: File | null) => {
+        field?.onChange?.(file);
+        return file;
+    };
+
+    return (
+        <FormFieldWrapper
+            field={field}
+            fieldName={fieldName}
+            showRequiredAsterisk={showRequiredAsterisk}
+            layout={layout}
+        >
+            {({ field: controllerField, isDisabled }) => (
+                <Input
+                    type="file"
+                    disabled={isDisabled}
+                    onChange={(e) => {
+                        const file = e.target.files?.[0] || null;
+                        const result = onChangeHandler(file);
+                        controllerField.onChange(result);
+                    }}
+                    className={cn(field.className)}
+                />
+            )}
+        </FormFieldWrapper>
+    );
+});
+
+export const MultiFileField = React.memo(function MultiFileField({
+    field,
+    fieldName,
+    showRequiredAsterisk,
+    layout = "vertical"
+}: BaseFieldProps) {
+    const onChangeHandler = (files: File[]) => {
+        field?.onChange?.(files);
+        return files;
+    };
+
+    return (
+        <FormFieldWrapper
+            field={field}
+            fieldName={fieldName}
+            showRequiredAsterisk={showRequiredAsterisk}
+            layout={layout}
+        >
+            {({ field: controllerField, isDisabled }) => (
+                <Input
+                    type="file"
+                    multiple
+                    disabled={isDisabled}
+                    onChange={(e) => {
+                        const files = e.target.files ? Array.from(e.target.files) : [];
+                        const result = onChangeHandler(files);
+                        controllerField.onChange(result);
+                    }}
+                    className={cn(field.className)}
+                />
+            )}
         </FormFieldWrapper>
     );
 });

@@ -7,12 +7,11 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
+import { EFileType } from 'shared/enums';
+import { GeneralBaseEntity } from '@/common/entities';
 
 @Entity('uploaded_files')
-export class FileUpload {
-  @ApiProperty({ example: 1, description: 'Unique identifier of the uploaded file' })
-  @PrimaryGeneratedColumn()
-  id: number;
+export class FileUpload extends GeneralBaseEntity {
 
   @ApiProperty({
     example: 'banner.jpg',
@@ -25,34 +24,42 @@ export class FileUpload {
     example: 'image/jpeg',
     description: 'MIME type of the uploaded file (e.g. image/jpeg, image/png)',
   })
-  @Column()
+  @Column({ default: '' })
   mimeType: string;
+
+
+  @ApiProperty({
+    example: EFileType.IMAGE,
+    description: 'Type of the uploaded file (e.g. image, video, audio)',
+  })
+  @Column({ type: 'enum', enum: EFileType, default: EFileType.OTHER })
+  type: EFileType;
 
   @ApiProperty({
     example: 1048576,
     description: 'Size of the file in bytes',
   })
-  @Column()
+  @Column({ type: 'bigint', default: 0 })
   size: number;
 
   @ApiProperty({
     example: 'uploads/banner-image/1722104000000-banner.jpg',
     description: 'Relative path to the uploaded file on the server',
   })
-  @Column()
+  @Column({ nullable: true })
   path: string;
 
   @ApiProperty({
-    example: '2025-06-27T10:00:00.000Z',
-    description: 'Timestamp when the file was uploaded',
+    example: 'general',
+    description: 'Folder where file is uploaded',
   })
-  @CreateDateColumn()
-  createdAt: Date;
+  @Column({ default: 'general' })
+  folder: string;
 
   @ApiProperty({
-    example: '2025-06-27T10:05:00.000Z',
-    description: 'Timestamp when the file metadata was last updated',
+    example: 'http://localhost:3001/uploads/banner-image/1722104000000-banner.jpg',
+    description: 'Full URL to access the file',
   })
-  @UpdateDateColumn()
-  updatedAt: Date;
+  @Column()
+  url: string;
 }

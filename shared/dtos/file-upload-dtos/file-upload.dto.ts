@@ -1,42 +1,49 @@
-import { IsString, IsOptional, IsNumber, IsEnum } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {  createPartialType } from '../../lib/type-utils';
+import { IsString, IsOptional, IsNumber, IsEnum, IsNotEmpty } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
+import { createPartialType } from '../../lib/type-utils';
 import { Type } from 'class-transformer';
 import { EFileType } from '../../enums/file-upload.enum';
 import { ListQueryDto } from '../common/list-query.dto';
 import { PaginationMetaDto } from '../common/pagination.dto';
 import { IFileUpload } from '../../interfaces';
+import { FieldOptions, FieldType } from '../../decorators/field.decorator';
 
 export class CreateFileUploadDto {
   @ApiProperty({ example: 'profile-picture.jpg' })
   @IsString()
-  filename: string;
+  @IsNotEmpty()
+  @FieldType("text", true)
+  name: string;
 
-  @ApiProperty({ example: 'image/jpeg' })
+  @ApiPropertyOptional({ example: 'general' })
   @IsString()
-  mimetype: string;
+  @IsOptional()
+  @FieldType("text")
+  folder?: string;
 
-  @ApiProperty({ example: 1024000 })
-  @IsNumber()
-  size: number;
-
-  @ApiProperty({ example: '/uploads/profile/123.jpg' })
-  @IsString()
-  path: string;
-
-  @ApiProperty({ enum: EFileType, example: EFileType.IMAGE })
+  @ApiProperty({ example: EFileType.IMAGE, enum: EFileType })
   @IsEnum(EFileType)
+  @FieldType("select")
+  @FieldOptions(Object.values(EFileType).map(v => ({ value: v, label: v })))
   type: EFileType;
 
-  @ApiProperty({ example: 1 })
+  @ApiPropertyOptional({ example: 'http://localhost:3001/uploads/profile/123.jpg' })
+  @IsString()
   @IsOptional()
-  userId?: number;
+  @FieldType("text")
+  url?: string;
+
+  @ApiPropertyOptional({ type: 'string', format: 'binary', required: false, description: 'File' })
+  @IsNotEmpty()
+  @FieldType("file", true)
+  file?: any;
 }
 
-export class UpdateFileUploadDto extends createPartialType(CreateFileUploadDto) {}
+export class UpdateFileUploadDto extends PartialType(CreateFileUploadDto) {
+}
 
 
-export class FilePaginationDto extends PaginationMetaDto{
+export class FilePaginationDto extends PaginationMetaDto {
   @ApiProperty({ type: () => [FileUploadDto] })
   @Type(() => FileUploadDto)
   data: FileUploadDto[]
@@ -46,6 +53,8 @@ export class FileListDto extends ListQueryDto<IFileUpload> {
   @ApiPropertyOptional({ enum: EFileType })
   @IsOptional()
   @IsEnum(EFileType)
+  @FieldType("select")
+  @FieldOptions(Object.values(EFileType).map(v => ({ value: v, label: v })))
   type?: EFileType;
 
   @ApiPropertyOptional({ example: 1 })
@@ -57,17 +66,29 @@ export class FileListDto extends ListQueryDto<IFileUpload> {
 
 
 export class FileUploadDto {
-    
+
   @ApiProperty({ example: 1 })
   id: number;
 
   @ApiProperty({ example: 'profile-picture.jpg' })
-  filename: string;
+  name: string;
 
   @ApiProperty({ example: 'image/jpeg' })
-  mimetype: string;
+  mimeType: string;
+
+  @ApiProperty({ example: EFileType.IMAGE })
+  type: EFileType;
 
   @ApiProperty({ example: 1024000 })
   size: number;
+
+  @ApiProperty({ example: 'general' })
+  folder: string;
+
+  @ApiProperty({ example: 'http://localhost:3001/uploads/general/1234567890-file.jpg' })
+  url: string;
+
+  createdAt: string;
+  updatedAt: string;
 }
 

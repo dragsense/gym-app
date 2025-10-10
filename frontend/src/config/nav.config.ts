@@ -1,4 +1,4 @@
-import {Activity, type LucideIcon, UserCheck } from "lucide-react";
+import {Activity, type LucideIcon, UserCheck, FileText } from "lucide-react";
 import { ADMIN_ROUTES } from "./routes.config";
 
 // Separate settings configuration object
@@ -23,6 +23,11 @@ export const navItems: {
             title: "Activit Logs",
             urls: [ADMIN_ROUTES.ACTIVITY_LOGS],
             icon: Activity,
+        },
+        {
+            title: "Files",
+            urls: [ADMIN_ROUTES.FILES],
+            icon: FileText,
         },
     ];
 

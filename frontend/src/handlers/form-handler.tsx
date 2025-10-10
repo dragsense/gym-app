@@ -92,6 +92,8 @@ export function FormHandler<TFormData, TResponse = any, TExtraProps extends Reco
 
     const isEditing = store.getState().isEditing;
 
+    console.log(formData);
+
     if (isEditing) {
       formData = getDirtyData(formData, initialValues) as TFormData;
     }

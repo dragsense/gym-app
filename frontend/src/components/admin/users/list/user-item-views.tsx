@@ -28,11 +28,13 @@ const UserActions = ({
   handleEdit,
   handleDelete,
   handleView,
+  handleUpdateProfile,
 }: {
   user: IUser;
   handleEdit?: (id: number) => void;
   handleDelete?: (id: number) => void;
   handleView?: (id: number) => void;
+  handleUpdateProfile?: (id: number) => void;
 }) => {
   return (
     <DropdownMenu>
@@ -50,7 +52,11 @@ const UserActions = ({
             View Details
           </DropdownMenuItem>
         )}
-        
+        {handleUpdateProfile && (
+          <DropdownMenuItem onClick={() => handleUpdateProfile(user.id)}>
+            Update Profile
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         {handleEdit && (
           <DropdownMenuItem onClick={() => handleEdit(user.id)}>
@@ -73,11 +79,13 @@ const UserActions = ({
 export const itemViews = ({
   handleEdit,
   handleDelete,
-  handleView
+  handleView,
+  handleUpdateProfile
 }: {
   handleEdit?: (id: number) => void;
   handleDelete?: (id: number) => void;
   handleView?: (id: number) => void;
+  handleUpdateProfile?: (id: number) => void;
 }): {
   columns: ColumnDef<IUser>[];
   listItem: (item: IUser) => JSX.Element;
@@ -89,7 +97,7 @@ export const itemViews = ({
       cell: ({ row }) => {
         const profile = row.original.profile;
         const name = profile ? `${profile.firstName} ${profile.lastName}` : '-';
-        const imagePath = profile?.image?.path;
+        const imagePath = profile?.image?.url;
         return (
           <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-white font-bold">
             {imagePath ? (
@@ -149,7 +157,7 @@ export const itemViews = ({
             handleEdit={handleEdit}
             handleDelete={handleDelete}
             handleView={handleView}
-
+            handleUpdateProfile={handleUpdateProfile}
           />
         );
       },
@@ -159,7 +167,7 @@ export const itemViews = ({
   const listItem = (item: IUser) => {
     const profile = item.profile;
     const name = profile ? `${profile.firstName} ${profile.lastName}` : 'Unknown User';
-    const imagePath = profile?.image?.path;
+    const imagePath = profile?.image?.url;
     const phoneNumber = profile?.phoneNumber || '-';
 
     return (
@@ -227,6 +235,7 @@ export const itemViews = ({
                 handleEdit={handleEdit}
                 handleDelete={handleDelete}
                 handleView={handleView}
+                handleUpdateProfile={handleUpdateProfile}
               />
             </div>
           </div>

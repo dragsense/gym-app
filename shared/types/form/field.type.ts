@@ -15,6 +15,7 @@ export type TFieldType =
   | "checked"
   | "radio"
   | "file"
+  | "multiFile"
   | "checkbox"
   | "multiSelect"
   | "url"

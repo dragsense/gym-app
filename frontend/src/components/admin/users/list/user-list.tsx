@@ -72,6 +72,10 @@ export default function UserList({
     setAction('createOrUpdate', id);
   }
 
+  const handleUpdateProfile = (id: number) => {
+    setAction('updateProfile', id);
+  }
+
   const handleDelete = (id: number) => {
     setAction('delete', id);
   }
@@ -83,7 +87,8 @@ export default function UserList({
   const { columns, listItem } = itemViews({
     handleEdit,
     handleDelete,
-    handleView
+    handleView,
+    handleUpdateProfile
   }
   );
 

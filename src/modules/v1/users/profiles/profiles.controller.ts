@@ -8,8 +8,8 @@ import { ProfilesService } from './profiles.service';
 import { Profile } from './entities/profile.entity';
 import { UpdateProfileDto } from 'shared/dtos';
 
-import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
-import { ImageValidationPipe } from '@/pipes/image-validation';
+import {  FileFieldsInterceptor } from '@nestjs/platform-express';
+import { OmitType } from 'shared/lib/type-utils';
 
 
 @UseGuards(JwtAuthGuard)
@@ -28,29 +28,29 @@ export class ProfilesController {
   }
 
 
-  @UseInterceptors(FileFieldsInterceptor([
-    { name: 'image', maxCount: 1 },
-    { name: 'companyLogo', maxCount: 1 },
-  ]))
+
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'image', maxCount: 1 },
+      { name: 'documents', maxCount: 10 },
+    ]),
+  )
   @ApiConsumes('multipart/form-data')
   @Patch('profile/me')
   @ApiOperation({ summary: 'Update profile of the authenticated user' })
   @ApiResponse({ status: 200, description: 'Profile updated', type: Profile })
   @ApiResponse({ status: 404, description: 'Profile not found' })
-  async updateMe(@Req() req: any,
-    @UploadedFiles(new ImageValidationPipe()) files: { image?: Express.Multer.File[];},
-    @Body() updateProfileDto: UpdateProfileDto) {
+  async updateMe(
+    @Req() req: any,
+    @UploadedFiles() files: { image?: Express.Multer.File[], documents?: Express.Multer.File[] },
+    @Body() updateProfileDto: OmitType<UpdateProfileDto, 'image' | 'documents'>
+  ) {
     const profile = await this.profilesService.findOneByUser({ id: req.user.id });
 
-    const image = files.image?.[0];
+    const image = files?.image?.[0];
+    const documents = files?.documents;
 
-    if (updateProfileDto.image) {
-      updateProfileDto.image = null;
-    }
-
-
-
-    return this.profilesService.update(profile.id, updateProfileDto, image);
+    return this.profilesService.update(profile.id, updateProfileDto, image, documents);
   }
 
 
@@ -64,7 +64,12 @@ export class ProfilesController {
     return this.profilesService.findOneByUser({ id });
   }
 
-  @UseInterceptors(FileInterceptor('image'))
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'image', maxCount: 1 },
+      { name: 'documents', maxCount: 10 },
+    ]),
+  )
   @ApiConsumes('multipart/form-data')
   @Patch(':id')
   @ApiOperation({ summary: 'Update profile by ID' })
@@ -73,14 +78,14 @@ export class ProfilesController {
   @ApiResponse({ status: 404, description: 'Profile not found' })
   update(
     @Param('id', ParseIntPipe) id: number,
-    @UploadedFile() image: Express.Multer.File,
-    @Body() updateProfileDto: UpdateProfileDto) {
+    @UploadedFiles() files: { image?: Express.Multer.File[], documents?: Express.Multer.File[] },
+    @Body() updateProfileDto: OmitType<UpdateProfileDto, 'image' | 'documents'>
+  ) {
 
-    if (updateProfileDto.image) {
-      updateProfileDto.image = null;
-    }
+    const image = files?.image?.[0];
+    const documents = files?.documents;
 
-    return this.profilesService.update(id, updateProfileDto, image);
+    return this.profilesService.update(id, updateProfileDto, image, documents);
   }
 
 }

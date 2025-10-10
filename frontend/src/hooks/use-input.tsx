@@ -1,5 +1,5 @@
 import React from "react";
-import { TextField, TextareaField, SelectField, SwitchField, DateField, useArrayField, CustomField } from "@/components/form-ui/field-components";
+import { TextField, TextareaField, SelectField, SwitchField, DateField, useArrayField, CustomField, FileField, MultiFileField } from "@/components/form-ui/field-components";
 import type { TFieldConfig, TFieldConfigObject } from "@/@types/form/field-config.type";
 
 interface UseInputProps<T> {
@@ -87,6 +87,10 @@ export function useInput<T>({
       case "time":
       case "checkbox":
         return <TextField {...commonProps} />;
+      case "file":
+        return <FileField {...commonProps} />;
+      case "multiFile":
+        return <MultiFileField {...commonProps} />;
       case "custom":
         return <CustomField {...commonProps} />;
       default:

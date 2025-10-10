@@ -69,15 +69,14 @@ export const updateProfile = (data: TUpdateProfileData) => {
 
     const formData = new FormData();
 
-    console.log(data);
-
     Object.entries(data).forEach(([key, value]) => {
         if (value === undefined || value === null) return;
 
         if (Array.isArray(value)) {
             value.forEach((item) => {
                 if (item instanceof File || item instanceof Blob) {
-                    formData.append(`${key}[]`, item);
+                    // For file arrays, append without brackets - backend expects 'documents' not 'documents[]'
+                    formData.append(key, item);
                 } else {
                     formData.append(`${key}[]`, String(item));
                 }

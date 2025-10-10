@@ -7,7 +7,7 @@ import {
 import { Observable } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { Request, Response } from 'express';
-import { ActivityLogsService } from     '@/activity-logs/activity-logs.service';
+import { ActivityLogsService } from     '@/common/activity-logs/activity-logs.service';
 import { EActivityType, EActivityStatus } from 'shared/enums/activity-log.enum';
 import { LoggerService } from '@/common/logger/logger.service';
 
@@ -16,6 +16,29 @@ export class ActivityLogInterceptor implements NestInterceptor {
   private readonly logger = new LoggerService(ActivityLogInterceptor.name);
 
   constructor(private readonly activityLogsService: ActivityLogsService) {}
+
+  /**
+   * Get all nested keys from an object
+   */
+  private getNestedKeys(obj: any, prefix = ''): string[] {
+    if (!obj || typeof obj !== 'object' || Array.isArray(obj)) {
+      return [];
+    }
+
+    const keys: string[] = [];
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        const fullKey = prefix ? `${prefix}.${key}` : key;
+        keys.push(fullKey);
+        
+        // Recursively get nested keys
+        if (obj[key] && typeof obj[key] === 'object' && !Array.isArray(obj[key])) {
+          keys.push(...this.getNestedKeys(obj[key], fullKey));
+        }
+      }
+    }
+    return keys;
+  }
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const request = context.switchToHttp().getRequest<Request>();
@@ -42,6 +65,18 @@ export class ActivityLogInterceptor implements NestInterceptor {
         try {
           const duration = Date.now() - startTime;
           
+          // Safely get response size without circular reference errors
+          let responseSize = 0;
+          try {
+            responseSize = JSON.stringify(data).length;
+          } catch (e) {
+            // Ignore circular reference errors
+            responseSize = 0;
+          }
+
+          // Get all nested keys from request body (not values for privacy)
+          const bodyKeys = request.body ? this.getNestedKeys(request.body) : [];
+          
           await this.activityLogsService.create({
             description,
             type: activityType,
@@ -53,8 +88,9 @@ export class ActivityLogInterceptor implements NestInterceptor {
             statusCode: response.statusCode,
             metadata: {
               duration,
-              responseSize: JSON.stringify(data).length,
+              responseSize,
               timestamp: new Date().toISOString(),
+              bodyKeys,
             },
             userId: user?.id || null,
           });
@@ -65,6 +101,9 @@ export class ActivityLogInterceptor implements NestInterceptor {
       catchError(async (error) => {
         try {
           const duration = Date.now() - startTime;
+
+          // Get all nested keys from request body (not values for privacy)
+          const bodyKeys = request.body ? this.getNestedKeys(request.body) : [];
           
           await this.activityLogsService.create({
             description,
@@ -78,6 +117,7 @@ export class ActivityLogInterceptor implements NestInterceptor {
             metadata: {
               duration,
               timestamp: new Date().toISOString(),
+              bodyKeys,
             },
             errorMessage: error.message,
             userId: user?.id || null,
