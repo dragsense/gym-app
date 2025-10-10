@@ -9,7 +9,6 @@ import {
 import { Observable, map } from 'rxjs';
 import { ConfigService } from '@nestjs/config';
 import { EncryptionService } from '../lib/encryption.service';
-import Stream from 'stream';
 
 @Injectable()
 export class ResponseEncryptionInterceptor implements NestInterceptor {

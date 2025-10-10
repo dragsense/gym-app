@@ -18,6 +18,7 @@ import {
 import type { IUser } from "@shared/interfaces/user.interface";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { AppCard } from "@/components/layout-ui/app-card";
 
 const API_URL = import.meta.env.VITE_PUBLIC_API_URL || "http://localhost:5000";
 
@@ -163,8 +164,8 @@ export const itemViews = ({
 
     return (
      
-      <Card className="group hover:shadow-xl transition-all duration-300 hover:scale-[1.02] cursor-pointer border-2 hover:border-primary/50 bg-gradient-to-br from-background to-muted/20">
-        <CardContent className="p-3">
+      <AppCard>
+  
           <div className="flex flex-col sm:flex-row items-start gap-3">
             <div className="flex-1 w-full space-y-3">
               {/* Header with Name and Status */}
@@ -229,8 +230,8 @@ export const itemViews = ({
               />
             </div>
           </div>
-        </CardContent>
-      </Card>
+     
+      </AppCard>
     );
   };
 

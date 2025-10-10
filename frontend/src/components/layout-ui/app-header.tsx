@@ -1,6 +1,5 @@
 // External Libraries
-import { User, Mail, LogOut, Loader2, ChevronRight, ChevronDown } from "lucide-react";
-import { Link } from "react-router-dom";
+import { User, LogOut, Loader2, ChevronDown } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
 // UI Components
@@ -14,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ThemeToggle } from "@/components/shared-ui/theme-toggle";
 
 // Hooks
 import { useAuthUser } from "@/hooks/use-auth-user";
@@ -22,12 +22,13 @@ import { useLogout } from "@/hooks/use-logout";
 
 
 interface AppHeaderProps {
-  title: string;
+  title?: string;
 }
 
 // Use separate settings config object
 
 export function AppHeader({ title }: AppHeaderProps) {
+  // Title is available for future use if needed
   const [isDesktopSettingsOpen, setIsDesktopSettingsOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
   
@@ -62,7 +63,12 @@ export function AppHeader({ title }: AppHeaderProps) {
           <SidebarTrigger className="-ml-1 block md:hidden" />
         </div>
 
-        <div className="flex items-center gap-5 p-4 text-left text-sm bg-header rounded-full p-4 shadow-sm">          
+        <div className="flex items-center gap-3">
+          {/* Theme Toggle */}
+          <ThemeToggle />
+        </div>
+
+        <div className="flex items-center gap-5 p-4 text-left text-sm bg-header rounded-full border-1 p-4 shadow-sm">          
           {/* Profile Dropdown Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -115,25 +121,7 @@ export function AppHeader({ title }: AppHeaderProps) {
 
               {/* Desktop Profile Actions */}
               <div className="hidden md:block p-2">
-                <DropdownMenuItem asChild>
-                  <Link 
-                    to="/settings/profile"
-                    className="flex items-center gap-3 cursor-pointer transition-colors duration-150 hover:bg-muted/50 p-3 rounded-md"
-                  >
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium">Profile Settings</span>
-                  </Link>
-                </DropdownMenuItem>
-                
-                <DropdownMenuItem asChild>
-                  <Link 
-                    to="/settings/notifications"
-                    className="flex items-center gap-3 cursor-pointer transition-colors duration-150 hover:bg-muted/50 p-3 rounded-md"
-                  >
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium">Notifications</span>
-                  </Link>
-                </DropdownMenuItem>
+               
               </div>
 
         
@@ -141,19 +129,23 @@ export function AppHeader({ title }: AppHeaderProps) {
 
               {/* Logout Button */}
               <div className="p-2">
-                <DropdownMenuItem 
-                  onClick={logout}
-                  className="flex items-center gap-3 cursor-pointer transition-colors duration-150 hover:bg-destructive/10 hover:text-destructive p-3 rounded-md"
-                  disabled={isLoading}
-                >
+                <DropdownMenuItem onClick={() => logout()}>
                   {isLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <LogOut className="h-4 w-4" />
                   )}
-                  <span className="font-medium">
-                    {isLoading ? "Logging out..." : "Log out"}
-                  </span>
+
+                  <span>Log out</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => logout(true)}>
+                  {isLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <LogOut className="h-4 w-4" />
+                  )}
+
+                  <span>Log out from all devices</span>
                 </DropdownMenuItem>
               </div>
             </DropdownMenuContent>

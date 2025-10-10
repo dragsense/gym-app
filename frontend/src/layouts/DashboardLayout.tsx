@@ -51,7 +51,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     <SidebarProvider>
 
       <AppSidebar
-        variant="inset"
+     
       />
       <SidebarInset
         className="w-100"

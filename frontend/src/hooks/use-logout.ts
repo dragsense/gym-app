@@ -4,17 +4,18 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
 // Services
-import { logout } from "@/services/auth.api";
+import { logout, logoutAll } from "@/services/auth.api";
 
 
 export const useLogout = () => {
     const [isLoading, setIsLoading] = useState(false);
     const queryClient = useQueryClient();
-    const handleLogout = async () => {
+    const handleLogout = async (all: boolean = false) => {
         setIsLoading(true);
         try {
 
-            await logout();
+            if (all) await logoutAll();
+            else await logout();
             queryClient.invalidateQueries({ queryKey: ["me"] });
             window.location.reload();
 

@@ -14,7 +14,8 @@ import { ResponseEncryptionInterceptor } from './interceptors/response-encryptio
 import { BrowserHtmlInterceptor } from './interceptors/BrowserHtmlInterceptor';
 import { ExceptionsFilter } from './exceptions/exceptions-filter';
 import { LoggerService } from './common/logger/logger.service';
-import { LoggerInterceptor } from './common/logger/logger.interceptor';
+import { LoggerInterceptor } from './common/logger/interceptors/logger.interceptor';
+import { ActivityLogInterceptor } from './activity-logs/interceptors/activity-log.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -116,6 +117,9 @@ async function bootstrap() {
 
   const loggerInterceptor = app.get(LoggerInterceptor);
   interceptors.push(loggerInterceptor);
+
+  const activityLogInterceptor = app.get(ActivityLogInterceptor)
+  interceptors.push(activityLogInterceptor);
 
   app.useGlobalInterceptors(...interceptors);
 

@@ -1,0 +1,126 @@
+import {
+  Injectable,
+  NestInterceptor,
+  ExecutionContext,
+  CallHandler,
+} from '@nestjs/common';
+import { Observable } from 'rxjs';
+import { tap, catchError } from 'rxjs/operators';
+import { Request, Response } from 'express';
+import { ActivityLogsService } from     '@/activity-logs/activity-logs.service';
+import { EActivityType, EActivityStatus } from 'shared/enums/activity-log.enum';
+import { LoggerService } from '@/common/logger/logger.service';
+
+@Injectable()
+export class ActivityLogInterceptor implements NestInterceptor {
+  private readonly logger = new LoggerService(ActivityLogInterceptor.name);
+
+  constructor(private readonly activityLogsService: ActivityLogsService) {}
+
+  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+    const request = context.switchToHttp().getRequest<Request>();
+    const response = context.switchToHttp().getResponse<Response>();
+    
+    const startTime = Date.now();
+    const { method, url, ip, headers } = request;
+
+
+    const userAgent = headers['user-agent'];
+    const user = (request as any).user;
+
+    // Skip logging for activity-logs endpoints to avoid infinite loops
+    if (url.includes('/activity-logs') || method === 'GET' || method === 'get') {
+      return next.handle();
+    }
+
+    // Determine activity type based on HTTP method
+    const activityType = this.getActivityType(method);
+    const description = this.getDescription(method, url);
+
+    return next.handle().pipe(
+      tap(async (data) => {
+        try {
+          const duration = Date.now() - startTime;
+          
+          await this.activityLogsService.create({
+            description,
+            type: activityType,
+            status: EActivityStatus.SUCCESS,
+            ipAddress: ip,
+            userAgent,
+            endpoint: url,
+            method,
+            statusCode: response.statusCode,
+            metadata: {
+              duration,
+              responseSize: JSON.stringify(data).length,
+              timestamp: new Date().toISOString(),
+            },
+            userId: user?.id || null,
+          });
+        } catch (error) {
+          this.logger.error('Failed to log activity', error);
+        }
+      }),
+      catchError(async (error) => {
+        try {
+          const duration = Date.now() - startTime;
+          
+          await this.activityLogsService.create({
+            description,
+            type: activityType,
+            status: EActivityStatus.FAILED,
+            ipAddress: ip,
+            userAgent,
+            endpoint: url,
+            method,
+            statusCode: error.status || 500,
+            metadata: {
+              duration,
+              timestamp: new Date().toISOString(),
+            },
+            errorMessage: error.message,
+            userId: user?.id || null,
+          });
+        } catch (logError) {
+          this.logger.error('Failed to log activity error', logError);
+        }
+        
+        throw error;
+      }),
+    );
+  }
+
+  private getActivityType(method: string): EActivityType {
+    switch (method.toUpperCase()) {
+      case 'GET':
+        return EActivityType.READ;
+      case 'POST':
+        return EActivityType.CREATE;
+      case 'PUT':
+      case 'PATCH':
+        return EActivityType.UPDATE;
+      case 'DELETE':
+        return EActivityType.DELETE;
+      default:
+        return EActivityType.READ;
+    }
+  }
+
+  private getDescription(method: string, url: string): string {
+    const segments = url.split('/').filter(Boolean);
+    const resource = segments[segments.length - 1] || 'resource';
+    const action = method.toLowerCase();
+    
+    const actionDescriptions = {
+      get: 'Retrieved',
+      post: 'Created',
+      put: 'Updated',
+      patch: 'Modified',
+      delete: 'Deleted',
+    };
+
+    const actionDesc = actionDescriptions[action] || 'Accessed';
+    return `${actionDesc} ${resource}`;
+  }
+}

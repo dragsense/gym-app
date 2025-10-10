@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 // Local
 import appRouter from "./AppRoutes";
 import { AuthUserProvider } from "./hooks/use-auth-user";
+import { ThemeProvider } from "./hooks/use-theme";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -22,9 +23,11 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthUserProvider>
-        <RouterProvider router={appRouter} />
-      </AuthUserProvider>
+      <ThemeProvider defaultTheme="system" storageKey="app-theme">
+        <AuthUserProvider>
+          <RouterProvider router={appRouter} />
+        </AuthUserProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

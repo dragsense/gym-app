@@ -10,7 +10,6 @@ import { useFormContext, Controller } from "react-hook-form";
 import { Link } from "react-router-dom";
 import { PUBLIC_ROUTES } from "@/config/routes.config";
 import { toast } from "sonner";
-import { FormErrors } from "../shared-ui/form-errors";
 import { type THandlerComponentProps } from "@/@types/handler-types";
 import { AppCard } from "../layout-ui/app-card";
 import { Form } from "../form-ui/form";
@@ -184,7 +183,6 @@ export default function VerifyOtpForm({ storeKey, store }: IVerifyOtpFormProps) 
                     }}
                 />
 
-                <FormErrors />
             </AppCard>
         </Form>
     );

@@ -1,5 +1,4 @@
 // External Libraries
-import { type ReactNode } from "react";
 import { useShallow } from 'zustand/shallow';
 
 // Components
@@ -8,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { AppCard } from "@/components/layout-ui/app-card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { AppDialog } from "@/components/layout-ui/app-dialog";
-import { User, Mail, Phone, MapPin, Star, Calendar, Target } from "lucide-react";
+import { User, MapPin, Calendar, Phone } from "lucide-react";
 
 // Types
 import { type IUser } from "@shared/interfaces/user.interface";
@@ -98,12 +97,19 @@ function UserDetailContent({ user }: IUserDetailContentProps) {
                             <User className="w-5 h-5" />
                             <div>
                                 <span className="font-semibold">Personal Information</span>
-                                <p className="text-sm text-muted-foreground">Basic trainer details and contact information</p>
+                                <p className="text-sm text-muted-foreground">Basic user details and contact information</p>
                             </div>
                         </div>
                     }
                 >
                     <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                            <div className="text-muted-foreground"><Phone className="w-4 h-4" /></div>
+                            <div className="flex-1">
+                                <span className="text-sm text-muted-foreground">Phone:</span>
+                                <p className="font-medium">{profile?.phoneNumber || 'Not specified'}</p>
+                            </div>
+                        </div>
                         <div className="flex items-center gap-3">
                             <div className="text-muted-foreground"><MapPin className="w-4 h-4" /></div>
                             <div className="flex-1">
@@ -120,47 +126,9 @@ function UserDetailContent({ user }: IUserDetailContentProps) {
                         </div>
                     </div>
                 </AppCard>
-
-            
             </div>
-
-            {/* Additional Information */}
-            <AppCard
-                header={
-                    <div className="flex items-center gap-2">
-                        <Calendar className="w-5 h-5" />
-                        <div>
-                            <span className="font-semibold">Additional Information</span>
-                            <p className="text-sm text-muted-foreground">Account details and timestamps</p>
-                        </div>
-                    </div>
-                }
-            >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex items-center gap-3">
-                        <div className="text-muted-foreground"><Calendar className="w-4 h-4" /></div>
-                        <div className="flex-1">
-                            <span className="text-sm text-muted-foreground">Member Since:</span>
-                            <p className="font-medium">{new Date(user.createdAt).toLocaleDateString()}</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <div className="text-muted-foreground"><Calendar className="w-4 h-4" /></div>
-                        <div className="flex-1">
-                            <span className="text-sm text-muted-foreground">Last Updated:</span>
-                            <p className="font-medium">{new Date(user.updatedAt).toLocaleDateString()}</p>
-                        </div>
-                    </div>
-                </div>
-            </AppCard>
-
          
-            {/* Action Buttons */}
-            <div className="flex justify-end gap-2 pt-4 border-t">
-                <Button size="sm">
-                    Edit User
-                </Button>
-            </div>
+    
         </div>
     );
 }

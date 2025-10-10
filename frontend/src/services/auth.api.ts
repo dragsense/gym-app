@@ -33,3 +33,9 @@ export const resetPassword = async (data: TAuthResetPasswordData) =>
 
 export const logout = async () =>
   apiRequest<IMessageResponse>(`${AUTH_API_PATH}/logout`, "POST");
+
+
+export const logoutAll = async () =>
+  apiRequest<IMessageResponse>(`${AUTH_API_PATH}/logout-all`, "POST", undefined);
+
+

@@ -90,10 +90,10 @@ export default function UserList({
 
 
   const renderViewToggle = () => (
-    <TabsList className="grid grid-cols-2 w-auto border-b border-gray-200">
+    <TabsList className="flex justify-center items-center w-auto border-gray-200">
       <TabsTrigger
         value="table"
-        className="flex items-center gap-2 px-4 py-2 data-[state=active]:text-secondary data-[state=active]:font-semibold"
+        className="flex items-center gap-2 px-4 data-[state=active]:text-secondary data-[state=active]:font-semibold"
       >
         <Table className="h-4 w-4" />
         <span className="hidden sm:inline">Table</span>
@@ -101,7 +101,7 @@ export default function UserList({
 
       <TabsTrigger
         value="list"
-        className="flex items-center gap-2 px-4 py-2 data-[state=active]:text-secondary data-[state=active]:font-semibold"
+        className="flex items-center gap-2 px-4 data-[state=active]:text-secondary data-[state=active]:font-semibold"
       >
         <List className="h-4 w-4" />
         <span className="hidden sm:inline">List</span>
@@ -129,7 +129,7 @@ export default function UserList({
 
 
       <TabsContent value="table">
-        <AppCard>
+        <AppCard className="px-0">
           <TTable<IUser>
             listStore={store}
             columns={columns}

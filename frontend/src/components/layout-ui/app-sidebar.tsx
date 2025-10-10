@@ -33,6 +33,7 @@ import { useLogout } from "@/hooks/use-logout";
 
 // Assets
 import logo from "@/assets/logos/logo.png";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu";
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   themeClass?: string;
@@ -80,7 +81,7 @@ export function AppSidebar({
   };
 
   const renderSidebarHeader = (showCloseButton: boolean = false) => (
-    <SidebarHeader>
+    <SidebarHeader className="mt-5">
       <div className={showCloseButton ? "flex items-center justify-between p-4" : ""}>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -131,7 +132,7 @@ export function AppSidebar({
                           tooltip={item.title}
                           className="group cursor-pointer text-muted-foreground/50 p-6 rounded-xl hover:bg-muted/50 transition-all duration-200"
                         >
-                          {item.icon && <item.icon className="group-data-[active=true]:text-background h-6 w-6" />}
+                          {item.icon && <item.icon className="group-data-[active=true]:text-secondary hover:text-secondary h-6 w-6" />}
                           <span className="font-medium">{item.title}</span>
                         </SidebarMenuButton>
                       </CollapsibleTrigger>
@@ -146,7 +147,7 @@ export function AppSidebar({
                               >
                                 <Link to={child.url}>
                                   {child.icon && (
-                                    <child.icon className="group-data-[active=true]:text-background hover:text-background h-5 w-5" />
+                                    <child.icon className="group-data-[active=true]:text-secondary hover:text-secondary h-5 w-5" />
                                   )}
                                   <span className="font-medium">{child.title}</span>
                                 </Link>
@@ -170,7 +171,7 @@ export function AppSidebar({
                       tooltip={item.title}
                       className="group cursor-pointer text-muted-foreground/50 p-6 rounded-xl hover:bg-muted/50 transition-all duration-200"
                     >
-                      {item.icon && <item.icon className="group-data-[active=true]:text-background hover:text-background h-6 w-6" />}
+                      {item.icon && <item.icon className="group-data-[active=true]:text-secondary hover:text-secondary h-6 w-6" />}
                       <span className="font-medium">{item.title}</span>
                     </SidebarMenuButton>
                   </Link>
@@ -185,19 +186,41 @@ export function AppSidebar({
 
   const renderSidebarFooter = () => (
     <SidebarFooter>
-      <Button
-        onClick={logout}
-        variant="secondary"
-        className="justify-start gap-2 mb-2 hover:bg-destructive/10 hover:text-destructive transition-all duration-200"
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
-          <LogOutIcon className="h-4 w-4" />
-        )}
-        {isLoading ? "Logging out..." : "Log out"} 
-      </Button>
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            className="justify-start gap-2 mb-2"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <LogOutIcon className="h-4 w-4" />
+            )}
+            {isLoading ? "Logging out..." : "Log out"}
+          </Button>
+        </DropdownMenuTrigger>
+
+        <DropdownMenuContent align="start" className="w-56">
+          <DropdownMenuLabel>Logout Options</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={() => logout(false)}
+            disabled={isLoading}
+            className="cursor-pointer"
+          >
+            Log out (this device)
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => logout(true)}
+            disabled={isLoading}
+            className="cursor-pointer"
+          >
+            Log out from all devices
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </SidebarFooter>
   );
 
@@ -205,9 +228,9 @@ export function AppSidebar({
     <>
       {/* Desktop Sidebar */}
       <div className="hidden md:block">
-        <Sidebar 
-          collapsible="offcanvas" 
-          themeClass={themeClass} 
+        <Sidebar
+          collapsible="offcanvas"
+          themeClass={themeClass}
           {...props}
         >
           {renderSidebarHeader()}
@@ -218,9 +241,9 @@ export function AppSidebar({
 
       {/* Mobile Sidebar with Close Button */}
       <div className="md:hidden">
-        <Sidebar 
-          collapsible="offcanvas" 
-          themeClass={themeClass} 
+        <Sidebar
+          collapsible="offcanvas"
+          themeClass={themeClass}
           {...props}
         >
           {renderSidebarHeader(true)}

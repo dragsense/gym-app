@@ -16,10 +16,6 @@ interface EmailTemplateData {
   user: User;
   appName: string;
   loginUrl: string;
-  companyName: string;
-  companyAddress: string;
-  supportEmail: string;
-  ntn: string;
   tempPassword?: string;
   createdBy?: User;
 }
@@ -61,10 +57,6 @@ export class UserEmailService {
       user,
       appName: this.appConfig.name,
       loginUrl,
-      companyName: this.appConfig.superAdmin.companyName,
-      companyAddress: this.appConfig.superAdmin.companyAddress,
-      supportEmail: this.appConfig.superAdmin.email,
-      ntn: this.appConfig.superAdmin.ntn,
       tempPassword,
       createdBy
     };
@@ -79,7 +71,7 @@ export class UserEmailService {
   }
 
   private generateWelcomeEmailHTML(data: EmailTemplateData): string {
-    const { user, appName, loginUrl, companyName, companyAddress, supportEmail, ntn, tempPassword, createdBy } = data;
+    const { user, appName, loginUrl, tempPassword, createdBy } = data;
     const userName = user.profile?.firstName || 'Valued Customer';
     const createdByName = createdBy?.profile?.firstName ? `${createdBy.profile.firstName} ${createdBy.profile.lastName || ''}` : 'System Administrator';
 
@@ -175,7 +167,6 @@ export class UserEmailService {
 <body>
     <div class="container">
         <div class="header">
-            <div class="company-name">${companyName}</div>
             <h2 style="color: #333; margin: 0;">Welcome to ${appName}</h2>
             <p style="color: #666; font-size: 16px; margin: 10px 0 0 0;">Your account has been successfully created</p>
         </div>
@@ -209,16 +200,9 @@ export class UserEmailService {
             <a href="${loginUrl}" class="login-button">Access Your Account</a>
         </div>
 
-        <div class="contact-info">
-            <h3 style="color: #1e4d72; margin-top: 0;">Need Assistance?</h3>
-            <p>Our support team is here to help you get started:</p>
-            <div class="info-item"><strong>📧 Email:</strong> ${supportEmail}</div>
-            <div class="info-item"><strong>🏢 Address:</strong> ${companyAddress}</div>
-        </div>
 
         <div class="footer">
-            <p>&copy; ${new Date().getFullYear()} ${companyName}. All rights reserved.</p>
-            <p>NTN: ${ntn}</p>
+            <p>&copy; ${new Date().getFullYear()} ${appName}. All rights reserved.</p>
             <p><a href="${this.appConfig.appUrl}" style="color: #4caf50; text-decoration: none;">Visit our website</a></p>
         </div>
     </div>
@@ -227,7 +211,7 @@ export class UserEmailService {
   }
 
   private generateWelcomeEmailText(data: EmailTemplateData): string {
-    const { user, appName, loginUrl, companyName, supportEmail, tempPassword, createdBy } = data;
+    const { user, appName, loginUrl, tempPassword, createdBy } = data;
     const userName = user.profile?.firstName || 'Valued Customer';
     const createdByName = createdBy?.profile?.firstName ? `${createdBy.profile.firstName} ${createdBy.profile.lastName || ''}` : 'System Administrator';
 
@@ -236,7 +220,7 @@ Welcome to ${appName}!
 
 Dear ${userName},
 
-Your account has been successfully created with ${companyName}.
+Your account has been successfully created with ${appName}.
 
 Account Details:
 - Email: ${user.email}
@@ -254,13 +238,11 @@ Login Credentials:
 Access your account at: ${loginUrl}
 `}
 
-Need help? Contact our support team:
-Email: ${supportEmail}
 
 Best regards,
-The ${companyName} Team
+The ${appName} Team
 
-© ${new Date().getFullYear()} ${companyName}. All rights reserved.
+© ${new Date().getFullYear()} ${appName}. All rights reserved.
     `.trim();
   }
 
