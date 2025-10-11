@@ -20,7 +20,7 @@ export const useSingleHandlerStore = <TResponse, TExtra extends Record<string, a
                 error: null,
                 response: null,
                 action: '',
-
+                payload: null,
                 extra: initialExtra,
 
                 // State setters

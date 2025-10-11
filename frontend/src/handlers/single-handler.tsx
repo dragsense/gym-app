@@ -85,12 +85,12 @@ export function SingleHandler<
   }, [singleStoreKey, store]);
 
 
-  const id = store((state) => state.id);
+  const payload = store((state) => state.payload);
   const params = store((state) => state.params);
   const filteredExtra = store(useShallow((state) => pickKeys(state.extra, Object.keys(initialParams) as (keyof typeof initialParams)[])
   ));
 
-  const queryKey = [singleStoreKey, id, JSON.stringify(filteredExtra)];
+  const queryKey = [singleStoreKey, JSON.stringify(payload), JSON.stringify(filteredExtra)];
 
   useApiQuery<IData>(
     queryKey,
@@ -98,7 +98,7 @@ export function SingleHandler<
       store.setState({ isLoading: true });
       try {
 
-        const response = await queryFn(id, {...params, ...filteredExtra});
+        const response = await queryFn(payload, {...params, ...filteredExtra});
 
         store.setState({
           isLoading: false,
@@ -125,7 +125,7 @@ export function SingleHandler<
       ...filteredExtra
     },
     {
-      enabled: !!id || enabled,
+      enabled: !!payload || enabled,
     }
   );
 
@@ -170,21 +170,21 @@ export function SingleHandler<
           "Delete Item",
           `Are you sure you want to delete this ${name}?`,
           () => {
-            deleteItem(id);
+            deleteItem(payload);
             store.getState().reset()
           },
           () => { store.getState().reset() },
 
           "destructive"
         ),
-    [deleteFn, id]
+    [deleteFn, payload]
   );
 
   useEffect(() => {
     if (store.getState().action === "delete") {
       handleDeleteItem();
     }
-  }, [id]);
+  }, [payload]);
 
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>

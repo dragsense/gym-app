@@ -12,6 +12,8 @@
     "dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
+    "start:cluster": "CLUSTER_ENABLED=true node dist/cluster-bootstrap",
+    "start:cluster:dev": "CLUSTER_ENABLED=true ts-node src/cluster-bootstrap.ts",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",

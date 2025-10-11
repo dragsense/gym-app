@@ -30,6 +30,7 @@ export const useListHandlerStore = <TResponse, TUserListData = any, TExtra exten
         isSuccess: false,
         pagination: initialPaginationState,
         action: '',
+        payload: null,
 
         extra: initialExtra,
         filteredFields: filteredFields,

@@ -1,24 +1,25 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { CronJob } from 'cron';
-import { CronExpressionParser } from 'cron-parser';
-import { ScheduleService } from './schedule.service';
-import { Schedule } from './entities/schedule.entity';
-import { LoggerService } from '../logger/logger.service';
-import { EScheduleFrequency, EScheduleStatus } from 'shared/enums/schedule.enum';
+import { ScheduleService } from '../schedule.service';
+import { ScheduleRegistryService } from './schedule-registry.service';
+import { Schedule } from '../entities/schedule.entity';
+import { LoggerService } from '../../logger/logger.service';
+import { BullQueueService } from '../../bull-queue/bull-queue.service';
 
 @Injectable()
 export class ScheduleExecutorService implements OnModuleInit {
   private readonly logger = new LoggerService(ScheduleExecutorService.name);
-  private scheduledJobs: Map<number, CronJob[]> = new Map();
+  private scheduledJobs: Map<number, string[]> = new Map(); // Store Bull Queue job IDs instead of CronJob instances
 
   constructor(
     private readonly scheduleService: ScheduleService,
+    private readonly scheduleRegistry: ScheduleRegistryService,
+    private readonly bullQueueService: BullQueueService,
   ) { }
 
   /**
    * Run on application boot
-   * Get all schedules for today and set up cron jobs
+   * Get all schedules for today and set up Bull Queue jobs
    */
   async onModuleInit() {
     this.logger.log('🚀 Application started - Setting up schedules for today...');
@@ -27,14 +28,14 @@ export class ScheduleExecutorService implements OnModuleInit {
 
   /**
    * Run at midnight (start of day)
-   * Get all schedules for today and set up cron jobs
+   * Get all schedules for today and set up Bull Queue jobs
    */
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async setupDailySchedules() {
     this.logger.log('🕐 Setting up schedules for today...');
 
     // Clear previous jobs
-    this.clearAllJobs();
+    await this.clearAllJobs();
 
     const todaySchedules = await this.scheduleService.getTodaysSchedules();
 
@@ -87,14 +88,14 @@ export class ScheduleExecutorService implements OnModuleInit {
 
         // If NO interval - schedule ONE job at timeOfDay
         if (!schedule.interval) {
-          this.scheduleFixedTimeJob(schedule, startHour, startMinute);
+          await this.scheduleFixedTimeJob(schedule, startHour, startMinute);
         } else {
 
           // If HAS interval - schedule jobs based on interval
           const endTimeStr = schedule.endTime || '23:59';
           const [endHour, endMinute] = endTimeStr.split(':').map(Number);
 
-          this.scheduleIntervalJobs(schedule, startHour, startMinute, endHour, endMinute);
+          await this.scheduleIntervalJobs(schedule, startHour, startMinute, endHour, endMinute);
         }
       }
     } catch (error) {
@@ -140,43 +141,45 @@ export class ScheduleExecutorService implements OnModuleInit {
   }
 
   /**
-   * Schedule a fixed-time job (no interval)
+   * Schedule a fixed-time job (no interval) using Bull Queue
    */
-  private scheduleFixedTimeJob(schedule: Schedule, hour: number, minute: number): void {
+  private async scheduleFixedTimeJob(schedule: Schedule, hour: number, minute: number): Promise<void> {
+    const runDate = new Date();
+    runDate.setHours(hour, minute, 0, 0);
+    
+    // If the time has already passed today, schedule for tomorrow
+    if (runDate <= new Date()) {
+      runDate.setDate(runDate.getDate() + 1);
+    }
 
+    const delay = runDate.getTime() - Date.now();
 
-    const cronTime = `${minute} ${hour} * * *`; // Run at specific time daily
+    const job = await this.bullQueueService.addJob(
+      'schedule',
+      schedule.action,
+      {
+        action: schedule.action,
+        data: schedule.data,
+        entityId: schedule.entityId,
+      },
+      { delay }
+    );
 
-    const job = new CronJob(cronTime, async () => {
-      try {
-        await this.performAction(schedule);
-        await this.scheduleService.trackExecution(schedule.id, true);
-        await this.scheduleService.executeAndUpdateNext(schedule.id);
-        // Reset retry count on success
-        await this.scheduleService.updateSchedule(schedule.id, { currentRetries: 0 } as any);
-        this.logger.log(`✅ Executed: ${schedule.title}`);
-      } catch (error) {
-        await this.handleExecutionFailure(schedule, error.message);
-      }
-    });
-
-    job.start();
-    this.addJob(schedule.id, job);
-
-    this.logger.log(`📅 Scheduled: ${schedule.title} at ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
+    this.addJob(schedule.id, job.id!);
+    this.logger.log(`📅 Scheduled: ${schedule.title} at ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')} (Job ID: ${job.id})`);
   }
 
   /**
-   * Schedule interval-based jobs
+   * Schedule interval-based jobs using Bull Queue
    */
-  private scheduleIntervalJobs(
+  private async scheduleIntervalJobs(
     schedule: Schedule,
     startHour: number,
     startMinute: number,
     endHour: number,
     endMinute: number,
-  ): void {
-    const jobs: CronJob[] = [];
+  ): Promise<void> {
+    const jobIds: string[] = [];
 
     // Calculate all execution times based on interval
     const startTimeInMinutes = startHour * 60 + startMinute;
@@ -189,71 +192,100 @@ export class ScheduleExecutorService implements OnModuleInit {
       // Skip if beyond 24 hours
       if (hour >= 24) break;
 
-      const cronTime = `${minute} ${hour} * * *`;
+      const runDate = new Date();
+      runDate.setHours(hour, minute, 0, 0);
+      
+      // If the time has already passed today, schedule for tomorrow
+      if (runDate <= new Date()) {
+        runDate.setDate(runDate.getDate() + 1);
+      }
 
-      const job = new CronJob(cronTime, async () => {
-        try {
-          await this.performAction(schedule);
-          await this.scheduleService.trackExecution(schedule.id, true);
-          // Reset retry count on success
-          await this.scheduleService.updateSchedule(schedule.id, { currentRetries: 0 } as any);
-          this.logger.log(`✅ Executed interval: ${schedule.title} at ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
-        } catch (error) {
-          await this.handleExecutionFailure(schedule, error.message);
-        }
-      });
+      const delay = runDate.getTime() - Date.now();
 
-      job.start();
-      jobs.push(job);
+      const job = await this.bullQueueService.addJob(
+        'schedule',
+        schedule.action,
+        {
+          action: schedule.action,
+          data: schedule.data,
+          entityId: schedule.entityId,
+        },
+        { delay }
+      );
+
+      jobIds.push(job.id!);
     }
 
     // Schedule job to update next run date at end of day
-    const updateCronTime = `${endMinute} ${endHour} * * *`;
-    const updateJob = new CronJob(updateCronTime, async () => {
-      try {
-        await this.scheduleService.executeAndUpdateNext(schedule.id);
-        this.logger.log(`📅 Updated next run for: ${schedule.title}`);
-      } catch (error) {
-        this.logger.error(`Failed to update schedule: ${error.message}`);
-      }
-    });
+    const updateRunDate = new Date();
+    updateRunDate.setHours(endHour, endMinute, 0, 0);
+    
+    if (updateRunDate <= new Date()) {
+      updateRunDate.setDate(updateRunDate.getDate() + 1);
+    }
 
-    updateJob.start();
-    jobs.push(updateJob);
+    const updateDelay = updateRunDate.getTime() - Date.now();
 
-    this.scheduledJobs.set(schedule.id, jobs);
+    const updateJob = await this.bullQueueService.addScheduleJob(
+      'update-next-run',
+      { scheduleId: schedule.id },
+      updateDelay,
+      schedule.entityId
+    );
 
-    this.logger.log(`📅 Scheduled interval: ${schedule.title} every ${schedule.interval} min from ${startHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')} to ${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`);
+    jobIds.push(updateJob.id!);
+    this.scheduledJobs.set(schedule.id, jobIds);
+
+    this.logger.log(`📅 Scheduled interval: ${schedule.title} every ${schedule.interval} min from ${startHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')} to ${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')} (${jobIds.length} jobs)`);
   }
 
   /**
-   * Perform the actual action
+   * Unified schedule execution method
+   */
+  private async executeSchedule(schedule: Schedule, updateNextRun: boolean): Promise<void> {
+    try {
+      await this.performAction(schedule);
+      await this.scheduleService.trackExecution(schedule.id, true);
+      
+      if (updateNextRun) {
+        await this.scheduleService.executeAndUpdateNext(schedule.id);
+      }
+      
+      await this.scheduleService.updateSchedule(schedule.id, { currentRetries: 0 } as any);
+      this.logger.log(`✅ Executed: ${schedule.title}`);
+    } catch (error) {
+      await this.handleExecutionFailure(schedule, error.message);
+    }
+  }
+
+  /**
+   * Perform the actual action using the registry
    */
   private async performAction(schedule: Schedule): Promise<void> {
     this.logger.log(`Executing: ${schedule.action} for entity ${schedule.entityId || 'N/A'}`);
-
-    switch (schedule.action) {
-      default:
-        this.logger.warn(`Unknown action: ${schedule.action}`);
-    }
+    await this.scheduleRegistry.executeAction(schedule);
   }
 
   /**
    * Add job to tracking map
    */
-  private addJob(scheduleId: number, job: CronJob): void {
+  private addJob(scheduleId: number, jobId: string): void {
     const existingJobs = this.scheduledJobs.get(scheduleId) || [];
-    existingJobs.push(job);
+    existingJobs.push(jobId);
     this.scheduledJobs.set(scheduleId, existingJobs);
   }
 
   /**
    * Clear all scheduled jobs
    */
-  private clearAllJobs(): void {
-    for (const [scheduleId, jobs] of this.scheduledJobs.entries()) {
-      for (const job of jobs) {
-        job.stop();
+  private async clearAllJobs(): Promise<void> {
+    for (const [scheduleId, jobIds] of this.scheduledJobs.entries()) {
+      for (const jobId of jobIds) {
+        try {
+          await this.bullQueueService.removeJob('schedule', jobId);
+        } catch (error) {
+          this.logger.warn(`Failed to remove job ${jobId}: ${error.message}`);
+        }
       }
     }
     this.scheduledJobs.clear();

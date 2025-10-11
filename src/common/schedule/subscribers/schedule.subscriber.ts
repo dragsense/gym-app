@@ -6,7 +6,7 @@ import {
     UpdateEvent,
 } from 'typeorm';
 import { Schedule } from '../entities/schedule.entity';
-import { ScheduleExecutorService } from '../schedule-executor.service';
+import { ScheduleExecutorService } from '../services/schedule-executor.service';
 import { Injectable, Logger } from '@nestjs/common';
 import { EScheduleStatus } from 'shared/enums/schedule.enum';
 

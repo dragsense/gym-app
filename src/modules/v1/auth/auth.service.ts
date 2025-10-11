@@ -15,6 +15,8 @@ import { IMessageResponse } from 'shared/interfaces';
 import { ResetPasswordWithTokenDto, SignupDto } from 'shared/dtos';
 import { UsersService } from '../users/users.service';
 import { LoggerService } from '@/common/logger/logger.service';
+import { ActivityLogsService } from '@/common/activity-logs/activity-logs.service';
+import { EActivityType, EActivityStatus } from 'shared/enums/activity-log.enum';
 
 @Injectable()
 export class AuthService {
@@ -25,24 +27,61 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly mailerService: MailerService,
     private readonly userService: UsersService,
+    private readonly activityLogsService: ActivityLogsService,
   ) {}
 
   async signup(
     signupDto: SignupDto,
   ): Promise<IMessageResponse> {
+    try {
+      const {firstName, lastName, ...userData} = signupDto;
 
-    const {firstName, lastName, ...userData} = signupDto;
+      const res = await this.userService.create({
+        ...userData,
+        isActive: true,
+        profile: {
+          firstName,
+          lastName,
+        }
+      });
 
-    const res = await this.userService.create({
-      ...userData,
-      isActive: true,
-      profile: {
-        firstName,
-        lastName,
-      }
-    });
+      // Log successful signup activity
+      await this.activityLogsService.create({
+        description: `User registered successfully: ${signupDto.email}`,
+        type: EActivityType.SIGNUP,
+        status: EActivityStatus.SUCCESS,
+        endpoint: '/api/auth/signup',
+        method: 'POST',
+        statusCode: 201,
+        metadata: {
+          email: signupDto.email,
+          firstName,
+          lastName,
+          timestamp: new Date().toISOString(),
+        },
+        userId: res.user?.id,
+      });
 
-    return { message: 'Registration successful' };
+      return { message: 'Registration successful' };
+    } catch (error) {
+      // Log failed signup activity
+      await this.activityLogsService.create({
+        description: `Failed to register user: ${signupDto.email}`,
+        type: EActivityType.SIGNUP,
+        status: EActivityStatus.FAILED,
+        endpoint: '/api/auth/signup',
+        method: 'POST',
+        statusCode: 400,
+        metadata: {
+          email: signupDto.email,
+          timestamp: new Date().toISOString(),
+        },
+        errorMessage: error.message,
+        userId: undefined,
+      });
+
+      throw error;
+    }
   }
 
 
@@ -50,121 +89,272 @@ export class AuthService {
     email: string,
     clientPassword: string,
   ): Promise<any> {
+    try {
+      const user = await this.userService.findOne(
+        { email },
+        {
+          select: ['id', 'email', 'password', 'isActive'],
+          relations: ['profile']
+        });
 
-    const user = await this.userService.findOne(
-      { email },
-      {
-        select: ['id', 'email', 'password', 'isActive'],
-        relations: ['profile']
-      });
-
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    const isMatch = await bcrypt.compare(clientPassword, user.password);
-
-    if (!isMatch) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    if (!user.isActive) {
-      throw new UnauthorizedException('User account is inactive');
-    }
-
-
-    const token = this.jwtService.sign(
-      {
-        email: user.email,
-        purpose: 'otp',
-      },
-      {
-        expiresIn: '1d',
+      if (!user) {
+        // Log failed login attempt
+        await this.activityLogsService.create({
+          description: `Failed login attempt: ${email}`,
+          type: EActivityType.LOGIN,
+          status: EActivityStatus.FAILED,
+          endpoint: '/api/auth/login',
+          method: 'POST',
+          statusCode: 401,
+          metadata: {
+            email,
+            reason: 'User not found',
+            timestamp: new Date().toISOString(),
+          },
+          errorMessage: 'Invalid credentials',
+          userId: undefined,
+        });
+        throw new UnauthorizedException('Invalid credentials');
       }
-    );
 
-    const { password, ...userWithoutPassword } = user;
+      const isMatch = await bcrypt.compare(clientPassword, user.password);
 
+      if (!isMatch) {
+        // Log failed login attempt
+        await this.activityLogsService.create({
+          description: `Failed login attempt: ${email}`,
+          type: EActivityType.LOGIN,
+          status: EActivityStatus.FAILED,
+          endpoint: '/api/auth/login',
+          method: 'POST',
+          statusCode: 401,
+          metadata: {
+            email,
+            reason: 'Invalid password',
+            timestamp: new Date().toISOString(),
+          },
+          errorMessage: 'Invalid credentials',
+          userId: user.id,
+        });
+        throw new UnauthorizedException('Invalid credentials');
+      }
 
-    return { token, user: userWithoutPassword };
-  }
-
-  async sendResetLink(email: string): Promise<{ message: string }> {
-    const user = await this.userService.findOne({ email }, { select: ['id', 'email'], relations: ['profile'] });
-
-    if (user) {
-
-      const appConfig = this.configService.get('app');
+      if (!user.isActive) {
+        // Log failed login attempt
+        await this.activityLogsService.create({
+          description: `Failed login attempt: ${email}`,
+          type: EActivityType.LOGIN,
+          status: EActivityStatus.FAILED,
+          endpoint: '/api/auth/login',
+          method: 'POST',
+          statusCode: 401,
+          metadata: {
+            email,
+            reason: 'Account inactive',
+            timestamp: new Date().toISOString(),
+          },
+          errorMessage: 'User account is inactive',
+          userId: user.id,
+        });
+        throw new UnauthorizedException('User account is inactive');
+      }
 
       const token = this.jwtService.sign(
         {
-          id: user.id,
-          purpose: 'password_reset',
+          email: user.email,
+          purpose: 'otp',
         },
+        {
+          expiresIn: '1d',
+        }
       );
 
-      const appUrl = appConfig.appUrl;
-      const appName = appConfig.name;
-      const resetPasswordPath = appConfig.passwordResetPath;
-      const resetUrl = `${appUrl}/${resetPasswordPath}?token=${token}`;
+      const { password, ...userWithoutPassword } = user;
 
-      const emailContent = `
-      <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #2c3e50;">Password Reset Request</h2>
-        
-        <p>Dear ${user.profile?.firstName || 'User'},</p>
-        
-        <p>We received a request to reset your password for account <strong>${user.email}</strong>.</p>
-        
-        <p style="text-align: center; margin: 25px 0;">
-          <a href="${resetUrl}" 
-             style="background-color: #3498db; color: white; padding: 12px 24px; 
-                    text-decoration: none; border-radius: 4px; font-weight: bold;
-                    display: inline-block;">
-            Reset Your Password
-          </a>
-        </p>
-        
-        <p style="font-size: 0.9em; color: #7f8c8d;">
-          This link will expire in 15 minutes. If you didn't request this, 
-          please ignore this email or contact support if you have concerns.
-        </p>
-        
-        <hr style="border: none; border-top: 1px solid #ecf0f1; margin: 20px 0;">
-        
-        <p style="font-size: 0.8em; color: #7f8c8d;">
-          Can't click the button? Copy this link to your browser:<br>
-          <a href="${resetUrl}" style="word-break: break-all;">${resetUrl}</a>
-        </p>
-      </div>
-    `;
+      // Log successful login activity
+      await this.activityLogsService.create({
+        description: `User logged in successfully: ${email}`,
+        type: EActivityType.LOGIN,
+        status: EActivityStatus.SUCCESS,
+        endpoint: '/api/auth/login',
+        method: 'POST',
+        statusCode: 200,
+        metadata: {
+          email,
+          userId: user.id,
+          timestamp: new Date().toISOString(),
+        },
+        userId: user.id,
+      });
 
-      const mailerConfig = this.configService.get('mailer');
-
-
-      try {
-        await this.mailerService.sendMail({
-          to: user.email,
-          from: mailerConfig.from,
-          subject: appName + ' - Your Password Reset Instructions',
-          html: emailContent,
-
-          text: `Please use the following link to reset your password:\n\n${resetUrl}\n\nThis link expires in 15 minutes.`,
-        });
-
-      } catch (error) {
-        this.logger.error('Error sending reset email', error.stack);
-        throw new HttpException(
-          'Failed to send reset email. Please try again later.',
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
+      return { token, user: userWithoutPassword };
+    } catch (error) {
+      // Re-throw the error if it's already an UnauthorizedException
+      if (error instanceof UnauthorizedException) {
+        throw error;
       }
-    }
+      
+      // Log unexpected error
+      await this.activityLogsService.create({
+        description: `Login error: ${email}`,
+        type: EActivityType.LOGIN,
+        status: EActivityStatus.FAILED,
+        endpoint: '/api/auth/login',
+        method: 'POST',
+        statusCode: 500,
+        metadata: {
+          email,
+          timestamp: new Date().toISOString(),
+        },
+        errorMessage: error.message,
+        userId: undefined,
+      });
 
-    return {
-      message:
-        'If an account with this email exists, a reset link has been sent',
-    };
+      throw error;
+    }
+  }
+
+  async sendResetLink(email: string): Promise<{ message: string }> {
+    try {
+      const user = await this.userService.findOne({ email }, { select: ['id', 'email'], relations: ['profile'] });
+
+      if (user) {
+        const appConfig = this.configService.get('app');
+
+        const token = this.jwtService.sign(
+          {
+            id: user.id,
+            purpose: 'password_reset',
+          },
+        );
+
+        const appUrl = appConfig.appUrl;
+        const appName = appConfig.name;
+        const resetPasswordPath = appConfig.passwordResetPath;
+        const resetUrl = `${appUrl}/${resetPasswordPath}?token=${token}`;
+
+        const emailContent = `
+        <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #2c3e50;">Password Reset Request</h2>
+          
+          <p>Dear ${user.profile?.firstName || 'User'},</p>
+          
+          <p>We received a request to reset your password for account <strong>${user.email}</strong>.</p>
+          
+          <p style="text-align: center; margin: 25px 0;">
+            <a href="${resetUrl}" 
+               style="background-color: #3498db; color: white; padding: 12px 24px; 
+                      text-decoration: none; border-radius: 4px; font-weight: bold;
+                      display: inline-block;">
+              Reset Your Password
+            </a>
+          </p>
+          
+          <p style="font-size: 0.9em; color: #7f8c8d;">
+            This link will expire in 15 minutes. If you didn't request this, 
+            please ignore this email or contact support if you have concerns.
+          </p>
+          
+          <hr style="border: none; border-top: 1px solid #ecf0f1; margin: 20px 0;">
+          
+          <p style="font-size: 0.8em; color: #7f8c8d;">
+            Can't click the button? Copy this link to your browser:<br>
+            <a href="${resetUrl}" style="word-break: break-all;">${resetUrl}</a>
+          </p>
+        </div>
+      `;
+
+        const mailerConfig = this.configService.get('mailer');
+
+        try {
+          await this.mailerService.sendMail({
+            to: user.email,
+            from: mailerConfig.from,
+            subject: appName + ' - Your Password Reset Instructions',
+            html: emailContent,
+            text: `Please use the following link to reset your password:\n\n${resetUrl}\n\nThis link expires in 15 minutes.`,
+          });
+
+          // Log successful password reset request
+          await this.activityLogsService.create({
+            description: `Password reset link sent successfully: ${email}`,
+            type: EActivityType.FORGOT_PASSWORD,
+            status: EActivityStatus.SUCCESS,
+            endpoint: '/api/auth/forgot-password',
+            method: 'POST',
+            statusCode: 200,
+            metadata: {
+              email,
+              userId: user.id,
+              timestamp: new Date().toISOString(),
+            },
+            userId: user.id,
+          });
+
+        } catch (error) {
+          this.logger.error('Error sending reset email', error.stack);
+          
+          // Log failed password reset request
+          await this.activityLogsService.create({
+            description: `Failed to send password reset link: ${email}`,
+            type: EActivityType.FORGOT_PASSWORD,
+            status: EActivityStatus.FAILED,
+            endpoint: '/api/auth/forgot-password',
+            method: 'POST',
+            statusCode: 500,
+            metadata: {
+              email,
+              userId: user.id,
+              timestamp: new Date().toISOString(),
+            },
+            errorMessage: error.message,
+            userId: user.id,
+          });
+
+          throw new HttpException(
+            'Failed to send reset email. Please try again later.',
+            HttpStatus.INTERNAL_SERVER_ERROR,
+          );
+        }
+      } else {
+        // Log password reset request for non-existent user
+        await this.activityLogsService.create({
+          description: `Password reset requested for non-existent email: ${email}`,
+          type: EActivityType.FORGOT_PASSWORD,
+          status: EActivityStatus.SUCCESS,
+          endpoint: '/api/auth/forgot-password',
+          method: 'POST',
+          statusCode: 200,
+          metadata: {
+            email,
+            timestamp: new Date().toISOString(),
+          },
+          userId: undefined,
+        });
+      }
+
+      return {
+        message: 'If an account with this email exists, a reset link has been sent',
+      };
+    } catch (error) {
+      // Log unexpected error
+      await this.activityLogsService.create({
+        description: `Password reset request error: ${email}`,
+        type: EActivityType.FORGOT_PASSWORD,
+        status: EActivityStatus.FAILED,
+        endpoint: '/api/auth/forgot-password',
+        method: 'POST',
+        statusCode: 500,
+        metadata: {
+          email,
+          timestamp: new Date().toISOString(),
+        },
+        errorMessage: error.message,
+        userId: undefined,
+      });
+
+      throw error;
+    }
   }
 
   async resetPassword(
@@ -172,15 +362,64 @@ export class AuthService {
   ): Promise<{ message: string }> {
     const { token, password, confirmPassword } = resetDta;
 
-    let payload;
     try {
-      payload = this.jwtService.verify(token);
-    } catch (e) {
-      throw new BadRequestException('Invalid or expired token');
+      let payload;
+      try {
+        payload = this.jwtService.verify(token);
+      } catch (e) {
+        // Log failed password reset due to invalid token
+        await this.activityLogsService.create({
+          description: `Failed password reset attempt - invalid token`,
+          type: EActivityType.RESET_PASSWORD,
+          status: EActivityStatus.FAILED,
+          endpoint: '/api/auth/reset-password',
+          method: 'POST',
+          statusCode: 400,
+          metadata: {
+            timestamp: new Date().toISOString(),
+          },
+          errorMessage: 'Invalid or expired token',
+          userId: undefined,
+        });
+        throw new BadRequestException('Invalid or expired token');
+      }
+
+      const result = await this.userService.resetPassword(payload.id, { password, confirmPassword }, true);
+
+      // Log successful password reset
+      await this.activityLogsService.create({
+        description: `Password reset successfully for user ID: ${payload.id}`,
+        type: EActivityType.RESET_PASSWORD,
+        status: EActivityStatus.SUCCESS,
+        endpoint: '/api/auth/reset-password',
+        method: 'POST',
+        statusCode: 200,
+        metadata: {
+          userId: payload.id,
+          timestamp: new Date().toISOString(),
+        },
+        userId: payload.id,
+      });
+
+      return result;
+    } catch (error) {
+      // Log failed password reset
+      await this.activityLogsService.create({
+        description: `Failed password reset attempt`,
+        type: EActivityType.RESET_PASSWORD,
+        status: EActivityStatus.FAILED,
+        endpoint: '/api/auth/reset-password',
+        method: 'POST',
+        statusCode: 400,
+        metadata: {
+          timestamp: new Date().toISOString(),
+        },
+        errorMessage: error.message,
+        userId: undefined,
+      });
+
+      throw error;
     }
-
-    return await this.userService.resetPassword(payload.id, { password, confirmPassword }, true);
-
   }
 
 

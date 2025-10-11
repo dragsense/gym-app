@@ -21,6 +21,7 @@ export interface IListHandlerBaseState<TResponse> {
 export interface IListHandlerState<TResponse, TUserListData = any, TExtra extends Record<string, any> = {}> extends IListHandlerBaseState<TResponse>, IListQueryState {
   
   extra: TExtra;
+  payload: any;
   action: string;
   filteredFields: TFieldConfigObject<TUserListData>;
   
@@ -35,7 +36,7 @@ export interface IListHandlerState<TResponse, TUserListData = any, TExtra extend
   setError: (error: Error | null) => void;
   setResponse: (response: TResponse[]) => void;
   syncWithQuery: (queryState: IListHandlerBaseState<TResponse>) => void;
-  setAction: (action: string, id?: number) => void;
+  setAction: (action: string, payload?: any) => void;
   reset: () => void;
 }
 

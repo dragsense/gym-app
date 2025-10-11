@@ -1,5 +1,5 @@
-import { apiRequest } from "@/utils/fetcher";
-import { type IMessageResponse } from "@shared/interfaces/api/response.interface";
+import type { IMessageResponse } from "@shared/interfaces";
+import { BaseService } from "./base.service";
 import { type ILoginResponse } from "@shared/interfaces/auth.interface";
 import type {
   TLoginData,
@@ -11,31 +11,31 @@ import type {
 
 const AUTH_API_PATH = "/auth";
 
+// Create base service instance
+const authService = new BaseService(AUTH_API_PATH);
 
-export const login = async (data: TLoginData) =>
-  apiRequest<ILoginResponse>(`${AUTH_API_PATH}/login`, "POST", data);
+export const login = (data: TLoginData) =>
+  authService.post<ILoginResponse>(data, undefined, "/login");
 
-export const signup = async (data: TSignupData) =>
-  apiRequest<IMessageResponse>(`${AUTH_API_PATH}/signup`, "POST", data);
+export const signup = (data: TSignupData) =>
+  authService.post(data, undefined, "/signup");
 
+export const verifyOtp = (data: TVerifyOtpData) =>
+  authService.post(data, undefined, "/verify-otp");
 
-export const verifyOtp = async (data: TVerifyOtpData) =>
-  apiRequest<IMessageResponse>(`${AUTH_API_PATH}/verify-otp`, "POST", data);
+export const resendOtp = (data: { token: string }) =>
+  authService.post(data, undefined, "/resend-otp");
 
-export const resendOtp = async (data: { token: string }) =>
-  apiRequest<IMessageResponse>(`${AUTH_API_PATH}/resend-otp`, "POST", data);
+export const forgotPassword = (data: TForgotPasswordData) =>
+  authService.post(data, undefined, "/send-reset-link");
 
-export const forgotPassword = async (data: TForgotPasswordData) =>
-  apiRequest<IMessageResponse>(`${AUTH_API_PATH}/send-reset-link`, "POST", data);
+export const resetPassword = (data: TAuthResetPasswordData) =>
+  authService.post(data, undefined, "/reset-password");
 
-export const resetPassword = async (data: TAuthResetPasswordData) =>
-  apiRequest<IMessageResponse>(`${AUTH_API_PATH}/reset-password`, "POST", data);
+export const logout = () =>
+  authService.post({}, undefined, "/logout");
 
-export const logout = async () =>
-  apiRequest<IMessageResponse>(`${AUTH_API_PATH}/logout`, "POST");
-
-
-export const logoutAll = async () =>
-  apiRequest<IMessageResponse>(`${AUTH_API_PATH}/logout-all`, "POST", undefined);
+export const logoutAll = () =>
+  authService.post({}, undefined, "/logout-all");
 
 

@@ -34,15 +34,18 @@ import { JwtAuthGuard, JwtRefreshAuthGuard } from '@/guards/jwt-auth.gaurd';
 import { TokenService } from './services/tokens.service';
 import { MfaService } from './services/mfa-device.service';
 import { UsersService } from '../users/users.service';
+import { ActivityLogsService } from '@/common/activity-logs/activity-logs.service';
+import { EActivityType, EActivityStatus } from 'shared/enums/activity-log.enum';
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService,
+  constructor(
+    private readonly authService: AuthService,
     private readonly tokenService: TokenService,
     private readonly mfaService: MfaService,
-    private readonly userService: UsersService
-
+    private readonly userService: UsersService,
+    private readonly activityLogsService: ActivityLogsService,
   ) { }
 
   @ApiOperation({
@@ -172,12 +175,29 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Post('logout')
   async logout(@Req() req: any, @Res() res: Response) {
-
     const token = req.user.token;
+    const userId = req.user.id;
+    const userEmail = req.user.email;
 
     try {
       await this.tokenService.invalidateToken(token);
     } catch (err) {
+      // Log failed logout activity
+      await this.activityLogsService.create({
+        description: `Failed to logout user: ${userEmail}`,
+        type: EActivityType.LOGOUT,
+        status: EActivityStatus.FAILED,
+        endpoint: '/api/auth/logout',
+        method: 'POST',
+        statusCode: 500,
+        metadata: {
+          email: userEmail,
+          userId,
+          timestamp: new Date().toISOString(),
+        },
+        errorMessage: err.message,
+        userId,
+      });
     }
 
     res.clearCookie('refresh_token', {
@@ -187,6 +207,22 @@ export class AuthController {
     });
 
     res.setHeader('Authorization', '');
+
+    // Log successful logout activity
+    await this.activityLogsService.create({
+      description: `User logged out successfully: ${userEmail}`,
+      type: EActivityType.LOGOUT,
+      status: EActivityStatus.SUCCESS,
+      endpoint: '/api/auth/logout',
+      method: 'POST',
+      statusCode: 200,
+      metadata: {
+        email: userEmail,
+        userId,
+        timestamp: new Date().toISOString(),
+      },
+      userId,
+    });
 
     return res.status(HttpStatus.OK).json({ message: 'Logged out successful' });
   }

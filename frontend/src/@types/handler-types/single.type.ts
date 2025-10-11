@@ -16,7 +16,7 @@ export interface ISingleHandlerState<TResponse, TExtra extends Record<string, an
   name: string,
   params: TQueryParams;
   action: string;
-
+  payload: any;
   extra: TExtra;
 
   setExtra: <K extends keyof TExtra>(key: K, value?: TExtra[K]) => void;
@@ -26,7 +26,7 @@ export interface ISingleHandlerState<TResponse, TExtra extends Record<string, an
   setError: (error: Error | null) => void;
   setResponse: (response: TResponse) => void;
   setParams: (params: TQueryParams) => void;
-  setAction: (action: string, id?: number) => void;
+  setAction: (action: string, payload?: any) => void;
   setResetActions: () => void;
   syncWithQuery: (state: ISingleHandlerBaseState<TResponse>) => void;
 

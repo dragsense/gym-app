@@ -72,9 +72,10 @@ export class CreateActivityLogDto {
     @IsString()
     errorMessage?: string;
   
-    @ApiProperty({ example: 1, description: 'User who performed the activity' })
+    @ApiPropertyOptional({ example: 1, description: 'User who performed the activity' })
+    @IsOptional()
     @IsNumber()
     @Type(() => Number)
     @Min(1)
-    userId: number;
+    userId?: number;
   }

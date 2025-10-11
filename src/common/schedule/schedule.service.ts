@@ -197,6 +197,13 @@ export class ScheduleService {
   }
 
   /**
+   * Get schedule by ID (alias for findOne)
+   */
+  async getScheduleById(id: number): Promise<Schedule> {
+    return this.findOne(id);
+  }
+
+  /**
    * Get all schedules that should run today
    */
   async getTodaysSchedules(): Promise<Schedule[]> {

@@ -47,14 +47,8 @@ export class ActivityLogInterceptor implements NestInterceptor {
     const startTime = Date.now();
     const { method, url, ip, headers } = request;
 
-
     const userAgent = headers['user-agent'];
     const user = (request as any).user;
-
-    // Skip logging for activity-logs endpoints to avoid infinite loops
-    if (url.includes('/activity-logs') || method === 'GET' || method === 'get') {
-      return next.handle();
-    }
 
     // Determine activity type based on HTTP method
     const activityType = this.getActivityType(method);
@@ -64,6 +58,17 @@ export class ActivityLogInterceptor implements NestInterceptor {
       tap(async (data) => {
         try {
           const duration = Date.now() - startTime;
+          
+          // Check if activity should be logged based on configuration
+          const shouldLog = this.activityLogsService.shouldLogActivity(
+            url,
+            method,
+            activityType
+          );
+
+          if (!shouldLog) {
+            return;
+          }
           
           // Safely get response size without circular reference errors
           let responseSize = 0;
@@ -101,6 +106,17 @@ export class ActivityLogInterceptor implements NestInterceptor {
       catchError(async (error) => {
         try {
           const duration = Date.now() - startTime;
+
+          // Check if activity should be logged based on configuration
+          const shouldLog = this.activityLogsService.shouldLogActivity(
+            url,
+            method,
+            activityType
+          );
+
+          if (!shouldLog) {
+            throw error;
+          }
 
           // Get all nested keys from request body (not values for privacy)
           const bodyKeys = request.body ? this.getNestedKeys(request.body) : [];
