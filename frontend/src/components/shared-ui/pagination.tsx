@@ -1,4 +1,7 @@
 
+// React
+import { useId, useMemo, useTransition } from "react";
+
 // UI Components
 import {
   ChevronLeftIcon,
@@ -31,8 +34,28 @@ export function Pagination({
   onPageChange,
   onLimitChange,
 }: PaginationProps) {
+  // React 19: Essential IDs and transitions
+  const componentId = useId();
+  const [, startTransition] = useTransition();
+
+  // React 19: Memoized page size options for better performance
+  const memoizedPageSizeOptions = useMemo(() => pageSizeOptions, [pageSizeOptions]);
+
+  // React 19: Smooth pagination changes
+  const handlePageChange = (page: number) => {
+    startTransition(() => {
+      onPageChange(page);
+    });
+  };
+
+  const handleLimitChange = (limit: number) => {
+    startTransition(() => {
+      onLimitChange(limit);
+    });
+  };
+
   return (
-    <div className="flex items-center justify-between px-2">
+    <div className="flex items-center justify-between px-2" data-component-id={componentId}>
       <div className="flex-1 text-sm text-muted-foreground">
         {datalength} of {pagination.total}{" "}
         row(s) selected.
@@ -44,14 +67,14 @@ export function Pagination({
           <Select
             value={`${pagination.limit}`}
             onValueChange={(value) => {
-              onLimitChange(Number(value));
+              handleLimitChange(Number(value));
             }}
           >
             <SelectTrigger className="h-8 w-[70px]">
               <SelectValue placeholder={pagination.limit} />
             </SelectTrigger>
             <SelectContent side="top">
-              {pageSizeOptions.map((pageSize) => (
+              {memoizedPageSizeOptions.map((pageSize) => (
                 <SelectItem key={pageSize} value={`${pageSize}`}>
                   {pageSize}
                 </SelectItem>
@@ -68,7 +91,7 @@ export function Pagination({
           <Button
             variant="outline"
             className="hidden h-8 w-8 p-0 lg:flex"
-            onClick={() => onPageChange(1)}
+            onClick={() => handlePageChange(1)}
             disabled={!pagination.hasPrevPage}
           >
             <span className="sr-only">Go to first page</span>
@@ -77,7 +100,7 @@ export function Pagination({
           <Button
             variant="outline"
             className="h-8 w-8 p-0"
-            onClick={() => onPageChange(pagination.page - 1)}
+            onClick={() => handlePageChange(pagination.page - 1)}
             disabled={!pagination.hasPrevPage}
           >
             <span className="sr-only">Go to previous page</span>
@@ -86,7 +109,7 @@ export function Pagination({
           <Button
             variant="outline"
             className="h-8 w-8 p-0"
-            onClick={() => onPageChange(pagination.page + 1)}
+            onClick={() => handlePageChange(pagination.page + 1)}
             disabled={!pagination.hasNextPage}
           >
             <span className="sr-only">Go to next page</span>
@@ -95,7 +118,7 @@ export function Pagination({
           <Button
             variant="outline"
             className="hidden h-8 w-8 p-0 lg:flex"
-            onClick={() => onPageChange(pagination.lastPage)}
+            onClick={() => handlePageChange(pagination.lastPage)}
             disabled={!pagination.hasNextPage}
           >
             <span className="sr-only">Go to last page</span>

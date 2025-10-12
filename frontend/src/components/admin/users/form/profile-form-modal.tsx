@@ -1,6 +1,6 @@
 
 // External Libraries
-import React from "react";
+import React, { useId, useMemo, useTransition } from "react";
 import { Loader2 } from "lucide-react";
 
 // Custom Hooks
@@ -34,7 +34,9 @@ const ProfileFormModal = React.memo(function ProfileFormModal({
   storeKey,
   store,
 }: IProfileFormModalProps) {
-
+  // React 19: Essential IDs and transitions
+  const componentId = useId();
+  const [, startTransition] = useTransition();
 
   if (!store) {
     return `Form store "${storeKey}" not found. Did you forget to register it?`;
@@ -43,10 +45,10 @@ const ProfileFormModal = React.memo(function ProfileFormModal({
   const open = store((state) => state.extra.open)
   const onClose = store((state) => state.extra.onClose)
 
-
   const storeFields = store((state) => state.fields)
 
-  const fields = {
+  // React 19: Memoized fields for better performance
+  const fields = useMemo(() => ({
     ...storeFields,
     image: {
       ...storeFields.image,
@@ -58,7 +60,7 @@ const ProfileFormModal = React.memo(function ProfileFormModal({
       type: 'custom' as const,
       Component: ({value, onChange}: {value: File[] | IFileUpload[] | undefined, onChange: (file: File[] | null) => void}) => <MultiFileUpload value={value} onChange={onChange} />
     }
-  } as TFieldConfigObject<TUpdateProfileData>;
+  } as TFieldConfigObject<TUpdateProfileData>), [storeFields]);
 
   const inputs = useInput<TUpdateProfileData>({
     fields,
@@ -67,18 +69,20 @@ const ProfileFormModal = React.memo(function ProfileFormModal({
 
 
   const onOpenChange = (state: boolean) => {
-    if (state === false)
-      onClose();
+    if (state === false) {
+      startTransition(() => onClose());
+    }
   };
 
-  const formButtons = (
+  // React 19: Memoized form buttons for better performance
+  const formButtons = useMemo(() => (
     <div className="flex justify-end gap-2">
       <Button
         type="button"
         variant="outline"
         onClick={(e) => {
           e.preventDefault();
-          onClose();
+          startTransition(() => onClose());
         }}
       >
         Cancel
@@ -88,7 +92,7 @@ const ProfileFormModal = React.memo(function ProfileFormModal({
         Update Profile
       </Button>
     </div>
-  );
+  ), [onClose]);
 
 
   return <>
@@ -100,6 +104,7 @@ const ProfileFormModal = React.memo(function ProfileFormModal({
       formStore={store}
       footerContent={formButtons}
       width="3xl"
+      data-component-id={componentId}
     >
       <div className="space-y-8">
         {/* Basic Info */}

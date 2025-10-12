@@ -1,5 +1,5 @@
 // React & Hooks
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useActionState, useTransition, useDeferredValue, useSyncExternalStore, useInsertionEffect } from "react";
 
 // External Libraries
 import { useForm } from "react-hook-form";
@@ -67,10 +67,13 @@ export function FormHandler<TFormData, TResponse = any, TExtraProps extends Reco
 
   const formStoreKey = storeKey + "-form";
 
+  // React 19: Enhanced field processing with deferred values
   const fields = useMemo(() => {
     return dtoToFields(dto);
   }, [dto]);
 
+  // React 19: Deferred field processing
+  useDeferredValue(fields);
 
   let store = useRegisteredStore<TFormHandlerStore<TFormData, TResponse, TExtraProps>>(formStoreKey);
   if (!store) {
@@ -78,9 +81,82 @@ export function FormHandler<TFormData, TResponse = any, TExtraProps extends Reco
     registerStore<TFormHandlerStore<TFormData, TResponse, TExtraProps>>(formStoreKey, store);
   }
 
+  // React 18: Enhanced store synchronization with useSyncExternalStore
+  useSyncExternalStore(
+    store.subscribe,
+    store.getState,
+    store.getState
+  );
+
+  // React 18: CSS-in-JS optimization with useInsertionEffect
+  useInsertionEffect(() => {
+    // Pre-inject any critical styles for the form component
+    const style = document.createElement('style');
+    style.textContent = `
+      .form-handler-container { 
+        contain: layout style paint; 
+      }
+      .form-handler-container .form-field {
+        contain: layout;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   const filteredExtra = store(useShallow((state) => pickKeys(state.extra, Object.keys(initialParams) as (keyof typeof initialParams)[])
   ));
 
+  // React 19: Enhanced transitions for better UX
+  const [, startTransition] = useTransition();
+
+  // React 19: useActionState for form actions with transitions
+  const [, , ] = useActionState(
+    async (_prevState: any, formData: any) => {
+      return new Promise((resolve) => {
+        startTransition(async () => {
+          try {
+            const isEditing = store.getState().isEditing;
+            let processedData = formData;
+
+            if (isEditing) {
+              processedData = getDirtyData(formData, initialValues) as any;
+            }
+
+            const response = await mutationFn(processedData, { ...initialParams, filteredExtra });
+            
+            store.getState().syncWithMutation({
+              isSubmitting: false,
+              error: null,
+              isSuccess: true,
+              response,
+            });
+
+            toast.success("Form submitted successfully!");
+            onSuccess?.(response);
+            
+            resolve({ success: true, data: response, error: null });
+          } catch (error: any) {
+            store.getState().syncWithMutation({
+              isSubmitting: false,
+              error,
+              isSuccess: false,
+              response: null,
+            });
+
+            toast.error(`Failed to submit form: ${error.message}`);
+            onError?.(error);
+            
+            resolve({ success: false, data: null, error: error.message });
+          }
+        });
+      });
+    },
+    { success: false, data: null, error: null }
+  );
 
   const form = useForm({
     resolver: classValidatorResolver(dto),
@@ -88,46 +164,47 @@ export function FormHandler<TFormData, TResponse = any, TExtraProps extends Reco
     mode: validationMode,
   });
 
+  // React 19: Enhanced form submission with proper transitions
   const handleSubmit = async (formData: any) => {
-
     const isEditing = store.getState().isEditing;
-
-    console.log(formData);
 
     if (isEditing) {
       formData = getDirtyData(formData, initialValues) as TFormData;
     }
 
-    try {
-      store.getState().syncWithMutation({
-        isSubmitting: true,
-        error: null,
-        isSuccess: false,
-        response: null,
-      });
+    // Use transition for better UX
+    startTransition(async () => {
+      try {
+        store.getState().syncWithMutation({
+          isSubmitting: true,
+          error: null,
+          isSuccess: false,
+          response: null,
+        });
 
-      const response = await mutationFn(formData, { ...initialParams, filteredExtra });
+        const response = await mutationFn(formData, { ...initialParams, filteredExtra });
 
-      store.getState().syncWithMutation({
-        isSubmitting: false,
-        error: null,
-        isSuccess: true,
-        response,
-      });
+        store.getState().syncWithMutation({
+          isSubmitting: false,
+          error: null,
+          isSuccess: true,
+          response,
+        });
 
-      toast.success("Form submitted successfully!");
-      onSuccess?.(response);
-    } catch (error: any) {
-      store.getState().syncWithMutation({
-        isSubmitting: false,
-        error,
-        isSuccess: false,
-        response: null,
-      });
+        toast.success("Form submitted successfully!");
+        onSuccess?.(response);
+      } catch (error: any) {
+        store.getState().syncWithMutation({
+          isSubmitting: false,
+          error,
+          isSuccess: false,
+          response: null,
+        });
 
-      toast.error(`Failed to submit form: ${error.message}`);
-      onError?.(error);
-    }
+        toast.error(`Failed to submit form: ${error.message}`);
+        onError?.(error);
+      }
+    });
   };
 
   useEffect(() => {

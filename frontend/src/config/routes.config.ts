@@ -20,8 +20,9 @@ export const ADMIN_ROUTES = {
   FILES: '/files',
   SCHEDULES: '/schedules',
   QUEUES: '/queues',
-  CLUSTER: '/cluster',
-  WORKERS: '/workers'
+  DASHBOARD: '/dashboard',
+  WORKERS: '/workers',
+  ROLES: '/roles'
 } as const;
 export type AdminRoute = keyof typeof ADMIN_ROUTES;
 
@@ -40,6 +41,6 @@ export const ROUTE_TITLES: Record<string, string> = {
     [ADMIN_ROUTES.FILES]: "Files",
     [ADMIN_ROUTES.SCHEDULES]: "Schedules",
     [ADMIN_ROUTES.QUEUES]: "Queue Management",
-    [ADMIN_ROUTES.CLUSTER]: "Cluster Dashboard",
+    [ADMIN_ROUTES.DASHBOARD]: "Dashboard",
     [ADMIN_ROUTES.WORKERS]: "Worker Management"
 };

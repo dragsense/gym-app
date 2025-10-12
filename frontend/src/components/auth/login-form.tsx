@@ -1,5 +1,5 @@
 // React
-import React, { useState } from 'react';
+import React, { useState, useId, useMemo, useTransition } from 'react';
 
 // Types
 import { type TLoginData } from '@shared/types/auth.type';
@@ -29,6 +29,10 @@ const LoginForm = React.memo(function LoginForm({
   storeKey,
   store,
 }: ILoginFormProps) {
+  // React 19: Essential IDs and transitions
+  const componentId = useId();
+  const [, startTransition] = useTransition();
+
   if (!store) {
     return `Form store "${storeKey}" not found. Did you forget to register it?`;
   }
@@ -37,7 +41,9 @@ const LoginForm = React.memo(function LoginForm({
   const [showPassword, setShowPassword] = useState(false);
 
   const originalFields = store(state => state.fields);
-  const fields = {
+  
+  // React 19: Memoized fields for better performance
+  const fields = useMemo(() => ({
     ...originalFields,
     password: {
       ...originalFields.password,
@@ -45,7 +51,7 @@ const LoginForm = React.memo(function LoginForm({
       endAdornment: (
         <button
           type="button"
-          onClick={() => setShowPassword(!showPassword)}
+          onClick={() => startTransition(() => setShowPassword(!showPassword))}
           className="text-muted-foreground hover:text-foreground"
         >
           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -60,7 +66,7 @@ const LoginForm = React.memo(function LoginForm({
         </p>
       )
     }
-  };
+  }), [originalFields, showPassword]);
 
 
 
@@ -82,7 +88,7 @@ const LoginForm = React.memo(function LoginForm({
         }
         footer={
           <div className="flex flex-col gap-4 w-full">
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
+            <Button type="submit" className="w-full" disabled={isSubmitting} data-component-id={componentId}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Login
             </Button>

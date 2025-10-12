@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useId, useMemo, useTransition } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,9 @@ interface IVerifyOtpFormProps extends THandlerComponentProps<TFormHandlerStore<T
 }
 
 export default function VerifyOtpForm({ storeKey, store }: IVerifyOtpFormProps) {
+    // React 19: Essential IDs and transitions
+    const componentId = useId();
+    const [, startTransition] = useTransition();
 
     const length = 6;
 
@@ -42,8 +45,12 @@ export default function VerifyOtpForm({ storeKey, store }: IVerifyOtpFormProps) 
         return () => clearInterval(interval);
     }, []);
 
-    const minutes = Math.floor(timeLeft / 60);
-    const seconds = timeLeft % 60;
+    // React 19: Memoized time display for better performance
+    const timeDisplay = useMemo(() => {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        return { minutes, seconds };
+    }, [timeLeft]);
 
     const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
         const values = getValues().code?.split("") || Array(6).fill("");
@@ -69,28 +76,38 @@ export default function VerifyOtpForm({ storeKey, store }: IVerifyOtpFormProps) 
         }
     };
 
+    // React 19: Smooth input changes
     const handleChange = (index: number, value: string) => {
         if (!/^\d*$/.test(value)) return;
 
-        const values = getValues().code?.split("") || Array(length).fill("");
-        values[index] = value;
-        setValue("code", values.join(""));
+        startTransition(() => {
+            const values = getValues().code?.split("") || Array(length).fill("");
+            values[index] = value;
+            setValue("code", values.join(""));
 
-        if (value && index < length - 1) inputsRef.current[index + 1]?.focus();
+            if (value && index < length - 1) inputsRef.current[index + 1]?.focus();
+        });
     };
 
 
+    // React 19: Smooth resend operations
     const handleResend = async () => {
         if (!resendOtp) return;
         try {
-            setResending(true);
+            startTransition(() => {
+                setResending(true);
+            });
             await resendOtp();
-            setTimeLeft(5 * 60);
+            startTransition(() => {
+                setTimeLeft(5 * 60);
+            });
             toast.success("OTP resent successfully!");
         } catch (err: any) {
             toast.error("Failed to resend OTP: " + err.message);
         } finally {
-            setResending(false);
+            startTransition(() => {
+                setResending(false);
+            });
         }
     };
 
@@ -111,7 +128,7 @@ export default function VerifyOtpForm({ storeKey, store }: IVerifyOtpFormProps) 
                         <p className="text-center text-sm text-muted-foreground">
                             Your OTP will expire in{" "}
                             <span className="font-medium text-primary">
-                                {minutes}:{seconds.toString().padStart(2, "0")}
+                                {timeDisplay.minutes}:{timeDisplay.seconds.toString().padStart(2, "0")}
                             </span>
                         </p>
 
@@ -131,7 +148,7 @@ export default function VerifyOtpForm({ storeKey, store }: IVerifyOtpFormProps) 
                             )}
                         />
 
-                        <Button type="submit" className="w-full" disabled={isSubmitting || resending}>
+                        <Button type="submit" className="w-full" disabled={isSubmitting || resending} data-component-id={componentId}>
                             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             Verify OTP
                         </Button>
@@ -141,6 +158,7 @@ export default function VerifyOtpForm({ storeKey, store }: IVerifyOtpFormProps) 
                             className="w-full"
                             onClick={handleResend}
                             disabled={isSubmitting || resending}
+                            data-component-id={componentId}
                         >
                             {resending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             {resending ? "Resending..." : "Resend OTP"}

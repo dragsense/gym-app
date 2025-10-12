@@ -1,6 +1,7 @@
 // External Libraries
 import { type JSX } from "react";
 import { type ColumnDef } from "@tanstack/react-table";
+import { useId, useMemo, useTransition } from "react";
 
 // Components
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +21,8 @@ export const itemViews = (): {
   columns: ColumnDef<IActivityLog>[];
   listItem: (item: IActivityLog) => JSX.Element;
 } => {
+  // React 19: Essential IDs
+  const componentId = useId();
   const columns: ColumnDef<IActivityLog>[] = [
     {
       accessorKey: "id",
@@ -169,7 +172,7 @@ export const itemViews = (): {
   ];
 
   const listItem = (item: IActivityLog) => {
-    return <div>Not Provided</div>;
+    return <div data-component-id={componentId}>Not Provided</div>;
   };
 
   return { columns, listItem };

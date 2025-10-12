@@ -1,5 +1,5 @@
 // React & Routing
-import { Suspense } from "react";
+import { Suspense, useId } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 
 // Custom Hooks
@@ -15,6 +15,9 @@ import { AppLoader } from "@/components/layout-ui/app-loader";
 
 
 export default function PublicRoute() {
+  // React 19: Essential IDs
+  const componentId = useId();
+  
   const { user, isLoading } = useAuthUser();
 
   if (isLoading) return <AppLoader />;
@@ -26,7 +29,9 @@ export default function PublicRoute() {
 
   return (
     <Suspense fallback={<AppLoader />}>
-      <Outlet />
+      <div data-component-id={componentId}>
+        <Outlet />
+      </div>
     </Suspense>
   );
 } 

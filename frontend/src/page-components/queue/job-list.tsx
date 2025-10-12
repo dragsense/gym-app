@@ -1,5 +1,6 @@
 // External Libraries
 import { useShallow } from 'zustand/shallow';
+import { useMemo, useCallback, useTransition, useDeferredValue } from "react";
 
 // Handlers
 import { ListHandler } from "@/handlers";
@@ -30,6 +31,8 @@ export default function QueueJobList({
     storeKey,
     store,
 }: IJobListProps) {
+    // React 19: Essential transitions
+    const [, startTransition] = useTransition();
     
     const JOB_STORE_KEY = storeKey + '-job';
 
@@ -43,35 +46,49 @@ export default function QueueJobList({
         payload: state.payload,
     })));
 
+    // React 19: Deferred payload for performance
+    const deferredPayload = useDeferredValue(payload);
 
-    return (
-        <Dialog
-            open={action === 'viewJobs'}
-            onOpenChange={(state: boolean) => {
+    // React 19: Enhanced dialog props with transitions
+    const dialogProps = useMemo(() => ({
+        open: action === 'viewJobs',
+        onOpenChange: (state: boolean) => {
+            startTransition(() => {
                 if (!state) {
                     setAction('none');
                 }
-            }}>
+            });
+        }
+    }), [action, setAction, startTransition]);
+
+    // React 19: Memoized action components
+    const actionComponents = useMemo(() => [
+        {
+            action: 'retryJob',
+            comp: RetryJob,
+        },
+        {
+            action: 'removeJob',
+            comp: RemoveJob,
+        },
+    ], []);
+
+    // React 19: Enhanced query function with deferred payload
+    const queryFn = useCallback((params: any) => fetchJobs(deferredPayload, params), [deferredPayload]);
+
+    return (
+        <Dialog {...dialogProps}>
             <DialogContent>
                 <AppDialog
                     title="Queue Jobs"
                     description="List of jobs in the queue"
                 >
                     <ListHandler<IQueueJob, TJobListData, TJobListExtraProps>
-                        queryFn={(params) => fetchJobs(payload, params)}
+                        queryFn={queryFn}
                         ListComponent={JobList}
                         storeKey={JOB_STORE_KEY}
-                        listProps={{ queueName: payload }}
-                         actionComponents={[
-                            {
-                                action: 'retryJob',
-                                comp: RetryJob,
-                            },
-                            {
-                                action: 'removeJob',
-                                comp: RemoveJob,
-                            },
-                        ]} 
+                        listProps={{ queueName: deferredPayload }}
+                        actionComponents={actionComponents} 
                     />
                 </AppDialog>
             </DialogContent>

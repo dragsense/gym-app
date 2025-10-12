@@ -1,5 +1,5 @@
 // React & Hooks
-import { useEffect, useState } from "react";
+import { useEffect, useState, useId, useMemo, useTransition } from "react";
 
 // External libraries
 import { Filter, XIcon } from "lucide-react";
@@ -28,6 +28,9 @@ interface IUserFiltersProps {
 export function UserFilters({
   store,
 }: IUserFiltersProps) {
+  // React 19: Essential IDs and transitions
+  const componentId = useId();
+  const [, startTransition] = useTransition();
 
   const filteredFields = store.getState().filteredFields;
   const filters = store(state => state.filters);
@@ -37,23 +40,26 @@ export function UserFilters({
     fields: filteredFields as TFieldConfigObject<TUserListData>,
   });
 
-  const hasActiveFilters = Object.keys(filters).length > 0;
+  // React 19: Memoized active filters check for better performance
+  const hasActiveFilters = useMemo(() => Object.keys(filters).length > 0, [filters]);
+
+  const handleClearFilters = () => {
+    startTransition(() => setFilters({}));
+  };
 
   return (
-    <div className="flex-1 flex items-end gap-2 flex-wrap">
+    <div className="flex-1 flex items-end gap-2 flex-wrap" data-component-id={componentId}>
       {inputs.search}
       {inputs.createdAfter}
       {inputs.createdBefore}
       {inputs.dueDate}
 
-
       {hasActiveFilters && (
-        <Button variant="outline" onClick={() => setFilters({})} className="hidden lg:flex">
+        <Button variant="outline" onClick={handleClearFilters} className="hidden lg:flex">
           <XIcon className="h-4 w-4 mr-2" />
           Clear Filters
         </Button>
       )}
     </div>
-
   );
 }

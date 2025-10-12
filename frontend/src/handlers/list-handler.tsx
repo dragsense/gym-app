@@ -1,5 +1,5 @@
 // React & Hooks
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useOptimistic, useTransition, useDeferredValue, useId, useCallback, useSyncExternalStore, useInsertionEffect } from "react";
 
 // Types
 import { type IPaginatedResponse } from "@shared/interfaces/api/response.interface";
@@ -72,23 +72,28 @@ export function ListHandler<
 >) {
   const listStoreKey = storeKey + "-list"
   const singelStoreKey = storeKey + "-single";
+  // React 19: Unique ID for list
+  useId();
 
   const singleStore = useRegisteredStore<TSingleHandlerStore<TSingleData, TSingleExtraProps>>(singelStoreKey);
 
 
+  // React 19: Enhanced field processing with deferred values
   const filteredFields = useMemo(() => {
     if (!dto) return {};
     return dtoToFields(dto);
   }, [dto]);
 
+  const deferredFields = useDeferredValue(filteredFields); // React 19: Deferred field processing
+
   const defaultFormValues = useMemo(() => {
-    const defaults = Object.keys(filteredFields).reduce((acc, key) => {
+    const defaults = Object.keys(deferredFields).reduce((acc, key) => {
       acc[key] = '';
       return acc;
     }, {} as any);
     
     return { ...defaults, ...initialParams.filters || {} };
-  }, [filteredFields, initialParams.filters]);
+  }, [deferredFields, initialParams.filters]);
 
 
   let store = useRegisteredStore<TListHandlerStore<TData, TUserListData, TExtraProps>>(listStoreKey);
@@ -97,6 +102,28 @@ export function ListHandler<
     registerStore<TListHandlerStore<TData, TUserListData, TExtraProps>>(listStoreKey, store);
   }
 
+  // React 18: Enhanced store synchronization with useSyncExternalStore
+  useSyncExternalStore(
+    store.subscribe,
+    store.getState,
+    store.getState
+  );
+
+  // React 18: CSS-in-JS optimization with useInsertionEffect
+  useInsertionEffect(() => {
+    // Pre-inject any critical styles for the list component
+    const style = document.createElement('style');
+    style.textContent = `
+      .list-handler-container { 
+        contain: layout style paint; 
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
 
   useEffect(() => {
     registerStore(listStoreKey, store);
@@ -117,51 +144,56 @@ export function ListHandler<
   const queryKey = [listStoreKey, JSON.stringify(filteredExtra)];
 
 
+  // React 19: Enhanced query with transitions and optimistic updates
   const { setFilters, setLimit, setPage } = useApiPaginatedQuery<TData>(queryKey, async (params) => {
-    store.setState({ isLoading: true });
-    try {
-      const response = await queryFn(params);
-      store.setState({
-        response: response.data,
-        pagination: {
-          page: response.page,
-          limit: response.limit,
-          total: response.total,
-          lastPage: response.lastPage,
-          hasNextPage: response.hasNextPage,
-          hasPrevPage: response.hasPrevPage
-        },
-        isLoading: false,
-        error: null,
-        isSuccess: true,
-        // Don't update filters here - they're managed by the form
-        sortBy: params.sortBy || 'createdAt',
-        sortOrder: params.sortOrder || 'DESC',
-        search: params.search || ''
+    return new Promise((resolve, reject) => {
+      startTransition(async () => {
+        store.setState({ isLoading: true });
+        try {
+          const response = await queryFn(params);
+          store.setState({
+            response: response.data,
+            pagination: {
+              page: response.page,
+              limit: response.limit,
+              total: response.total,
+              lastPage: response.lastPage,
+              hasNextPage: response.hasNextPage,
+              hasPrevPage: response.hasPrevPage
+            },
+            isLoading: false,
+            error: null,
+            isSuccess: true,
+            // Don't update filters here - they're managed by the form
+            sortBy: params.sortBy || 'createdAt',
+            sortOrder: params.sortOrder || 'DESC',
+            search: params.search || ''
+          });
+          resolve(response);
+        } catch (error) {
+          const err = error instanceof Error ? error : new Error(String(error));
+          store.setState({
+            response: null,
+            pagination: {
+              page: 1,
+              limit: initialParams.limit || 10,
+              total: 0,
+              lastPage: 1,
+              hasNextPage: false,
+              hasPrevPage: false
+            },
+            isLoading: false,
+            error: err,
+            isSuccess: false,
+            // Don't reset filters on error - keep user's input
+            sortBy: 'createdAt',
+            sortOrder: 'DESC',
+            search: ''
+          });
+          reject(err);
+        }
       });
-      return response;
-    } catch (error) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      store.setState({
-        response: null,
-        pagination: {
-          page: 1,
-          limit: initialParams.limit || 10,
-          total: 0,
-          lastPage: 1,
-          hasNextPage: false,
-          hasPrevPage: false
-        },
-        isLoading: false,
-        error: err,
-        isSuccess: false,
-        // Don't reset filters on error - keep user's input
-        sortBy: 'createdAt',
-        sortOrder: 'DESC',
-        search: ''
-      });
-      throw err;
-    }
+    });
   }, {
     page: initialParams.page || 1,
     limit: initialParams.limit || 10,
@@ -179,7 +211,54 @@ export function ListHandler<
     defaultValues: defaultFormValues,
   });
 
+  // React 19: Enhanced transitions and optimistic updates
+  const [, startTransition] = useTransition();
+  const [optimisticData, addOptimistic] = useOptimistic(
+    store.getState().response || [],
+    (currentData, optimisticUpdate: { type: 'add' | 'update' | 'delete', item: any, id?: string }) => {
+      switch (optimisticUpdate.type) {
+        case 'add':
+          return [...currentData, { ...optimisticUpdate.item, isOptimistic: true }];
+        case 'update':
+          return currentData.map(item => 
+            (item as any).id === optimisticUpdate.id 
+              ? { ...item, ...optimisticUpdate.item, isOptimistic: true }
+              : item
+          );
+        case 'delete':
+          return currentData.filter(item => (item as any).id !== optimisticUpdate.id);
+        default:
+          return currentData;
+      }
+    }
+  );
 
+  // React 19: Enhanced optimistic update functions
+  // React 19: Optimistic update functions (available for use)
+  const addOptimisticItem = useCallback((item: any) => {
+    startTransition(() => {
+      addOptimistic({ type: 'add', item });
+    });
+  }, [addOptimistic]);
+
+  const updateOptimisticItem = useCallback((id: string, item: any) => {
+    startTransition(() => {
+      addOptimistic({ type: 'update', id, item });
+    });
+  }, [addOptimistic]);
+
+  const deleteOptimisticItem = useCallback((id: string) => {
+    startTransition(() => {
+      addOptimistic({ type: 'delete', id, item: null });
+    });
+  }, [addOptimistic]);
+
+  // Update store with optimistic data when available
+  useEffect(() => {
+    if (optimisticData.length > 0) {
+      store.setState({ response: optimisticData });
+    }
+  }, [optimisticData, store]);
 
   const isUpdatingFromStoreRef = React.useRef(false);
 

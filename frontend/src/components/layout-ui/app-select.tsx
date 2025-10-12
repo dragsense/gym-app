@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Check, ChevronsUpDown, X } from "lucide-react";
+import { useId, useMemo, useTransition } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -60,6 +61,10 @@ export function AppSelect({
     disabled = false,
     emptyText = "No options found.",
 }: AppSelectProps) {
+    // React 19: Essential IDs and transitions
+    const componentId = useId();
+    const [, startTransition] = useTransition();
+    
     const [open, setOpen] = React.useState(false);
 
     // Map value -> label (keys must be strings)
@@ -76,31 +81,35 @@ export function AppSelect({
         [multiple, value]
     );
 
+    // React 19: Smooth selection changes
     const toggle = (val: OptionValue) => {
+        startTransition(() => {
+            let next: any;
+            if (multiple) {
+                const list = (value as OptionValue[]) ?? [];
+                const exists = list.some((v) => toKey(v) === toKey(val));
+                next = exists ? list.filter((v) => toKey(v) !== toKey(val)) : [...list, val];
+            } else {
+                const current = value as OptionValue | undefined;
+                next = current !== undefined && toKey(current) === toKey(val) ? undefined : val;
+                setOpen(false);
+            }
 
-        let next: any;
-        if (multiple) {
-            const list = (value as OptionValue[]) ?? [];
-            const exists = list.some((v) => toKey(v) === toKey(val));
-            next = exists ? list.filter((v) => toKey(v) !== toKey(val)) : [...list, val];
-        } else {
-            const current = value as OptionValue | undefined;
-            next = current !== undefined && toKey(current) === toKey(val) ? undefined : val;
-            setOpen(false);
-        }
-
-        onChange(next);
-
+            onChange(next);
+        });
     };
 
+    // React 19: Smooth clear operations
     const clearAll = (e?: React.MouseEvent) => {
         e?.preventDefault();
         e?.stopPropagation?.();
-        if (multiple) {
-            (onChange as (v: OptionValue[]) => void)([]);
-        } else {
-            (onChange as (v: OptionValue | undefined) => void)(undefined);
-        }
+        startTransition(() => {
+            if (multiple) {
+                (onChange as (v: OptionValue[]) => void)([]);
+            } else {
+                (onChange as (v: OptionValue | undefined) => void)(undefined);
+            }
+        });
     };
 
     const hasSelection = multiple

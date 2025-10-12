@@ -1,5 +1,5 @@
 // React
-import React, { useState } from 'react';
+import React, { useState, useId, useMemo, useTransition } from 'react';
 
 // Types
 import { type TSignupData } from '@shared/types/auth.type';
@@ -28,6 +28,10 @@ const SignupForm = React.memo(function SignupForm({
   storeKey,
   store,
 }: ISignupFormProps) {
+  // React 19: Essential IDs and transitions
+  const componentId = useId();
+  const [, startTransition] = useTransition();
+
   if (!store) {
     return `Form store "${storeKey}" not found. Did you forget to register it?`;
   }
@@ -37,7 +41,9 @@ const SignupForm = React.memo(function SignupForm({
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const originalFields = store(state => state.fields);
-  const fields = {
+  
+  // React 19: Memoized fields for better performance
+  const fields = useMemo(() => ({
     ...originalFields,
     password: {
       ...originalFields.password,
@@ -45,7 +51,7 @@ const SignupForm = React.memo(function SignupForm({
       endAdornment: (
         <button
           type="button"
-          onClick={() => setShowPassword(!showPassword)}
+          onClick={() => startTransition(() => setShowPassword(!showPassword))}
           className="text-muted-foreground hover:text-foreground"
         >
           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -58,7 +64,7 @@ const SignupForm = React.memo(function SignupForm({
       endAdornment: (
         <button
           type="button"
-          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+          onClick={() => startTransition(() => setShowConfirmPassword(!showConfirmPassword))}
           className="text-muted-foreground hover:text-foreground"
         >
           {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -77,7 +83,7 @@ const SignupForm = React.memo(function SignupForm({
       ...originalFields.lastName,
       startAdornment: <User className="h-4 w-4 text-muted-foreground" />
     }
-  };
+  }), [originalFields, showPassword, showConfirmPassword]);
 
   const inputs = useInput<TSignupData>({
     fields: fields as any,
@@ -97,7 +103,7 @@ const SignupForm = React.memo(function SignupForm({
         }
         footer={
           <div className="flex flex-col gap-4 w-full">
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
+            <Button type="submit" className="w-full" disabled={isSubmitting} data-component-id={componentId}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Sign Up
             </Button>

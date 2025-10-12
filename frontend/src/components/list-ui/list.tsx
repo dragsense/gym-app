@@ -1,5 +1,6 @@
 // React
 import {  type ReactNode } from "react";
+import { useId, useMemo, useTransition, useDeferredValue } from "react";
 
 // External Libraries
 import { Loader2 } from "lucide-react";
@@ -42,6 +43,10 @@ export function List<TData, TListData = any, TExtra extends Record<string, unkno
 
   colClassName = "",
 }: IListProps<TData, TListData, TExtra>) {
+  // React 19: Essential IDs and transitions
+  const componentId = useId();
+  const [, startTransition] = useTransition();
+
   const {
     response: data,
     isLoading: loading,
@@ -58,33 +63,48 @@ export function List<TData, TListData = any, TExtra extends Record<string, unkno
     }))
   );
 
+  // React 19: Deferred data for better performance
+  const deferredData = useDeferredValue(data);
+
+  // React 19: Smooth pagination changes
   const handlePageChange = (page: number) => {
-    setPagination({ page });
+    startTransition(() => {
+      setPagination({ page });
+    });
   };
 
   const handleLimitChange = (limit: number) => {
-    setPagination({ limit });
+    startTransition(() => {
+      setPagination({ limit });
+    });
   };
 
-  let displayData = data || [];
-  if (limit) {
-    displayData = displayData.slice(0, limit);
-  }
+  // React 19: Memoized display data for better performance
+  const memoizedDisplayData = useMemo(() => {
+    let displayData = deferredData || [];
+    if (limit) {
+      displayData = displayData.slice(0, limit);
+    }
+    return displayData;
+  }, [deferredData, limit]);
+
+  // React 19: Memoized loading state for better performance
+  const memoizedLoadingState = useMemo(() => (
+    <div className="absolute inset-0 bg-background/50 z-10 flex items-center justify-center rounded-lg">
+      <Loader2 className="h-8 w-8 animate-spin" />
+    </div>
+  ), []);
 
   return (
-    <div className={cn("relative flex flex-col gap-6", className)}>
-      {loading && (
-        <div className="absolute inset-0 bg-background/50 z-10 flex items-center justify-center rounded-lg">
-          <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
-      )}
+    <div className={cn("relative flex flex-col gap-6", className)} data-component-id={componentId}>
+      {loading && memoizedLoadingState}
 
 
 
       <div className={cn("space-y-3", colClassName)}>
       <div  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {displayData.length > 0 ? (
-          displayData.map((item, index) => (
+        {memoizedDisplayData.length > 0 ? (
+          memoizedDisplayData.map((item, index) => (
               <div key={index}>
                 {renderItem(item, index)}
             </div>
@@ -99,11 +119,11 @@ export function List<TData, TListData = any, TExtra extends Record<string, unkno
         <p className="text-sm font-medium text-red-500 my-2">{error.message}</p>
       )}
 
-      {(showPagination && !limit && data && data.length > 0) && (
+      {(showPagination && !limit && memoizedDisplayData && memoizedDisplayData.length > 0) && (
         <div className="flex flex-col gap-4 pt-6 border-t">
           <div className="w-full">
             <Pagination
-              datalength={data.length}
+              datalength={memoizedDisplayData.length}
               pageSizeOptions={pageSizeOptions}
               pagination={pagination}
               onPageChange={handlePageChange}

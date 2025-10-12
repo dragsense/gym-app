@@ -1,29 +1,42 @@
 import { registerAs } from '@nestjs/config';
+import { ConfigService } from '@nestjs/config';
 
 export default registerAs('bullQueue', () => ({
   dragonfly: {
     host: process.env.DRAGONFLY_HOST || 'localhost',
-    port: parseInt(process.env.DRAGONFLY_PORT, 10) || 6379,
+    port: parseInt(process.env.DRAGONFLY_PORT || '6379', 10),
     password: process.env.DRAGONFLY_PASSWORD,
-    db: parseInt(process.env.DRAGONFLY_DB, 10) || 0,
+    db: parseInt(process.env.DRAGONFLY_DB || '0', 10),
     retryDelayOnFailover: 50,
     maxRetriesPerRequest: 5,
     lazyConnect: true,
     keepAlive: 60000,
     connectTimeout: 5000,
     commandTimeout: 3000,
-    // DragonflyDB specific optimizations
     enableReadyCheck: true,
     maxMemoryPolicy: 'allkeys-lru',
     compression: true,
   },
-  workers: {
-    concurrency: parseInt(process.env.BULL_WORKER_CONCURRENCY, 10) || 5,
-    stalledInterval: 30000,
-    maxStalledCount: 1,
-  },
-  monitoring: {
-    enabled: process.env.NODE_ENV === 'production',
-    port: parseInt(process.env.BULL_MONITORING_PORT, 10) || 3001,
-  },
 }));
+
+export const getBullQueueConfig = (configService: ConfigService) => {
+  const dragonflyConfig = configService.get('bullQueue.dragonfly');
+  
+  return {
+    redis: {
+      host: dragonflyConfig.host,
+      port: dragonflyConfig.port,
+      password: dragonflyConfig.password,
+      db: dragonflyConfig.db,
+      retryDelayOnFailover: dragonflyConfig.retryDelayOnFailover,
+      maxRetriesPerRequest: dragonflyConfig.maxRetriesPerRequest,
+      lazyConnect: dragonflyConfig.lazyConnect,
+      keepAlive: dragonflyConfig.keepAlive,
+      connectTimeout: dragonflyConfig.connectTimeout,
+      commandTimeout: dragonflyConfig.commandTimeout,
+      enableReadyCheck: dragonflyConfig.enableReadyCheck,
+      maxMemoryPolicy: dragonflyConfig.maxMemoryPolicy,
+      compression: dragonflyConfig.compression,
+    },
+  };
+};

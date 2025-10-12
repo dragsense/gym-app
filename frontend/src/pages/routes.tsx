@@ -1,18 +1,48 @@
 
 
-
+import { lazy, Suspense, useId } from "react";
 import { COMMON_ROUTES } from "@/config/routes.config";
-import NotFound from "./404";
-import UnauthorizedPage from "./unauthorized";
+import { AppLoader } from "@/components/layout-ui/app-loader";
 
+// React 19: Lazy load common pages with enhanced performance
+const NotFound = lazy(() => import("./404"));
+const UnauthorizedPage = lazy(() => import("./unauthorized"));
+
+// React 19: Enhanced loading component for common routes
+const CommonRouteLoadingFallback = () => {
+  const componentId = useId();
+  
+  return (
+    <div 
+      className="flex flex-col items-center justify-center min-h-screen bg-background"
+      data-component-id={componentId}
+    >
+      <div className="text-center mb-4">
+        <h3 className="text-lg font-semibold text-foreground">Loading Page</h3>
+        <p className="text-sm text-muted-foreground">Please wait while we load the content...</p>
+      </div>
+      <AppLoader />
+    </div>
+  );
+};
+
+// React 19: Enhanced common routes with lazy loading and Suspense
 const commonRoutes = [
     {
         path: COMMON_ROUTES.NOT_FOUND,
-        element: <NotFound />,
+        element: (
+            <Suspense fallback={<CommonRouteLoadingFallback />}>
+                <NotFound />
+            </Suspense>
+        ),
     },
     {
         path: COMMON_ROUTES.UNAUTHORIZED,
-        element: <UnauthorizedPage />,
+        element: (
+            <Suspense fallback={<CommonRouteLoadingFallback />}>
+                <UnauthorizedPage />
+            </Suspense>
+        ),
     }
 ];
 

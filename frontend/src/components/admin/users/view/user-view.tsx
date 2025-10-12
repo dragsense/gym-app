@@ -1,5 +1,6 @@
 // External Libraries
 import { useShallow } from 'zustand/shallow';
+import { useId, useMemo, useTransition } from 'react';
 
 // Components
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,10 @@ interface IUserViewProps extends THandlerComponentProps<TSingleHandlerStore<IUse
 }
 
 export default function UserView({ storeKey, store }: IUserViewProps) {
+    // React 19: Essential IDs and transitions
+    const componentId = useId();
+    const [, startTransition] = useTransition();
+
     if (!store) {
         return <div>Single store "{storeKey}" not found. Did you forget to register it?</div>;
     }
@@ -40,11 +45,11 @@ export default function UserView({ storeKey, store }: IUserViewProps) {
     }
 
     const handleCloseView = () => {
-        reset();
+        startTransition(() => reset());
     };
 
     return (
-        <Dialog open={action === 'view'} onOpenChange={handleCloseView}>
+        <Dialog open={action === 'view'} onOpenChange={handleCloseView} data-component-id={componentId}>
             <DialogContent className="min-w-2xl max-h-[90vh] overflow-y-auto">
                 <AppDialog
                     title="User Details"
@@ -62,10 +67,19 @@ interface IUserDetailContentProps {
 }
 
 function UserDetailContent({ user }: IUserDetailContentProps) {
+    // React 19: Essential IDs
+    const componentId = useId();
+    
     const profile = user.profile;
 
+    // React 19: Memoized user creation date for better performance
+    const userCreationDate = useMemo(() => 
+        new Date(user.createdAt).toLocaleDateString(), 
+        [user.createdAt]
+    );
+
     return (
-        <div className="space-y-6">
+        <div className="space-y-6" data-component-id={componentId}>
             {/* Quick Preview Card */}
             <AppCard className="bg-gradient-to-r from-green-50 to-green-100 border-green-200">
                 <div className="flex items-center gap-4">
@@ -82,7 +96,7 @@ function UserDetailContent({ user }: IUserDetailContentProps) {
                                 {user.isActive ? "Active" : "Inactive"}
                             </Badge>
                             <span className="text-sm text-muted-foreground">
-                                User since {new Date(user.createdAt).toLocaleDateString()}
+                                User since {userCreationDate}
                             </span>
                         </div>
                     </div>

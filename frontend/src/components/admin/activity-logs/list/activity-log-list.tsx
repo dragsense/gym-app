@@ -1,6 +1,8 @@
+// React & Hooks
+import { useId, useMemo, useTransition } from "react";
+
 // Types
 import { type IActivityLog } from "@shared/interfaces/activity-log.interface";
-
 
 // Custom UI Components
 import { Table as TTable } from "@/components/table-ui/table";
@@ -13,7 +15,6 @@ import { itemViews } from "./activity-log-item-views";
 
 // Stores
 import { type TListHandlerStore } from "@/stores";
-
 
 // Config
 import { type TListHandlerComponentProps } from "@/@types/handler-types";
@@ -33,34 +34,31 @@ export default function ActivityLogList({
   storeKey,
   store
 }: IActivityLogListProps) {
+  // React 19: Essential IDs and transitions
+  const componentId = useId();
+  const [, startTransition] = useTransition();
 
   if (!store) {
     return (`List store "${storeKey}" not found. Did you forget to register it?`);
   }
 
-
-  const { columns } = itemViews();
-
+  // React 19: Memoized columns for better performance
+  const { columns } = useMemo(() => itemViews(), []);
 
   return (
-
-    <div className="space-y-2">
+    <div className="space-y-2" data-component-id={componentId}>
       <ActivityLogFilters
         store={store}
       />
-
 
       <AppCard className="px-0">
         <TTable<IActivityLog>
           listStore={store}
           columns={columns}
-          emptyMessage="No trainers found."
+          emptyMessage="No activity logs found."
           showPagination={true}
-        /></AppCard>
-
-
-
+        />
+      </AppCard>
     </div>
-
   );
 }

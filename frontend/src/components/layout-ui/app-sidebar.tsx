@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Loader2, LogOutIcon, X } from "lucide-react";
+import { useId, useMemo, useTransition } from "react";
 
 // UI Components
 import {
@@ -43,6 +44,10 @@ export function AppSidebar({
   themeClass = "",
   ...props
 }: AppSidebarProps) {
+  // React 19: Essential IDs and transitions
+  const componentId = useId();
+  const [, startTransition] = useTransition();
+  
   const location = useLocation();
   const { logout, isLoading } = useLogout();
   const { setOpenMobile, isMobile } = useSidebar();
@@ -73,15 +78,19 @@ export function AppSidebar({
     }
   }, [location.pathname, isMobile, setOpenMobile]);
 
+  // React 19: Smooth sidebar interactions
   const toggleExpanded = (title: string) => {
-    setExpandedItems((prev) => ({
-      ...prev,
-      [title]: !prev[title],
-    }));
+    startTransition(() => {
+      setExpandedItems((prev) => ({
+        ...prev,
+        [title]: !prev[title],
+      }));
+    });
   };
 
-  const renderSidebarHeader = (showCloseButton: boolean = false) => (
-    <SidebarHeader className="mt-5">
+  // React 19: Memoized sidebar header for better performance
+  const renderSidebarHeader = React.useMemo(() => (showCloseButton: boolean = false) => (
+    <SidebarHeader className="mt-5" data-component-id={componentId}>
       <div className={showCloseButton ? "flex items-center justify-between p-4" : ""}>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -97,7 +106,7 @@ export function AppSidebar({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setOpenMobile(false)}
+            onClick={() => startTransition(() => setOpenMobile(false))}
             className="h-8 w-8 p-0 hover:bg-muted/50"
           >
             <X className="h-4 w-4" />
@@ -105,7 +114,7 @@ export function AppSidebar({
         )}
       </div>
     </SidebarHeader>
-  );
+  ), [componentId]);
 
   const renderNavItems = () => (
     <SidebarContent className="mt-2">
@@ -206,14 +215,14 @@ export function AppSidebar({
           <DropdownMenuLabel>Logout Options</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem
-            onClick={() => logout(false)}
+            onClick={() => startTransition(() => logout(false))}
             disabled={isLoading}
             className="cursor-pointer"
           >
             Log out (this device)
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={() => logout(true)}
+            onClick={() => startTransition(() => logout(true))}
             disabled={isLoading}
             className="cursor-pointer"
           >

@@ -6,3 +6,4 @@ export * from './activity-log.type';
 export * from './schedule.type';
 export * from './queue.type';
 export * from './worker.type';
+export * from './role';

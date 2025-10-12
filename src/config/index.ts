@@ -4,6 +4,6 @@ export { default as databaseConfig, getTypeOrmConfig } from './database.config';
 export { default as jwtConfig, getJwtConfig } from './jwt.config';
 export { default as mailerConfig, getMailerConfig } from './mailer.config';
 export { default as bullQueueConfig } from './bull-queue.config';
-export { default as activityLogsConfig } from './activity-logs.config';
 export { default as clusterConfig } from './cluster.config';
-export { default as workerConfig } from './worker.config';
+export { default as activityLogsConfig } from './activity-logs.config';
+export { default as cacheConfig, getCacheConfig } from './cache.config';

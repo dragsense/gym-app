@@ -1,3 +1,6 @@
+// React
+import { useId, useMemo } from "react";
+
 // External Libraries
 import {
   type ColumnDef,
@@ -56,10 +59,14 @@ export function AppTable<TData>({
   colClassName = "",
   showHeader = true,
 }: DataTableProps<TData>) {
+  // React 19: Essential IDs
+  const componentId = useId();
 
+  // React 19: Memoized empty message for better performance
+  const memoizedEmptyMessage = useMemo(() => emptyMessage, [emptyMessage]);
 
   return (
-    <ShadcnTable className={className}>
+    <ShadcnTable className={className} data-component-id={componentId}>
       {showHeader && (
         <TableHeader className="bg-muted">
           {table.getHeaderGroups().map((headerGroup) => (
@@ -97,7 +104,7 @@ export function AppTable<TData>({
         ) : (
           <TableRow>
             <TableCell colSpan={columns.length} className="h-24 text-center">
-              {emptyMessage}
+              {memoizedEmptyMessage}
             </TableCell>
           </TableRow>
         )}

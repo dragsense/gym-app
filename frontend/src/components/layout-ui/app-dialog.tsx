@@ -1,5 +1,6 @@
 // React
 import type { ReactNode } from "react";
+import { useId, useMemo } from "react";
 
 // Custom UI Components
 import {
@@ -23,22 +24,30 @@ export const AppDialog = ({
   footerContent,
   children,
 }: IDialogProps) => {
+  // React 19: Essential IDs
+  const componentId = useId();
+  
+  // React 19: Memoized title for better performance
+  const memoizedTitle = useMemo(() => {
+    return typeof title === "string" ? (
+      <DialogTitle>{title}</DialogTitle>
+    ) : (
+      title
+    );
+  }, [title]);
+
   return (
-    <>
-        <DialogHeader>
-          {typeof title === "string" ? (
-            <DialogTitle>{title}</DialogTitle>
-          ) : (
-            title
-          )}
-          {description && <DialogDescription>{description}</DialogDescription>}
-        </DialogHeader>
+    <div data-component-id={componentId}>
+      <DialogHeader>
+        {memoizedTitle}
+        {description && <DialogDescription>{description}</DialogDescription>}
+      </DialogHeader>
 
-        {children}
+      {children}
 
-        {footerContent && (
-          <DialogFooter className="mt-6">{footerContent}</DialogFooter>
-        )}
-      </>
+      {footerContent && (
+        <DialogFooter className="mt-6">{footerContent}</DialogFooter>
+      )}
+    </div>
   );
 };

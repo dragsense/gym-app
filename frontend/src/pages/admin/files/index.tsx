@@ -1,4 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
+import { useId, useTransition } from "react";
 
 // Types
 import { type IFileUpload } from "@shared/interfaces/file-upload.interface";
@@ -20,17 +21,26 @@ import { PageInnerLayout } from "@/layouts";
 import { FileListDto } from "@shared/dtos/file-upload-dtos/file-upload.dto";
 
 export default function FilesPage() {
+  // React 19: Essential IDs and transitions
+  const componentId = useId();
+  const [, startTransition] = useTransition();
+  
   const queryClient = useQueryClient();
 
   const STORE_KEY = "file";
 
   return (
     <PageInnerLayout Header={<Header />}>
+      <div data-component-id={componentId}>
       <SingleHandler<IFileUpload, TFileExtraProps>
         queryFn={fetchFile}
         deleteFn={deleteFile}
         storeKey={STORE_KEY}
-        onDeleteSuccess={() => queryClient.invalidateQueries({ queryKey: [STORE_KEY + "-list"] })}
+        onDeleteSuccess={() => {
+          startTransition(() => {
+            queryClient.invalidateQueries({ queryKey: [STORE_KEY + "-list"] });
+          });
+        }}
         SingleComponent={FileView}
         actionComponents={[
           {
@@ -46,6 +56,7 @@ export default function FilesPage() {
         dto={FileListDto}
         storeKey={STORE_KEY}
       />
+      </div>
     </PageInnerLayout>
   );
 }

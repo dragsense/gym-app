@@ -1,5 +1,6 @@
 // React
 import {type ReactNode } from "react";
+import { useId, useMemo, useTransition, useDeferredValue } from "react";
 
 // External Libraries
 import { Loader2 } from "lucide-react";
@@ -51,6 +52,9 @@ export function Table<TData, TListData = any, TExtra extends Record<string, unkn
   colClassName = "",
   showHeader = true,
 }: ITableProps<TData, TListData, TExtra>) {
+  // React 19: Essential IDs and transitions
+  const componentId = useId();
+  const [, startTransition] = useTransition();
 
   const {
     response: data,
@@ -68,28 +72,42 @@ export function Table<TData, TListData = any, TExtra extends Record<string, unkn
   }))
   );
 
+  // React 19: Deferred data for better performance
+  const deferredData = useDeferredValue(data);
+
+  // React 19: Smooth pagination changes
   const onPageChange = (page: number) => {
-    setPagination({ page });
+    startTransition(() => {
+      setPagination({ page });
+    });
   };
+  
   const onLimitChange = (limit: number) => {
-    setPagination({ limit });
+    startTransition(() => {
+      setPagination({ limit });
+    });
   };
 
+
+  // React 19: Memoized table data for better performance
+  const memoizedTableData = useMemo(() => deferredData || [], [deferredData]);
 
   const { table } = useTable<TData>({
     columns,
-    data: data || [],
+    data: memoizedTableData,
     defaultPageSize: pagination.limit || 10,
   });
 
+  // React 19: Memoized loading state for better performance
+  const memoizedLoadingState = useMemo(() => (
+    <div className="absolute inset-0 bg-background/50 z-10 flex items-center justify-center rounded-lg">
+      <Loader2 className="h-8 w-8 animate-spin" />
+    </div>
+  ), []);
 
   return (
-    <div className={cn("px-4", MainClassName)}>
-      {loading && (
-        <div className="absolute inset-0 bg-background/50 z-10 flex items-center justify-center rounded-lg">
-          <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
-      )}
+    <div className={cn("px-4", MainClassName)} data-component-id={componentId}>
+      {loading && memoizedLoadingState}
 
       <AppTable
         onRowClick={onRowClick}

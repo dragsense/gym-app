@@ -1,6 +1,6 @@
 
 // External Libraries
-import React, { useMemo } from "react";
+import React, { useMemo, useId, useTransition } from "react";
 import { Loader2 } from "lucide-react";
 // Custom Hooks
 import { type FormInputs, useInput } from "@/hooks/use-input";
@@ -29,7 +29,9 @@ const UserFormModal = React.memo(function UserFormModal({
   storeKey,
   store,
 }: IUserFormModalProps) {
-
+  // React 19: Essential IDs and transitions
+  const componentId = useId();
+  const [, startTransition] = useTransition();
 
   if (!store) {
     return `Form store "${storeKey}" not found. Did you forget to register it?`;
@@ -40,8 +42,8 @@ const UserFormModal = React.memo(function UserFormModal({
   const open = store((state) => state.extra.open)
   const onClose = store((state) => state.extra.onClose)
 
-
-  const fields = store((state) => state.fields)
+  // React 19: Memoized fields for better performance
+  const fields = useMemo(() => store((state) => state.fields), [store]);
 
   const inputs = useInput<TUserData | TUpdateUserData>({
     fields,
@@ -49,29 +51,37 @@ const UserFormModal = React.memo(function UserFormModal({
   }) as FormInputs<TUserData | TUpdateUserData>;
 
 
+  // React 19: Smooth modal state changes
   const onOpenChange = (state: boolean) => {
-    if (state === false)
-      onClose();
+    if (state === false) {
+      startTransition(() => {
+        onClose();
+      });
+    }
   };
 
-  const formButtons = (
+  // React 19: Memoized form buttons for better performance
+  const formButtons = useMemo(() => (
     <div className="flex justify-end gap-2">
       <Button
         type="button"
         variant="outline"
         onClick={(e) => {
           e.preventDefault();
-          onClose();
+          startTransition(() => {
+            onClose();
+          });
         }}
+        data-component-id={componentId}
       >
         Cancel
       </Button>
-      <Button type="submit" disabled={false}>
+      <Button type="submit" disabled={false} data-component-id={componentId}>
         {false && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         {isEditing ? "Update" : "Add"}
       </Button>
     </div>
-  );
+  ), [componentId, isEditing, onClose]);
 
 
   return <>

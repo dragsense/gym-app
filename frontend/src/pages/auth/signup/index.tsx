@@ -1,6 +1,7 @@
 // External Libraries
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useTransition, useId } from "react";
 
 // Types
 import { type TSignupData } from "@shared/types/auth.type";
@@ -22,6 +23,10 @@ import { PUBLIC_ROUTES } from "@/config/routes.config";
 
 
 export default function SignupPage() {
+  // React 19: Essential IDs and transitions
+  const componentId = useId();
+  const [, startTransition] = useTransition();
+  
   const navigate = useNavigate();
 
   const SIGNUP_INITIAL_VALUES: TSignupData = {
@@ -40,8 +45,10 @@ export default function SignupPage() {
       validationMode={EVALIDATION_MODES.OnChange}
       dto={SignupDto}
       onSuccess={() => {
-        toast.success('Signup successful');
-        navigate(PUBLIC_ROUTES.LOGIN);
+        startTransition(() => {
+          toast.success('Signup successful');
+          navigate(PUBLIC_ROUTES.LOGIN);
+        });
       }}
       onError={(error) => toast.error('Signup failed: ' + error?.message)}
       storeKey="signup"

@@ -3,6 +3,7 @@
 import { useShallow } from 'zustand/shallow';
 import { Loader2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useMemo, useCallback, useId, useTransition, useDeferredValue } from "react";
 
 // Handlers
 import { FormHandler } from "@/handlers";
@@ -36,6 +37,9 @@ export default function ProfileForm({
     storeKey,
     store,
 }: IProfileFormProps) {
+    // React 19: Essential IDs and transitions
+    const componentId = useId();
+    const [, startTransition] = useTransition();
 
     const queryClient = useQueryClient();
 
@@ -45,11 +49,10 @@ export default function ProfileForm({
     }
 
 
-    const { action, response, isLoading, setAction, reset, extra } = store(useShallow(state => ({
+    const { action, response, isLoading, setAction, reset } = store(useShallow(state => ({
         action: state.action,
         response: state.response,
         isLoading: state.isLoading,
-        extra: state.extra,
         setAction: state.setAction,
         reset: state.reset
     })));
@@ -68,26 +71,34 @@ export default function ProfileForm({
     }
 
 
-    const INITIAL_VALUES: TUpdateProfileData = {
-        firstName: "",
-        lastName: "",
-        phoneNumber: "",
-        dateOfBirth: new Date(
-            new Date().setFullYear(new Date().getFullYear() - 12)
-        ).toISOString(),
-        address: "",
-        gender: EUserGender.MALE,
-        image: undefined,
-        documents: undefined,
-        skills: []
-    };
+    // React 19: Memoized initial values with deferred processing
+    const initialValues = useMemo(() => {
+        const INITIAL_VALUES: TUpdateProfileData = {
+            firstName: "",
+            lastName: "",
+            phoneNumber: "",
+            dateOfBirth: new Date(
+                new Date().setFullYear(new Date().getFullYear() - 12)
+            ).toISOString(),
+            address: "",
+            gender: EUserGender.MALE,
+            image: undefined,
+            documents: undefined,
+            skills: []
+        };
+        return strictDeepMerge<TUpdateProfileData>(INITIAL_VALUES, response?.profile ?? {});
+    }, [response?.profile]);
 
-    const initialValues = strictDeepMerge<TUpdateProfileData>(INITIAL_VALUES, response?.profile ?? {});
+    // React 19: Deferred initial values for performance
+    const deferredInitialValues = useDeferredValue(initialValues);
 
-    const handleClose = () => {
-        reset();
-        setAction('none');
-    };
+    // React 19: Enhanced handler with transitions
+    const handleClose = useCallback(() => {
+        startTransition(() => {
+            reset();
+            setAction('none');
+        });
+    }, [reset, setAction, startTransition]);
 
 
 
@@ -95,25 +106,29 @@ export default function ProfileForm({
     const mutationFn = updateProfile;
     const dto = UpdateProfileDto;
 
-    return <>
-        <FormHandler<TUpdateProfileData, IMessageResponse, IProfileFormModalExtraProps>
-            mutationFn={mutationFn}
-            FormComponent={ProfileFormModal}
-            storeKey={storeKey}
-            initialValues={initialValues}
-            dto={dto}
-            validationMode={EVALIDATION_MODES.OnSubmit}
-            isEditing={isEditing}
-            onSuccess={(response) => {
-                queryClient.invalidateQueries({ queryKey: [storeKey + "-list"] });
-                handleClose();
-            }}
-            formProps={{
-                open: action === 'updateProfile',
-                onClose: handleClose,
-            }}
-        />
-    </>
+    return (
+        <div data-component-id={componentId}>
+            <FormHandler<TUpdateProfileData, IMessageResponse, IProfileFormModalExtraProps>
+                mutationFn={mutationFn}
+                FormComponent={ProfileFormModal}
+                storeKey={storeKey}
+                initialValues={deferredInitialValues}
+                dto={dto}
+                validationMode={EVALIDATION_MODES.OnSubmit}
+                isEditing={isEditing}
+                onSuccess={() => {
+                    startTransition(() => {
+                        queryClient.invalidateQueries({ queryKey: [storeKey + "-list"] });
+                        handleClose();
+                    });
+                }}
+                formProps={{
+                    open: action === 'updateProfile',
+                    onClose: handleClose,
+                }}
+            />
+        </div>
+    )
 
 }
 

@@ -1,6 +1,7 @@
 // External Libraries
 import { type JSX } from "react";
 import { type ColumnDef } from "@tanstack/react-table";
+import { useId, useMemo, useTransition } from "react";
 
 // Components
 import { Badge } from "@/components/ui/badge";
@@ -29,23 +30,26 @@ export const itemViews = ({
 }): {
   columns: ColumnDef<IQueue>[];
 } => {
+  // React 19: Essential IDs and transitions
+  const componentId = useId();
+  const [, startTransition] = useTransition();
   
   const setAction = store.getState().setAction;
 
   const pauseQueue = (queueName: string) => {
-    setAction('pauseQueue', queueName);
+    startTransition(() => setAction('pauseQueue', queueName));
   };
 
   const resumeQueue = (queueName: string) => {
-    setAction('resumeQueue', queueName);
+    startTransition(() => setAction('resumeQueue', queueName));
   };
 
   const cleanQueue = (queueName: string) => {
-    setAction('cleanQueue', queueName);
+    startTransition(() => setAction('cleanQueue', queueName));
   };
 
   const viewJobs = (queueName: string) => {
-    setAction('viewJobs', queueName);
+    startTransition(() => setAction('viewJobs', queueName));
   };
 
   const columns: ColumnDef<IQueue>[] = [
@@ -149,7 +153,7 @@ export const itemViews = ({
         const queue = row.original;
         
         return (
-          <div className="flex gap-1">
+          <div className="flex gap-1" data-component-id={componentId}>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>

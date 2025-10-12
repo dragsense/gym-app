@@ -3,10 +3,17 @@ import logo from "@/assets/logos/logo.png";
 
 // React Router
 import { Outlet } from "react-router-dom";
+import { useId } from "react";
 
 export default function AuthLayout() {
+  // React 19: Essential IDs
+  const componentId = useId();
+  
   return (
-    <div className="min-h-screen max-w-7xl mx-auto grid md:grid-cols-2 md:gap-10 gap-4 p-4 py-15">
+    <div 
+      className="min-h-screen max-w-7xl mx-auto grid md:grid-cols-2 md:gap-10 gap-4 p-4 py-15"
+      data-component-id={componentId}
+    >
 
       {/* Left Panel */}
       <div className="flex flex-col items-center justify-center gap-1">

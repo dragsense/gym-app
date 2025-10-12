@@ -1,5 +1,5 @@
 // React & Hooks
-import { useState } from "react";
+import { useState, useId, useMemo, useTransition } from "react";
 
 // External libraries
 import { List, Plus, Table } from "lucide-react";
@@ -40,6 +40,9 @@ export default function FileList({
   store,
   singleStore
 }: IFileListProps) {
+  // React 19: Essential IDs and transitions
+  const componentId = useId();
+  const [, startTransition] = useTransition();
 
   if (!store) {
     return (`List store "${storeKey}" not found. Did you forget to register it?`);
@@ -53,22 +56,29 @@ export default function FileList({
 
   const [currentView, setCurrentView] = useState<ViewType>("table");
 
-
-
+  // React 19: Smooth action transitions
   const handleCreate = () => {
-    setAction('createOrUpdate');
+    startTransition(() => {
+      setAction('createOrUpdate');
+    });
   };
 
   const handleEdit = (id: number) => {
-    setAction('createOrUpdate', id);
+    startTransition(() => {
+      setAction('createOrUpdate', id);
+    });
   }
 
   const handleDelete = (id: number) => {
-    setAction('delete', id);
+    startTransition(() => {
+      setAction('delete', id);
+    });
   }
 
   const handleView = (id: number) => {
-    setAction('view', id);
+    startTransition(() => {
+      setAction('view', id);
+    });
   }
 
   const { columns, listItem } = itemViews({
@@ -77,8 +87,9 @@ export default function FileList({
     handleView
   });
 
-  const renderViewToggle = () => (
-    <TabsList className="flex justify-center items-center w-auto border-gray-200">
+  // React 19: Memoized view toggle for better performance
+  const renderViewToggle = useMemo(() => (
+    <TabsList className="flex justify-center items-center w-auto border-gray-200" data-component-id={componentId}>
       <TabsTrigger
         value="table"
         className="flex items-center gap-2 px-4 data-[state=active]:text-secondary data-[state=active]:font-semibold"
@@ -95,18 +106,19 @@ export default function FileList({
         <span className="hidden sm:inline">List</span>
       </TabsTrigger>
     </TabsList>
-  );
+  ), [componentId]);
 
   return (
-    <Tabs value={currentView} onValueChange={(value) => setCurrentView(value as ViewType)}>
+    <Tabs value={currentView} onValueChange={(value) => setCurrentView(value as ViewType)} data-component-id={componentId}>
 
       <div className="flex flex-1 justify-between items-start md:items-center gap-2 flex-wrap">
         <FileFilters store={store} />
-        {renderViewToggle()}
+        {renderViewToggle}
         <div className="flex gap-2">
           <Button
             onClick={handleCreate}
             variant="default"
+            data-component-id={componentId}
           >
             <Plus /> <span className="hidden sm:inline">Create</span>
           </Button>

@@ -1,5 +1,5 @@
 // React & Hooks
-import React, { createContext, useContext } from "react";
+import React, { createContext, useContext, useDeferredValue, useMemo, useTransition, useId } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 // Types
@@ -12,11 +12,16 @@ interface IAuthUserContextType {
   user?: IAuthUser;
   isLoading: boolean;
   error: Error | null;
+  componentId: string;
+  startTransition: (callback: () => void) => void;
 }
 
 const AuthUserContext = createContext<IAuthUserContextType | undefined>(undefined);
 
 export function AuthUserProvider({ children }: { children: React.ReactNode }) {
+  // React 19: Essential IDs and transitions
+  const componentId = useId();
+  const [, startTransition] = useTransition();
 
   const {
     data,
@@ -29,12 +34,17 @@ export function AuthUserProvider({ children }: { children: React.ReactNode }) {
     staleTime: 1000 * 60 * 5,
   });
 
-
-  const value = {
-    user: data,
+  // React 19: Deferred user data for better performance
+  const deferredUser = useDeferredValue(data);
+  
+  // React 19: Memoized context value to prevent unnecessary re-renders
+  const value = useMemo(() => ({
+    user: deferredUser,
     isLoading,
     error,
-  };
+    componentId,
+    startTransition,
+  }), [deferredUser, isLoading, error, componentId, startTransition]);
 
   return <AuthUserContext.Provider value={value}>{children}</AuthUserContext.Provider>;
 }

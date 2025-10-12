@@ -1,0 +1,170 @@
+// External Libraries
+import { ColumnDef } from "@tanstack/react-table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { 
+  MoreHorizontal, 
+  Edit, 
+  Trash2, 
+  Shield,
+  CheckCircle,
+  XCircle,
+  Clock
+} from "lucide-react";
+
+// Components
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+// Types
+import type { IPermission } from '@shared/interfaces';
+
+export const itemViews = ({
+  editPermission,
+  deletePermission,
+}: {  
+  editPermission: (permissionId: number) => void;
+  deletePermission: (permissionId: number) => void;
+}) => {
+  const columns: ColumnDef<IPermission>[] = [
+    {
+      accessorKey: "id",
+      header: "ID",
+      cell: ({ row }) => {
+        const id = row.getValue<number>("id");
+        return (
+          <span className="font-mono text-sm">{id}</span>
+        );
+      },
+    },
+    {
+      accessorKey: "name",
+      header: "Permission Name",
+      cell: ({ row }) => {
+        const name = row.getValue<string>("name");
+        return (
+          <span className="font-medium">{name}</span>
+        );
+      },
+    },
+    {
+      accessorKey: "displayName",
+      header: "Display Name",
+      cell: ({ row }) => {
+        const displayName = row.getValue<string>("displayName");
+        return (
+          <span className="text-muted-foreground">{displayName || 'No display name'}</span>
+        );
+      },
+    },
+    {
+      accessorKey: "action",
+      header: "Action",
+      cell: ({ row }) => {
+        const action = row.getValue<string>("action");
+        return (
+          <Badge variant="outline" className="font-mono">
+            {action}
+          </Badge>
+        );
+      },
+    },
+    {
+      accessorKey: "resource",
+      header: "Resource",
+      cell: ({ row }) => {
+        const resource = row.getValue<any>("resource");
+        return (
+          <span className="text-sm">{resource?.name || 'N/A'}</span>
+        );
+      },
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => {
+        const status = row.getValue<string>("status") || 'active';
+        
+        const statusConfig = {
+          active: { variant: "default" as const, icon: CheckCircle, color: "text-green-600" },
+          inactive: { variant: "secondary" as const, icon: XCircle, color: "text-red-600" },
+          pending: { variant: "outline" as const, icon: Clock, color: "text-yellow-600" },
+        };
+
+        const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.active;
+        const Icon = config.icon;
+
+        return (
+          <Badge variant={config.variant} className={config.color}>
+            <Icon className="w-3 h-3 mr-1" />
+            {status}
+          </Badge>
+        );
+      },
+    },
+    {
+      accessorKey: "roles",
+      header: "Roles",
+      cell: ({ row }) => {
+        const roles = row.getValue<any[]>("roles") || [];
+        return (
+          <div className="flex items-center gap-1">
+            <Shield className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">
+              {roles.length} role{roles.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "createdAt",
+      header: "Created",
+      cell: ({ row }) => {
+        const createdAt = row.getValue<string>("createdAt");
+        return (
+          <span className="text-sm text-muted-foreground">
+            {new Date(createdAt).toLocaleDateString()}
+          </span>
+        );
+      },
+    },
+    {
+      id: "actions",
+      header: "Actions",
+      cell: ({ row }) => {
+        const permission = row.original;
+        
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => editPermission(permission.id)}>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit Permission
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => deletePermission(permission.id)}
+                className="text-destructive"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Permission
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
+    },
+  ];
+
+  return { columns };
+};

@@ -2,6 +2,7 @@
 import { toast } from "sonner";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTransition } from "react";
 
 // Types
 import type { TVerifyOtpData } from "@shared/types";
@@ -26,6 +27,7 @@ export default function VerifyOtpPage() {
     const queryClient = useQueryClient();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
+    const [, startTransition] = useTransition();
 
 
     const token = searchParams.get("token");
@@ -46,9 +48,11 @@ export default function VerifyOtpPage() {
             validationMode={EVALIDATION_MODES.OnChange}
             dto={VerifyOtpDto}
             onSuccess={() => {
-                toast.success('Login successful')
-                queryClient.invalidateQueries({ queryKey: ["me"] });
-                navigate(ADMIN_ROUTES.USERS);
+                startTransition(() => {
+                    toast.success('Login successful')
+                    queryClient.invalidateQueries({ queryKey: ["me"] });
+                    navigate(ADMIN_ROUTES.USERS);
+                });
             }}
             onError={(error) => toast.error("OTP verification failed: " + error?.message)}
             storeKey="verify-otp"

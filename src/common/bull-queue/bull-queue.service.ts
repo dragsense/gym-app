@@ -1,5 +1,4 @@
-import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Injectable, OnModuleInit, OnModuleDestroy, Inject } from '@nestjs/common';
 import { Queue, Job, JobOptions } from 'bull';
 import { LoggerService } from '../logger/logger.service';
 import { ActivityLogsService } from '../activity-logs/activity-logs.service';
@@ -31,7 +30,7 @@ export class BullQueueService implements OnModuleInit, OnModuleDestroy {
   private queues: Map<string, Queue> = new Map();
 
   constructor(
-    private readonly configService: ConfigService,
+    @Inject('BULL_QUEUE_CONFIG') private readonly bullConfig: any,
     private readonly workerManager: WorkerManagerService,
     private readonly activityLogsService: ActivityLogsService,
   ) {}
@@ -82,10 +81,8 @@ export class BullQueueService implements OnModuleInit, OnModuleDestroy {
    */
   async createQueue(createQueueDto: CreateQueueDto): Promise<Queue> {
     try {
-      const dragonflyConfig = this.configService.get('bullQueue.dragonfly');
-      
       const queue = new Bull(createQueueDto.name, {
-        redis: dragonflyConfig,
+        redis: this.bullConfig.redis,
         defaultJobOptions: {
           removeOnComplete: 100,
           removeOnFail: 50,

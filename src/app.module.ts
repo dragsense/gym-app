@@ -5,9 +5,9 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
-import { CacheModule } from '@nestjs/cache-manager';
+import { CacheModule as NestCacheModule } from '@nestjs/cache-manager';
 
-import { configOptions, appConfig, databaseConfig, jwtConfig, mailerConfig, bullQueueConfig, clusterConfig, workerConfig, getTypeOrmConfig, getMailerConfig } from './config';
+import { configOptions, appConfig, databaseConfig, jwtConfig, mailerConfig, bullQueueConfig, clusterConfig, cacheConfig, getTypeOrmConfig, getMailerConfig } from './config';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -22,8 +22,10 @@ import { ScheduleModule } from './common/schedule/schedule.module';
 import { BullQueueModule } from './common/bull-queue/bull-queue.module';
 import { ClusterModule } from './common/cluster/cluster.module';
 import { WorkerModule } from './common/worker/worker.module';
+import { RolesModule } from './common/roles/roles.module';
 // Common modules
 import { LoggerModule } from './common/logger/logger.module';
+import { CacheModule } from './common/cache/cache.module';
 
 // Entities for dashboard stats
 import { ServerGateway } from './gateways/server.gateway';
@@ -39,7 +41,7 @@ import { EncryptionService } from './lib/encryption.service';
     // Configuration
     ConfigModule.forRoot({
       ...configOptions,
-      load: [appConfig, databaseConfig, jwtConfig, mailerConfig, bullQueueConfig, clusterConfig, workerConfig],
+      load: [appConfig, databaseConfig, jwtConfig, mailerConfig, bullQueueConfig, clusterConfig, cacheConfig],
       isGlobal: true,
     }),
 
@@ -54,12 +56,8 @@ import { EncryptionService } from './lib/encryption.service';
     }),
 
 
-    // Cache
-    CacheModule.register({
-      ttl: 300, // 5 minutes
-      max: 100, // maximum number of items in cache
-      isGlobal: true,
-    }),
+    // Cache (using Dragonfly)
+    CacheModule,
 
     // Database
     TypeOrmModule.forRootAsync({
@@ -81,12 +79,14 @@ import { EncryptionService } from './lib/encryption.service';
 
     // Common modules
     LoggerModule,
+    CacheModule,
     FileUploadModule,
     ActivityLogsModule,
     ScheduleModule,
     BullQueueModule,
     ClusterModule,
     WorkerModule,
+    RolesModule,
 
     // Feature modules
     UsersModule,

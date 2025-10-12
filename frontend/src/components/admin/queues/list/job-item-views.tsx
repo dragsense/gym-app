@@ -1,6 +1,7 @@
 // External Libraries
 import { type JSX } from "react";
 import { type ColumnDef } from "@tanstack/react-table";
+import { useId, useMemo, useTransition } from "react";
 
 // Components
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +33,9 @@ export const itemViews = ({
 }): {
   columns: ColumnDef<IQueueJob>[];
 } => {
+  // React 19: Essential IDs and transitions
+  const componentId = useId();
+  const [, startTransition] = useTransition();
   const columns: ColumnDef<IQueueJob>[] = [
     {
       accessorKey: "id",
@@ -129,7 +133,7 @@ export const itemViews = ({
         const job = row.original;
         
         return (
-          <div className="flex gap-1">
+          <div className="flex gap-1" data-component-id={componentId}>
             {(job.status === 'failed' || job.status === 'completed') && (
               <TooltipProvider>
                 <Tooltip>
@@ -137,7 +141,7 @@ export const itemViews = ({
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => retryJob(job.id)}
+                      onClick={() => startTransition(() => retryJob(job.id))}
                     >
                       <RefreshCw className="w-3 h-3" />
                     </Button>
@@ -155,7 +159,7 @@ export const itemViews = ({
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => removeJob(job.id)}
+                    onClick={() => startTransition(() => removeJob(job.id))}
                   >
                     <Trash2 className="w-3 h-3" />
                   </Button>

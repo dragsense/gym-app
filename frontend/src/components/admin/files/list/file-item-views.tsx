@@ -1,5 +1,6 @@
 import { Eye, Pencil, Trash2 } from "lucide-react";
 import { type ColumnDef } from "@tanstack/react-table";
+import { useId, useMemo, useTransition } from "react";
 
 // Types
 import { type IFileUpload } from "@shared/interfaces/file-upload.interface";
@@ -19,6 +20,9 @@ export const itemViews = ({
   handleDelete,
   handleView,
 }: IItemViewArgs) => {
+  // React 19: Essential IDs and transitions
+  const componentId = useId();
+  const [, startTransition] = useTransition();
   const columns: ColumnDef<IFileUpload>[] = [
     {
       accessorKey: "id",
@@ -65,21 +69,21 @@ export const itemViews = ({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => handleView(row.original.id)}
+            onClick={() => startTransition(() => handleView(row.original.id))}
           >
             <Eye className="h-4 w-4" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => handleEdit(row.original.id)}
+            onClick={() => startTransition(() => handleEdit(row.original.id))}
           >
             <Pencil className="h-4 w-4" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => handleDelete(row.original.id)}
+            onClick={() => startTransition(() => handleDelete(row.original.id))}
           >
             <Trash2 className="h-4 w-4 text-red-500" />
           </Button>
@@ -88,19 +92,24 @@ export const itemViews = ({
     },
   ];
 
-  const listItem = (item: IFileUpload) => (
-    <div className="flex items-center justify-between p-4 bg-white rounded-lg border hover:shadow-md transition-shadow">
+  const listItem = (item: IFileUpload) => {
+    // React 19: Memoized file size for better performance
+    const fileSize = useMemo(() => 
+      item.size >= 1024 * 1024
+        ? `${(item.size / (1024 * 1024)).toFixed(2)} MB`
+        : `${(item.size / 1024).toFixed(2)} KB`,
+      [item.size]
+    );
+
+    return (
+      <div className="flex items-center justify-between p-4 bg-white rounded-lg border hover:shadow-md transition-shadow" data-component-id={componentId}>
       <div className="flex-1">
         <div className="flex items-center gap-3 mb-2">
           <span className="font-semibold text-lg">{item.name}</span>
           <Badge variant="outline">{item.mimeType}</Badge>
         </div>
         <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-          <span>
-            Size: {item.size >= 1024 * 1024
-              ? `${(item.size / (1024 * 1024)).toFixed(2)} MB`
-              : `${(item.size / 1024).toFixed(2)} KB`}
-          </span>
+          <span>Size: {fileSize}</span>
           <span>Uploaded: {new Date(item.createdAt).toLocaleDateString()}</span>
         </div>
       </div>
@@ -108,27 +117,28 @@ export const itemViews = ({
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => handleView(item.id)}
+          onClick={() => startTransition(() => handleView(item.id))}
         >
           <Eye className="h-4 w-4" />
         </Button>
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => handleEdit(item.id)}
+          onClick={() => startTransition(() => handleEdit(item.id))}
         >
           <Pencil className="h-4 w-4" />
         </Button>
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => handleDelete(item.id)}
+          onClick={() => startTransition(() => handleDelete(item.id))}
         >
           <Trash2 className="h-4 w-4 text-red-500" />
         </Button>
       </div>
-    </div>
-  );
+      </div>
+    );
+  };
 
   return { columns, listItem };
 };

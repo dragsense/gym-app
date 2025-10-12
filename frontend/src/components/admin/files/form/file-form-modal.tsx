@@ -1,5 +1,5 @@
 // External Libraries
-import React from "react";
+import React, { useId, useMemo, useTransition } from "react";
 import { Loader2 } from "lucide-react";
 
 // Custom Hooks
@@ -27,6 +27,9 @@ const FileCreateFormModal = React.memo(function FileCreateModal({
   storeKey,
   store,
 }: IFileFormModalProps) {
+  // React 19: Essential IDs and transitions
+  const componentId = useId();
+  const [, startTransition] = useTransition();
 
   if (!store) {
     return `Form store "${storeKey}" not found. Did you forget to register it?`;
@@ -36,23 +39,29 @@ const FileCreateFormModal = React.memo(function FileCreateModal({
   const onClose = store((state) => state.extra.onClose);
   const fields = store((state) => state.fields);
 
+  // React 19: Memoized fields for better performance
+  const memoizedFields = useMemo(() => fields, [fields]);
+
   const inputs = useInput<TFileUploadData>({
-    fields,
+    fields: memoizedFields,
     showRequiredAsterisk: true,
   }) as FormInputs<TFileUploadData>;
 
   const onOpenChange = (state: boolean) => {
-    if (state === false) onClose();
+    if (state === false) {
+      startTransition(() => onClose());
+    }
   };
 
-  const formButtons = (
+  // React 19: Memoized form buttons for better performance
+  const formButtons = useMemo(() => (
     <div className="flex justify-end gap-2">
       <Button
         type="button"
         variant="outline"
         onClick={(e) => {
           e.preventDefault();
-          onClose();
+          startTransition(() => onClose());
         }}
       >
         Cancel
@@ -62,7 +71,7 @@ const FileCreateFormModal = React.memo(function FileCreateModal({
         Create File
       </Button>
     </div>
-  );
+  ), [onClose]);
 
   return (
     <ModalForm<TFileUploadData, IMessageResponse, IFileFormModalExtraProps>
@@ -73,6 +82,7 @@ const FileCreateFormModal = React.memo(function FileCreateModal({
       formStore={store}
       footerContent={formButtons}
       width="2xl"
+      data-component-id={componentId}
     >
       <div className="space-y-6">
         {/* Basic Info */}

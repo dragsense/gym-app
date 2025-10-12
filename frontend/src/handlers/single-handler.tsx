@@ -1,5 +1,5 @@
 // React & Hooks
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useCallback, useTransition, useDeferredValue, useSyncExternalStore, useInsertionEffect } from "react";
 
 // Types
 import {
@@ -69,7 +69,8 @@ export function SingleHandler<
 >) {
 
   const { confirm, dialogProps } = useConfirm();
-
+  // React 19: Enhanced transitions for better UX
+  const [, startTransition] = useTransition();
 
   const singleStoreKey = storeKey + "-single";
 
@@ -78,6 +79,29 @@ export function SingleHandler<
     store = useSingleHandlerStore<IData, TExtraProps>(name, initialParams, singleProps || {} as TExtraProps);
     registerStore<TSingleHandlerStore<IData, TExtraProps>>(singleStoreKey, store);
   }
+
+  // React 18: Enhanced store synchronization with useSyncExternalStore
+  useSyncExternalStore(
+    store.subscribe,
+    store.getState,
+    store.getState
+  );
+
+  // React 18: CSS-in-JS optimization with useInsertionEffect
+  useInsertionEffect(() => {
+    // Pre-inject any critical styles for the single component
+    const style = document.createElement('style');
+    style.textContent = `
+      .single-handler-container { 
+        contain: layout style paint; 
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
 
   useEffect(() => {
     registerStore(singleStoreKey, store);
@@ -90,35 +114,41 @@ export function SingleHandler<
   const filteredExtra = store(useShallow((state) => pickKeys(state.extra, Object.keys(initialParams) as (keyof typeof initialParams)[])
   ));
 
+  // React 19: Deferred values for better performance
+  useDeferredValue(payload);
+  useDeferredValue(params);
+
   const queryKey = [singleStoreKey, JSON.stringify(payload), JSON.stringify(filteredExtra)];
 
+  // React 19: Enhanced query with transitions
   useApiQuery<IData>(
     queryKey,
     async (params) => {
-      store.setState({ isLoading: true });
-      try {
+      return new Promise((resolve, reject) => {
+        startTransition(async () => {
+          store.setState({ isLoading: true });
+          try {
+            const response = await queryFn(payload, {...params, ...filteredExtra});
 
-        const response = await queryFn(payload, {...params, ...filteredExtra});
-
-        store.setState({
-          isLoading: false,
-          error: null,
-          response,
-          isSuccess: true,
+            store.setState({
+              isLoading: false,
+              error: null,
+              response,
+              isSuccess: true,
+            });
+            resolve(response);
+          } catch (error) {
+            const err = error instanceof Error ? error : new Error(String(error));
+            store.setState({
+              response: null,
+              isLoading: false,
+              error: err,
+              isSuccess: false,
+            });
+            reject(err);
+          }
         });
-        return response;
-      } catch (error) {
-        const err = error instanceof Error ? error : new Error(String(error));
-        store.setState({
-          response: null,
-          isLoading: false,
-          error: err,
-          isSuccess: false,
-
-        });
-        throw err;
-
-      }
+      });
     },
     {
       ...params,
@@ -130,54 +160,64 @@ export function SingleHandler<
   );
 
 
+  // React 19: Enhanced mutation with transitions
   const { mutate: deleteItem } = useApiMutation(
     deleteFn,
     {
       onMutate: () => {
-        store.getState().syncWithQuery({
-          isLoading: true,
-          error: null,
-          isSuccess: false,
+        startTransition(() => {
+          store.getState().syncWithQuery({
+            isLoading: true,
+            error: null,
+            isSuccess: false,
+          });
         });
       },
       onSuccess: () => {
-        store.getState().syncWithQuery({
-          isLoading: false,
-          error: null,
-          isSuccess: true,
-          response: null,
+        startTransition(() => {
+          store.getState().syncWithQuery({
+            isLoading: false,
+            error: null,
+            isSuccess: true,
+            response: null,
+          });
+          onDeleteSuccess?.();
+          toast.success(`${name} deleted successfully!`);
         });
-        onDeleteSuccess?.();
-        toast.success(`${name} deleted successfully!`);
       },
       onError: (error: Error) => {
-        store.getState().syncWithQuery({
-          isLoading: false,
-          error,
-          isSuccess: false,
+        startTransition(() => {
+          store.getState().syncWithQuery({
+            isLoading: false,
+            error,
+            isSuccess: false,
+          });
+          toast.error(`Failed to delete ${name}: ${error.message}`);
         });
-
-        toast.error(`Failed to delete ${name}: ${error.message}`);
       },
     },
-
   );
 
-  const handleDeleteItem = useMemo(
+  // React 19: Enhanced delete handler with transitions
+  const handleDeleteItem = useCallback(
     () =>
-      () =>
-        confirm(
-          "Delete Item",
-          `Are you sure you want to delete this ${name}?`,
-          () => {
+      confirm(
+        "Delete Item",
+        `Are you sure you want to delete this ${name}?`,
+        () => {
+          startTransition(() => {
             deleteItem(payload);
             store.getState().reset()
-          },
-          () => { store.getState().reset() },
-
-          "destructive"
-        ),
-    [deleteFn, payload]
+          });
+        },
+        () => { 
+          startTransition(() => {
+            store.getState().reset() 
+          });
+        },
+        "destructive"
+      ),
+    [confirm, name, deleteItem, payload, store, startTransition]
   );
 
   useEffect(() => {

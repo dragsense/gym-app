@@ -1,3 +1,6 @@
+// React & Hooks
+import { useId, useMemo, useTransition } from "react";
+
 // Types
 import { type IQueueJob } from "@shared/interfaces/queue.interface";
 
@@ -27,6 +30,9 @@ export default function JobList({
   storeKey,
   store
 }: IJobListProps) {
+  // React 19: Essential IDs and transitions
+  const componentId = useId();
+  const [, startTransition] = useTransition();
 
   if (!store) {
     return <div>List store "{storeKey}" not found. Did you forget to register it?</div>;
@@ -35,17 +41,24 @@ export default function JobList({
   const setAction = store(state => state.setAction);
   const queueName = store(state => state.extra.queueName);
 
+  // React 19: Smooth job actions
   const retryJob = (jobId: string) => {
-    setAction('retryJob', { queueName, jobId });
+    startTransition(() => {
+      setAction('retryJob', { queueName, jobId });
+    });
   };
+  
   const removeJob = (jobId: string) => {
-    setAction('removeJob', { queueName, jobId });
+    startTransition(() => {
+      setAction('removeJob', { queueName, jobId });
+    });
   };
 
-  const { columns } = itemViews({ retryJob, removeJob });
+  // React 19: Memoized columns for better performance
+  const { columns } = useMemo(() => itemViews({ retryJob, removeJob }), [retryJob, removeJob]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-component-id={componentId}>
       <JobFilters store={store} />
       
       <AppCard className="px-0">

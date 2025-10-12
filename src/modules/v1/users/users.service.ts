@@ -12,8 +12,7 @@ import * as bcrypt from 'bcrypt';
 import { User } from '@/modules/v1/users/entities/user.entity';
 import { Profile } from '@/modules/v1/users/profiles/entities/profile.entity';
 import { CreateUserDto, UpdateUserDto, UserListDto } from 'shared/dtos';
-import { EUserRole, EUserLevels } from 'shared/enums';
-import { IMessageResponse, IPaginatedResponse, IListQueryParams } from 'shared/interfaces';
+import { IMessageResponse, IPaginatedResponse } from 'shared/interfaces';
 import { ResetPasswordDto } from 'shared/dtos/user-dtos/reset-password.dto';
 import { PasswordService } from './services/password.service';
 import { TokenService } from '../auth/services/tokens.service';
@@ -28,7 +27,6 @@ export class UsersService {
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
     private readonly dataSource: DataSource,
-    private readonly configService: ConfigService,
     private readonly passwordService: PasswordService,
     private readonly userEmailService: UserEmailService,
     private tokenService: TokenService,

@@ -1,6 +1,6 @@
 // External Libraries
 import { User, LogOut, Loader2, ChevronDown } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useId, useMemo, useTransition, useDeferredValue } from "react";
 
 // UI Components
 import { Button } from "@/components/ui/button";
@@ -28,12 +28,19 @@ interface AppHeaderProps {
 // Use separate settings config object
 
 export function AppHeader({ title }: AppHeaderProps) {
+  // React 19: Essential IDs and transitions
+  const componentId = useId();
+  const [, startTransition] = useTransition();
+  
   // Title is available for future use if needed
   const [isDesktopSettingsOpen, setIsDesktopSettingsOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
   
   const { user } = useAuthUser();
   const { logout, isLoading } = useLogout();
+  
+  // React 19: Deferred user data for better performance
+  const deferredUser = useDeferredValue(user);
 
   // Close desktop settings menu when clicking outside
   useEffect(() => {
@@ -52,12 +59,26 @@ export function AppHeader({ title }: AppHeaderProps) {
     };
   }, [isDesktopSettingsOpen]);
 
-  const firstName = user?.profile?.firstName || "Unknown";
-  const fullName = user ? `${user?.profile?.firstName} ${user?.profile?.lastName}` : "Unknown";
-  const email = user?.email || "Unknown";
+  // React 19: Memoized user data for better performance
+  const memoizedUserData = useMemo(() => {
+    const firstName = deferredUser?.profile?.firstName || "Unknown";
+    const fullName = deferredUser ? `${deferredUser?.profile?.firstName} ${deferredUser?.profile?.lastName}` : "Unknown";
+    const email = deferredUser?.email || "Unknown";
+    return { firstName, fullName, email };
+  }, [deferredUser]);
+
+  // React 19: Smooth logout transitions
+  const handleLogout = (all: boolean = false) => {
+    startTransition(() => {
+      logout(all);
+    });
+  };
 
   return (
-    <header className="group-has-data-[collapsible=icon]/sidebar-wrapper:h-20 flex h-30 shrink-0 items-center gap-2 transition-[width,height] ease-linear">
+    <header 
+      className="group-has-data-[collapsible=icon]/sidebar-wrapper:h-20 flex h-30 shrink-0 items-center gap-2 transition-[width,height] ease-linear"
+      data-component-id={componentId}
+    >
       <div className="flex flex-row w-full items-center justify-between gap-1 px-4 lg:gap-2 lg:px-6">
         <div className="flex flex-1 items-center gap-4" ref={settingsRef}>
           <SidebarTrigger className="-ml-1 block md:hidden" />
@@ -78,20 +99,20 @@ export function AppHeader({ title }: AppHeaderProps) {
               >
                 <Avatar className="h-8 w-8 rounded-lg">
                   {/* User image */}
-                  <AvatarImage src={undefined} alt={firstName} />
+                  <AvatarImage src={undefined} alt={memoizedUserData.firstName} />
 
                   {/* Fallback: initials or icon */}
                   <AvatarFallback className="rounded-lg bg-foreground/2 flex items-center justify-center">
-                    {firstName ? (
-                      firstName.substring(0, 2).toUpperCase() // show initials
+                    {memoizedUserData.firstName ? (
+                      memoizedUserData.firstName.substring(0, 2).toUpperCase() // show initials
                     ) : (
                       <User className="w-4 h-4" /> // show icon if no name
                     )}
                   </AvatarFallback>
                 </Avatar>
                 <div className="hidden md:block text-left">
-                  <div className="font-semibold text-sm">{fullName}</div>
-                  <div className="text-xs text-muted-foreground">{email}</div>
+                  <div className="font-semibold text-sm">{memoizedUserData.fullName}</div>
+                  <div className="text-xs text-muted-foreground">{memoizedUserData.email}</div>
                 </div>
                 <ChevronDown className="h-3 w-3 opacity-60" />
               </Button>
@@ -104,18 +125,18 @@ export function AppHeader({ title }: AppHeaderProps) {
               {/* Mobile User Info Header */}
               <div className="md:hidden flex items-center gap-3 p-4 border-b border-border/50">
                 <Avatar className="h-10 w-10 rounded-lg">
-                  <AvatarImage src={undefined} alt={firstName} />
+                  <AvatarImage src={undefined} alt={memoizedUserData.firstName} />
                   <AvatarFallback className="rounded-lg bg-foreground/2 flex items-center justify-center">
-                    {firstName ? (
-                      firstName.substring(0, 2).toUpperCase()
+                    {memoizedUserData.firstName ? (
+                      memoizedUserData.firstName.substring(0, 2).toUpperCase()
                     ) : (
                       <User className="w-5 h-5" />
                     )}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-sm truncate">{fullName}</div>
-                  <div className="text-xs text-muted-foreground truncate">{email}</div>
+                  <div className="font-semibold text-sm truncate">{memoizedUserData.fullName}</div>
+                  <div className="text-xs text-muted-foreground truncate">{memoizedUserData.email}</div>
                 </div>
               </div>
 
@@ -129,7 +150,7 @@ export function AppHeader({ title }: AppHeaderProps) {
 
               {/* Logout Button */}
               <div className="p-2">
-                <DropdownMenuItem onClick={() => logout()}>
+                <DropdownMenuItem onClick={() => handleLogout()}>
                   {isLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
@@ -138,7 +159,7 @@ export function AppHeader({ title }: AppHeaderProps) {
 
                   <span>Log out</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => logout(true)}>
+                <DropdownMenuItem onClick={() => handleLogout(true)}>
                   {isLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (

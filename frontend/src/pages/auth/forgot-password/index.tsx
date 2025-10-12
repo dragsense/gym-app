@@ -1,5 +1,6 @@
 // External Libraries
 import { toast } from "sonner";
+import { useTransition, useId } from "react";
 
 // Types
 import { EVALIDATION_MODES } from "@/enums/form.enums";
@@ -18,6 +19,10 @@ import { ForgotPasswordDto } from "@shared/dtos";
 
 
 export default function ForgotPasswordPage() {
+  // React 19: Essential IDs and transitions
+  const componentId = useId();
+  const [, startTransition] = useTransition();
+  
   const FORGOT_PASSWORD_INITIAL_VALUES: TForgotPasswordData = {
     email: ""
   };
@@ -29,7 +34,11 @@ export default function ForgotPasswordPage() {
       initialValues={FORGOT_PASSWORD_INITIAL_VALUES}
       validationMode={EVALIDATION_MODES.OnChange}
       dto={ForgotPasswordDto}
-      onSuccess={() => toast.success('Password reset instructions sent to your email')}
+      onSuccess={() => {
+        startTransition(() => {
+          toast.success('Password reset instructions sent to your email');
+        });
+      }}
       onError={(error) => toast.error('Failed to send reset instructions: ' + error?.message)}
       storeKey="forgot-password"
     />

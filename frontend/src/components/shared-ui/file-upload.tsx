@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useId, useMemo, useTransition } from "react";
 import { X, FileImage, FileVideo, FileAudio, FileText, File as FileIcon, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { IFileUpload } from "@shared/interfaces/file-upload.interface";
@@ -21,6 +21,10 @@ export default function FileUpload({
     disabled,
     variant = "card",
 }: FileUploadProps) {
+    // React 19: Essential IDs and transitions
+    const componentId = useId();
+    const [, startTransition] = useTransition();
+    
     const [isDragOver, setIsDragOver] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [preview, setPreview] = useState<{
@@ -70,9 +74,20 @@ export default function FileUpload({
         return true;
     };
 
+    // React 19: Memoized file icon for better performance
+    const getFileIcon = useMemo(() => (type: string) => {
+        if (type.startsWith("image/")) return <FileImage className="w-8 h-8 text-blue-500" />;
+        if (type.startsWith("video/")) return <FileVideo className="w-8 h-8 text-purple-500" />;
+        if (type.startsWith("audio/")) return <FileAudio className="w-8 h-8 text-green-500" />;
+        if (type.includes("pdf") || type.includes("document")) return <FileText className="w-8 h-8 text-red-500" />;
+        return <FileIcon className="w-8 h-8 text-gray-500" />;
+    }, []);
+
     const handleFileUpload = (file: File) => {
         if (validateFile(file)) {
-            onChange?.(file);
+            startTransition(() => {
+                onChange?.(file);
+            });
         }
     };
 
@@ -104,17 +119,11 @@ export default function FileUpload({
     };
 
     const removeFile = () => {
-        setPreview(null);
-        setError(null);
-        onChange?.(null);
-    };
-
-    const getFileIcon = (type: string) => {
-        if (type.startsWith("image/")) return <FileImage className="w-8 h-8 text-blue-500" />;
-        if (type.startsWith("video/")) return <FileVideo className="w-8 h-8 text-purple-500" />;
-        if (type.startsWith("audio/")) return <FileAudio className="w-8 h-8 text-green-500" />;
-        if (type.includes("pdf") || type.includes("document")) return <FileText className="w-8 h-8 text-red-500" />;
-        return <FileIcon className="w-8 h-8 text-gray-500" />;
+        startTransition(() => {
+            setPreview(null);
+            setError(null);
+            onChange?.(null);
+        });
     };
 
     const renderPreview = () => {
@@ -280,7 +289,7 @@ export default function FileUpload({
     };
 
     return (
-        <div className="w-full flex flex-col items-center gap-2">
+        <div className="w-full flex flex-col items-center gap-2" data-component-id={componentId}>
             {preview ? renderPreview() : renderUploadZone()}
 
             {error && <p className="text-sm text-red-600 text-center">{error}</p>}

@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useId, useMemo, useTransition } from "react";
 import { X, FileImage, FileVideo, FileAudio, FileText, File as FileIcon, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { IFileUpload } from "@shared/interfaces/file-upload.interface";
@@ -20,6 +20,10 @@ export default function MultiFileUpload({
     value = [],
     disabled,
 }: MultiFileUploadProps) {
+    // React 19: Essential IDs and transitions
+    const componentId = useId();
+    const [, startTransition] = useTransition();
+    
     const [isDragOver, setIsDragOver] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -41,15 +45,26 @@ export default function MultiFileUpload({
         return true;
     };
 
+    // React 19: Memoized file icon for better performance
+    const getFileIcon = useMemo(() => (type: string) => {
+        if (type.startsWith("image/")) return <FileImage className="w-6 h-6 text-blue-500" />;
+        if (type.startsWith("video/")) return <FileVideo className="w-6 h-6 text-purple-500" />;
+        if (type.startsWith("audio/")) return <FileAudio className="w-6 h-6 text-green-500" />;
+        if (type.includes("pdf") || type.includes("document")) return <FileText className="w-6 h-6 text-red-500" />;
+        return <FileIcon className="w-6 h-6 text-gray-500" />;
+    }, []);
+
     const handleFileUpload = (newFiles: File[]) => {
         const validFiles = newFiles.filter(validateFile);
         if (validFiles.length > 0) {
-            const currentFiles = value.filter((f): f is File => f instanceof File);
-            const totalFiles = [...currentFiles, ...validFiles];
-            
-            // Limit to maxFiles
-            const limitedFiles = totalFiles.slice(0, maxFiles);
-            onChange?.(limitedFiles);
+            startTransition(() => {
+                const currentFiles = value.filter((f): f is File => f instanceof File);
+                const totalFiles = [...currentFiles, ...validFiles];
+                
+                // Limit to maxFiles
+                const limitedFiles = totalFiles.slice(0, maxFiles);
+                onChange?.(limitedFiles);
+            });
         }
     };
 
@@ -79,18 +94,12 @@ export default function MultiFileUpload({
     };
 
     const removeFile = (index: number) => {
-        const currentFiles = value.filter((f): f is File => f instanceof File);
-        const newFiles = currentFiles.filter((_, i) => i !== index);
-        setError(null);
-        onChange?.(newFiles);
-    };
-
-    const getFileIcon = (type: string) => {
-        if (type.startsWith("image/")) return <FileImage className="w-6 h-6 text-blue-500" />;
-        if (type.startsWith("video/")) return <FileVideo className="w-6 h-6 text-purple-500" />;
-        if (type.startsWith("audio/")) return <FileAudio className="w-6 h-6 text-green-500" />;
-        if (type.includes("pdf") || type.includes("document")) return <FileText className="w-6 h-6 text-red-500" />;
-        return <FileIcon className="w-6 h-6 text-gray-500" />;
+        startTransition(() => {
+            const currentFiles = value.filter((f): f is File => f instanceof File);
+            const newFiles = currentFiles.filter((_, i) => i !== index);
+            setError(null);
+            onChange?.(newFiles);
+        });
     };
 
     const getFileName = (file: File | IFileUpload): string => {
@@ -176,7 +185,7 @@ export default function MultiFileUpload({
     };
 
     return (
-        <div className="w-full flex flex-col gap-2">
+        <div className="w-full flex flex-col gap-2" data-component-id={componentId}>
             {value.length < maxFiles && renderUploadZone()}
             {renderFileList()}
             {error && <p className="text-sm text-red-600">{error}</p>}

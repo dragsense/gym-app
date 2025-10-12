@@ -1,5 +1,6 @@
 // External Libraries
 import { type ColumnDef } from "@tanstack/react-table";
+import { useId, useMemo, useTransition } from "react";
 
 // Components
 import { Badge } from "@/components/ui/badge";
@@ -28,19 +29,22 @@ export const itemViews = ({
 }): {
   columns: ColumnDef<IWorker>[];
 } => {
+  // React 19: Essential IDs and transitions
+  const componentId = useId();
+  const [, startTransition] = useTransition();
   
   const setAction = store.getState().setAction;
 
   const pauseWorker = (workerId: string) => {
-    setAction('pauseWorker', workerId);
+    startTransition(() => setAction('pauseWorker', workerId));
   };
 
   const resumeWorker = (workerId: string) => {
-    setAction('resumeWorker', workerId);
+    startTransition(() => setAction('resumeWorker', workerId));
   };
 
   const stopWorker = (workerId: string) => {
-    setAction('stopWorker', workerId);
+    startTransition(() => setAction('stopWorker', workerId));
   };
 
   const columns: ColumnDef<IWorker>[] = [
@@ -127,7 +131,7 @@ export const itemViews = ({
         const worker = row.original;
         
         return (
-          <div className="flex gap-1">
+          <div className="flex gap-1" data-component-id={componentId}>
             {worker.status === 'running' ? (
               <TooltipProvider>
                 <Tooltip>

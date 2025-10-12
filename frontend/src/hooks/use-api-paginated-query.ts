@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useDeferredValue } from "react";
 import { useQuery, type UseQueryOptions } from "@tanstack/react-query";
 import type { IPaginatedResponse } from "@shared/interfaces/api/response.interface";
 import type { IListQueryParams } from "@shared/interfaces/api/param.interface";
@@ -67,14 +67,17 @@ export function useApiPaginatedQuery<T = any>(
   const [accumulated, setAccumulated] = useState<T[]>([]);
   const [currentPage, setCurrentPage] = useState(initialParams.page ?? 1);
 
+  // React 19: Deferred params for better performance
+  const deferredParams = useDeferredValue(params);
+
   const key = useMemo(
-    () => [...(Array.isArray(queryKey) ? queryKey : [queryKey]), params],
-    [queryKey, params]
+    () => [...(Array.isArray(queryKey) ? queryKey : [queryKey]), deferredParams],
+    [queryKey, deferredParams]
   );
 
   const query = useQuery<IPaginatedResponse<T>, Error>({
     queryKey: key,
-    queryFn: () => queryFn(params),
+    queryFn: () => queryFn(deferredParams),
     ...(options as BaseOptions<T>),
   });
 

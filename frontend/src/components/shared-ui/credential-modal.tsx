@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Copy, Check, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useId, useMemo, useTransition } from "react";
 import { AppDialog } from "@/components/layout-ui/app-dialog";
 import { toast } from "sonner";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -20,23 +20,34 @@ export function CredentialModal({
   email,
   password,
 }: CredentialModalProps) {
+  // React 19: Essential IDs and transitions
+  const componentId = useId();
+  const [, startTransition] = useTransition();
+  
   const [copied, setCopied] = useState(false);
   const rootUrl = window.location.origin;
   const loginUrl = `${rootUrl}/login`;
 
-  const credentialsText = `Account Details\n\nEmail: ${email}\nPassword: ${password}\n\nLogin URL: ${loginUrl}`;
+  // React 19: Memoized credentials text for better performance
+  const credentialsText = useMemo(() => 
+    `Account Details\n\nEmail: ${email}\nPassword: ${password}\n\nLogin URL: ${loginUrl}`,
+    [email, password, loginUrl]
+  );
 
+  // React 19: Smooth copy operation
   const copyAllCredentials = () => {
-    navigator.clipboard.writeText(credentialsText);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-    toast.success("All credentials copied to clipboard");
+    startTransition(() => {
+      navigator.clipboard.writeText(credentialsText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      toast.success("All credentials copied to clipboard");
+    });
   };
 
   return (
     <Dialog open={open}
       onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent data-component-id={componentId}>
         <AppDialog
           title="Customer Account Created"
           description="Credentials have been sent to the user's email."
@@ -98,8 +109,10 @@ export function CredentialModal({
               </Button>
               <Button
                 onClick={() => {
-                  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(credentialsText)}`;
-                  window.open(whatsappUrl, "_blank");
+                  startTransition(() => {
+                    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(credentialsText)}`;
+                    window.open(whatsappUrl, "_blank");
+                  });
                 }}
               >
                 Share via WhatsApp

@@ -1,4 +1,4 @@
-import {Activity, type LucideIcon, UserCheck, FileText, CalendarClock, Database, Workflow, Server, Cpu } from "lucide-react";
+import {Activity, type LucideIcon, UserCheck, FileText, CalendarClock, Database, Workflow, Server, Cpu, Shield } from "lucide-react";
 import { ADMIN_ROUTES } from "./routes.config";
 
 // Separate settings configuration object
@@ -45,14 +45,19 @@ export const navItems: {
             icon: Workflow,
         },
         {
-            title: "Cluster Dashboard",
-            urls: [ADMIN_ROUTES.CLUSTER],
+            title: "Dashboard",
+            urls: [ADMIN_ROUTES.DASHBOARD],
             icon: Server,
         },
         {
             title: "Worker Management",
             urls: [ADMIN_ROUTES.WORKERS],
             icon: Cpu,
+        },
+        {
+            title: "Roles & Permissions",
+            urls: [ADMIN_ROUTES.ROLES],
+            icon: Shield,
         },
     ];
 

@@ -1,6 +1,7 @@
 // External Libraries
 import { toast } from "sonner";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useTransition, useId } from "react";
 
 // Types
 import { EVALIDATION_MODES } from "@/enums/form.enums";
@@ -23,6 +24,10 @@ import { PUBLIC_ROUTES } from "@/config/routes.config";
 
 
 export default function ResetPasswordPage() {
+  // React 19: Essential IDs and transitions
+  const componentId = useId();
+  const [, startTransition] = useTransition();
+  
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
@@ -46,8 +51,10 @@ export default function ResetPasswordPage() {
       validationMode={EVALIDATION_MODES.OnChange}
       dto={ResetPasswordWithTokenDto}
       onSuccess={() => {
-        toast.success('Password reset successfully');
-        navigate(PUBLIC_ROUTES.LOGIN);
+        startTransition(() => {
+          toast.success('Password reset successfully');
+          navigate(PUBLIC_ROUTES.LOGIN);
+        });
       }}
       onError={(error) => toast.error('Failed to reset password: ' + error?.message)}
       storeKey="reset-password"

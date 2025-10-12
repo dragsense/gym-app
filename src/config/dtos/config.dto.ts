@@ -146,4 +146,88 @@ export class EnvironmentVariables {
   @IsString()
   @IsOptional()
   API_PREFIX: string;
+
+  // Cache Configuration
+  @IsString()
+  @IsOptional()
+  CACHE_HOST: string;
+
+  @IsNumber()
+  @IsOptional()
+  CACHE_PORT: number;
+
+  @IsString()
+  @IsOptional()
+  CACHE_PASSWORD: string;
+
+  @IsNumber()
+  @IsOptional()
+  CACHE_DB: number;
+
+  @IsNumber()
+  @IsOptional()
+  CACHE_DEFAULT_TTL: number;
+
+  @IsNumber()
+  @IsOptional()
+  CACHE_MAX_ITEMS: number;
+
+  @IsString()
+  @IsOptional()
+  CACHE_PREFIX: string;
+
+  @IsBoolean()
+  @IsOptional()
+  CACHE_ENABLED: boolean;
+
+  // Dragonfly Configuration (for Bull Queue)
+  @IsString()
+  @IsOptional()
+  DRAGONFLY_HOST: string;
+
+  @IsNumber()
+  @IsOptional()
+  DRAGONFLY_PORT: number;
+
+  @IsString()
+  @IsOptional()
+  DRAGONFLY_PASSWORD: string;
+
+  @IsNumber()
+  @IsOptional()
+  DRAGONFLY_DB: number;
+
+  // Bull Queue Configuration - Only Dragonfly config is used
+
+  // Cluster Configuration
+  @IsBoolean()
+  @IsOptional()
+  CLUSTER_ENABLED: boolean;
+
+  @IsNumber()
+  @IsOptional()
+  CLUSTER_WORKERS: number;
+
+  // Activity Logs Configuration
+  @IsBoolean()
+  @IsOptional()
+  ACTIVITY_LOGS_ENABLED: boolean;
+
+  // Mailer Configuration
+  @IsString()
+  @IsOptional()
+  MAIL_ADMIN_EMAIL: string;
+
+  @IsString()
+  @IsOptional()
+  MAIL_DKIM_SELECTOR: string;
+
+  @IsString()
+  @IsOptional()
+  MAIL_DKIM_PRIVATE_KEY_PATH: string;
+
+  // Encryption Configuration
+  @IsString()
+  @IsOptional()
+  ENCRYPTION_ALGORITHM: string;
 }

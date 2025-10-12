@@ -1,4 +1,5 @@
 // React & Hooks
+import { useId, useMemo, useTransition } from "react";
 import { XIcon } from "lucide-react";
 
 // UI Components
@@ -16,6 +17,10 @@ interface IQueueFiltersProps {
 }
 
 export function QueueFilters({ store }: IQueueFiltersProps) {
+  // React 19: Essential IDs and transitions
+  const componentId = useId();
+  const [, startTransition] = useTransition();
+
   const filteredFields = store.getState().filteredFields;
   const filters = store((state) => state.filters);
   const setFilters = store.getState().setFilters;
@@ -24,10 +29,15 @@ export function QueueFilters({ store }: IQueueFiltersProps) {
     fields: filteredFields as TFieldConfigObject<QueueListDto>,
   });
 
-  const hasActiveFilters = Object.keys(filters).length > 0;
+  // React 19: Memoized active filters check for better performance
+  const hasActiveFilters = useMemo(() => Object.keys(filters).length > 0, [filters]);
+
+  const handleClearFilters = () => {
+    startTransition(() => setFilters({}));
+  };
 
   return (
-    <div className="flex-1 flex items-end gap-2 flex-wrap">
+    <div className="flex-1 flex items-end gap-2 flex-wrap" data-component-id={componentId}>
       {inputs.search}
       {inputs.status}
       {inputs.createdAfter}
@@ -37,7 +47,7 @@ export function QueueFilters({ store }: IQueueFiltersProps) {
       {hasActiveFilters && (
         <Button
           variant="outline"
-          onClick={() => setFilters({})}
+          onClick={handleClearFilters}
           className="hidden lg:flex"
         >
           <XIcon className="h-4 w-4 mr-2" />

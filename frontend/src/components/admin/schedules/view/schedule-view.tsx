@@ -1,5 +1,6 @@
 import { Calendar, Clock, Activity, AlertCircle, CheckCircle, XCircle } from "lucide-react";
 import { useShallow } from "zustand/shallow";
+import { useId, useMemo, useTransition } from "react";
 
 // Types
 import { type ISchedule } from "@shared/interfaces/schedule.interface";
@@ -52,6 +53,10 @@ const getStatusColor = (status: EScheduleStatus) => {
 
 
 function ScheduleView({ store, storeKey }: IScheduleViewProps) {
+    // React 19: Essential IDs and transitions
+    const componentId = useId();
+    const [, startTransition] = useTransition();
+
     if (!store) {
         return <div>Single store "{storeKey}" not found. Did you forget to register it?</div>;
     }
@@ -68,11 +73,11 @@ function ScheduleView({ store, storeKey }: IScheduleViewProps) {
 
     
     const handleCloseView = () => {
-        reset();
+        startTransition(() => reset());
     };
 
   return (
-    <Dialog open={action === 'view'} onOpenChange={handleCloseView}>
+    <Dialog open={action === 'view'} onOpenChange={handleCloseView} data-component-id={componentId}>
     <DialogContent className="min-w-2xl max-h-[90vh] overflow-y-auto">
         <AppDialog
             title="Schedule Details"

@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useId, useMemo, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -54,25 +54,63 @@ export function AppComboBox<T>({
   getValue,
   shouldFilter = true
 }: AppComboBoxProps<T>) {
+  // React 19: Essential IDs and transitions
+  const componentId = useId();
+  const [, startTransition] = useTransition();
+  
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
   const [popoverWidth, setPopoverWidth] = useState<number | undefined>(undefined);
+  
+  // React 19: Smooth popover transitions
   const handleOpenChange = (nextOpen: boolean) => {
-    setOpen(nextOpen);
-    if (nextOpen && triggerRef.current) {
-      setPopoverWidth(triggerRef.current.offsetWidth);
-    }
+    startTransition(() => {
+      setOpen(nextOpen);
+      if (nextOpen && triggerRef.current) {
+        setPopoverWidth(triggerRef.current.offsetWidth);
+      }
+    });
   };
 
-  // Multi-select logic - work with values, not keys
-  const selectedValues: T[] = multiple
-    ? (Array.isArray(value) ? value : [])
-    : [];
-
+  // React 19: Memoized selected values for better performance
+  const selectedValues: T[] = useMemo(() => 
+    multiple ? (Array.isArray(value) ? value : []) : [], 
+    [multiple, value]
+  );
 
   const maxTags = 5;
   const extraCount = multiple ? selectedValues.length - maxTags : 0;
+
+  // React 19: Smooth selection changes
+  const handleSelectionChange = (item: T) => {
+    startTransition(() => {
+      if (multiple) {
+        const itemValue = getValue(item);
+        const isSelected = selectedValues.some((val) => {
+          if (typeof val === 'object' && typeof itemValue === 'object') {
+            return JSON.stringify(val) === JSON.stringify(itemValue);
+          }
+          return val === itemValue;
+        });
+
+        if (isSelected) {
+          const filtered = selectedValues.filter((val) => {
+            if (typeof val === 'object' && typeof itemValue === 'object') {
+              return JSON.stringify(val) !== JSON.stringify(itemValue);
+            }
+            return val !== itemValue;
+          });
+          onChange(filtered as T[]);
+        } else {
+          onChange([...selectedValues, itemValue] as T[]);
+        }
+      } else {
+        onChange(getValue(item));
+        setOpen(false);
+      }
+    });
+  };
 
 
   return (
@@ -84,6 +122,7 @@ export function AppComboBox<T>({
           className="w-full justify-between min-h-[40px] h-auto flex-nowrap overflow-hidden"
           disabled={disabled}
           style={{ textAlign: "left" }}
+          data-component-id={componentId}
         >
           <span className="flex flex-wrap gap-1 items-center w-full">
             {multiple ? (
@@ -150,32 +189,7 @@ export function AppComboBox<T>({
                   {items.map((item) => (
                     <CommandItem
                       key={getKey(item)}
-                      onSelect={() => {
-                        if (multiple) {
-                          const itemValue = getValue(item);
-                          const isSelected = selectedValues.some((val) => {
-                            if (typeof val === 'object' && typeof itemValue === 'object') {
-                              return JSON.stringify(val) === JSON.stringify(itemValue);
-                            }
-                            return val === itemValue;
-                          });
-
-                          if (isSelected) {
-                            const filtered = selectedValues.filter((val) => {
-                              if (typeof val === 'object' && typeof itemValue === 'object') {
-                                return JSON.stringify(val) !== JSON.stringify(itemValue);
-                              }
-                              return val !== itemValue;
-                            });
-                            onChange(filtered as T[]);
-                          } else {
-                            onChange([...selectedValues, itemValue] as T[]);
-                          }
-                        } else {
-                          onChange(getValue(item));
-                          setOpen(false);
-                        }
-                      }}
+                      onSelect={() => handleSelectionChange(item)}
                       className="cursor-pointer"
                     >
                       {multiple && (

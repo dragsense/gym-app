@@ -1,6 +1,7 @@
 // React & Hooks
 import type { ReactNode } from "react";
 import { useLocation } from "react-router-dom";
+import { useId, useDeferredValue, useMemo } from "react";
 
 // External Libraries
 import { Outlet } from "react-router-dom";
@@ -28,10 +29,13 @@ interface DashboardLayoutProps {
 
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
+  // React 19: Essential IDs
+  const componentId = useId();
+  
   const location = useLocation();
 
-
-  const getRouteTitle = () => {
+  // React 19: Memoized route title calculation for better performance
+  const title = useMemo(() => {
     if (ROUTE_TITLES[location.pathname]) {
       return ROUTE_TITLES[location.pathname];
     }
@@ -43,21 +47,19 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }
 
     return "Unknown Page";
-  };
+  }, [location.pathname]);
 
-  const title = getRouteTitle();
+  // React 19: Deferred title for better performance during navigation
+  const deferredTitle = useDeferredValue(title);
 
   return (
     <SidebarProvider>
-
-      <AppSidebar
-     
-      />
+      <AppSidebar />
       <SidebarInset
         className="w-100"
-
+        data-component-id={componentId}
       >
-        <AppHeader title={title} />
+        <AppHeader title={deferredTitle} />
 
         <div className="flex flex-1 flex-col p-4 lg:px-6 pb-20">
 

@@ -1,6 +1,6 @@
 
 // React & Hooks
-import { useEffect, useState } from "react";
+import { useEffect, useState, useId, useMemo, useTransition } from "react";
 
 // Types
 import type { TCustomInputWrapper } from "@/@types/form/field-config.type";
@@ -34,9 +34,19 @@ export const SearchableInputWrapper = <T,>({
     getValue,
     shouldFilter = true
 }: UserInputPropsWrapperProps<T>) => {
+    // React 19: Essential IDs and transitions
+    const componentId = useId();
+    const [, startTransition] = useTransition();
 
     const { response, isLoading, error, setFilters } = useSearchable();
     const [search, setSearch] = useState("");
+
+    // React 19: Memoized search handler for better performance
+    const handleSearchChange = useMemo(() => (newSearch: string) => {
+        startTransition(() => {
+            setSearch(newSearch);
+        });
+    }, []);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -44,26 +54,28 @@ export const SearchableInputWrapper = <T,>({
         }, 300);
 
         return () => clearTimeout(timer);
-    }, [search]);
+    }, [search, setFilters]);
 
 
     return (
-        <AppComboBox<T>
-            value={multiple ? (value || []) : (value ?? "")}
-            getValue={getValue}
-            onChange={onChange}
-            items={(response?.data || [])}
-            loading={isLoading}
-            error={error?.message || null}
-            getKey={getKey}
-            getLabel={getLabel}
-            search={search}
-            onSearchChange={setSearch}
-            placeholder={"Select..."}
-            multiple={multiple}
-            modal={modal}
-            disabled={disabled}
-            shouldFilter={shouldFilter}
-        />
+        <div data-component-id={componentId}>
+            <AppComboBox<T>
+                value={multiple ? (value || []) : (value ?? "")}
+                getValue={getValue}
+                onChange={onChange}
+                items={(response?.data || [])}
+                loading={isLoading}
+                error={error?.message || null}
+                getKey={getKey}
+                getLabel={getLabel}
+                search={search}
+                onSearchChange={handleSearchChange}
+                placeholder={"Select..."}
+                multiple={multiple}
+                modal={modal}
+                disabled={disabled}
+                shouldFilter={shouldFilter}
+            />
+        </div>
     );
 };

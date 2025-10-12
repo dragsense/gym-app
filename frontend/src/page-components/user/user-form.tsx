@@ -3,7 +3,7 @@
 import { useShallow } from 'zustand/shallow';
 import { Loader2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import {  useState } from "react";
+import { useState, useMemo, useCallback, useId, useTransition, useDeferredValue } from "react";
 
 // Handlers
 import { FormHandler } from "@/handlers";
@@ -40,7 +40,10 @@ export default function UserForm({
     storeKey,
     store,
 }: IUserFormProps) {
-
+    // React 19: Essential IDs and transitions
+    const componentId = useId();
+    const [, startTransition] = useTransition();
+    
     const queryClient = useQueryClient();
     const [credentialModalContent, setCredentialModalContent] = useState({
         open: false,
@@ -48,20 +51,39 @@ export default function UserForm({
         password: ""
     });
 
-
     if (!store) {
         return <div>Single store "{storeKey}" not found. Did you forget to register it?</div>;
     }
 
-
-    const { action, response, isLoading, setAction, reset, extra } = store(useShallow(state => ({
+    const { action, response, isLoading, setAction, reset } = store(useShallow(state => ({
         action: state.action,
         response: state.response,
         isLoading: state.isLoading,
-        extra: state.extra,
         setAction: state.setAction,
         reset: state.reset
     })));
+
+    // React 19: Memoized initial values with deferred processing
+    const initialValues = useMemo(() => {
+        const INITIAL_VALUES: TUserData = {
+            email: "",
+            isActive: true,
+            profile: {
+                firstName: "",
+                lastName: "",
+                phoneNumber: "",
+                dateOfBirth: new Date(
+                    new Date().setFullYear(new Date().getFullYear() - 12)
+                ).toISOString(),
+                address: "",
+                gender: EUserGender.MALE
+            }
+        };
+        return strictDeepMerge<TUserData>(INITIAL_VALUES, response ?? {});
+    }, [response]);
+    
+    // React 19: Deferred values for performance
+    const deferredInitialValues = useDeferredValue(initialValues);
 
 
     if (isLoading) {
@@ -73,77 +95,67 @@ export default function UserForm({
     }
 
 
-    const INITIAL_VALUES: TUserData = {
-
-        email: "",
-        isActive: true,
-
-        profile: {
-            firstName: "",
-            lastName: "",
-            phoneNumber: "",
-            dateOfBirth: new Date(
-                new Date().setFullYear(new Date().getFullYear() - 12)
-            ).toISOString(),
-            address: "",
-            gender: EUserGender.MALE
-        }
-    };
-
-    const initialValues = strictDeepMerge<TUserData>(INITIAL_VALUES, response ?? {});
-
-    const handleClose = () => {
-        reset();
-        setAction('none');
-        setCredentialModalContent({ open: false, email: "", password: "" });
-    };
-
-
+    // React 19: Handlers with transitions
+    const handleClose = useCallback(() => {
+        startTransition(() => {
+            reset();
+            setAction('none');
+            setCredentialModalContent({ open: false, email: "", password: "" });
+        });
+    }, [reset, setAction, startTransition]);
 
     const isEditing = !!response?.id;
+
     const mutationFn = isEditing ? updateUser(response.id) : createUser;
     const dto = isEditing ? UpdateUserDto : CreateUserDto;
 
-    return <>
-        <FormHandler<TUserData, TUserResponse, IUserFormModalExtraProps>
-            mutationFn={mutationFn}
-            FormComponent={UserFormModal}
-            storeKey={storeKey}
-            initialValues={initialValues}
-            dto={dto}
-            validationMode={EVALIDATION_MODES.OnSubmit}
-            isEditing={isEditing}
-            onSuccess={(response) => {
-                queryClient.invalidateQueries({ queryKey: [storeKey + "-list"] });
+    return (
+        <div data-component-id={componentId}>
+            <FormHandler<TUserData, TUserResponse, IUserFormModalExtraProps>
+                mutationFn={mutationFn}
+                FormComponent={UserFormModal}
+                storeKey={storeKey}
+                initialValues={deferredInitialValues}
+                dto={dto}
+                validationMode={EVALIDATION_MODES.OnSubmit}
+                isEditing={isEditing}
+                onSuccess={(response) => {
+                    startTransition(() => {
+                        queryClient.invalidateQueries({ queryKey: [storeKey + "-list"] });
 
-                if (response && 'user' in response && response.user) {
-                    setCredentialModalContent({
-                        open: true,
-                        email: response.user.email,
-                        password: response.user.password || ""
-                    })
-                }
+                        if (response && 'user' in response && response.user) {
+                            setCredentialModalContent({
+                                open: true,
+                                email: response.user.email,
+                                password: response.user.password || ""
+                            })
+                        }
+                    });
+                }}
+                formProps={{
+                    open: action === 'createOrUpdate',
+                    onClose: handleClose,
+                }}
+            />
 
-            }}
-            formProps={{
-                open: action === 'createOrUpdate',
-                onClose: handleClose,
-            }}
-        />
-
-        <CredentialModal
-            open={credentialModalContent.open}
-            onOpenChange={(state: boolean) => {
-                if (!state) {
-                    handleClose();
-                }
-            }}
-            closeModal={() => {
-                handleClose();
-            }}
-            email={credentialModalContent.email}
-            password={credentialModalContent.password}
-        />
-    </>
+            <CredentialModal
+                open={credentialModalContent.open}
+                onOpenChange={(state: boolean) => {
+                    startTransition(() => {
+                        if (!state) {
+                            handleClose();
+                        }
+                    });
+                }}
+                closeModal={() => {
+                    startTransition(() => {
+                        handleClose();
+                    });
+                }}
+                email={credentialModalContent.email}
+                password={credentialModalContent.password}
+            />
+        </div>
+    )
 
 }

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { TextField, TextareaField, SelectField, SwitchField, DateField, useArrayField, CustomField, FileField, MultiFileField } from "@/components/form-ui/field-components";
 import type { TFieldConfig, TFieldConfigObject } from "@/@types/form/field-config.type";
 
@@ -39,7 +39,8 @@ export function useInput<T>({
   showRequiredAsterisk,
   layout = "vertical",
 }: UseInputProps<T>): FormInputs<T> {
-  const renderField = (field: TFieldConfig<T>, parentName?: string):
+  // React 19: Memoized field renderer for better performance
+  const renderField = useMemo(() => (field: TFieldConfig<T>, parentName?: string):
     React.ReactNode |
     Record<string, React.ReactNode> |
     React.ReactNode => {
@@ -96,7 +97,7 @@ export function useInput<T>({
       default:
         return null;
     }
-  };
+  }, [showRequiredAsterisk, layout]);
 
   return renderFormInputs(fields, renderField) as FormInputs<T>;
 }

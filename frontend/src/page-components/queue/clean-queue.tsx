@@ -1,5 +1,5 @@
 // External Libraries
-import { useState } from "react";
+import { useCallback, useMemo, useId, useTransition, useDeferredValue } from "react";
 import { useShallow } from 'zustand/shallow';
 import { Loader2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -24,9 +24,11 @@ export default function CleanQueue({
   storeKey,
   store
 }: ICleanQueueProps) {
-
+  // React 19: Essential IDs and transitions
+  const componentId = useId();
+  const [isPending, startTransition] = useTransition();
+  
   const queryClient = useQueryClient();
-  const [isLoading, setIsLoading] = useState(false);
 
   if (!store) {
     return <div>List store "{storeKey}" not found. Did you forget to register it?</div>;
@@ -38,49 +40,63 @@ export default function CleanQueue({
     payload: state.payload,
   })));
 
-  const handleClean = async () => {
-    try {
-      setIsLoading(true);
-      await cleanQueue(payload);
-      queryClient.invalidateQueries({ queryKey: [`${storeKey}-list`] });
-      setAction('none');
-    } catch (error) {
-      console.error('Failed to clean queue:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // React 19: Deferred payload for better performance
+  const deferredPayload = useDeferredValue(payload);
 
-  return (
-    <Dialog 
-      open={action === 'cleanQueue'}
-      onOpenChange={(state: boolean) => {
+  // React 19: Enhanced async handler with transitions
+  const handleClean = useCallback(async () => {
+    startTransition(async () => {
+      try {
+        await cleanQueue(deferredPayload);
+        queryClient.invalidateQueries({ queryKey: [`${storeKey}-list`] });
+        setAction('none');
+      } catch (error) {
+        console.error('Failed to clean queue:', error);
+      }
+    });
+  }, [deferredPayload, queryClient, storeKey, setAction, startTransition]);
+
+  // React 19: Enhanced dialog props with transitions
+  const dialogProps = useMemo(() => ({
+    open: action === 'cleanQueue',
+    onOpenChange: (state: boolean) => {
+      startTransition(() => {
         if (!state) {
           setAction('none');
         }
-      }}>
-      <DialogContent>
-        <AppDialog
-          title="Clean Queue"
-          description={`Are you sure you want to clean the queue "${payload}"? This will remove all completed and failed jobs.`}
-        >
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setAction('none')}
-            >
-              Cancel
-            </Button>
+      });
+    }
+  }), [action, setAction, startTransition]);
+
+  return (
+    <div 
+      data-component-id={componentId}
+    >
+      <Dialog {...dialogProps}>
+        <DialogContent>
+          <AppDialog
+            title="Clean Queue"
+            description={`Are you sure you want to clean the queue "${deferredPayload}"? This will remove all completed and failed jobs.`}
+          >
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => startTransition(() => setAction('none'))}
+                disabled={isPending}
+              >
+                Cancel
+              </Button>
             <Button
               onClick={handleClean}
-              disabled={isLoading}
+              disabled={isPending}
             >
-              {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Clean Queue
             </Button>
-          </div>
-        </AppDialog>
-      </DialogContent>
-    </Dialog>
+            </div>
+          </AppDialog>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }

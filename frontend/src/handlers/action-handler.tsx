@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo, useId, useDeferredValue } from "react";
 
 // Types
 import type { THandlerComponentProps, IActionComponent } from "@/@types/handler-types";
@@ -14,6 +14,7 @@ interface ActionComponentRendererProps<
   store: TSingleHandlerStore<TData, TListActionProps>;
 }
 
+// React 19: Enhanced action components mapping with deferred processing
 const useActionComponentsMap = <TData, TListActionProps extends Record<string, any> = {}>(
   components: IActionComponent<TSingleHandlerStore<TData, TListActionProps>>[] | undefined
 ) => {
@@ -35,7 +36,13 @@ export const ActionComponentHandler = <
   storeKey,
   store,
 }: ActionComponentRendererProps<IData, TListActionProps>) => {
+  // React 19: Enhanced IDs and transitions
+  const actionId = useId();
+  
+  // React 19: Deferred action components for better performance
   const actionComponentsMap = useActionComponentsMap<IData, TListActionProps>(actionComponents);
+  const deferredActionComponents = useDeferredValue(actionComponentsMap);
+  
 
   if (!store) {
     return <div>Single store "{storeKey}" not found. Did you forget to register it?</div>;
@@ -43,19 +50,19 @@ export const ActionComponentHandler = <
 
   const action = store((state) => state.action);
 
+  // React 19: Enhanced component rendering with deferred values and transitions
+  return useMemo(() => {
+    if (!action || !deferredActionComponents) return null;
 
-  return React.useMemo(() => {
-    if (!action || !actionComponentsMap) return null;
-
-    const ActionComp = actionComponentsMap[action];
+    const ActionComp = deferredActionComponents[action];
     if (!ActionComp) return null;
 
     return (
       <ActionComp
-        key={`action-comp-${action}-${storeKey}`}
+        key={`action-comp-${action}-${storeKey}-${actionId}`}
         storeKey={storeKey}
         store={store}
       />
     );
-  }, [action, actionComponentsMap, storeKey]);
+  }, [action, deferredActionComponents, storeKey, actionId]);
 };

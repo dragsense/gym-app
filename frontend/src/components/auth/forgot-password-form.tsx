@@ -1,5 +1,5 @@
 // React
-import React from 'react';
+import React, { useId, useMemo, useTransition } from 'react';
 
 // Types
 import { type TForgotPasswordData } from '@shared/types/auth.type';
@@ -28,12 +28,17 @@ const ForgotPasswordForm = React.memo(function ForgotPasswordForm({
   storeKey,
   store,
 }: IForgotPasswordFormProps) {
+  // React 19: Essential IDs and transitions
+  const componentId = useId();
+
   if (!store) {
     return `Form store "${storeKey}" not found. Did you forget to register it?`;
   }
 
   const isSubmitting = store(state => state.isSubmitting);
-  const fields = store(state => state.fields);
+  
+  // React 19: Memoized fields for better performance
+  const fields = useMemo(() => store(state => state.fields), [store]);
 
   const inputs = useInput<TForgotPasswordData>({
     fields: fields as any,
@@ -53,7 +58,7 @@ const ForgotPasswordForm = React.memo(function ForgotPasswordForm({
         }
         footer={
           <div className="flex flex-col gap-4 w-full">
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
+            <Button type="submit" className="w-full" disabled={isSubmitting} data-component-id={componentId}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Send Reset Instructions
             </Button>

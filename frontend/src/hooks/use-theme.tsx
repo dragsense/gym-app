@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useDeferredValue, useMemo, type ReactNode } from 'react';
 
 type Theme = 'light' | 'dark' | 'system';
 
@@ -30,6 +30,9 @@ export function ThemeProvider({
 
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light');
 
+  // React 19: Deferred theme for better performance
+  const deferredTheme = useDeferredValue(theme);
+
   useEffect(() => {
     const root = window.document.documentElement;
     
@@ -38,19 +41,19 @@ export function ThemeProvider({
     
     let resolved: 'light' | 'dark';
     
-    if (theme === 'system') {
+    if (deferredTheme === 'system') {
       const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
       resolved = systemTheme;
     } else {
-      resolved = theme;
+      resolved = deferredTheme;
     }
     
     setResolvedTheme(resolved);
     root.classList.add(resolved);
     
     // Store in localStorage
-    localStorage.setItem(storageKey, theme);
-  }, [theme, storageKey]);
+    localStorage.setItem(storageKey, deferredTheme);
+  }, [deferredTheme, storageKey]);
 
   // Listen for system theme changes
   useEffect(() => {
@@ -68,11 +71,12 @@ export function ThemeProvider({
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, [theme]);
 
-  const value = {
+  // React 19: Memoized context value to prevent unnecessary re-renders
+  const value = useMemo(() => ({
     theme,
     setTheme,
     resolvedTheme,
-  };
+  }), [theme, resolvedTheme]);
 
   return (
     <ThemeContext.Provider value={value}>

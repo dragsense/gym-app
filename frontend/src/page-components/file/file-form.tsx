@@ -2,6 +2,7 @@
 import { useShallow } from 'zustand/shallow';
 import { Loader2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useMemo, useCallback, useId, useTransition, useDeferredValue } from "react";
 
 // Handlers
 import { FormHandler } from "@/handlers";
@@ -33,6 +34,9 @@ export default function FileForm({
     storeKey,
     store,
 }: IFileFormProps) {
+    // React 19: Essential IDs and transitions
+    const componentId = useId();
+    const [, startTransition] = useTransition();
 
     const queryClient = useQueryClient();
 
@@ -57,42 +61,54 @@ export default function FileForm({
     }
 
 
-    const INITIAL_VALUES: TFileUploadData = {
-        name: "",
-        url: "",
-        type: EFileType.OTHER,
-        file: undefined,
-        folder: "general",
-    };
+    // React 19: Memoized initial values with deferred processing
+    const initialValues = useMemo(() => {
+        const INITIAL_VALUES: TFileUploadData = {
+            name: "",
+            url: "",
+            type: EFileType.OTHER,
+            file: undefined,
+            folder: "general",
+        };
+        return strictDeepMerge<TFileUploadData>(INITIAL_VALUES, response ?? {});
+    }, [response]);
 
-    const initialValues = strictDeepMerge<TFileUploadData>(INITIAL_VALUES, response ?? {});
+    // React 19: Deferred initial values for performance
+    const deferredInitialValues = useDeferredValue(initialValues);
 
-    const handleClose = () => {
-        reset();
-        setAction('none');
-    };
+    // React 19: Enhanced handler with transitions
+    const handleClose = useCallback(() => {
+        startTransition(() => {
+            reset();
+            setAction('none');
+        });
+    }, [reset, setAction, startTransition]);
 
     const isEditing = !!response?.id;
     const mutationFn = isEditing ? updateFile(response.id) : createFile;
     const dto = isEditing ? UpdateFileUploadDto : CreateFileUploadDto;
 
     return (
-        <FormHandler<TFileUploadData, IMessageResponse, IFileFormModalExtraProps>
-            mutationFn={mutationFn}
-            FormComponent={FileFormModal}
-            storeKey={storeKey}
-            initialValues={initialValues}
-            dto={dto}
-            validationMode={EVALIDATION_MODES.OnSubmit}
-            isEditing={isEditing}
-            onSuccess={() => {
-                queryClient.invalidateQueries({ queryKey: [storeKey + "-list"] });
-            }}
-            formProps={{
-                open: action === 'createOrUpdate',
-                onClose: handleClose,
-            }}
-        />
+        <div data-component-id={componentId}>
+            <FormHandler<TFileUploadData, IMessageResponse, IFileFormModalExtraProps>
+                mutationFn={mutationFn}
+                FormComponent={FileFormModal}
+                storeKey={storeKey}
+                initialValues={deferredInitialValues}
+                dto={dto}
+                validationMode={EVALIDATION_MODES.OnSubmit}
+                isEditing={isEditing}
+                onSuccess={() => {
+                    startTransition(() => {
+                        queryClient.invalidateQueries({ queryKey: [storeKey + "-list"] });
+                    });
+                }}
+                formProps={{
+                    open: action === 'createOrUpdate',
+                    onClose: handleClose,
+                }}
+            />
+        </div>
     );
 }
 

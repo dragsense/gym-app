@@ -1,5 +1,6 @@
 // React
 import { type ReactNode } from "react";
+import { useId, useMemo, useTransition } from "react";
 
 // UI Components
 import { AppDialog } from "@/components/layout-ui/app-dialog";
@@ -48,13 +49,29 @@ export function ModalForm<TFormData, TResponse, TExtraProps extends Record<strin
   formStore,
   className
 }: IModalFormProps<TFormData, TResponse, TExtraProps>) {
+  // React 19: Essential IDs and transitions
+  const componentId = useId();
+  const [, startTransition] = useTransition();
 
+  // React 19: Memoized width class for better performance
+  const memoizedWidthClass = useMemo(() => 
+    widthMap[width] || "sm:max-w-lg", 
+    [width]
+  );
 
+  // React 19: Smooth modal state changes
+  const handleOpenChange = (newOpen: boolean) => {
+    startTransition(() => {
+      onOpenChange(newOpen);
+    });
+  };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent forceMount
-        className={cn(`max-h-[90vh] overflow-y-auto`, widthMap[width] || "sm:max-w-lg")}
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent 
+        forceMount
+        className={cn(`max-h-[90vh] overflow-y-auto`, memoizedWidthClass)}
+        data-component-id={componentId}
       >
         <Form<TFormData, TResponse, TExtraProps>
           formStore={formStore}
@@ -66,11 +83,9 @@ export function ModalForm<TFormData, TResponse, TExtraProps extends Record<strin
             footerContent={footerContent}
           >
             {children}
-
           </AppDialog>
         </Form>
-
       </DialogContent>
-    </Dialog >
+    </Dialog>
   );
 }

@@ -1,3 +1,6 @@
+// React & Hooks
+import { useId, useMemo, useTransition } from "react";
+
 // Types
 import { type IWorker } from "@shared/interfaces/worker.interface";
 
@@ -24,15 +27,19 @@ export default function WorkerList({
   storeKey,
   store
 }: IWorkerListProps) {
+  // React 19: Essential IDs and transitions
+  const componentId = useId();
+  const [, startTransition] = useTransition();
 
   if (!store) {
     return <div>List store "{storeKey}" not found. Did you forget to register it?</div>;
   }
 
-  const { columns } = itemViews({ store });
+  // React 19: Memoized columns for better performance
+  const { columns } = useMemo(() => itemViews({ store }), [store]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-component-id={componentId}>
       <WorkerFilters store={store} />
       <AppCard className="px-0">
         <TTable<IWorker>

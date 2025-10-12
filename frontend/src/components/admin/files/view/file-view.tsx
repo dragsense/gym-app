@@ -1,5 +1,6 @@
 // External Libraries
 import { useShallow } from 'zustand/shallow';
+import { useId, useMemo, useTransition } from 'react';
 
 // Components
 import { AppCard } from "@/components/layout-ui/app-card";
@@ -21,6 +22,10 @@ interface IFileViewProps extends THandlerComponentProps<TSingleHandlerStore<IFil
 }
 
 export default function FileView({ storeKey, store }: IFileViewProps) {
+    // React 19: Essential IDs and transitions
+    const componentId = useId();
+    const [, startTransition] = useTransition();
+
     if (!store) {
         return <div>Single store "{storeKey}" not found. Did you forget to register it?</div>;
     }
@@ -36,11 +41,11 @@ export default function FileView({ storeKey, store }: IFileViewProps) {
     }
 
     const handleCloseView = () => {
-        reset();
+        startTransition(() => reset());
     };
 
     return (
-        <Dialog open={action === 'view'} onOpenChange={handleCloseView}>
+        <Dialog open={action === 'view'} onOpenChange={handleCloseView} data-component-id={componentId}>
             <DialogContent className="min-w-2xl max-h-[90vh] overflow-y-auto">
                 <AppDialog
                     title="File Details"
@@ -58,15 +63,19 @@ interface IFileDetailContentProps {
 }
 
 function FileDetailContent({ file }: IFileDetailContentProps) {
-    const formatFileSize = (bytes: number) => {
-        if (bytes >= 1024 * 1024) {
-            return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+    // React 19: Essential IDs
+    const componentId = useId();
+    
+    // React 19: Memoized file size for better performance
+    const fileSize = useMemo(() => {
+        if (file.size >= 1024 * 1024) {
+            return `${(file.size / (1024 * 1024)).toFixed(2)} MB`;
         }
-        return `${(bytes / 1024).toFixed(2)} KB`;
-    };
+        return `${(file.size / 1024).toFixed(2)} KB`;
+    }, [file.size]);
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6" data-component-id={componentId}>
             {/* Quick Preview Card */}
             <AppCard className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
                 <div className="flex items-center gap-4">
@@ -80,7 +89,7 @@ function FileDetailContent({ file }: IFileDetailContentProps) {
                         <div className="flex items-center gap-2 mt-1">
                             <Badge variant="outline">{file.mimeType}</Badge>
                             <span className="text-sm text-muted-foreground">
-                                {formatFileSize(file.size)}
+                                {fileSize}
                             </span>
                         </div>
                         {file.url && (
@@ -122,7 +131,7 @@ function FileDetailContent({ file }: IFileDetailContentProps) {
                             <div className="text-muted-foreground"><HardDrive className="w-4 h-4" /></div>
                             <div className="flex-1">
                                 <span className="text-sm text-muted-foreground">Size:</span>
-                                <p className="font-medium">{formatFileSize(file.size)}</p>
+                                <p className="font-medium">{fileSize}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">

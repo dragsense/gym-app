@@ -1,5 +1,6 @@
 // React types
 import type { ReactNode } from "react";
+import { useId, useMemo } from "react";
 
 // UI Components
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
@@ -24,17 +25,21 @@ export function AppCard({
   onClick
 
 }: CardProps) {
+  // React 19: Essential IDs
+  const componentId = useId();
+
+  // React 19: Memoized loading state for better performance
+  const memoizedLoadingState = useMemo(() => (
+    <Skeleton />
+  ), []);
+
   return (
-    <Card className={className} onClick={onClick}>
+    <Card className={className} onClick={onClick} data-component-id={componentId}>
       {header && <CardHeader>
         {header}
       </CardHeader>}
       <CardContent>
-        {loading ? (
-          <Skeleton />
-        ) : (
-          children
-        )}
+        {loading ? memoizedLoadingState : children}
       </CardContent>
       {footer && <CardFooter>
         {footer}

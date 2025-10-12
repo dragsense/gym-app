@@ -1,6 +1,7 @@
 // External Libraries
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTransition, useId } from "react";
 
 // Types
 import { type TLoginData } from "@shared/types/auth.type";
@@ -23,6 +24,10 @@ import { PUBLIC_ROUTES } from "@/config/routes.config";
 
 
 export default function LoginPage() {
+  // React 19: Essential IDs and transitions
+  const componentId = useId();
+  const [, startTransition] = useTransition();
+  
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -39,15 +44,16 @@ export default function LoginPage() {
       validationMode={EVALIDATION_MODES.OnChange}
       dto={LoginDto}
       onSuccess={(res: unknown) => {
-
-        const result: ILoginResponse = res as ILoginResponse;
-        if (result.requiredOtp)
-          navigate(buildRoutePath(PUBLIC_ROUTES.VERIFY_OTP, undefined, { token: result.token || '' }));
-        else {
-          toast.success('Login successful')
-          queryClient.invalidateQueries({ queryKey: ["me"] });
-          navigate(ADMIN_ROUTES.USERS);
-        }
+        startTransition(() => {
+          const result: ILoginResponse = res as ILoginResponse;
+          if (result.requiredOtp)
+            navigate(buildRoutePath(PUBLIC_ROUTES.VERIFY_OTP, undefined, { token: result.token || '' }));
+          else {
+            toast.success('Login successful')
+            queryClient.invalidateQueries({ queryKey: ["me"] });
+            navigate(ADMIN_ROUTES.USERS);
+          }
+        });
       }}
       onError={(error) => toast.error('Login failed: ' + error?.message)}
       storeKey="login"

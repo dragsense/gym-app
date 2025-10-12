@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { navItems } from "@/config/nav.config";
 import { matchRoutePath } from "@/lib/utils";
+import { useId, useMemo, useTransition } from "react";
 
 interface StackedNavProps {
   className?: string;
@@ -18,6 +19,10 @@ interface NavStack {
 }
 
 export function StackedNav({ className, onBack }: StackedNavProps) {
+  // React 19: Essential IDs and transitions
+  const componentId = useId();
+  const [, startTransition] = useTransition();
+  
   const location = useLocation();
   const [navStack, setNavStack] = React.useState<NavStack[]>([
     { title: "Main Menu", items: navItems }
@@ -26,28 +31,33 @@ export function StackedNav({ className, onBack }: StackedNavProps) {
   const currentLevel = navStack[navStack.length - 1];
   const isMainMenu = navStack.length === 1;
 
+  // React 19: Smooth navigation transitions
   const handleItemClick = (item: typeof navItems[0]) => {
     if (item.children && item.children.length > 0) {
-      // Push sub-menu to stack
-      setNavStack(prev => [...prev, {
-        title: item.title,
-        items: item.children!.map(child => ({
-          title: child.title,
-          icon: child.icon,
-          urls: [child.url],
-          children: undefined
-        })),
-        parent: currentLevel.title
-      }]);
+      startTransition(() => {
+        // Push sub-menu to stack
+        setNavStack(prev => [...prev, {
+          title: item.title,
+          items: item.children!.map(child => ({
+            title: child.title,
+            icon: child.icon,
+            urls: [child.url],
+            children: undefined
+          })),
+          parent: currentLevel.title
+        }]);
+      });
     }
   };
 
   const handleBack = () => {
-    if (navStack.length > 1) {
-      setNavStack(prev => prev.slice(0, -1));
-    } else if (onBack) {
-      onBack();
-    }
+    startTransition(() => {
+      if (navStack.length > 1) {
+        setNavStack(prev => prev.slice(0, -1));
+      } else if (onBack) {
+        onBack();
+      }
+    });
   };
 
   const NavItem = ({ item }: { item: typeof navItems[0] }) => {
@@ -90,7 +100,7 @@ export function StackedNav({ className, onBack }: StackedNavProps) {
   };
 
   return (
-    <div className={cn("flex flex-col h-full", className)}>
+    <div className={cn("flex flex-col h-full", className)} data-component-id={componentId}>
       {/* Header */}
       <div className="flex items-center gap-3 p-4 border-b">
         {!isMainMenu && (

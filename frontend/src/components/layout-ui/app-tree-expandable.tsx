@@ -1,5 +1,6 @@
 import * as React from "react"
 import { ChevronDown, ChevronUp } from "lucide-react"
+import { useId, useMemo, useTransition } from "react"
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -27,6 +28,10 @@ export function AppTreeExpandable({
   className = "",
   value,
 }: AppTreeExpandableProps) {
+  // React 19: Essential IDs and transitions
+  const componentId = useId();
+  const [, startTransition] = useTransition();
+  
   const [internalItems, setInternalItems] = React.useState<MenuItem[]>(items)
 
   React.useEffect(() => {
@@ -92,16 +97,19 @@ export function AppTreeExpandable({
   const selectedItemId = value || findSelectedItemId(internalItems)
   const pathToSelectedItem = findPathToSelectedItem(internalItems, selectedItemId)
 
+  // React 19: Smooth selection changes
   const handleSelectionChange = (itemId: string) => {
-    const updatedItems = updateSingleSelectionState(internalItems, itemId)
-    setInternalItems(updatedItems)
+    startTransition(() => {
+      const updatedItems = updateSingleSelectionState(internalItems, itemId)
+      setInternalItems(updatedItems)
 
-    if (onSelectionChange) onSelectionChange(itemId)
-    if (onChange) onChange(itemId)
+      if (onSelectionChange) onSelectionChange(itemId)
+      if (onChange) onChange(itemId)
+    });
   }
 
   return (
-    <div className={`w-full rounded-lg p-2 shadow-sm ${className}`}>
+    <div className={`w-full rounded-lg p-2 shadow-sm ${className}`} data-component-id={componentId}>
       <div className="space-y-2">
         <RadioGroup
           value={selectedItemId ?? ""}

@@ -1,5 +1,5 @@
 // External Libraries
-import { useState } from "react";
+import { useCallback, useMemo, useTransition, useDeferredValue } from "react";
 import { useShallow } from 'zustand/shallow';
 import { Loader2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -23,9 +23,10 @@ export default function RemoveJob({
   storeKey,
   store
 }: IRemoveJobProps) {
+  // React 19: Essential transitions
+  const [isPending, startTransition] = useTransition();
 
   const queryClient = useQueryClient();
-  const [isLoading, setIsLoading] = useState(false);
 
   if (!store) {
     return <div>List store "{storeKey}" not found. Did you forget to register it?</div>;
@@ -37,46 +38,56 @@ export default function RemoveJob({
     payload: state.payload,
   })));
 
-  const handleRemove = async () => {
-    try {
-      setIsLoading(true);
-      await removeJob(payload.queueName, payload.jobId);
-      queryClient.invalidateQueries({ queryKey: [`${storeKey}-list`] });
-      queryClient.invalidateQueries({ queryKey: ['jobs'] });
-      setAction('none');
-    } catch (error) {
-      console.error('Failed to remove job:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // React 19: Deferred payload for performance
+  const deferredPayload = useDeferredValue(payload);
 
-  return (
-    <Dialog 
-      open={action === 'removeJob'}
-      onOpenChange={(state: boolean) => {
+  // React 19: Enhanced async handler with transitions
+  const handleRemove = useCallback(async () => {
+    startTransition(async () => {
+      try {
+        await removeJob(deferredPayload.queueName, deferredPayload.jobId);
+        queryClient.invalidateQueries({ queryKey: [`${storeKey}-list`] });
+        queryClient.invalidateQueries({ queryKey: ['jobs'] });
+        setAction('none');
+      } catch (error) {
+        console.error('Failed to remove job:', error);
+      }
+    });
+  }, [deferredPayload, queryClient, storeKey, setAction, startTransition]);
+
+  // React 19: Enhanced dialog props with transitions
+  const dialogProps = useMemo(() => ({
+    open: action === 'removeJob',
+    onOpenChange: (state: boolean) => {
+      startTransition(() => {
         if (!state) {
           setAction('none');
         }
-      }}>
+      });
+    }
+  }), [action, setAction, startTransition]);
+
+  return (
+    <Dialog {...dialogProps}>
       <DialogContent>
         <AppDialog
           title="Remove Job"
-          description={`Are you sure you want to remove job "${payload?.jobId}"? This action cannot be undone.`}
+          description={`Are you sure you want to remove job "${deferredPayload?.jobId}"? This action cannot be undone.`}
         >
           <div className="flex justify-end gap-2">
             <Button
               variant="outline"
-              onClick={() => setAction('none')}
+              onClick={() => startTransition(() => setAction('none'))}
+              disabled={isPending}
             >
               Cancel
             </Button>
             <Button
               onClick={handleRemove}
-              disabled={isLoading}
+              disabled={isPending}
               variant="destructive"
             >
-              {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Remove Job
             </Button>
           </div>

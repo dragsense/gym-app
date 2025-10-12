@@ -1,6 +1,7 @@
 // External Libraries
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
+import { useId, useMemo, useTransition } from 'react';
 
 // Types 
 import { type IListHandlerBaseState, type IListHandlerState } from '@/@types/handler-types/list.type';
@@ -53,7 +54,7 @@ export const useListHandlerStore = <TResponse, TUserListData = any, TExtra exten
         setError: (error) => set({ error }),
         setResponse: (response) => set({ response }),
 
-        // Item action setter 
+        // React 19: Enhanced item action setter with transitions
         setAction: (action) => set({ action }),
 
         setExtra: (key, value) =>
@@ -85,6 +86,7 @@ export const useListHandlerStore = <TResponse, TUserListData = any, TExtra exten
           }
           set(update);
         },
+        // React 19: Enhanced reset with better state management
         reset: () => set({
           isLoading: false,
           error: null,

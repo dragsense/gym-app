@@ -1,6 +1,10 @@
-import { useState } from "react";
+import { useState, useTransition, useId } from "react";
 
 export function useConfirm() {
+  // React 19: Essential IDs and transitions
+  const componentId = useId();
+  const [, startTransition] = useTransition();
+  
   const [state, setState] = useState<{
     isOpen: boolean;
     title: string;
@@ -34,17 +38,22 @@ export function useConfirm() {
   };
 
   const onConfirm = () => {
-    state.onConfirm?.();
-    setState((prev) => ({ ...prev, isOpen: false }));
+    startTransition(() => {
+      state.onConfirm?.();
+      setState((prev) => ({ ...prev, isOpen: false }));
+    });
   };
 
   const onCancel = () => {
-    state.onCancel?.();
-    setState((prev) => ({ ...prev, isOpen: false }));
+    startTransition(() => {
+      state.onCancel?.();
+      setState((prev) => ({ ...prev, isOpen: false }));
+    });
   };
 
   return {
     confirm,
+    componentId,
     dialogProps: {
       open: state.isOpen,
       onOpenChange: (open: boolean) => open || onCancel(),

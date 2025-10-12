@@ -4,5 +4,7 @@ export * from "./activity-log-dtos";
 export * from "./queue-dtos";
 export * from "./common";
 export * from "./file-upload-dtos";
+export * from "./notification-dtos";
+export * from "./role-dtos";
 export * from "./schedule-dtos";
 export * from "./worker-dtos";

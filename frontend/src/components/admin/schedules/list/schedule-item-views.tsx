@@ -1,5 +1,6 @@
 import { Eye, Pencil, Trash2, Clock, Calendar } from "lucide-react";
 import { type ColumnDef } from "@tanstack/react-table";
+import { useId, useMemo, useTransition } from "react";
 
 // Types
 import { type ISchedule } from "@shared/interfaces/schedule.interface";
@@ -55,6 +56,9 @@ export const itemViews = ({
   handleDelete,
   handleView,
 }: IItemViewArgs) => {
+  // React 19: Essential IDs and transitions
+  const componentId = useId();
+  const [, startTransition] = useTransition();
   const columns: ColumnDef<ISchedule>[] = [
     {
       accessorKey: "id",
@@ -130,25 +134,25 @@ export const itemViews = ({
       id: "actions",
       header: "Actions",
       cell: ({ row }) => (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" data-component-id={componentId}>
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => handleView(row.original.id)}
+            onClick={() => startTransition(() => handleView(row.original.id))}
           >
             <Eye className="h-4 w-4" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => handleEdit(row.original.id)}
+            onClick={() => startTransition(() => handleEdit(row.original.id))}
           >
             <Pencil className="h-4 w-4" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => handleDelete(row.original.id)}
+            onClick={() => startTransition(() => handleDelete(row.original.id))}
           >
             <Trash2 className="h-4 w-4 text-red-500" />
           </Button>
@@ -157,8 +161,12 @@ export const itemViews = ({
     },
   ];
 
-  const listItem = (item: ISchedule) => (
-    <div className="flex items-center justify-between p-4 bg-white rounded-lg border hover:shadow-md transition-shadow">
+  const listItem = (item: ISchedule) => {
+    // React 19: Memoized formatted date for better performance
+    const nextRunDate = useMemo(() => formatDate(item.nextRunDate), [item.nextRunDate]);
+    
+    return (
+      <div className="flex items-center justify-between p-4 bg-white rounded-lg border hover:shadow-md transition-shadow" data-component-id={componentId}>
       <div className="flex-1">
         <div className="flex items-center gap-3 mb-2">
           <span className="text-xl">{getFrequencyIcon(item.frequency)}</span>
@@ -168,7 +176,7 @@ export const itemViews = ({
         <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-2">
           <span className="flex items-center gap-1">
             <Calendar className="h-3 w-3" />
-            Next: {formatDate(item.nextRunDate)}
+            Next: {nextRunDate}
           </span>
           {item.timeOfDay && (
             <span className="flex items-center gap-1">
@@ -196,27 +204,28 @@ export const itemViews = ({
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => handleView(item.id)}
+          onClick={() => startTransition(() => handleView(item.id))}
         >
           <Eye className="h-4 w-4" />
         </Button>
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => handleEdit(item.id)}
+          onClick={() => startTransition(() => handleEdit(item.id))}
         >
           <Pencil className="h-4 w-4" />
         </Button>
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => handleDelete(item.id)}
+          onClick={() => startTransition(() => handleDelete(item.id))}
         >
           <Trash2 className="h-4 w-4 text-red-500" />
         </Button>
       </div>
-    </div>
-  );
+      </div>
+    );
+  };
 
   return { columns, listItem };
 };

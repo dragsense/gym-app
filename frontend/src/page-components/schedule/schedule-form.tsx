@@ -2,6 +2,7 @@
 import { useShallow } from 'zustand/shallow';
 import { Loader2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useMemo, useCallback, useId, useTransition, useDeferredValue } from "react";
 
 // Handlers
 import { FormHandler } from "@/handlers";
@@ -38,6 +39,9 @@ export default function ScheduleForm({
     storeKey,
     store,
 }: IScheduleFormProps) {
+    // React 19: Essential IDs and transitions
+    const componentId = useId();
+    const [isPending, startTransition] = useTransition();
 
     const queryClient = useQueryClient();
 
@@ -61,46 +65,58 @@ export default function ScheduleForm({
         );
     }
 
-    const INITIAL_VALUES: TScheduleData = {
-        title: "",
-        action: "",
-        frequency: EScheduleFrequency.ONCE,
-        startDate: new Date(new Date().setHours(0, 0, 0, 0)).toISOString(),
-        intervalUnit: EIntervalUnit.MINUTES,
-        retryOnFailure: false,
-        maxRetries: 3,
-        retryDelayMinutes: 5,
-    };
+    // React 19: Memoized initial values with deferred processing
+    const initialValues = useMemo(() => {
+        const INITIAL_VALUES: TScheduleData = {
+            title: "",
+            action: "",
+            frequency: EScheduleFrequency.ONCE,
+            startDate: new Date(new Date().setHours(0, 0, 0, 0)).toISOString(),
+            intervalUnit: EIntervalUnit.MINUTES,
+            retryOnFailure: false,
+            maxRetries: 3,
+            retryDelayMinutes: 5,
+        };
+        return strictDeepMerge<TScheduleData>(INITIAL_VALUES, response ?? {});
+    }, [response]);
 
-    const initialValues = strictDeepMerge<TScheduleData>(INITIAL_VALUES, response ?? {});
+    // React 19: Deferred initial values for performance
+    const deferredInitialValues = useDeferredValue(initialValues);
 
-    const handleClose = () => {
-        reset();
-        setAction('none');
-    };
+    // React 19: Enhanced handler with transitions
+    const handleClose = useCallback(() => {
+        startTransition(() => {
+            reset();
+            setAction('none');
+        });
+    }, [reset, setAction, startTransition]);
 
     const isEditing = !!response?.id;
     const mutationFn = isEditing ? updateSchedule(response.id) : createSchedule;
     const dto = isEditing ? UpdateScheduleDto : CreateScheduleDto;
 
     return (
-        <FormHandler<TScheduleData, IMessageResponse, IScheduleFormModalExtraProps>
-            mutationFn={mutationFn}
-            FormComponent={ScheduleFormModal}
-            storeKey={storeKey}
-            initialValues={initialValues}
-            dto={dto}
-            validationMode={EVALIDATION_MODES.OnSubmit}
-            isEditing={isEditing}
-            onSuccess={() => {
-                queryClient.invalidateQueries({ queryKey: [storeKey + "-list"] });
-                handleClose();
-            }}
-            formProps={{
-                open: action === 'createOrUpdate',
-                onClose: handleClose,
-            }}
-        />
+        <div data-component-id={componentId}>
+            <FormHandler<TScheduleData, IMessageResponse, IScheduleFormModalExtraProps>
+                mutationFn={mutationFn}
+                FormComponent={ScheduleFormModal}
+                storeKey={storeKey}
+                initialValues={deferredInitialValues}
+                dto={dto}
+                validationMode={EVALIDATION_MODES.OnSubmit}
+                isEditing={isEditing}
+                onSuccess={() => {
+                    startTransition(() => {
+                        queryClient.invalidateQueries({ queryKey: [storeKey + "-list"] });
+                        handleClose();
+                    });
+                }}
+                formProps={{
+                    open: action === 'createOrUpdate',
+                    onClose: handleClose,
+                }}
+            />
+        </div>
     );
 }
 

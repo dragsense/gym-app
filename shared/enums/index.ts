@@ -4,3 +4,5 @@ export * from './activity-log.enum';
 export * from './queue.enum';
 export * from './schedule.enum';
 export * from './worker.enum';
+export * from './notification.enum';
+export * from './role';

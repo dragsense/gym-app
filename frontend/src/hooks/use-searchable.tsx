@@ -1,4 +1,5 @@
 // hooks/use-searchable-resource.ts
+import { useMemo, useDeferredValue } from "react";
 import { IListQueryParams } from "@shared/interfaces/api/param.interface";
 import { useApiPaginatedQuery } from "./use-api-paginated-query";
 
@@ -10,26 +11,45 @@ export function useSearchableResource<T>(
   fetcher: (params: IListQueryParams) => Promise<any>,
   initialParams: IListQueryParams = { page: 1, limit: 10 }
 ) {
+  // React 19: Memoized key for better performance
+  const memoizedKey = useMemo(() => [key], [key]);
+  
+  // React 19: Deferred initial params for better performance
+  const deferredInitialParams = useDeferredValue(initialParams);
+
   const { data, isLoading, error, setFilters } = useApiPaginatedQuery<T>(
-    [key],
+    memoizedKey,
     fetcher,
-    initialParams
+    deferredInitialParams
   );
 
-  return {
+  // React 19: Memoized return value to prevent unnecessary re-renders
+  return useMemo(() => ({
     response: data,
     isLoading,
     error,
     setFilters,
-  };
+  }), [data, isLoading, error, setFilters]);
 }
 
 
 
 export function useSearchableUsers({ level, initialParams }: { level?: number, initialParams?: IListQueryParams }) {
+  // React 19: Memoized key generation for better performance
+  const memoizedKey = useMemo(() => 
+    "searchable-users" + (level ? `-${level}` : ""), 
+    [level]
+  );
+  
+  // React 19: Memoized fetcher for better performance
+  const memoizedFetcher = useMemo(() => 
+    (params: IListQueryParams) => fetchUsers(params, level), 
+    [level]
+  );
+
   return useSearchableResource<IUser>(
-    "searchable-users" + (level ? `-${level}` : ""),
-    (params: IListQueryParams) => fetchUsers(params, level),
+    memoizedKey,
+    memoizedFetcher,
     initialParams
   );
 }
