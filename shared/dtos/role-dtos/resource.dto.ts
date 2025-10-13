@@ -7,8 +7,8 @@ import {
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import { PaginationMetaDto } from '../common/pagination.dto';
 import { ListQueryDto } from '../common/list-query.dto';
-import {  FieldType } from '../../decorators/field.decorator';
-import { OmitType } from 'shared/lib/dto-type-adapter';
+import {  FieldType } from '../../decorators';
+import { OmitType } from '../../lib/dto-type-adapter';
 
 export class ResourceDto {
   @ApiProperty({ example: 1, description: 'Resource ID' })

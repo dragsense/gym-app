@@ -2,7 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { PaginationMetaDto } from '../common/pagination.dto';
 import { EWorkerStatus } from '../../enums/worker.enum';
-import { FieldOptions, FieldType } from 'shared/decorators/field.decorator';
+import { FieldOptions, FieldType } from '../../decorators';
 import { IsEnum, IsOptional, IsString, IsNumber, IsDateString } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ListQueryDto } from '../common/list-query.dto';

@@ -1,7 +1,6 @@
 // External Libraries
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { useId, useMemo, useTransition } from 'react';
 
 // Types 
 import { type ISingleHandlerState } from '@/@types/handler-types/single.type';
@@ -15,7 +14,6 @@ export const useSingleHandlerStore = <TResponse, TExtra extends Record<string, a
         devtools(
             (set) => ({
                 name,
-                id: 0,
                 params: initialParams,
                 isLoading: false,
                 error: null,
@@ -32,8 +30,8 @@ export const useSingleHandlerStore = <TResponse, TExtra extends Record<string, a
 
 
                 // React 19: Enhanced action setting with transitions
-                setAction: (action: string, id: number = 0) => {
-                    set({ id, action });
+                setAction: (action: string, payload: any) => {
+                    set({ payload, action });
                 },
 
                 setExtra: (key: string, value: any) =>
@@ -61,7 +59,7 @@ export const useSingleHandlerStore = <TResponse, TExtra extends Record<string, a
 
                 // React 19: Enhanced reset with better state management
                 reset: () => set({
-                    id: 0,
+                    payload: null,
                     isLoading: false,
                     error: null,
                     response: null,

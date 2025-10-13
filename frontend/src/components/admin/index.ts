@@ -6,3 +6,4 @@ export * from "./queues";
 export * from "./cache";
 export * from "./cluster";
 export * from "./workers";
+export * from "./health";

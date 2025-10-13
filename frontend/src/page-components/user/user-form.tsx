@@ -63,39 +63,28 @@ export default function UserForm({
         reset: state.reset
     })));
 
+
+    const INITIAL_VALUES: TUserData = {
+        email: "",
+        isActive: true,
+        profile: {
+            firstName: "",
+            lastName: "",
+            phoneNumber: "",
+            dateOfBirth: new Date(
+                new Date().setFullYear(new Date().getFullYear() - 12)
+            ).toISOString(),
+            address: "",
+            gender: EUserGender.MALE
+        }
+    };
+
     // React 19: Memoized initial values with deferred processing
     const initialValues = useMemo(() => {
-        const INITIAL_VALUES: TUserData = {
-            email: "",
-            isActive: true,
-            profile: {
-                firstName: "",
-                lastName: "",
-                phoneNumber: "",
-                dateOfBirth: new Date(
-                    new Date().setFullYear(new Date().getFullYear() - 12)
-                ).toISOString(),
-                address: "",
-                gender: EUserGender.MALE
-            }
-        };
         return strictDeepMerge<TUserData>(INITIAL_VALUES, response ?? {});
-    }, [response]);
-    
-    // React 19: Deferred values for performance
-    const deferredInitialValues = useDeferredValue(initialValues);
+    }, [INITIAL_VALUES, response?.id]); 
 
 
-    if (isLoading) {
-        return (
-            <div className="absolute inset-0 z-30 flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-        );
-    }
-
-
-    // React 19: Handlers with transitions
     const handleClose = useCallback(() => {
         startTransition(() => {
             reset();
@@ -106,8 +95,23 @@ export default function UserForm({
 
     const isEditing = !!response?.id;
 
-    const mutationFn = isEditing ? updateUser(response.id) : createUser;
-    const dto = isEditing ? UpdateUserDto : CreateUserDto;
+    const mutationFn = useMemo(() => {
+        return isEditing ? updateUser(response.id) : createUser;
+    }, [isEditing, response?.id]);
+    
+    // React 19: Memoized DTO to prevent unnecessary re-renders
+    const dto = useMemo(() => {
+        return isEditing ? UpdateUserDto : CreateUserDto;
+    }, [isEditing]);
+
+    if (isLoading) {
+        return (
+            <div className="absolute inset-0 z-30 flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+        );
+    }
+
 
     return (
         <div data-component-id={componentId}>
@@ -115,11 +119,11 @@ export default function UserForm({
                 mutationFn={mutationFn}
                 FormComponent={UserFormModal}
                 storeKey={storeKey}
-                initialValues={deferredInitialValues}
+                initialValues={initialValues}
                 dto={dto}
                 validationMode={EVALIDATION_MODES.OnSubmit}
                 isEditing={isEditing}
-                onSuccess={(response) => {
+                onSuccess={(response: any) => {
                     startTransition(() => {
                         queryClient.invalidateQueries({ queryKey: [storeKey + "-list"] });
 

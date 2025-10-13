@@ -257,7 +257,8 @@ export class BullQueueService implements OnModuleInit, OnModuleDestroy {
     if (!queue) {
       throw new Error(`Queue ${queueName} not found`);
     }
-    return queue.getJob(jobId);
+    const job = await queue.getJob(jobId);
+    return job || undefined;
   }
 
   /**

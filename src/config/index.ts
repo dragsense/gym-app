@@ -7,3 +7,4 @@ export { default as bullQueueConfig } from './bull-queue.config';
 export { default as clusterConfig } from './cluster.config';
 export { default as activityLogsConfig } from './activity-logs.config';
 export { default as cacheConfig, getCacheConfig } from './cache.config';
+export { default as scalarConfig, scalarThemes } from './scalar.config';

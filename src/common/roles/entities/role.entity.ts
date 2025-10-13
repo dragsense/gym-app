@@ -7,7 +7,7 @@ import {
 import { ApiProperty } from '@nestjs/swagger';
 import { GeneralBaseEntity } from '@/common/entities';
 import { Permission } from './permission.entity';
-import { ERoleType, ERoleStatus } from 'shared/enums/role/role.enum';
+import { ERoleStatus } from 'shared/enums/role/role.enum';
 
 @Entity('roles')
 export class Role extends GeneralBaseEntity {

@@ -1,15 +1,15 @@
 {
   "compilerOptions": {
     "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "ES2023",
     "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
-    "target": "ES2023",
     "sourceMap": true,
     "outDir": "./dist",
-
     "baseUrl": "./",
     "paths": {
       "@/*": ["src/*"]
@@ -20,6 +20,9 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": false,
     "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false
-  }
+    "noFallthroughCasesInSwitch": false,
+    "types": ["node","multer"]
+  },
+  "include": ["src/**/*.ts", "shared/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
 }

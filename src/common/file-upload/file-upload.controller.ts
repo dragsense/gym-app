@@ -34,7 +34,6 @@ import { User } from '@/modules/v1/users/entities/user.entity';
 import { FileValidationPipe } from '@/pipes/file-validation.pipe';
 import { OmitType } from 'shared/lib/type-utils';
 
-
 @ApiTags('File Upload')
 @UseGuards(JwtAuthGuard)
 @Controller('files')

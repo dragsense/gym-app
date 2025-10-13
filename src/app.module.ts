@@ -1,13 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
-import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
-import { CacheModule as NestCacheModule } from '@nestjs/cache-manager';
+import { APP_GUARD } from '@nestjs/core';
 
-import { configOptions, appConfig, databaseConfig, jwtConfig, mailerConfig, bullQueueConfig, clusterConfig, cacheConfig, getTypeOrmConfig, getMailerConfig } from './config';
+import { configOptions, appConfig, databaseConfig, jwtConfig, mailerConfig, getMailerConfig } from './config';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -18,14 +16,10 @@ import { AuthModule } from './modules/v1/auth/auth.module';
 
 import { FileUploadModule } from './common/file-upload/file-upload.module';
 import { ActivityLogsModule } from './common/activity-logs/activity-logs.module';
-import { ScheduleModule } from './common/schedule/schedule.module';
-import { BullQueueModule } from './common/bull-queue/bull-queue.module';
-import { ClusterModule } from './common/cluster/cluster.module';
-import { WorkerModule } from './common/worker/worker.module';
-import { RolesModule } from './common/roles/roles.module';
+
 // Common modules
 import { LoggerModule } from './common/logger/logger.module';
-import { CacheModule } from './common/cache/cache.module';
+import { DatabaseModule } from './common/database/database.module';
 
 // Entities for dashboard stats
 import { ServerGateway } from './gateways/server.gateway';
@@ -41,7 +35,7 @@ import { EncryptionService } from './lib/encryption.service';
     // Configuration
     ConfigModule.forRoot({
       ...configOptions,
-      load: [appConfig, databaseConfig, jwtConfig, mailerConfig, bullQueueConfig, clusterConfig, cacheConfig],
+      load: [appConfig, databaseConfig, jwtConfig, mailerConfig],
       isGlobal: true,
     }),
 
@@ -55,15 +49,8 @@ import { EncryptionService } from './lib/encryption.service';
 
     }),
 
-
-    // Cache (using Dragonfly)
-    CacheModule,
-
-    // Database
-    TypeOrmModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: getTypeOrmConfig,
-    }),
+    // Database - Unified System
+    DatabaseModule.forRoot(),
 
     // Email
     MailerModule.forRootAsync({
@@ -79,14 +66,9 @@ import { EncryptionService } from './lib/encryption.service';
 
     // Common modules
     LoggerModule,
-    CacheModule,
     FileUploadModule,
     ActivityLogsModule,
-    ScheduleModule,
-    BullQueueModule,
-    ClusterModule,
-    WorkerModule,
-    RolesModule,
+
 
     // Feature modules
     UsersModule,
@@ -105,3 +87,4 @@ import { EncryptionService } from './lib/encryption.service';
   ],
 }) 
 export class AppModule { }
+ 

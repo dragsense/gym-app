@@ -19,9 +19,7 @@ export class ScheduleBullService implements OnModuleInit {
     await this.bullQueueService.createQueue({
       name: this.scheduleQueueName,
       options: {
-        defaultJobOptions: {
-          removeOnComplete: true,
-        },
+        removeOnComplete: true,
       },
     });
     await this.setupDailySchedules();

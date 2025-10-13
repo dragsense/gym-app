@@ -24,7 +24,7 @@ export class ProfilesController {
   @ApiResponse({ status: 200, description: 'Profile found', type: Profile })
   @ApiResponse({ status: 404, description: 'Profile not found' })
   findMe(@Req() req: any) {
-    return this.profilesService.findOneByUser({ id: req.user.id });
+    return this.profilesService.getSingle({ id: req.user.id });
   }
 
 
@@ -45,12 +45,12 @@ export class ProfilesController {
     @UploadedFiles() files: { image?: Express.Multer.File[], documents?: Express.Multer.File[] },
     @Body() updateProfileDto: OmitType<UpdateProfileDto, 'image' | 'documents'>
   ) {
-    const profile = await this.profilesService.findOneByUser({ id: req.user.id });
+    const profile = await this.profilesService.getSingle({ id: req.user.id });
 
     const image = files?.image?.[0];
     const documents = files?.documents;
 
-    return this.profilesService.update(profile.id, updateProfileDto, image, documents);
+    return this.profilesService.updateProfile(profile.id, updateProfileDto, image, documents);
   }
 
 
@@ -61,7 +61,7 @@ export class ProfilesController {
   @ApiResponse({ status: 200, description: 'Profile found', type: Profile })
   @ApiResponse({ status: 404, description: 'Profile not found' })
   findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.profilesService.findOneByUser({ id });
+    return this.profilesService.getSingle({ id });
   }
 
   @UseInterceptors(
@@ -85,7 +85,7 @@ export class ProfilesController {
     const image = files?.image?.[0];
     const documents = files?.documents;
 
-    return this.profilesService.update(id, updateProfileDto, image, documents);
+    return this.profilesService.updateProfile(id, updateProfileDto, image, documents);
   }
 
 }

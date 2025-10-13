@@ -18,109 +18,40 @@ import { PasswordService } from './services/password.service';
 import { TokenService } from '../auth/services/tokens.service';
 import { UserEmailService } from './services/user-email.service';
 import { LoggerService } from '@/common/logger/logger.service';
+import { CrudService } from '@/common/crud/crud.service';
+import { CrudEventService } from '@/common/crud/services/crud-event.service';
+import { CrudOptions } from 'shared/decorators';
+import { ProfilesService } from './profiles/profiles.service';
 
 @Injectable()
-export class UsersService {
-  private readonly logger = new LoggerService(UsersService.name);
+export class UsersService extends CrudService<User> {
+  private readonly customLogger = new LoggerService(UsersService.name);
 
   constructor(
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
-    private readonly dataSource: DataSource,
+    private readonly profielService: ProfilesService,
     private readonly passwordService: PasswordService,
     private readonly userEmailService: UserEmailService,
     private tokenService: TokenService,
-  ) {}
-
-  async findOne(
-    where: FindOptionsWhere<User>,
-    options?: {
-      select?: (keyof User)[];
-      relations?: string[];
-    }
-  ): Promise<User> {
-    const { select = [], relations = ['profile'] } = options || {};
-
-    const user = await this.userRepo.findOne({
-      where,
-      select,
-      relations,
-    });
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    return user;
-  }
-
-
-  async findAll(
-    queryDto: UserListDto,
-    currentUser: User
-  ): Promise<IPaginatedResponse<User>> {
-    const {
-      page = 1,
-      limit = 10,
-      search,
-      sortBy,
-      sortOrder,
-      createdAfter,
-      createdBefore,
-      updatedAfter,
-      updatedBefore,
-      ...filters
-    } = queryDto;
-
-    const skip = (page - 1) * limit;
-    const query = this.userRepo.createQueryBuilder('user')
-      .leftJoinAndSelect('user.profile', 'profile')
-      .leftJoinAndSelect('profile.image', 'image')
-
-    // Apply filters
-    if (search) {
-      query.andWhere(
-        '(user.email ILIKE :search OR profile.firstName ILIKE :search OR profile.lastName ILIKE :search)',
-        { search: `%${search}%` }
-      );
-    }
-
-
-    // (Optional) Apply extra filters dynamically if needed
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined) {
-        query.andWhere(`user.${key} = :${key}`, { [key]: value });
+    dataSource: DataSource,
+    crudEventService: CrudEventService,
+  ) {
+    const crudOptions: CrudOptions = {
+      searchableFields: ['email'],
+      pagination: {
+        defaultLimit: 10,
+        maxLimit: 100
+      },
+      defaultSort: {
+        field: 'createdAt',
+        order: 'DESC'
       }
-    });
-
-    // Apply sorting
-    const sortColumn = sortBy || 'createdAt';
-    const sortDirection = (sortOrder?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC') as 'ASC' | 'DESC';
-    query.orderBy(`user.${sortColumn}`, sortDirection);
-
-    if (createdAfter) query.andWhere('user.createdAt >= :createdAfter', { createdAfter });
-    if (createdBefore) query.andWhere('user.createdAt <= :createdBefore', { createdBefore });
-    if (updatedAfter) query.andWhere('user.updatedAt >= :updatedAfter', { updatedAfter });
-    if (updatedBefore) query.andWhere('user.updatedAt <= :updatedBefore', { updatedBefore });
-
-    const [data, total] = await query
-      .skip(skip)
-      .take(limit)
-      .getManyAndCount();
-
-    const lastPage = Math.ceil(total / limit);
-
-    return {
-      data,
-      total,
-      page,
-      limit,
-      lastPage,
-      hasNextPage: page < lastPage,
-      hasPrevPage: page > 1,
     };
-
+    super(userRepo, dataSource, crudEventService, crudOptions);
   }
+
+
 
   private generateStrongPassword(length: number): string {
     const chars = {
@@ -154,9 +85,7 @@ export class UsersService {
       .join('');
   }
 
-  async create(createUserDto: CreateUserDto): Promise<IMessageResponse & { user: User }> {
-
-
+  async createUser(createUserDto: CreateUserDto): Promise<IMessageResponse & { user: User }> {
     const { profile, ...userData } = createUserDto;
 
     // Check if email exists
@@ -164,61 +93,47 @@ export class UsersService {
       where: { email: userData.email },
     });
 
-
     if (existingUser) {
       throw new ConflictException('Email already exists');
     }
 
-    let tempPassword: string;
+    let tempPassword: string | undefined;
 
-  
     if (!userData.password) {
       tempPassword = this.generateStrongPassword(12);
       userData.password = tempPassword;
     }
 
-    return await this.dataSource.transaction(async (manager: EntityManager) => {
-
-      // Create profile
-      const profileData: DeepPartial<Profile> = {
+    // Use CRUD service create method
+    const user = await this.create({
+      ...userData,
+      profile: {
         firstName: profile.firstName,
         lastName: profile.lastName,
         phoneNumber: profile.phoneNumber,
-      };
-
-      // Create user (use userData.password which has the temp password if generated)
-      const userDataToSave: DeepPartial<User> = {
-        email: createUserDto.email,
-        password: userData.password, // Use the modified password (could be temp password)
-        isActive: true,
-        profile: profileData,
-      };
-
-      // Track created by is handled through audit columns
-      const user = manager.create(User, userDataToSave);
-      await manager.save(user);
-
-      if (tempPassword) {
-        this.userEmailService.sendOnboardingEmail({
-          user,
-          tempPassword,
-        }).catch((error) =>
-          this.logger.error('Onboarding email failed', error.stack),
-        );
-        user.password = tempPassword;
       }
-
-      return { message: 'User created successfully.', user };
     });
+
+    // Send onboarding email if temp password was generated
+    if (tempPassword) {
+      this.userEmailService.sendOnboardingEmail({
+        user,
+        tempPassword,
+      }).catch((error) =>
+        this.customLogger.error('Onboarding email failed', error.stack),
+      );
+    }
+
+    return { message: 'User created successfully.', user };
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto): Promise<IMessageResponse> {
-    const user = await this.findOne({ id }, { relations: ['profile'] });
+  async updateUser(id: number, updateUserDto: UpdateUserDto): Promise<IMessageResponse> {
+    const existingUser = await this.getSingle({ id }, { relations: ['profile'] });
 
     const { profile, ...userData } = updateUserDto;
 
-    // Check email uniqueness if changed
-    if (userData.email && userData.email !== user.email) {
+
+    if (userData.email && userData.email !== existingUser.email) {
       const existingUser = await this.userRepo.findOne({
         where: { email: userData.email },
       });
@@ -228,39 +143,21 @@ export class UsersService {
       }
     }
 
-    await this.dataSource.transaction(async (manager: EntityManager) => {
-      // Update user
-      if (userData.email) {
-        user.email = userData.email;
-      }
 
-      if (userData.isActive !== undefined) {
-        user.isActive = userData.isActive;
-      }
+    // Update user data (excluding profile)
+    if (Object.keys(userData).length > 0) {
+      await this.update(existingUser.id, userData);
+    }
 
-      if (user.profile) {
-        Object.assign(user.profile, updateUserDto);
-
-      }
-
-      await manager.save(user);
-
-
-      return user;
-    });
+    if (profile && Object.keys(profile).length > 0 && existingUser.profile) {
+      await this.profielService.update(existingUser.profile.id, profile);
+    }
 
     return {
       message: 'User updated successfully',
     };
   }
 
-  async remove(id: number): Promise<IMessageResponse> {
-    const user = await this.findOne({ id });
-    await this.userRepo.remove(user);
-    return {
-      message: 'User deleted successfully',
-    };
-  }
 
   async resetPassword(
     id: number,
@@ -270,7 +167,7 @@ export class UsersService {
     const { currentPassword, password } = resetPasswordDto;
 
 
-    const user = await this.findOne({ id }, { select: ['id', 'password', 'passwordHistory'] });
+    const user = await this.getSingle({ id }, { select: ['id', 'password', 'passwordHistory'] });
 
     await this.passwordService.validatePasswordChange(user, password);
 
@@ -300,7 +197,7 @@ export class UsersService {
 
     // Send password reset confirmation email
     this.userEmailService.sendPasswordResetConfirmation(user).catch((error) =>
-      this.logger.error('Password reset confirmation email failed', error.stack),
+      this.customLogger.error('Password reset confirmation email failed', error.stack),
     );
 
     return {

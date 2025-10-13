@@ -34,31 +34,7 @@ export const navItems: {
             urls: [ADMIN_ROUTES.SCHEDULES],
             icon: CalendarClock,
         },
-        {
-            title: "Queue Management",
-            urls: [ADMIN_ROUTES.QUEUES],
-            icon: Database,
-        },
-        {
-            title: "Job Management",
-            urls: [ADMIN_ROUTES.JOBS],
-            icon: Workflow,
-        },
-        {
-            title: "Dashboard",
-            urls: [ADMIN_ROUTES.DASHBOARD],
-            icon: Server,
-        },
-        {
-            title: "Worker Management",
-            urls: [ADMIN_ROUTES.WORKERS],
-            icon: Cpu,
-        },
-        {
-            title: "Roles & Permissions",
-            urls: [ADMIN_ROUTES.ROLES],
-            icon: Shield,
-        },
+       
     ];
 
 

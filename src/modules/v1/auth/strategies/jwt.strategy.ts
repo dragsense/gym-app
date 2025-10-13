@@ -35,7 +35,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       throw new UnauthorizedException('Token revoked');
     }
 
-    const user = await this.userService.findOne({ id: payload.id },
+    const user = await this.userService.getSingle({ id: payload.id },
       { relations: ['profile'] });
     if (!user) {
       throw new UnauthorizedException('User not found');

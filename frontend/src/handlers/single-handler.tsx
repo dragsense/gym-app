@@ -80,29 +80,6 @@ export function SingleHandler<
     registerStore<TSingleHandlerStore<IData, TExtraProps>>(singleStoreKey, store);
   }
 
-  // React 18: Enhanced store synchronization with useSyncExternalStore
-  useSyncExternalStore(
-    store.subscribe,
-    store.getState,
-    store.getState
-  );
-
-  // React 18: CSS-in-JS optimization with useInsertionEffect
-  useInsertionEffect(() => {
-    // Pre-inject any critical styles for the single component
-    const style = document.createElement('style');
-    style.textContent = `
-      .single-handler-container { 
-        contain: layout style paint; 
-      }
-    `;
-    document.head.appendChild(style);
-    
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
-
   useEffect(() => {
     registerStore(singleStoreKey, store);
     return () => deregisterStore(singleStoreKey);
@@ -114,11 +91,10 @@ export function SingleHandler<
   const filteredExtra = store(useShallow((state) => pickKeys(state.extra, Object.keys(initialParams) as (keyof typeof initialParams)[])
   ));
 
-  // React 19: Deferred values for better performance
-  useDeferredValue(payload);
-  useDeferredValue(params);
+  const deferredParams = useDeferredValue(params);
+  const deferredFilteredExtra = useDeferredValue(filteredExtra);
 
-  const queryKey = [singleStoreKey, JSON.stringify(payload), JSON.stringify(filteredExtra)];
+  const queryKey = [singleStoreKey, JSON.stringify(payload), JSON.stringify(deferredFilteredExtra)];
 
   // React 19: Enhanced query with transitions
   useApiQuery<IData>(
@@ -128,7 +104,7 @@ export function SingleHandler<
         startTransition(async () => {
           store.setState({ isLoading: true });
           try {
-            const response = await queryFn(payload, {...params, ...filteredExtra});
+            const response = await queryFn(payload, { ...params, ...deferredParams, ...deferredFilteredExtra });
 
             store.setState({
               isLoading: false,
@@ -151,8 +127,8 @@ export function SingleHandler<
       });
     },
     {
-      ...params,
-      ...filteredExtra
+      ...deferredParams,
+      ...deferredFilteredExtra
     },
     {
       enabled: !!payload || enabled,
@@ -210,9 +186,9 @@ export function SingleHandler<
             store.getState().reset()
           });
         },
-        () => { 
+        () => {
           startTransition(() => {
-            store.getState().reset() 
+            store.getState().reset()
           });
         },
         "destructive"

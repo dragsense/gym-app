@@ -7,6 +7,7 @@ export * from './cache.interface';
 export * from './cluster.interface';
 export * from './file-upload.interface';
 export * from './activity-log.interface';
+export * from './health.interface';
 export * from './schedule.interface';
 export * from './queue.interface';
 export * from './worker.interface';

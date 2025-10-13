@@ -9,7 +9,7 @@ import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import { PaginationMetaDto } from '../common/pagination.dto';
 import { ListQueryDto } from '../common/list-query.dto';
 import { FieldOptions, FieldType } from '../../decorators/field.decorator';
-import { ERoleType, ERoleStatus } from '../../enums/role/role.enum';
+import { ERoleStatus } from '../../enums/role/role.enum';
 
 export class RoleDto {
   @ApiProperty({ example: 1, description: 'Role ID' })

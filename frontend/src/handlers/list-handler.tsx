@@ -73,7 +73,8 @@ export function ListHandler<
   const listStoreKey = storeKey + "-list"
   const singelStoreKey = storeKey + "-single";
   // React 19: Unique ID for list
-  useId();
+  const [, startTransition] = useTransition();
+  const componentId = useId();
 
   const singleStore = useRegisteredStore<TSingleHandlerStore<TSingleData, TSingleExtraProps>>(singelStoreKey);
 
@@ -102,28 +103,6 @@ export function ListHandler<
     registerStore<TListHandlerStore<TData, TUserListData, TExtraProps>>(listStoreKey, store);
   }
 
-  // React 18: Enhanced store synchronization with useSyncExternalStore
-  useSyncExternalStore(
-    store.subscribe,
-    store.getState,
-    store.getState
-  );
-
-  // React 18: CSS-in-JS optimization with useInsertionEffect
-  useInsertionEffect(() => {
-    // Pre-inject any critical styles for the list component
-    const style = document.createElement('style');
-    style.textContent = `
-      .list-handler-container { 
-        contain: layout style paint; 
-      }
-    `;
-    document.head.appendChild(style);
-    
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
 
   useEffect(() => {
     registerStore(listStoreKey, store);
@@ -211,54 +190,6 @@ export function ListHandler<
     defaultValues: defaultFormValues,
   });
 
-  // React 19: Enhanced transitions and optimistic updates
-  const [, startTransition] = useTransition();
-  const [optimisticData, addOptimistic] = useOptimistic(
-    store.getState().response || [],
-    (currentData, optimisticUpdate: { type: 'add' | 'update' | 'delete', item: any, id?: string }) => {
-      switch (optimisticUpdate.type) {
-        case 'add':
-          return [...currentData, { ...optimisticUpdate.item, isOptimistic: true }];
-        case 'update':
-          return currentData.map(item => 
-            (item as any).id === optimisticUpdate.id 
-              ? { ...item, ...optimisticUpdate.item, isOptimistic: true }
-              : item
-          );
-        case 'delete':
-          return currentData.filter(item => (item as any).id !== optimisticUpdate.id);
-        default:
-          return currentData;
-      }
-    }
-  );
-
-  // React 19: Enhanced optimistic update functions
-  // React 19: Optimistic update functions (available for use)
-  const addOptimisticItem = useCallback((item: any) => {
-    startTransition(() => {
-      addOptimistic({ type: 'add', item });
-    });
-  }, [addOptimistic]);
-
-  const updateOptimisticItem = useCallback((id: string, item: any) => {
-    startTransition(() => {
-      addOptimistic({ type: 'update', id, item });
-    });
-  }, [addOptimistic]);
-
-  const deleteOptimisticItem = useCallback((id: string) => {
-    startTransition(() => {
-      addOptimistic({ type: 'delete', id, item: null });
-    });
-  }, [addOptimistic]);
-
-  // Update store with optimistic data when available
-  useEffect(() => {
-    if (optimisticData.length > 0) {
-      store.setState({ response: optimisticData });
-    }
-  }, [optimisticData, store]);
 
   const isUpdatingFromStoreRef = React.useRef(false);
 
@@ -345,7 +276,7 @@ export function ListHandler<
   }, [form, store, setPage, setLimit, setFilters]);
 
   return (
-    <ErrorBoundary FallbackComponent={ErrorFallback}>
+    <ErrorBoundary FallbackComponent={ErrorFallback} key={componentId}>
       <Form {...form}>
         {ListComponent && <ListComponent
           storeKey={storeKey}

@@ -16,6 +16,11 @@ export interface CrudOptions {
     defaultLimit: number;
     maxLimit: number;
   };
+  fileFields?: {
+    single?: string;    // Field name for single file upload
+    multiple?: string;  // Field name for multiple file uploads
+    image?: string;     // Field name for image upload
+  };
 }
 
 export const CRUD_OPTIONS_KEY = 'crud_options';

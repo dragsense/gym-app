@@ -55,7 +55,13 @@ export class UsersController {
     @Query() query: UserListDto,
     @AuthUser() user: any
   ) {
-    return this.usersService.findAll(query, user);
+    return this.usersService.get(query, {
+      relations: [{
+        name: 'profile',
+        select: ['id', 'firstName', 'lastName', 'phoneNumber'],
+        searchableFields: ['firstName', 'lastName']
+      }],
+    });
   }
 
   @ApiOperation({ summary: 'Get authenticated user' })
@@ -68,7 +74,7 @@ export class UsersController {
   @Get('me')
   findMe(@AuthUser() user: any) {
     const userId = user.id;
-    return this.usersService.findOne(
+    return this.usersService.getSingle(
       { id: userId },
       { select: ['id', 'email'], relations: ['profile'] }
     );
@@ -86,7 +92,7 @@ export class UsersController {
   findOne(
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return this.usersService.findOne(
+    return this.usersService.getSingle(
       { id },
       { relations: ['profile'] }
     );
@@ -101,7 +107,7 @@ export class UsersController {
   @ApiResponse({ status: 409, description: 'Email is already taken' })
   @Post()
   create(@AuthUser() user: any, @Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+    return this.usersService.createUser(createUserDto);
   }
 
   @ApiOperation({ summary: 'Update user by ID' })
@@ -118,7 +124,7 @@ export class UsersController {
     @Body() updateUserDto: UpdateUserDto,
     @AuthUser() currentUser: any
   ) {
-    return this.usersService.update(id, updateUserDto);
+    return this.usersService.updateUser(id, updateUserDto);
   }
 
   @ApiOperation({ summary: 'Delete user by ID' })
@@ -126,11 +132,11 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'User deleted successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })
   @Delete(':id')
-  remove(
+  async remove(
     @Param('id', ParseIntPipe) id: number,
     @AuthUser() currentUser: any
   ) {
-    return this.usersService.remove(id);
+    await this.usersService.delete(id);
   }
 
   @ApiOperation({ summary: 'Reset authenticated user password' })

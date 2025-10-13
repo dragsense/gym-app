@@ -119,8 +119,8 @@ export class NotificationListDto extends ListQueryDto {
     @IsBoolean()
     @FieldType('select', false)
     @FieldOptions([
-        { value: true, label: 'Read' },
-        { value: false, label: 'Unread' }
+        { value: "true", label: 'Read' },
+        { value: "false", label: 'Unread' }
     ])
     isRead?: boolean;
 

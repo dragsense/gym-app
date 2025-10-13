@@ -1,12 +1,9 @@
 import {
   Entity,
   Column,
-  ManyToOne,
-  JoinColumn,
 } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { GeneralBaseEntity } from '@/common/entities';
-import { User } from '@/modules/v1/users/entities/user.entity';
 import { EActivityType, EActivityStatus } from 'shared/enums/activity-log.enum';
 
 @Entity('activity_logs')
@@ -71,8 +68,4 @@ export class ActivityLog extends GeneralBaseEntity {
   @ApiPropertyOptional({ example: 1, description: 'User who performed the activity' })
   @Column({ type: 'int', nullable: true })
   userId?: number;
-
-  @ManyToOne(() => User, { eager: true })
-  @JoinColumn({ name: 'userId' })
-  user?: User;
 }

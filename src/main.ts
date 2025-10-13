@@ -1,10 +1,12 @@
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { apiReference } from '@scalar/nestjs-api-reference';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as hpp from 'hpp';
 
 import { AppModule } from './app.module';
+import { scalarConfig, scalarThemes } from './config/scalar.config';
 
 import * as cookieParser from 'cookie-parser';
 import helmet from 'helmet';
@@ -63,7 +65,7 @@ async function bootstrap() {
 
   const port = configService.get<number>('app.port', 3000);
 
-  // API documentation
+  // API documentation with Scalar
   if (process.env.NODE_ENV !== 'production') {
     const config = new DocumentBuilder()
       .setTitle('Customer App Web API')
@@ -86,20 +88,42 @@ async function bootstrap() {
       .addTag('Payments', 'Payment processing and history')
       .addTag('Invoices', 'Invoice management')
       .addTag('Settings', 'Application settings')
+      .addTag('Roles & Permissions', 'Role and permission management')
+      .addTag('Health', 'System health and monitoring')
+      .addTag('Cache', 'Cache management')
+      .addTag('Queue', 'Background job management')
+      .addTag('Schedule', 'Scheduled task management')
+      .addTag('Activity Logs', 'User activity tracking')
+      .addTag('Notifications', 'Notification management')
+      .addTag('File Upload', 'File upload and management')
       .build();
 
-    const documentFactory = () => SwaggerModule.createDocument(app, config);
+    const document = SwaggerModule.createDocument(app, config);
 
-    SwaggerModule.setup('api/docs', app, documentFactory, {
-      customSiteTitle: 'Customer App Web API',
-      swaggerOptions: {
-        persistAuthorization: true,
-        withCredentials: true,
-      },
-    });
+    // Setup Scalar API Reference with dynamic theme
+    const scalarTheme = configService.get<string>('scalar.theme', 'purple');
+    const selectedTheme = scalarThemes[scalarTheme] || scalarThemes.purple;
+    
+    app.use(
+      '/api/docs',
+      apiReference({
+        content: document,
+        ...selectedTheme,
+        title: configService.get<string>('scalar.title', 'Customer App Web API'),
+        meta: {
+          description: configService.get<string>('scalar.description', 'Empower coaches to manage clients, track progress, and deliver results — all in one simple, powerful tool.'),
+        },
+      }),
+    );
+
+    // Also keep the JSON endpoint for external tools
+    SwaggerModule.setup('api/docs-json', app, document);
 
     loggerService.log(
-      `API documentation available at: http://localhost:${port}/api/docs`,
+      `🚀 Scalar API documentation available at: http://localhost:${port}/api/docs`,
+    );
+    loggerService.log(
+      `📄 OpenAPI JSON available at: http://localhost:${port}/api/docs-json`,
     );
   }
 

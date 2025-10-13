@@ -1,58 +1,67 @@
-import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, FindOptionsWhere, FindManyOptions, DataSource, QueryRunner, ObjectLiteral } from 'typeorm';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Repository, FindOptionsWhere, FindManyOptions, DataSource, QueryRunner, ObjectLiteral, EntityManager } from 'typeorm';
 import { IPaginatedResponse } from 'shared/interfaces';
 import { ICrudService } from './interfaces/crud.interface';
-import { CrudOptions, RelationConfig } from 'shared/decorators';
+import { CrudOptions } from 'shared/decorators';
 import { CrudEventService } from './services/crud-event.service';
 import { CrudEvent } from 'shared/interfaces/crud-events.interface';
-
-// Interfaces are now imported from shared/decorators
+import { LoggerService } from '../logger/logger.service';
 
 @Injectable()
 export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
-  private readonly logger = new Logger(CrudService.name);
-  private queryRunner: QueryRunner;
-
+  private readonly logger = new LoggerService(CrudService.name);
+  protected readonly repository: Repository<T>;
+  protected readonly dataSource: DataSource;
+  protected readonly eventService: CrudEventService;
+  protected options: CrudOptions;
   constructor(
-    @InjectRepository(Repository<T>)
-    private readonly repository: Repository<T>,
-    private readonly dataSource: DataSource,
-    private readonly eventService: CrudEventService,
-    private readonly options: CrudOptions = {}
+    repository: Repository<T>,
+    dataSource: DataSource,
+    eventService: CrudEventService,
+    options?: CrudOptions, // ✅ optional, child can pass this
   ) {
-    this.queryRunner = this.dataSource.createQueryRunner();
+    this.repository = repository;
+    this.dataSource = dataSource;
+    this.eventService = eventService;
+
+    // ✅ Merge default + custom options directly here
+    this.options = {
+      pagination: { defaultLimit: 10, maxLimit: 100 },
+      defaultSort: { field: 'createdAt', order: 'DESC' },
+      searchableFields: ['email'],
+      ...options,
+    };
+  }
+
+
+  setOptions(options: CrudOptions) {
+    // Merge provided options with defaults instead of replacing
+    this.options = {
+      ...this.options,
+      ...options
+    }
   }
 
   /**
    * Create a new entity with relation management and event emission
    */
   async create<TCreateDto>(createDto: TCreateDto): Promise<T> {
-    await this.queryRunner.connect();
-    await this.queryRunner.startTransaction();
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
     try {
       // Emit before create event
       await this.emitEvent('before:create', null, createDto);
 
-      // Handle relations before creating main entity
-      const processedDto = await this.handleRelations(createDto, 'create');
-      
-      const entity = this.repository.create(processedDto as any);
-      const savedEntity = await this.queryRunner.manager.save(entity);
-      // Handle case where save returns array (when saving multiple entities)
+      const entity = this.repository.create(createDto as any);
+      const savedEntity = await queryRunner.manager.save(entity);
       const finalEntity = Array.isArray(savedEntity) ? savedEntity[0] : savedEntity;
-      
-      // Handle post-creation relations
-      await this.handlePostCreateRelations(finalEntity, createDto, this.queryRunner);
-      
-      await this.queryRunner.commitTransaction();
-      
+
+      await queryRunner.commitTransaction();
+
       // Get the complete entity with relations for return
-      const completeEntity = await this.repository.findOne({
-        where: { id: (finalEntity as any).id } as unknown as FindOptionsWhere<T>,
-        relations: this.getDefaultRelations()
-      }) as T;
+      const completeEntity = await this.getSingle(finalEntity.id);
 
       // Emit after create event
       await this.emitEvent('create', completeEntity, createDto);
@@ -60,49 +69,36 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
       return completeEntity;
 
     } catch (error) {
-      await this.queryRunner.rollbackTransaction();
+      await queryRunner.rollbackTransaction();
       this.logger.error(`Error creating entity: ${error.message}`, error.stack);
       throw new BadRequestException(`Failed to create entity: ${error.message}`);
     } finally {
-      await this.queryRunner.release();
+      await queryRunner.release();
     }
   }
 
   /**
    * Update an existing entity with relation management and event emission
    */
-  async update<TUpdateDto>(id: number, updateDto: TUpdateDto): Promise<T> {
-    await this.queryRunner.connect();
-    await this.queryRunner.connect();
-    await this.queryRunner.startTransaction();
-
+  async update<TUpdateDto>(key: string | number | Record<string, any>, updateDto: TUpdateDto, callback?: (entity: T, manager: EntityManager) => Promise<void>): Promise<T> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
     try {
-      const existingEntity = await this.repository.findOne({ 
-        where: { id } as unknown as FindOptionsWhere<T> 
-      });
-      
-      if (!existingEntity) {
-        throw new NotFoundException(`Entity with ID ${id} not found`);
+
+      const existingEntity = await this.getSingle(key);
+      if (callback) {
+        await callback(existingEntity, queryRunner.manager);
       }
 
       // Emit before update event
       await this.emitEvent('before:update', existingEntity, updateDto);
 
-      // Handle relations before updating
-      const processedDto = await this.handleRelations(updateDto, 'update', existingEntity);
-      
-      await this.queryRunner.manager.update(this.repository.target, id, processedDto as any);
-      
-      // Handle post-update relations
-      await this.handlePostUpdateRelations(id, updateDto, this.queryRunner);
-      
-      await this.queryRunner.commitTransaction();
-      
+      await queryRunner.manager.update(this.repository.target, existingEntity.id, updateDto as any);
+      await queryRunner.commitTransaction();
+
       // Get updated entity with relations for return
-      const updatedEntity = await this.repository.findOne({
-        where: { id } as unknown as FindOptionsWhere<T>,
-        relations: this.getDefaultRelations()
-      }) as T;
+      const updatedEntity = await this.getSingle(existingEntity.id);
 
       // Emit after update event
       await this.emitEvent('update', updatedEntity, updateDto);
@@ -110,12 +106,12 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
       return updatedEntity;
 
     } catch (error) {
-      await this.queryRunner.rollbackTransaction();
+      await queryRunner.rollbackTransaction();
       this.logger.error(`Error updating entity: ${error.message}`, error.stack);
       if (error instanceof NotFoundException) throw error;
       throw new BadRequestException(`Failed to update entity: ${error.message}`);
     } finally {
-      await this.queryRunner.release();
+      await queryRunner.release();
     }
   }
 
@@ -124,24 +120,22 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
   /**
    * Get all entities without pagination
    */
-  async getAll<TQueryDto>(queryDto: TQueryDto): Promise<T[]> {
+  async getAll<TQueryDto>(queryDto: TQueryDto, options?: { relations?: string[]; select?: string[] }): Promise<T[]> {
     try {
       const {
         search,
         sortBy = this.options.defaultSort?.field || 'createdAt',
         sortOrder = this.options.defaultSort?.order || 'DESC',
-        filters = {},
-        relations = [],
-        select = [],
-        ...otherFilters
+
+        ...filters
       } = queryDto as any;
 
       const query = this.repository.createQueryBuilder('entity');
 
+      const { relations = [], select = [] } = options || {};
       // Add relations
-      const allRelations = [...this.getDefaultRelations(), ...relations];
-      if (allRelations.length > 0) {
-        allRelations.forEach(relation => {
+      if (relations.length > 0) {
+        relations.forEach(relation => {
           query.leftJoinAndSelect(`entity.${relation}`, relation);
         });
       }
@@ -153,18 +147,40 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
 
       // Apply search if provided
       if (search) {
-        const searchableFields = this.options.searchableFields || this.getDefaultSearchableFields();
+        const searchableFields = this.options.searchableFields || [];
         if (searchableFields.length > 0) {
+          // Check if we need to join relations for search
+          const relationsNeeded = new Set<string>();
+          searchableFields.forEach(field => {
+            if (field.includes('.')) {
+              const [relationName] = field.split('.');
+              relationsNeeded.add(relationName);
+            }
+          });
+
+          // Join relations needed for search
+          relationsNeeded.forEach(relationName => {
+            query.leftJoin(`entity.${relationName}`, relationName);
+          });
+
           const searchConditions = searchableFields
-            .map(field => `entity.${field} ILIKE :search`)
+            .map(field => {
+              // Handle nested fields (e.g., profile.firstName)
+              if (field.includes('.')) {
+                const [relationName, relationField] = field.split('.');
+                return `${relationName}.${relationField} ILIKE :search`;
+              } else {
+                // Handle direct entity fields
+                return `entity.${field} ILIKE :search`;
+              }
+            })
             .join(' OR ');
           query.andWhere(`(${searchConditions})`, { search: `%${search}%` });
         }
       }
 
       // Apply filters
-      const allFilters = { ...filters, ...otherFilters };
-      Object.entries(allFilters).forEach(([key, value]) => {
+      Object.entries(filters).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
           if (Array.isArray(value)) {
             query.andWhere(`entity.${key} IN (:...${key})`, { [key]: value });
@@ -189,7 +205,13 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
   /**
    * Get entities with pagination (internal method)
    */
-  async get<TQueryDto>(queryDto: TQueryDto): Promise<IPaginatedResponse<T>> {
+  async get<TQueryDto>(queryDto: TQueryDto, options?: {
+    relations?: {
+      name: string;
+      select: string[];
+      searchableFields: string[];
+    }[]; select?: string[]
+  }): Promise<IPaginatedResponse<T>> {
     try {
       const {
         page = 1,
@@ -197,10 +219,7 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
         search,
         sortBy = this.options.defaultSort?.field || 'createdAt',
         sortOrder = this.options.defaultSort?.order || 'DESC',
-        filters = {},
-        relations = [],
-        select = [],
-        ...otherFilters
+        ...filters
       } = queryDto as any;
 
       // Validate pagination limits
@@ -210,12 +229,26 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
 
       const query = this.repository.createQueryBuilder('entity');
 
+      const { relations = [] as { name: string; select: string[], searchableFields: string[] }[], 
+      select = [] } = options || {};
       // Add relations
-      const allRelations = [...this.getDefaultRelations(), ...relations];
-      if (allRelations.length > 0) {
-        allRelations.forEach(relation => {
-          query.leftJoinAndSelect(`entity.${relation}`, relation);
+      if (relations.length > 0) {
+        relations.forEach(relation => {
+          query.leftJoin(`entity.${relation.name}`, relation.name);
+          if (relation.select.length > 0) {
+            query.addSelect(relation.select.map(field => `${relation.name}.${field}`));
+          } else {
+            query.addSelect(`${relation.name}`);
+          }
+
+          if (relation.searchableFields.length > 0 && search) {
+            relation.searchableFields.forEach(field => {
+              query.orWhere(`${relation.name}.${field} ILIKE :search`, { search: `%${search}%` });
+            });
+          }
         });
+
+
       }
 
       // Add select fields
@@ -225,7 +258,7 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
 
       // Apply search if provided
       if (search) {
-        const searchableFields = this.options.searchableFields || this.getDefaultSearchableFields();
+        const searchableFields = this.options.searchableFields || [];
         if (searchableFields.length > 0) {
           const searchConditions = searchableFields
             .map(field => `entity.${field} ILIKE :search`)
@@ -235,8 +268,7 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
       }
 
       // Apply filters
-      const allFilters = { ...filters, ...otherFilters };
-      Object.entries(allFilters).forEach(([key, value]) => {
+      Object.entries(filters).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
           if (Array.isArray(value)) {
             query.andWhere(`entity.${key} IN (:...${key})`, { [key]: value });
@@ -295,13 +327,14 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
         where: whereCondition,
       };
 
-      const allRelations = [...this.getDefaultRelations(), ...(options?.relations || [])];
-      if (allRelations.length > 0) {
-        findOptions.relations = allRelations;
+      const { relations = [], select = [] } = options || {};
+
+      if (relations.length > 0) {
+        findOptions.relations = relations;
       }
 
-      if (options?.select) {
-        findOptions.select = options.select as (keyof T)[];
+      if (select.length > 0) {
+        findOptions.select = select as (keyof T)[];
       }
 
       const entity = await this.repository.findOne(findOptions);
@@ -323,28 +356,20 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
   /**
    * Delete an entity by ID and return the deleted entity
    */
-  async delete(id: number): Promise<T> {
+  async delete(key: string | number | Record<string, any>): Promise<T> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
-      const existingEntity = await this.repository.findOne({ 
-        where: { id } as unknown as FindOptionsWhere<T>,
-        relations: this.getDefaultRelations()
-      });
-      
-      if (!existingEntity) {
-        throw new NotFoundException(`Entity with ID ${id} not found`);
-      }
+
+      const existingEntity = await this.getSingle(key);
 
       // Emit before delete event
       await this.emitEvent('before:delete', existingEntity);
 
-      // Handle cascade deletes for relations
-      await this.handleCascadeDelete(id, queryRunner);
-      
-      await queryRunner.manager.delete(this.repository.target, id);
+
+      await queryRunner.manager.delete(this.repository.target, existingEntity.id);
       await queryRunner.commitTransaction();
 
       // Emit after delete event
@@ -389,118 +414,6 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
     }
   }
 
-  /**
-   * Handle relations before create/update
-   */
-  private async handleRelations(dto: any, operation: 'create' | 'update', existingEntity?: T): Promise<any> {
-    if (!this.options.relations) return dto;
-
-    const processedDto = { ...dto };
-
-    for (const relation of this.options.relations) {
-      const relationData = dto[relation.property];
-      
-      if (relationData) {
-        if (relation.type === 'one-to-one' && relation.autoCreate) {
-          // Auto-create related entity
-          const relatedEntity = await this.createRelatedEntity(relation.entity, relationData);
-          processedDto[relation.property] = relatedEntity;
-        } else if (relation.type === 'one-to-many' && relation.autoCreate) {
-          // Auto-create multiple related entities
-          const relatedEntities = await Promise.all(
-            relationData.map((data: any) => this.createRelatedEntity(relation.entity, data))
-          );
-          processedDto[relation.property] = relatedEntities;
-        }
-      }
-    }
-
-    return processedDto;
-  }
-
-  /**
-   * Handle relations after create
-   */
-  private async handlePostCreateRelations(entity: T, dto: any, queryRunner: QueryRunner): Promise<void> {
-    if (!this.options.relations) return;
-
-    for (const relation of this.options.relations) {
-      const relationData = dto[relation.property];
-      
-      if (relationData && relation.type === 'many-to-many') {
-        // Handle many-to-many relations
-        await this.handleManyToManyRelation(entity, relation, relationData, queryRunner);
-      }
-    }
-  }
-
-  /**
-   * Handle relations after update
-   */
-  private async handlePostUpdateRelations(id: number, dto: any, queryRunner: QueryRunner): Promise<void> {
-    if (!this.options.relations) return;
-
-    const entity = await queryRunner.manager.findOne(this.repository.target, {
-      where: { id } as unknown as FindOptionsWhere<T>
-    });
-
-    if (!entity) return;
-
-    for (const relation of this.options.relations) {
-      const relationData = dto[relation.property];
-      
-      if (relationData && relation.type === 'many-to-many') {
-        // Handle many-to-many relations
-        await this.handleManyToManyRelation(entity, relation, relationData, queryRunner);
-      }
-    }
-  }
-
-  /**
-   * Create related entity
-   */
-  private async createRelatedEntity(entityClass: any, data: any): Promise<any> {
-    const repository = this.dataSource.getRepository(entityClass);
-    const entity = repository.create(data);
-    return await repository.save(entity);
-  }
-
-  /**
-   * Handle many-to-many relations
-   */
-  private async handleManyToManyRelation(entity: T, relation: RelationConfig, relationData: any[], queryRunner: QueryRunner): Promise<void> {
-    // This would need to be implemented based on your specific many-to-many setup
-    // For now, just a placeholder
-    this.logger.log(`Handling many-to-many relation for ${relation.property}`);
-  }
-
-  /**
-   * Handle cascade delete
-   */
-  private async handleCascadeDelete(id: number, queryRunner: QueryRunner): Promise<void> {
-    if (!this.options.relations) return;
-
-    for (const relation of this.options.relations) {
-      if (relation.cascade) {
-        // Implement cascade delete logic based on relation type
-        this.logger.log(`Cascading delete for relation ${relation.property}`);
-      }
-    }
-  }
-
-  /**
-   * Get default relations
-   */
-  private getDefaultRelations(): string[] {
-    return this.options.relations?.map(r => r.property) || [];
-  }
-
-  /**
-   * Get default searchable fields
-   */
-  private getDefaultSearchableFields(): string[] {
-    return ['name', 'title', 'description', 'email'];
-  }
 
   /**
    * Build nested where condition for complex queries

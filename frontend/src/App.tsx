@@ -12,10 +12,9 @@ import { ThemeProvider } from "./hooks/use-theme";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 0, //5 * 60 * 1000,
-
+      staleTime: 5 * 60 * 1000,
       refetchOnWindowFocus: false,
-      retry: 0,
+      retry: 1,
     },
   },
 });

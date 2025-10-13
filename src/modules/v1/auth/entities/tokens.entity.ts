@@ -18,7 +18,7 @@ export class RefreshToken extends GeneralBaseEntity {
   @Column({ default: false })
   revoked: boolean;
 
-  @ManyToOne(() => User, user => user.refreshTokens)
+  @ManyToOne(() => User, user => user.refreshTokens, { onDelete: 'CASCADE' })
   user: User;
 
   isExpired(): boolean {

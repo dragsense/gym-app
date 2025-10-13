@@ -3,13 +3,15 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 
 import { IMessageResponse } from 'shared/interfaces';
+import { CrudService } from '@/common/crud/crud.service';
+import { CrudEventService } from '@/common/crud/services/crud-event.service';
+import { CrudOptions } from 'shared/decorators';
 
 
 import { Profile } from './entities/profile.entity';
-import { User } from '@/modules/v1/users/entities/user.entity';
 
 
 import { UpdateProfileDto } from 'shared/dtos/user-dtos/profile.dto';
@@ -18,39 +20,33 @@ import { FileUpload } from '@/common/file-upload/entities/file-upload.entity';
 import { EFileType } from 'shared';
 
 @Injectable()
-export class ProfilesService {
+export class ProfilesService extends CrudService<Profile> {
   constructor(
     @InjectRepository(Profile)
     private readonly profileRepo: Repository<Profile>,
-    private fileUploadService: FileUploadService,
+    private readonly fileUploadService: FileUploadService,
+    dataSource: DataSource,
+    crudEventService: CrudEventService,
+  ) {
 
-  ) { }
+    const crudOptions: CrudOptions = {
+      relations: [],
+      searchableFields: ['firstName', 'lastName'],
+      pagination: { defaultLimit: 10, maxLimit: 100 },
+      defaultSort: { field: 'createdAt', order: 'DESC' },
+    };
 
-  async findOneByUser(user: Pick<User, "id">): Promise<Profile> {
-
-    const userId = user.id;
-
-    const profile = await this.profileRepo.findOne({
-      where: { user: { id: userId } },
-      relations: ['image', 'documents']
-    });
-
-    if (!profile) {
-      throw new NotFoundException(`Profile for user with ID ${userId} not found`);
-    }
-
-    return profile;
+    super(profileRepo, dataSource, crudEventService, crudOptions);
+    
   }
 
-  async update(
+  async updateProfile(
     id: number, 
     updateProfileDto: UpdateProfileDto, 
     profileImage?: Express.Multer.File,
     documents?: Express.Multer.File[]
   ): Promise<IMessageResponse> {
 
-
-    console.log(updateProfileDto);
 
     const {
       image,
@@ -59,7 +55,7 @@ export class ProfilesService {
     } = updateProfileDto;
 
 
-    const profile = await this.profileRepo.findOne({
+    const profile = await this.getSingle({
       where: { id },
       relations: ['image', 'documents'],
     });
@@ -68,10 +64,6 @@ export class ProfilesService {
     if (!profile) {
       throw new NotFoundException(`Profile with ID ${id} not found`);
     }
-
-    Object.assign(profile, profileData);
-
-
 
     if (profileImage) {
       let uploaded: FileUpload;
@@ -130,7 +122,7 @@ export class ProfilesService {
     }
 
 
-    await this.profileRepo.save(profile);
+    await this.update(id, profileData);
 
     return { message: 'Profile updated successfully' };
   }

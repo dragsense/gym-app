@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -6,7 +6,6 @@ import { EntityManager, Repository } from 'typeorm';
 import { FileUpload } from './entities/file-upload.entity';
 import { FileListDto, CreateFileUploadDto, UpdateFileUploadDto } from 'shared/dtos/file-upload-dtos/file-upload.dto';
 import { IPaginatedResponse } from 'shared/interfaces';
-import { EFileType } from 'shared/enums';
 import { ConfigService } from '@nestjs/config';
 import { detectFileType } from '@/lib/utils/detect-file-type.util';
 import { OmitType } from 'shared/lib/type-utils';
@@ -37,6 +36,7 @@ export class FileUploadService {
   async createFile(
     createDto: OmitType<CreateFileUploadDto, 'file'>,
     file?: Express.Multer.File,
+    saveFile: boolean = true,
     manager?: EntityManager,
   ): Promise<FileUpload> {
 
@@ -50,17 +50,20 @@ export class FileUploadService {
       const timestamp = Date.now();
       const ext = path.extname(file.originalname);
       const fileName = `${timestamp}-${file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-      const physicalPath = path.join(uploadDir, fileName);
-      fs.writeFileSync(physicalPath, file.buffer);
+      if (saveFile) {
+        const physicalPath = path.join(uploadDir, fileName);
+        fs.writeFileSync(physicalPath, file.buffer);
+      }
 
       const relativePath = `uploads/${folder}/${fileName}`;
       const url = `${this.appUrl}/${relativePath}`;
-      
+
       // Auto-detect and correct type from mimetype
       const detectedType = detectFileType(file.mimetype);
-      
+
       const saved = this.fileRepo.create({
         name: createDto.name || file.originalname,
+        originalName: file.originalname,
         type: detectedType, // Use detected type, ignore user-provided type
         mimeType: file.mimetype,
         size: file.size,
@@ -97,7 +100,7 @@ export class FileUploadService {
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
-    
+
     // Delete DB record
     await this.fileRepo.remove(file);
   }
@@ -185,9 +188,9 @@ export class FileUploadService {
     file?: Express.Multer.File,
   ): Promise<FileUpload> {
 
-   
+
     const existingFile = await this.findOne(id);
-    
+
     // If physical file is provided, delete old and upload new (ignore URL)
     if (file) {
       // Delete old physical file
@@ -195,7 +198,7 @@ export class FileUploadService {
       if (fs.existsSync(oldFilePath)) {
         fs.unlinkSync(oldFilePath);
       }
-      
+
       // Upload new file
       const uploadFolder = updateData.folder || existingFile.folder;
       const uploadDir = path.join(process.cwd(), 'public', 'uploads', uploadFolder);
@@ -209,10 +212,10 @@ export class FileUploadService {
 
       const relativePath = `uploads/${uploadFolder}/${fileName}`;
       const url = `${this.appUrl}/${relativePath}`;
-      
+
       // Auto-detect and correct type from mimetype
       const detectedType = detectFileType(file.mimetype);
-      
+
       existingFile.name = updateData.name || file.originalname;
       existingFile.type = detectedType; // Use detected type, ignore user-provided
       existingFile.mimeType = file.mimetype;
@@ -227,5 +230,23 @@ export class FileUploadService {
     }
 
     return await this.fileRepo.save(existingFile);
+  }
+
+
+  async saveFiles(fileUploads: {file: Express.Multer.File, fileUpload: FileUpload}[]): Promise<void> {
+
+
+    for (let i = 0; i < fileUploads.length; i++) {
+
+      if (!fileUploads[i].file) {
+        throw new BadRequestException('File not found');
+      }
+
+      const uploadDir = path.join(process.cwd(), 'public', 'uploads', fileUploads[i].fileUpload.folder);
+      this.ensureDirectoryExists(uploadDir);
+      const physicalPath = path.join(uploadDir, fileUploads[i].fileUpload.name);
+      fs.writeFileSync(physicalPath, fileUploads[i].file.buffer);
+    }
+
   }
 }

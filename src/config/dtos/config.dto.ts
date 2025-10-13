@@ -79,7 +79,48 @@ export class EnvironmentVariables {
   @IsOptional()
   DB_POOL_CONN_TIMEOUT: number;
 
+  // Database Mode and Advanced Configuration
+  @IsString()
+  @IsOptional()
+  DB_MODE: string;
 
+  @IsString()
+  @IsOptional()
+  DB_DEFAULT_CONNECTION: string;
+
+  @IsBoolean()
+  @IsOptional()
+  DB_AUTO_REPLICA: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  DB_AUTO_ARCHIVE: boolean;
+
+  // Database Health Check Configuration
+  @IsNumber()
+  @IsOptional()
+  DB_HEALTH_CHECK_INTERVAL: number;
+
+  @IsNumber()
+  @IsOptional()
+  DB_HEALTH_CHECK_TIMEOUT: number;
+
+  @IsString()
+  @IsOptional()
+  DB_HEALTH_CHECK_QUERY: string;
+
+  // Database Retry Configuration
+  @IsNumber()
+  @IsOptional()
+  DB_RETRY_MAX_ATTEMPTS: number;
+
+  @IsNumber()
+  @IsOptional()
+  DB_RETRY_DELAY: number;
+
+  @IsNumber()
+  @IsOptional()
+  DB_RETRY_BACKOFF_MULTIPLIER: number;
 
   // JWT
   @IsString()

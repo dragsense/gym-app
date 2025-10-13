@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '../../logger/logger.service';
-import { ActionRegistryService, ActionHandler } from '../../bull-queue/services/action-registry.service';
+import { ActionRegistryService, ActionHandler, ActionResult } from '../../bull-queue/services/action-registry.service';
 
 @Injectable()
 export class ScheduleRegistryService {
@@ -42,8 +42,12 @@ export class ScheduleRegistryService {
     return this.actionRegistry.getAction(actionName);
   }
 
+  executeAction(actionName: string, data?: Record<string, any>, entityId?: number, userId?: number): Promise<ActionResult> {
+    return this.actionRegistry.executeAction(actionName, data, entityId, userId);
+  }
+
   /**
-   * Get all registered actions
+   * Get all registered actions`
    */
   getAllActions(): ActionHandler[] {
     return this.actionRegistry.getAllActions();

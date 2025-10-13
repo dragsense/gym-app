@@ -29,7 +29,7 @@ export const fetchUsers = (params: IListQueryParams, level?: number) => {
 
 export const fetchUser = (id: number) => userService.getSingle(id);
 export const createUser = (data: TUserData) => userService.post(data);
-export const updateUser = (id: number) => userService.put(id);
+export const updateUser = (id: number) => userService.patch(id);
 export const deleteUser = (id: number) => userService.delete(id);
 
 // Custom methods using BaseService

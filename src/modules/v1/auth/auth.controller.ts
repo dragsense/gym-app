@@ -294,7 +294,7 @@ export class AuthController {
       throw new HttpException('Invalid OTP', HttpStatus.UNAUTHORIZED);
     }
 
-    const user = await this.userService.findOne({ email: email });
+    const user = await this.userService.getSingle({ email: email });
 
     const { accessToken, refreshToken } = await this.tokenService.generateTokens({
       id: user.id,

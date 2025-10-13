@@ -21,6 +21,13 @@ export class FileUpload extends GeneralBaseEntity {
   name: string;
 
   @ApiProperty({
+    example: 'banner.jpg',
+    description: 'Original file name as uploaded by the user',
+  })
+  @Column()
+  originalName: string;
+
+  @ApiProperty({
     example: 'image/jpeg',
     description: 'MIME type of the uploaded file (e.g. image/jpeg, image/png)',
   })

@@ -153,7 +153,7 @@ export default function UserList({
           <TTable<IUser>
             listStore={store}
             columns={columns}
-            emptyMessage="No trainers found."
+            emptyMessage="No users found."
             showPagination={true}
           /></AppCard>
       </TabsContent>
@@ -163,7 +163,7 @@ export default function UserList({
         <div>
           <TList<IUser>
             listStore={store}
-            emptyMessage="No trainers found."
+            emptyMessage="No users found."
             showPagination={true}
             renderItem={listItem}
           />

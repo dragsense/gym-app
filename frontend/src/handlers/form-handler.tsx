@@ -1,5 +1,5 @@
 // React & Hooks
-import React, { useEffect, useMemo, useActionState, useTransition, useDeferredValue, useSyncExternalStore, useInsertionEffect } from "react";
+import React, { useEffect, useMemo, useActionState, useTransition, useDeferredValue, useSyncExternalStore, useInsertionEffect, useCallback } from "react";
 
 // External Libraries
 import { useForm } from "react-hook-form";
@@ -81,31 +81,8 @@ export function FormHandler<TFormData, TResponse = any, TExtraProps extends Reco
     registerStore<TFormHandlerStore<TFormData, TResponse, TExtraProps>>(formStoreKey, store);
   }
 
-  // React 18: Enhanced store synchronization with useSyncExternalStore
-  useSyncExternalStore(
-    store.subscribe,
-    store.getState,
-    store.getState
-  );
 
-  // React 18: CSS-in-JS optimization with useInsertionEffect
-  useInsertionEffect(() => {
-    // Pre-inject any critical styles for the form component
-    const style = document.createElement('style');
-    style.textContent = `
-      .form-handler-container { 
-        contain: layout style paint; 
-      }
-      .form-handler-container .form-field {
-        contain: layout;
-      }
-    `;
-    document.head.appendChild(style);
-    
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
+
 
   const filteredExtra = store(useShallow((state) => pickKeys(state.extra, Object.keys(initialParams) as (keyof typeof initialParams)[])
   ));
@@ -165,7 +142,7 @@ export function FormHandler<TFormData, TResponse = any, TExtraProps extends Reco
   });
 
   // React 19: Enhanced form submission with proper transitions
-  const handleSubmit = async (formData: any) => {
+  const handleSubmit = useCallback(async (formData: any) => {
     const isEditing = store.getState().isEditing;
 
     if (isEditing) {
@@ -205,7 +182,7 @@ export function FormHandler<TFormData, TResponse = any, TExtraProps extends Reco
         onError?.(error);
       }
     });
-  };
+  }, [store, initialValues, startTransition, mutationFn, initialParams, filteredExtra, onSuccess, onError]);
 
   useEffect(() => {
     registerStore(formStoreKey, store);

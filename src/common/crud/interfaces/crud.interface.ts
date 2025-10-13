@@ -1,4 +1,4 @@
-import { Repository, FindOptionsWhere, ObjectLiteral } from 'typeorm';
+import { Repository, FindOptionsWhere, ObjectLiteral, EntityManager } from 'typeorm';
 import { IPaginatedResponse } from 'shared/interfaces';
 
 export interface ICrudService<T extends ObjectLiteral> {
@@ -10,7 +10,7 @@ export interface ICrudService<T extends ObjectLiteral> {
   /**
    * Update an existing entity
    */
-  update<TUpdateDto>(id: number, updateDto: TUpdateDto): Promise<T>;
+  update<TUpdateDto>(id: number, updateDto: TUpdateDto, callback?: (entity: T, manager: EntityManager) => Promise<void>): Promise<T>;
 
   /**
    * Get entities with pagination

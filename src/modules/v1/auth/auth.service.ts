@@ -59,7 +59,7 @@ export class AuthService {
           lastName,
           timestamp: new Date().toISOString(),
         },
-        userId: res.user?.id,
+        userId: res.id,
       });
 
       return { message: 'Registration successful' };
@@ -90,7 +90,7 @@ export class AuthService {
     clientPassword: string,
   ): Promise<any> {
     try {
-      const user = await this.userService.findOne(
+      const user = await this.userService.getSingle(
         { email },
         {
           select: ['id', 'email', 'password', 'isActive'],
@@ -216,7 +216,7 @@ export class AuthService {
 
   async sendResetLink(email: string): Promise<{ message: string }> {
     try {
-      const user = await this.userService.findOne({ email }, { select: ['id', 'email'], relations: ['profile'] });
+      const user = await this.userService.getSingle({ email }, { select: ['id', 'email'], relations: ['profile'] });
 
       if (user) {
         const appConfig = this.configService.get('app');

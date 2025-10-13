@@ -103,7 +103,7 @@ export class ScheduleExecutorService implements OnModuleInit {
     }
   }
 
- 
+
 
   /**
    * Handle execution failure with retry logic
@@ -146,7 +146,7 @@ export class ScheduleExecutorService implements OnModuleInit {
   private async scheduleFixedTimeJob(schedule: Schedule, hour: number, minute: number): Promise<void> {
     const runDate = new Date();
     runDate.setHours(hour, minute, 0, 0);
-    
+
     // If the time has already passed today, schedule for tomorrow
     if (runDate <= new Date()) {
       runDate.setDate(runDate.getDate() + 1);
@@ -154,18 +154,19 @@ export class ScheduleExecutorService implements OnModuleInit {
 
     const delay = runDate.getTime() - Date.now();
 
-    const job = await this.bullQueueService.addJob(
-      'schedule',
-      schedule.action,
-      {
-        action: schedule.action,
-        data: schedule.data,
-        entityId: schedule.entityId,
+    const job = await this.bullQueueService.addJob({
+      queueName: 'schedule',
+      jobName: schedule.action,
+      action: schedule.action,
+      data: schedule.data,
+      entityId: schedule.entityId,
+      options: {
+        delay,
       },
-      { delay }
+    }
     );
 
-    this.addJob(schedule.id, job.id!);
+    this.addJob(schedule.id, job.id!.toString());
     this.logger.log(`📅 Scheduled: ${schedule.title} at ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')} (Job ID: ${job.id})`);
   }
 
@@ -194,7 +195,7 @@ export class ScheduleExecutorService implements OnModuleInit {
 
       const runDate = new Date();
       runDate.setHours(hour, minute, 0, 0);
-      
+
       // If the time has already passed today, schedule for tomorrow
       if (runDate <= new Date()) {
         runDate.setDate(runDate.getDate() + 1);
@@ -203,37 +204,39 @@ export class ScheduleExecutorService implements OnModuleInit {
       const delay = runDate.getTime() - Date.now();
 
       const job = await this.bullQueueService.addJob(
-        'schedule',
-        schedule.action,
         {
+          queueName: 'schedule',
+          jobName: schedule.action,
           action: schedule.action,
           data: schedule.data,
           entityId: schedule.entityId,
         },
-        { delay }
       );
 
-      jobIds.push(job.id!);
+      jobIds.push(job.id!.toString());
     }
 
     // Schedule job to update next run date at end of day
     const updateRunDate = new Date();
     updateRunDate.setHours(endHour, endMinute, 0, 0);
-    
+
     if (updateRunDate <= new Date()) {
       updateRunDate.setDate(updateRunDate.getDate() + 1);
     }
 
     const updateDelay = updateRunDate.getTime() - Date.now();
 
-    const updateJob = await this.bullQueueService.addScheduleJob(
-      'update-next-run',
-      { scheduleId: schedule.id },
-      updateDelay,
-      schedule.entityId
-    );
+    const updateJob = await this.bullQueueService.addJob({
+      queueName: 'schedule',
+      jobName: 'update-next-run',
+      action: 'update-next-run',
+      data: { scheduleId: schedule.id },
+      options: {
+        delay: updateDelay,
+      },
+    });
 
-    jobIds.push(updateJob.id!);
+    jobIds.push(updateJob.id!.toString());
     this.scheduledJobs.set(schedule.id, jobIds);
 
     this.logger.log(`📅 Scheduled interval: ${schedule.title} every ${schedule.interval} min from ${startHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')} to ${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')} (${jobIds.length} jobs)`);
@@ -246,11 +249,11 @@ export class ScheduleExecutorService implements OnModuleInit {
     try {
       await this.performAction(schedule);
       await this.scheduleService.trackExecution(schedule.id, true);
-      
+
       if (updateNextRun) {
         await this.scheduleService.executeAndUpdateNext(schedule.id);
       }
-      
+
       await this.scheduleService.updateSchedule(schedule.id, { currentRetries: 0 } as any);
       this.logger.log(`✅ Executed: ${schedule.title}`);
     } catch (error) {
@@ -263,7 +266,7 @@ export class ScheduleExecutorService implements OnModuleInit {
    */
   private async performAction(schedule: Schedule): Promise<void> {
     this.logger.log(`Executing: ${schedule.action} for entity ${schedule.entityId || 'N/A'}`);
-    await this.scheduleRegistry.executeAction(schedule);
+    await this.scheduleRegistry.executeAction(schedule.action, schedule.data, schedule.entityId);
   }
 
   /**

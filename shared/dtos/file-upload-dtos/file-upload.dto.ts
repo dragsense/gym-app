@@ -33,6 +33,12 @@ export class CreateFileUploadDto {
   @FieldType("text")
   url?: string;
 
+  @ApiPropertyOptional({ example: 'image', description: 'Relation property this file belongs to' })
+  @IsString()
+  @IsOptional()
+  @FieldType("text")
+  relation?: string;
+
   @ApiPropertyOptional({ type: 'string', format: 'binary', required: false, description: 'File' })
   @IsNotEmpty()
   @FieldType("file", true)

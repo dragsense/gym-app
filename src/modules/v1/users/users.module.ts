@@ -13,17 +13,21 @@ import { ConfigService } from '@nestjs/config';
 import { TokenService } from '../auth/services/tokens.service';
 import { RefreshToken } from '../auth/entities/tokens.entity';
 import { User } from '@/modules/v1/users/entities/user.entity';
+import { CrudModule } from '@/common/crud/crud.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User,RefreshToken]),
+  imports: [
+    TypeOrmModule.forFeature([User,RefreshToken]),
     ProfilesModule,
-  JwtModule.registerAsync({
-    useFactory: getJwtConfig,
-    inject: [ConfigService],
-  }),
+    CrudModule,
+    JwtModule.registerAsync({
+      useFactory: getJwtConfig,
+      inject: [ConfigService],
+    }),
   ],
   exports: [UsersService, UserEmailService],
   controllers: [UsersController],
-  providers: [UsersService, UserEmailService, UserSubscriber, PasswordService, TokenService],
+  providers: [UsersService, UserEmailService, UserSubscriber,
+     PasswordService, TokenService],
 })
 export class UsersModule { }

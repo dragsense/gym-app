@@ -1,10 +1,10 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { Worker } from 'worker_threads';
 import { LoggerService } from '../logger/logger.service';
-import { WorkerListDto, WorkerListPaginatedDto } from '@shared/dtos/worker-dtos/worker.dto';
-import { IWorkerTask } from '@shared/interfaces/worker.interface';
-import { EWorkerStatus } from '@shared/enums/worker.enum';
+import { WorkerListDto, WorkerListPaginatedDto } from 'shared/dtos';
+import { EWorkerStatus } from 'shared/enums';
 import * as path from 'path';
+import { IWorker } from 'shared/interfaces';
 
 export interface WorkerTask {
   id: string;
@@ -184,13 +184,13 @@ export class WorkerService implements OnModuleInit, OnModuleDestroy {
     const { page = 1, limit = 10, status } = query;
     
     // Convert tasks to worker format
-    let workers: IWorkerTask[] = Array.from(this.tasks.values()).map(task => ({
+    let workers: IWorker[] = Array.from(this.tasks.values()).map(task => ({
       id: task.id,
       name: task.name,
       status: this.pausedWorkers.has(task.id) ? EWorkerStatus.PAUSED : EWorkerStatus.RUNNING,
       progress: Math.floor(Math.random() * 100), // Mock progress
-      startTime: new Date(),
-      lastUpdate: new Date(),
+      startTime: new Date().toISOString(),
+      lastUpdate: new Date().toISOString(),
       data: null,
     }));
 
@@ -207,14 +207,13 @@ export class WorkerService implements OnModuleInit, OnModuleDestroy {
 
     return {
       data: paginatedWorkers,
-      meta: {
-        page,
-        limit,
-        total,
-        totalPages,
-        hasNextPage: page < totalPages,
-        hasPrevPage: page > 1,
-      },
+      total,
+      page,
+      limit,
+      lastPage: totalPages,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1,
+   
     };
   }
 
