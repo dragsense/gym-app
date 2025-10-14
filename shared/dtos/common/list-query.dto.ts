@@ -60,4 +60,5 @@ export class ListQueryDto<T = any> extends PaginationDto<T> {
     @IsDateString()
     @FieldType('date', false)
     updatedBefore?: string;
+
   }

@@ -122,7 +122,7 @@ export class ProfilesService extends CrudService<Profile> {
     }
 
 
-    await this.update(id, profileData);
+  await this.update(id, profileData);
 
     return { message: 'Profile updated successfully' };
   }

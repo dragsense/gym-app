@@ -18,6 +18,7 @@ export class ActivityLogsController {
   constructor(private readonly activityLogsService: ActivityLogsService) { }
 
 
+
   @Get()
   @ApiOperation({ summary: 'Get all activity logs with pagination and filtering' })
   @ApiQuery({ type: ActivityLogListDto })
@@ -41,7 +42,8 @@ export class ActivityLogsController {
     type: ActivityLogPaginatedDto,
   })
   async findByUser(
-    @Param('userId', ParseIntPipe) userId: number
+    @Param('userId', ParseIntPipe) userId: number,
+
   ) {
     return await this.activityLogsService.findOne({ userId });
   }

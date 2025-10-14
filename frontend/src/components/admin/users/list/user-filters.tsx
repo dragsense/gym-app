@@ -28,6 +28,8 @@ interface IUserFiltersProps {
 export function UserFilters({
   store,
 }: IUserFiltersProps) {
+
+
   // React 19: Essential IDs and transitions
   const componentId = useId();
   const [, startTransition] = useTransition();
@@ -52,7 +54,6 @@ export function UserFilters({
       {inputs.search}
       {inputs.createdAfter}
       {inputs.createdBefore}
-      {inputs.dueDate}
 
       {hasActiveFilters && (
         <Button variant="outline" onClick={handleClearFilters} className="hidden lg:flex">

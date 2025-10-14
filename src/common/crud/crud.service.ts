@@ -1,11 +1,12 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { Repository, FindOptionsWhere, FindManyOptions, DataSource, QueryRunner, ObjectLiteral, EntityManager } from 'typeorm';
+import { Repository, FindOptionsWhere, FindManyOptions, DataSource, QueryRunner, ObjectLiteral, EntityManager, Between as TypeOrmBetween } from 'typeorm';
 import { IPaginatedResponse } from 'shared/interfaces';
 import { ICrudService } from './interfaces/crud.interface';
 import { CrudOptions } from 'shared/decorators';
 import { CrudEventService } from './services/crud-event.service';
 import { CrudEvent } from 'shared/interfaces/crud-events.interface';
 import { LoggerService } from '../logger/logger.service';
+import { getQueryFilters } from 'shared/decorators/crud.dto.decorators';
 
 @Injectable()
 export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
@@ -120,19 +121,23 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
   /**
    * Get all entities without pagination
    */
-  async getAll<TQueryDto>(queryDto: TQueryDto, options?: { relations?: string[]; select?: string[] }): Promise<T[]> {
+  async getAll<TQueryDto>(queryDto: TQueryDto, options?: { 
+    relations?: string[]; 
+    select?: string[];
+    dtoClass?: any; // Add DTO class for query filters
+  }): Promise<T[]> {
     try {
       const {
         search,
         sortBy = this.options.defaultSort?.field || 'createdAt',
         sortOrder = this.options.defaultSort?.order || 'DESC',
-
         ...filters
       } = queryDto as any;
 
       const query = this.repository.createQueryBuilder('entity');
 
-      const { relations = [], select = [] } = options || {};
+      const { relations = [], select = [], dtoClass } = options || {};
+      
       // Add relations
       if (relations.length > 0) {
         relations.forEach(relation => {
@@ -179,7 +184,10 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
         }
       }
 
-      // Apply filters
+      // Apply query decorator filters
+      this.applyQueryFilters(query, queryDto, dtoClass);
+
+      // Apply legacy filters (for backward compatibility)
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
           if (Array.isArray(value)) {
@@ -210,7 +218,9 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
       name: string;
       select: string[];
       searchableFields: string[];
-    }[]; select?: string[]
+    }[]; 
+    select?: string[];
+    dtoClass?: any; // Add DTO class for query filters
   }): Promise<IPaginatedResponse<T>> {
     try {
       const {
@@ -230,7 +240,7 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
       const query = this.repository.createQueryBuilder('entity');
 
       const { relations = [] as { name: string; select: string[], searchableFields: string[] }[], 
-      select = [] } = options || {};
+      select = [], dtoClass } = options || {};
       // Add relations
       if (relations.length > 0) {
         relations.forEach(relation => {
@@ -267,7 +277,10 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
         }
       }
 
-      // Apply filters
+      // Apply query decorator filters
+      this.applyQueryFilters(query, queryDto, dtoClass);
+
+      // Apply legacy filters (for backward compatibility)
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
           if (Array.isArray(value)) {
@@ -414,6 +427,104 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
     }
   }
 
+
+  /**
+   * Apply query filters based on decorator metadata
+   */
+  private applyQueryFilters(query: any, queryDto: any, dtoClass?: any): void {
+    if (!dtoClass) return;
+
+    const queryFilters = getQueryFilters(dtoClass);
+    
+    Object.entries(queryFilters).forEach(([propertyKey, filterOptions]) => {
+      const value = queryDto[propertyKey];
+      
+      if (value === undefined || value === null || value === '') {
+        return;
+      }
+
+      const field = filterOptions.field || propertyKey;
+      let processedValue = value;
+
+      // Apply transform if provided
+      if (filterOptions.transform) {
+        processedValue = filterOptions.transform(value);
+      }
+
+      // Handle different filter types
+      switch (filterOptions.type) {
+        case 'between':
+          if (Array.isArray(processedValue) && processedValue.length === 2) {
+            query.andWhere(`${field} BETWEEN :${propertyKey}_start AND :${propertyKey}_end`, {
+              [`${propertyKey}_start`]: processedValue[0],
+              [`${propertyKey}_end`]: processedValue[1]
+            });
+          }
+          break;
+
+        case 'lessThan':
+          query.andWhere(`${field} < :${propertyKey}`, { [propertyKey]: processedValue });
+          break;
+
+        case 'greaterThan':
+          query.andWhere(`${field} > :${propertyKey}`, { [propertyKey]: processedValue });
+          break;
+
+        case 'lessThanOrEqual':
+          query.andWhere(`${field} <= :${propertyKey}`, { [propertyKey]: processedValue });
+          break;
+
+        case 'greaterThanOrEqual':
+          query.andWhere(`${field} >= :${propertyKey}`, { [propertyKey]: processedValue });
+          break;
+
+        case 'like':
+          query.andWhere(`${field} ILIKE :${propertyKey}`, { [propertyKey]: `%${processedValue}%` });
+          break;
+
+        case 'in':
+          if (Array.isArray(processedValue)) {
+            query.andWhere(`${field} IN (:...${propertyKey})`, { [propertyKey]: processedValue });
+          }
+          break;
+
+        case 'notIn':
+          if (Array.isArray(processedValue)) {
+            query.andWhere(`${field} NOT IN (:...${propertyKey})`, { [propertyKey]: processedValue });
+          }
+          break;
+
+        case 'isNull':
+          if (processedValue === true) {
+            query.andWhere(`${field} IS NULL`);
+          } else if (processedValue === false) {
+            query.andWhere(`${field} IS NOT NULL`);
+          }
+          break;
+
+        case 'isNotNull':
+          if (processedValue === true) {
+            query.andWhere(`${field} IS NOT NULL`);
+          } else if (processedValue === false) {
+            query.andWhere(`${field} IS NULL`);
+          }
+          break;
+
+        case 'equals':
+          query.andWhere(`${field} = :${propertyKey}`, { [propertyKey]: processedValue });
+          break;
+
+        case 'notEquals':
+          query.andWhere(`${field} != :${propertyKey}`, { [propertyKey]: processedValue });
+          break;
+
+        default:
+          // Fallback to simple equality
+          query.andWhere(`${field} = :${propertyKey}`, { [propertyKey]: processedValue });
+          break;
+      }
+    });
+  }
 
   /**
    * Build nested where condition for complex queries

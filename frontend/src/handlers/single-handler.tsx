@@ -91,6 +91,7 @@ export function SingleHandler<
   const filteredExtra = store(useShallow((state) => pickKeys(state.extra, Object.keys(initialParams) as (keyof typeof initialParams)[])
   ));
 
+  
   const deferredParams = useDeferredValue(params);
   const deferredFilteredExtra = useDeferredValue(filteredExtra);
 

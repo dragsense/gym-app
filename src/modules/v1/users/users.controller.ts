@@ -61,6 +61,8 @@ export class UsersController {
         select: ['id', 'firstName', 'lastName', 'phoneNumber'],
         searchableFields: ['firstName', 'lastName']
       }],
+      select: ['id', 'email', 'isActive', 'createdAt', 'updatedAt'],
+      dtoClass: UserListDto, // Pass DTO class for query decorators
     });
   }
 

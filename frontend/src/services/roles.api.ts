@@ -14,7 +14,7 @@ import type {
 // Config
 import { config } from '@/config';
 
-const API_BASE = `${config.api.baseUrl}/roles`;
+const API_BASE = `${config.apiUrl}/roles`;
 
 // Role API functions
 export const fetchRoles = async (params: IListQueryParams): Promise<IPaginatedResponse<IRole>> => {
@@ -27,10 +27,6 @@ export const fetchRole = async (id: number): Promise<IRole> => {
   return response.data;
 };
 
-export const fetchPermission = async (id: number): Promise<IPermission> => {
-  const response = await axios.get(`${API_BASE}/permissions/${id}`);
-  return response.data;
-};
 
 export const createRole = async (data: any): Promise<IMessageResponse> => {
   const response = await axios.post(`${API_BASE}`, data);
@@ -47,10 +43,7 @@ export const deleteRole = async (id: number): Promise<IMessageResponse> => {
   return response.data;
 };
 
-export const deletePermission = async (id: number): Promise<IMessageResponse> => {
-  const response = await axios.delete(`${API_BASE}/permissions/${id}`);
-  return response.data;
-};
+
 
 // Permission API functions
 export const fetchPermissions = async (params: IListQueryParams): Promise<IPaginatedResponse<IPermission>> => {

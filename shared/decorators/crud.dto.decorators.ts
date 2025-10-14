@@ -7,6 +7,7 @@ import {
 } from 'class-validator';
 import { Transform, TransformOptions } from 'class-transformer';
 import { plainToClass } from 'class-transformer';
+import 'reflect-metadata';
 
 // Number comparison decorators
 @ValidatorConstraint({ name: 'isGreaterThan', async: false })
@@ -175,6 +176,148 @@ export function TransformToDate(options?: TransformOptions) {
     }
     return value;
   }, options);
+}
+
+// Query Filtering Decorators
+export const QUERY_FILTER_METADATA = Symbol('query_filter_metadata');
+
+export interface QueryFilterOptions {
+  type: 'between' | 'lessThan' | 'greaterThan' | 'lessThanOrEqual' | 'greaterThanOrEqual' | 'like' | 'in' | 'notIn' | 'isNull' | 'isNotNull' | 'equals' | 'notEquals';
+  field?: string; // For nested fields like 'profile.firstName'
+  operator?: string; // Custom operator for complex queries
+  transform?: (value: any) => any; // Transform function for the value
+}
+
+/**
+ * Query decorator for filtering operations - integrates with existing CRUD system
+ * @param options Query filter options
+ */
+export function QueryFilter(options: QueryFilterOptions) {
+  return (target: any, propertyKey: string) => {
+    const existingFilters = Reflect.getMetadata(QUERY_FILTER_METADATA, target) || {};
+    existingFilters[propertyKey] = {
+      ...options,
+      field: options.field || propertyKey,
+    };
+    Reflect.defineMetadata(QUERY_FILTER_METADATA, existingFilters, target);
+  };
+}
+
+/**
+ * Between filter decorator - for range queries
+ * @param field Optional field name (defaults to property name)
+ */
+export function Between(field?: string) {
+  return QueryFilter({ type: 'between', field });
+}
+
+/**
+ * Less than filter decorator
+ * @param field Optional field name (defaults to property name)
+ */
+export function LessThan(field?: string) {
+  return QueryFilter({ type: 'lessThan', field });
+}
+
+/**
+ * Greater than filter decorator
+ * @param field Optional field name (defaults to property name)
+ */
+export function GreaterThan(field?: string) {
+  return QueryFilter({ type: 'greaterThan', field });
+}
+
+/**
+ * Less than or equal filter decorator
+ * @param field Optional field name (defaults to property name)
+ */
+export function LessThanOrEqual(field?: string) {
+  return QueryFilter({ type: 'lessThanOrEqual', field });
+}
+
+/**
+ * Greater than or equal filter decorator
+ * @param field Optional field name (defaults to property name)
+ */
+export function GreaterThanOrEqual(field?: string) {
+  return QueryFilter({ type: 'greaterThanOrEqual', field });
+}
+
+/**
+ * Like filter decorator - for text search
+ * @param field Optional field name (defaults to property name)
+ */
+export function Like(field?: string) {
+  return QueryFilter({ type: 'like', field });
+}
+
+/**
+ * In filter decorator - for array values
+ * @param field Optional field name (defaults to property name)
+ */
+export function In(field?: string) {
+  return QueryFilter({ type: 'in', field });
+}
+
+/**
+ * Not in filter decorator - for excluding array values
+ * @param field Optional field name (defaults to property name)
+ */
+export function NotIn(field?: string) {
+  return QueryFilter({ type: 'notIn', field });
+}
+
+/**
+ * Is null filter decorator
+ * @param field Optional field name (defaults to property name)
+ */
+export function IsNull(field?: string) {
+  return QueryFilter({ type: 'isNull', field });
+}
+
+/**
+ * Is not null filter decorator
+ * @param field Optional field name (defaults to property name)
+ */
+export function IsNotNull(field?: string) {
+  return QueryFilter({ type: 'isNotNull', field });
+}
+
+/**
+ * Equals filter decorator - explicit equality
+ * @param field Optional field name (defaults to property name)
+ */
+export function Equals(field?: string) {
+  return QueryFilter({ type: 'equals', field });
+}
+
+/**
+ * Not equals filter decorator
+ * @param field Optional field name (defaults to property name)
+ */
+export function NotEquals(field?: string) {
+  return QueryFilter({ type: 'notEquals', field });
+}
+
+/**
+ * Date range filter decorator - combines between for dates
+ * @param field Optional field name (defaults to property name)
+ */
+export function DateRange(field?: string) {
+  return QueryFilter({ 
+    type: 'between', 
+    field,
+    transform: (value: { start: string; end: string }) => [value.start, value.end]
+  });
+}
+
+/**
+ * Get query filters metadata from a class
+ * @param target Class or instance
+ * @returns Query filters metadata
+ */
+export function getQueryFilters(target: any): Record<string, QueryFilterOptions> {
+  return Reflect.getMetadata(QUERY_FILTER_METADATA, target) || {};
 }
 
 // Pagination decorators
