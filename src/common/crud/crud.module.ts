@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { CrudEventService } from './services/crud-event.service';
+import { EventService } from '../events/event.service';
 
 @Module({
   imports: [TypeOrmModule],
-  providers: [CrudEventService],
-  exports: [CrudEventService],
+  providers: [EventService],
+  exports: [EventService],
 })
 export class CrudModule {}

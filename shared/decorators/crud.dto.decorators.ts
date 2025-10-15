@@ -178,14 +178,55 @@ export function TransformToDate(options?: TransformOptions) {
   }, options);
 }
 
+// Custom validator for date arrays (for date ranges)
+@ValidatorConstraint({ name: 'isDateArray', async: false })
+export class IsDateArrayConstraint implements ValidatorConstraintInterface {
+  validate(value: any) {
+    if (!Array.isArray(value)) return false;
+    
+    return value.every(item => {
+      if (typeof item === 'string') {
+        const date = new Date(item);
+        return !isNaN(date.getTime());
+      }
+      return item instanceof Date;
+    });
+  }
+
+  defaultMessage() {
+    return 'Each item in the array must be a valid date string or Date object';
+  }
+}
+
+export function IsDateArray(validationOptions?: ValidationOptions) {
+  return function (object: Object, propertyName: string) {
+    registerDecorator({
+      target: object.constructor,
+      propertyName: propertyName,
+      options: validationOptions,
+      constraints: [],
+      validator: IsDateArrayConstraint,
+    });
+  };
+}
+
 // Query Filtering Decorators
 export const QUERY_FILTER_METADATA = Symbol('query_filter_metadata');
+export const RELATION_FILTER_METADATA = Symbol('relation_filter_metadata');
 
-export interface QueryFilterOptions {
-  type: 'between' | 'lessThan' | 'greaterThan' | 'lessThanOrEqual' | 'greaterThanOrEqual' | 'like' | 'in' | 'notIn' | 'isNull' | 'isNotNull' | 'equals' | 'notEquals';
+export interface BaseFilterOptions {
+  type?: 'between' | 'lessThan' | 'greaterThan' | 'lessThanOrEqual' | 'greaterThanOrEqual' | 'like' | 'in' | 'notIn' | 'isNull' | 'isNotNull' | 'equals' | 'notEquals';
   field?: string; // For nested fields like 'profile.firstName'
   operator?: string; // Custom operator for complex queries
   transform?: (value: any) => any; // Transform function for the value
+}
+
+export interface QueryFilterOptions extends BaseFilterOptions {
+  // Inherits type from BaseFilterOptions
+}
+
+export interface RelationFilterOptions extends BaseFilterOptions {
+  relationPath: string; // e.g., "profile.documents.version"
 }
 
 /**
@@ -196,10 +237,24 @@ export function QueryFilter(options: QueryFilterOptions) {
   return (target: any, propertyKey: string) => {
     const existingFilters = Reflect.getMetadata(QUERY_FILTER_METADATA, target) || {};
     existingFilters[propertyKey] = {
+      type: 'equals', // Default type
+      field: propertyKey,
       ...options,
-      field: options.field || propertyKey,
     };
     Reflect.defineMetadata(QUERY_FILTER_METADATA, existingFilters, target);
+  };
+}
+
+/**
+ * Relation filter decorator for filtering on relation fields
+ * @param relationPath The relation path (e.g., 'profile.documents.version')
+ * @example @RelationFilter('profile.documents.version')
+ */
+export function RelationFilter(relationPath: string) {
+  return (target: any, propertyKey: string) => {
+    const existingFilters = Reflect.getMetadata(RELATION_FILTER_METADATA, target) || {};
+    existingFilters[propertyKey] = relationPath;
+    Reflect.defineMetadata(RELATION_FILTER_METADATA, existingFilters, target);
   };
 }
 
@@ -318,6 +373,15 @@ export function DateRange(field?: string) {
  */
 export function getQueryFilters(target: any): Record<string, QueryFilterOptions> {
   return Reflect.getMetadata(QUERY_FILTER_METADATA, target) || {};
+}
+
+/**
+ * Get relation filters metadata from a class
+ * @param target Class or instance
+ * @returns Relation filters metadata
+ */
+export function getRelationFilters(target: any): Record<string, string> {
+  return Reflect.getMetadata(RELATION_FILTER_METADATA, target) || {};
 }
 
 // Pagination decorators

@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { TextField, TextareaField, SelectField, SwitchField, DateField, useArrayField, CustomField, FileField, MultiFileField } from "@/components/form-ui/field-components";
+import { TextField, TextareaField, SelectField, SwitchField, DateField, DateRangeField, DateTimeRangeField, useArrayField, CustomField, FileField, MultiFileField } from "@/components/form-ui/field-components";
 import type { TFieldConfig, TFieldConfigObject } from "@/@types/form/field-config.type";
 
 interface UseInputProps<T> {
@@ -79,6 +79,10 @@ export function useInput<T>({
       case "date":
       case "datetime":
         return <DateField {...commonProps} />;
+      case "dateRange":
+        return <DateRangeField {...commonProps} />;
+      case "dateTimeRange":
+        return <DateTimeRangeField {...commonProps} />;
       case "text":
       case "email":
       case "tel":

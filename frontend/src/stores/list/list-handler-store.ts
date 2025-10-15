@@ -41,12 +41,15 @@ export const useListHandlerStore = <TResponse, TUserListData = any, TExtra exten
         sortBy: 'createdAt',
         sortOrder: 'DESC',
         search: '',
-
+        _relations: '',
+        _select: '',
         // Setters
         setFilters: (filters) => set({ filters }),
         setFilteredFields: (fields) => set({ filteredFields: fields }),
         setSort: (sortBy, sortOrder) => set({ sortBy, sortOrder }),
         setSearch: (search) => set({ search }),
+        setRelations: (relations) => set({ _relations: relations }),
+        setSelect: (select) => set({ _select: select }),
         setPagination: (pagination) => set((state) => ({
           pagination: { ...state.pagination, ...pagination }
         })),

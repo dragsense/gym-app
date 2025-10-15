@@ -8,6 +8,8 @@ export interface IListQueryState {
   sortBy: string;
   sortOrder: 'ASC' | 'DESC';
   search: string;
+  _relations: string;
+  _select: string;
 }
 
 export interface IListHandlerBaseState<TResponse> {
@@ -31,6 +33,8 @@ export interface IListHandlerState<TResponse, TUserListData = any, TExtra extend
   setFilters: (filters: Record<string, any>) => void;
   setSort: (sortBy: string, sortOrder: 'ASC' | 'DESC') => void;
   setSearch: (search: string) => void;
+  setRelations: (relations: string) => void;
+  setSelect: (select: string) => void;
   setPagination: (pagination: Partial<IListPaginationState>) => void;
   setIsLoading: (isLoading: boolean) => void;
   setError: (error: Error | null) => void;

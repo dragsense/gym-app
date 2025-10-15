@@ -9,4 +9,7 @@ export interface IListQueryParams {
   sortBy?: string;
   sortOrder?: "ASC" | "DESC";
   filters?: TQueryParams;
+  _relations?: string;
+  _select?: string;
+  _searchable?: string;
 }

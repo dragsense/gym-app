@@ -16,7 +16,7 @@ import { ApiProperty, ApiPropertyOptional, PartialType} from '@nestjs/swagger';
 import { CreateProfileDto, ProfileDto, UpdateProfileDto } from './profile.dto';
 import { Type, Transform } from 'class-transformer';
 import { PaginationMetaDto } from '../common/pagination.dto';
-import { ListQueryDto } from '../common/list-query.dto';
+import { ListQueryDto, SingleQueryDto } from '../common/list-query.dto';
 import { IUser } from '../../interfaces/user.interface';
 import { FieldType } from '../../decorators/field.decorator';
 import { OmitType } from '../../lib/dto-type-adapter';
@@ -35,7 +35,8 @@ import {
   NotEquals,
   DateRange,
   TransformToArray,
-  TransformToDate
+  TransformToDate,
+  RelationFilter,
 } from '../../decorators/crud.dto.decorators';
 
 export class CreateUserDto {
@@ -108,31 +109,9 @@ export class UserPaginatedDto extends PaginationMetaDto {
   data: UserSafeDto[];
 }
 
+
+
 export class UserListDto extends ListQueryDto<IUser> {
-  // User ID filters
-  @ApiPropertyOptional({ example: 1, description: 'Filter by user ID' })
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  @Equals()
-  @FieldType('number', false)
-  id?: number;
-
-  // Email filters
-  @ApiPropertyOptional({ example: 'john@example.com', description: 'Filter by exact email' })
-  @IsOptional()
-  @IsString()
-  @Equals()
-  @FieldType('text', false)
-  email?: string;
-
-  @ApiPropertyOptional({ example: 'john', description: 'Search in email (partial match)' })
-  @IsOptional()
-  @IsString()
-  @Like('email')
-  @FieldType('text', false)
-  emailLike?: string;
-
   // Active status filters
   @ApiPropertyOptional({ example: true, description: 'Filter by active status' })
   @IsOptional()
@@ -141,104 +120,49 @@ export class UserListDto extends ListQueryDto<IUser> {
   @FieldType('switch', false)
   isActive?: boolean;
 
-  // Date range filters
-  @ApiPropertyOptional({ 
-    example: { start: '2024-01-01T00:00:00.000Z', end: '2024-12-31T23:59:59.999Z' }, 
-    description: 'Filter users created between dates' 
-  })
-  @IsOptional()
-  @Type(() => Object)
-  @DateRange('createdAt')
-  @FieldType('dateRange', false)
-  createdAtRange?: { start: string; end: string };
-
-  @ApiPropertyOptional({ 
-    example: '2024-01-01T00:00:00.000Z', 
-    description: 'Filter users created after this date' 
-  })
-  @IsOptional()
-  @IsDateString()
-  @TransformToDate()
-  @GreaterThan('createdAt')
-  @FieldType('date', false)
-  createdAtAfter?: string;
-
-  @ApiPropertyOptional({ 
-    example: '2024-12-31T23:59:59.999Z', 
-    description: 'Filter users created before this date' 
-  })
-  @IsOptional()
-  @IsDateString()
-  @TransformToDate()
-  @LessThan('createdAt')
-  @FieldType('date', false)
-  createdAtBefore?: string;
-
-  @ApiPropertyOptional({ 
-    example: { start: '2024-01-01T00:00:00.000Z', end: '2024-12-31T23:59:59.999Z' }, 
-    description: 'Filter users updated between dates' 
-  })
-  @IsOptional()
-  @Type(() => Object)
-  @DateRange('updatedAt')
-  @FieldType('dateRange', false)
-  updatedAtRange?: { start: string; end: string };
-
-  // Profile filters
-  @ApiPropertyOptional({ example: 'John', description: 'Search in first name' })
+  // Example relation filters
+  @ApiPropertyOptional({ example: 'John', description: 'Filter by profile first name' })
   @IsOptional()
   @IsString()
-  @Like('profile.firstName')
+  @Like()
+  @RelationFilter('profile.firstName')
   @FieldType('text', false)
-  firstName?: string;
+  profileFirstName?: string;
 
-  @ApiPropertyOptional({ example: 'Doe', description: 'Search in last name' })
+  @ApiPropertyOptional({ example: 'v1.0', description: 'Filter by document version' })
   @IsOptional()
   @IsString()
-  @Like('profile.lastName')
+  @Equals()
+  @RelationFilter('profile.documents.version.number')
   @FieldType('text', false)
-  lastName?: string;
+  documentVersion?: string;
 
-  @ApiPropertyOptional({ example: '+1234567890', description: 'Filter by phone number' })
-  @IsOptional()
-  @IsString()
-  @Like('profile.phoneNumber')
-  @FieldType('text', false)
-  phoneNumber?: string;
-
-  // Array filters
-  @ApiPropertyOptional({ example: [1, 2, 3], description: 'Filter by user IDs' })
-  @IsOptional()
-  @IsArray()
-  @Type(() => Number)
-  @TransformToArray()
-  @In('id')
-  @FieldType('multiSelect', false)
-  ids?: number[];
-
-  @ApiPropertyOptional({ example: ['active', 'inactive'], description: 'Filter by active status values' })
-  @IsOptional()
-  @IsArray()
-  @TransformToArray()
-  @In('isActive')
-  @FieldType('multiSelect', false)
-  activeStatuses?: boolean[];
-
-  // Null checks
-  @ApiPropertyOptional({ example: true, description: 'Filter users with null profile' })
-  @IsOptional()
-  @IsBoolean()
-  @IsNull('profile')
-  @FieldType('switch', false)
-  hasNullProfile?: boolean;
-
-  @ApiPropertyOptional({ example: true, description: 'Filter users with non-null profile' })
-  @IsOptional()
-  @IsBoolean()
-  @IsNotNull('profile')
-  @FieldType('switch', false)
-  hasProfile?: boolean;
+  // Example usage of the simplified system:
+  // __relations: "profile,profile.documents" (comma-separated relation names - can be nested)
+  // __select: "id,email,profile.firstName,profile.documents.name" (can include nested relation fields)
+  // __searchable: "email,profile.firstName,profile.documents.name" (comma-separated searchable fields)
+  
+  // Behavior:
+  // - __select can include main entity fields (user.id, user.email) AND specific relation fields
+  // - __relations can include nested relations (profile.documents enables access to document fields)
+  // - Relation fields in __select are ONLY allowed if parent relation is defined in __relations
+  // - Example: __select=profile.documents.name requires __relations=profile.documents
+  // - If relation not defined in __relations, the field is silently ignored
+  // - Only specific fields in __select are returned, NOT entire relations
+  // - ID fields are automatically included for all relations (e.g., profile.firstName includes profile.id)
+  // - Special case: If no __select but __relations specified, gets ALL relation fields
+  // - Example: __relations=profile&__select=email,profile.firstName returns email + profile.id + profile.firstName
+  // - Example: __relations=profile returns default user fields + ALL profile fields
+  // - Supports deep nesting: profile.documents.versions, profile.addresses.city, etc.
+  // - Restricted fields are always filtered out (no errors, silent filtering)
+  // - Restricted fields are defined in backend configuration only (security)
+  // - __searchable: If provided, uses those fields for search; otherwise falls back to default searchable fields
+  // - Relation filters: Use @RelationFilter decorator to filter on relation fields
+  // - Example: @Equals() @RelationFilter('profile.documents.version.number')
+  // - This allows filtering users by document version number in nested relations
+  // - Combine with condition decorators: @Like(), @Equals(), @Between(), etc.
 }
+
 
 
 

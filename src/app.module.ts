@@ -4,6 +4,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 import { configOptions, appConfig, databaseConfig, jwtConfig, mailerConfig, getMailerConfig } from './config';
 
@@ -63,6 +64,9 @@ import { EncryptionService } from './lib/encryption.service';
       ttl: 60000, // 1 minute
       limit: 60,  // 60 requests per minute
     }]),
+
+    // Events
+    EventEmitterModule.forRoot(),
 
     // Common modules
     LoggerModule,

@@ -19,9 +19,9 @@ import { TokenService } from '../auth/services/tokens.service';
 import { UserEmailService } from './services/user-email.service';
 import { LoggerService } from '@/common/logger/logger.service';
 import { CrudService } from '@/common/crud/crud.service';
-import { CrudEventService } from '@/common/crud/services/crud-event.service';
-import { CrudOptions } from 'shared/decorators';
+import { EventService } from '@/common/events/event.service';
 import { ProfilesService } from './profiles/profiles.service';
+import { CrudOptions } from '@/common/crud/interfaces/crud.interface';
 
 @Injectable()
 export class UsersService extends CrudService<User> {
@@ -35,10 +35,12 @@ export class UsersService extends CrudService<User> {
     private readonly userEmailService: UserEmailService,
     private tokenService: TokenService,
     dataSource: DataSource,
-    crudEventService: CrudEventService,
+    eventService: EventService,
   ) {
     const crudOptions: CrudOptions = {
       searchableFields: ['email'],
+      restrictedFields: ['password', 'refreshToken', 'resetPasswordToken', 'resetPasswordExpires'],
+      selectableFields: ['id', 'email', 'isActive', 'createdAt', 'updatedAt', 'profile.firstName', 'profile.lastName', 'profile.phoneNumber'],
       pagination: {
         defaultLimit: 10,
         maxLimit: 100
@@ -48,7 +50,7 @@ export class UsersService extends CrudService<User> {
         order: 'DESC'
       }
     };
-    super(userRepo, dataSource, crudEventService, crudOptions);
+    super(userRepo, dataSource, eventService, crudOptions);
   }
 
 
@@ -128,34 +130,48 @@ export class UsersService extends CrudService<User> {
   }
 
   async updateUser(id: number, updateUserDto: UpdateUserDto): Promise<IMessageResponse> {
-    const existingUser = await this.getSingle({ id }, { relations: ['profile'] });
-
     const { profile, ...userData } = updateUserDto;
 
-
-    if (userData.email && userData.email !== existingUser.email) {
-      const existingUser = await this.userRepo.findOne({
-        where: { email: userData.email },
-      });
-
-      if (existingUser) {
-        throw new ConflictException('Email already exists');
-      }
-    }
-
-
-    // Update user data (excluding profile)
+    // Update user data with callbacks
     if (Object.keys(userData).length > 0) {
-      await this.update(existingUser.id, userData);
-    }
+      await this.update(id, userData, {
+        beforeUpdate: async (existingEntity: User, manager: EntityManager) => {
+          // Check if email is being changed and if it already exists
+          if (userData.email && userData.email !== existingEntity.email) {
+            const emailExists = await manager.findOne(this.repository.target, {
+              where: { email: userData.email },
+            });
 
-    if (profile && Object.keys(profile).length > 0 && existingUser.profile) {
-      await this.profielService.update(existingUser.profile.id, profile);
+            if (emailExists) {
+              throw new ConflictException('Email already exists');
+            }
+          }
+        },
+        afterUpdate: async (updatedEntity: User, manager: EntityManager) => {
+          // Update profile within the same transaction if provided
+          await this.updateUserProfile(updatedEntity.id, profile);
+        }
+      });
+    } else if (profile && Object.keys(profile).length > 0) {
+      // Only profile update, no user data changes
+      await this.updateUserProfile(id, profile);
     }
 
     return {
       message: 'User updated successfully',
     };
+  }
+
+  /**
+   * Helper method to update user profile
+   */
+  private async updateUserProfile(userId: number, profile: any): Promise<void> {
+    if (profile && Object.keys(profile).length > 0) {
+      const userWithProfile = await this.getSingle({ id: userId }, { __relations: 'profile' });
+      if (userWithProfile.profile) {
+        await this.profielService.update(userWithProfile.profile.id, profile);
+      }
+    }
   }
 
 
@@ -194,11 +210,12 @@ export class UsersService extends CrudService<User> {
 
     await this.tokenService.invalidateAllTokens(user.id);
 
-
-    // Send password reset confirmation email
-    this.userEmailService.sendPasswordResetConfirmation(user).catch((error) =>
-      this.customLogger.error('Password reset confirmation email failed', error.stack),
-    );
+    // Emit password reset event for email sending
+    this.eventService.emit('user.password.reset', {
+      email: user.email,
+      user,
+      type: 'confirmation'
+    });
 
     return {
       message: 'Password reset successfully',

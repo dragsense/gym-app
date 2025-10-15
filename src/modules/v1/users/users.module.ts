@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { UserEmailService } from './services/user-email.service';
+import { UserEventListenerService } from './services/user-event-listener.service';
 import { UserSubscriber } from './subscribers/user.subscriber';
 import { ProfilesModule } from './profiles/profiles.module';
 import { PasswordService } from './services/password.service';
@@ -27,7 +28,7 @@ import { CrudModule } from '@/common/crud/crud.module';
   ],
   exports: [UsersService, UserEmailService],
   controllers: [UsersController],
-  providers: [UsersService, UserEmailService, UserSubscriber,
+  providers: [UsersService, UserEmailService, UserEventListenerService, UserSubscriber,
      PasswordService, TokenService],
 })
 export class UsersModule { }

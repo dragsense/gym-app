@@ -49,7 +49,7 @@ export class UserEmailService {
   /**
    * Admin self-registration welcome email
    */
-  private async sendWelcomeEmail(context: OnboardingEmailContext): Promise<void> {
+  async sendWelcomeEmail(context: OnboardingEmailContext): Promise<void> {
     const { user, tempPassword, createdBy } = context;
     const loginUrl = `${this.appConfig.appUrl}/${this.appConfig.loginPath}`;
 

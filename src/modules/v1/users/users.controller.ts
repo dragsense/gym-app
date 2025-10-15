@@ -31,8 +31,8 @@ import { UsersService } from './users.service';
 
 
 import { JwtAuthGuard } from '@/guards/jwt-auth.gaurd';
-import { CreateUserDto, ResetPasswordDto, UpdateUserDto, UserListDto, UserPaginatedDto, UserWithProfileSafeDto } from 'shared';
-import { EUserLevels, EUserRole } from 'shared/enums';
+import { CreateUserDto, ResetPasswordDto, SingleQueryDto, UpdateUserDto, UserListDto, UserPaginatedDto, UserWithProfileSafeDto } from 'shared';
+import { User } from './entities/user.entity';
 
 
 @UseGuards(JwtAuthGuard)
@@ -56,13 +56,8 @@ export class UsersController {
     @AuthUser() user: any
   ) {
     return this.usersService.get(query, {
-      relations: [{
-        name: 'profile',
-        select: ['id', 'firstName', 'lastName', 'phoneNumber'],
-        searchableFields: ['firstName', 'lastName']
-      }],
       select: ['id', 'email', 'isActive', 'createdAt', 'updatedAt'],
-      dtoClass: UserListDto, // Pass DTO class for query decorators
+      dtoClass: UserListDto, // Pass DTO class for dynamic relations and query decorators
     });
   }
 
@@ -93,12 +88,15 @@ export class UsersController {
   @Get(':id')
   findOne(
     @Param('id', ParseIntPipe) id: number,
+    @Query() query: SingleQueryDto<User>
   ) {
     return this.usersService.getSingle(
       { id },
-      { relations: ['profile'] }
     );
   }
+
+
+  
 
   @ApiOperation({ summary: 'Add a new user (Admin: add Customer/client, Customer: add client)' })
   @ApiBody({

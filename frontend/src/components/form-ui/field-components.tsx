@@ -12,9 +12,10 @@ import {
     FormMessage,
     FormDescription,
 } from "@/components/ui/form";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { AppSelect } from "@/components/layout-ui/app-select";
-import { DatePicker, DateTimePicker } from "@/components/form-ui/date-picker";
+import { DatePicker, DateTimePicker, DateRangePicker, DateTimeRangePicker } from "@/components/form-ui/date-picker";
 import { cn } from "@/lib/utils";
 import { EORDER_CLASSES } from "@/enums/general.enum";
 import type { TFieldConfig } from "@/@types/form/field-config.type";
@@ -249,7 +250,7 @@ export const DateField = React.memo(function DateField({
         >
             {({ field: controllerField, isDisabled }) => {
 
-                return field.type === "date" ? (
+                return field.type === "date" || field.type === "dateRange" ? (
                     <DatePicker
                         value={controllerField.value}
                         onChange={(date) => controllerField.onChange(onChangeHandler(date))}
@@ -267,6 +268,68 @@ export const DateField = React.memo(function DateField({
                     />
                 );
             }}
+        </FormFieldWrapper>
+    );
+});
+
+export const DateRangeField = React.memo(function DateRangeField({
+    field,
+    fieldName,
+    showRequiredAsterisk,
+    layout = "vertical"
+}: BaseFieldProps) {
+    const onChangeHandler = (dateRange: any) => {
+        field?.onChange?.(dateRange);
+        return dateRange;
+    };
+
+    return (
+        <FormFieldWrapper
+            field={field}
+            fieldName={fieldName}
+            showRequiredAsterisk={showRequiredAsterisk}
+            layout={layout}
+        >
+            {({ field: controllerField, isDisabled }) => (
+                <DateRangePicker
+                    value={controllerField.value}
+                    onChange={(dateRange) => controllerField.onChange(onChangeHandler(dateRange))}
+                    placeholder={field.placeholder}
+                    disabled={isDisabled}
+                    className={field.className}
+                />
+            )}
+        </FormFieldWrapper>
+    );
+});
+
+export const DateTimeRangeField = React.memo(function DateTimeRangeField({
+    field,
+    fieldName,
+    showRequiredAsterisk,
+    layout = "vertical"
+}: BaseFieldProps) {
+    const onChangeHandler = (dateTimeRange: any) => {
+        field?.onChange?.(dateTimeRange);
+        return dateTimeRange;
+    };
+
+    return (
+        <FormFieldWrapper
+            field={field}
+            fieldName={fieldName}
+            showRequiredAsterisk={showRequiredAsterisk}
+            layout={layout}
+        >
+            {({ field: controllerField, isDisabled }) => (
+                <DateTimeRangePicker
+                    value={controllerField.value}
+                    onChange={(dateTimeRange) => controllerField.onChange(onChangeHandler(dateTimeRange))}
+                    placeholder={field.placeholder}
+                    disabled={isDisabled}
+                    className={field.className}
+                />
+            )}
         </FormFieldWrapper>
     );
 });
@@ -368,6 +431,7 @@ export const MultiFileField = React.memo(function MultiFileField({
     );
 });
 
+
 interface UseArrayFieldProps<T> extends BaseFieldProps<T> {
     renderField: (field: any, parentName?: string) => any;
 }
@@ -448,3 +512,6 @@ export function useArrayField<T>({
         }}
     </FormFieldWrapper>
 }
+
+// Export DateRangePicker and DateTimeRangePicker for use in other components
+export { DateRangePicker, DateTimeRangePicker };

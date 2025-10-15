@@ -1,36 +1,65 @@
 import { Repository, FindOptionsWhere, ObjectLiteral, EntityManager } from 'typeorm';
 import { IPaginatedResponse } from 'shared/interfaces';
 
+
+export interface CrudOptions {
+  searchableFields?: string[];  // Fields that can be searched (legacy support)
+  defaultSearchableFields?: string[];
+  defaultSort?: { field: string; order: 'ASC' | 'DESC' };
+  pagination?: {
+    defaultLimit: number;
+    maxLimit: number;
+  };
+  restrictedFields?: string[];
+  selectableFields?: string[];
+}
+
 export interface ICrudService<T extends ObjectLiteral> {
+
   /**
    * Create a new entity
    */
-  create<TCreateDto>(createDto: TCreateDto): Promise<T>;
+  create<TCreateDto>(createDto: TCreateDto, callbacks?: {
+    beforeCreate?: (manager: EntityManager) => any | Promise<any>;
+    afterCreate?: (result: any, manager: EntityManager) => any | Promise<any>;
+  }): Promise<T>;
 
   /**
    * Update an existing entity
    */
-  update<TUpdateDto>(id: number, updateDto: TUpdateDto, callback?: (entity: T, manager: EntityManager) => Promise<void>): Promise<T>;
+  update<TUpdateDto>(key: string | number | Record<string, any>, updateDto: TUpdateDto, callbacks?: {
+    beforeUpdate?: (entity: T, manager: EntityManager) => any | Promise<any>;
+    afterUpdate?: (updatedEntity: T, manager: EntityManager) => any | Promise<any>;
+  }): Promise<T>;
 
   /**
    * Get entities with pagination
    */
-  get<TQueryDto>(queryDto: TQueryDto): Promise<IPaginatedResponse<T>>;
+  get<TQueryDto>(queryDto: TQueryDto, dtoClass?: any, callbacks?: {
+    beforeQuery?: (query: any, queryDto: any) => any | Promise<any>;
+    afterQuery?: (query: any, result: any, queryDto: any) => any | Promise<any>;
+  }): Promise<IPaginatedResponse<T>>;
 
   /**
    * Get all entities without pagination
    */
-  getAll<TQueryDto>(queryDto: TQueryDto): Promise<T[]>;
+  getAll<TQueryDto>(queryDto: TQueryDto, dtoClass: any, callbacks?: {
+    beforeQuery?: (query: any) => any | Promise<any>;
+    afterQuery?: (query: any, result: any) => any | Promise<any>;
+  }): Promise<T[]>;
 
   /**
    * Get a single entity by any key
    */
-  getSingle(key: string | number | Record<string, any>, options?: { relations?: string[]; select?: string[] }): Promise<T>;
+  getSingle<TQueryDto>(key: string | number | Record<string, any>, queryDto?: TQueryDto, dtoClass?: any): Promise<T>;
 
   /**
    * Delete an entity by ID and return the deleted entity
    */
-  delete(id: number): Promise<T>;
+  delete(key: string | number | Record<string, any>, callbacks?: {
+    beforeDelete?: (entity: any, manager: EntityManager) => any | Promise<any>;
+    afterDelete?: (entity: any, manager: EntityManager) => any | Promise<any>;
+  }): Promise<T>;
 
   /**
    * Get repository for the entity

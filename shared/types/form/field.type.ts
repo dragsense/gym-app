@@ -22,4 +22,5 @@ export type TFieldType =
   | "rating"
   | "slider"
   | "datetime"
-  | "dateRange";
+  | "dateRange"
+  | "dateTimeRange"

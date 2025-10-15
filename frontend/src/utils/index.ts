@@ -253,15 +253,69 @@ export function generateQueryParams(
     if (value === undefined || value === null || value === "") return;
 
     if (Array.isArray(value)) {
-
-      value.forEach((v) => {
-        if (v !== undefined && v !== null && v !== "")
-          queryParams.append(key, formatValue(v));
-      });
+      // Join all arrays with comma: "value1,value2,value3"
+      const formattedArray = value
+        .filter(v => v !== undefined && v !== null && v !== "")
+        .map(v => formatValue(v))
+        .join(',');
+      
+      if (formattedArray) {
+        queryParams.append(key, formattedArray);
+      }
     } else if (typeof value === "object" && !(value instanceof Date)) {
       generateQueryParams(queryParams, value);
     } else {
       queryParams.append(key, formatValue(value));
     }
   });
+}
+
+/**
+ * Parse comma-separated values back into arrays
+ * Handles both single values and comma-separated strings
+ */
+export function parseQueryParams(searchParams: URLSearchParams): Record<string, any> {
+  const result: Record<string, any> = {};
+
+  for (const [key, value] of searchParams.entries()) {
+    if (value.includes(',')) {
+      // Split comma-separated values into array
+      const arrayValue = value
+        .split(',')
+        .map(v => v.trim())
+        .filter(v => v !== '');
+      
+      // Try to parse dates if they look like ISO dates
+      result[key] = arrayValue.map(v => {
+        // Check if it's a date string (ISO format or YYYY-MM-DD format)
+        if (/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d{3})?Z?)?$/.test(v)) {
+          return new Date(v);
+        }
+        // Check if it's a boolean
+        if (v === 'true') return true;
+        if (v === 'false') return false;
+        // Check if it's a number
+        if (!isNaN(Number(v))) return Number(v);
+        // Return as string
+        return v;
+      });
+    } else {
+      // Single value
+      let parsedValue: any = value;
+      
+      // Try to parse dates
+      if (/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d{3})?Z?)?$/.test(value)) {
+        parsedValue = new Date(value);
+      }
+      // Try to parse booleans
+      else if (value === 'true') parsedValue = true;
+      else if (value === 'false') parsedValue = false;
+      // Try to parse numbers
+      else if (!isNaN(Number(value))) parsedValue = Number(value);
+      
+      result[key] = parsedValue;
+    }
+  }
+
+  return result;
 }

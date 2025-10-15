@@ -6,11 +6,32 @@ import {
   IsString,
   Max,
   Min,
+  IsArray,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 import { FieldType } from '../../decorators/field.decorator';
+import { Between, TransformToArray, IsDateArray } from '../../decorators/crud.dto.decorators';
 
-export class PaginationDto<T> {
+
+
+export class BaseQueryDto<T = any> {
+  // Simplified relation, select, and searchable system
+  @IsOptional()
+  @IsArray()
+  @TransformToArray()
+  @FieldType('text', false)
+  _relations?: string[]; // Comma-separated relation names: "profile,role,permissions"
+
+  @IsOptional()
+  @IsArray()
+  @TransformToArray()
+  @FieldType('text', false)
+  _select?: string[]; // Comma-separated selectable fields: "id,email,profile.firstName,profile.phoneNumber"
+
+}
+
+
+export class PaginationDto<T> extends BaseQueryDto<T> {
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -36,29 +57,51 @@ export class PaginationDto<T> {
 }
 
 export class ListQueryDto<T = any> extends PaginationDto<T> {
-    @IsOptional()
-    @IsString()
-    @FieldType('text', false)
-    search?: string;
-  
-    @IsOptional()
-    @IsDateString()
-    @FieldType('date', false)
-    createdAfter?: string;
-  
-    @IsOptional()
-    @IsDateString()
-    @FieldType('date', false)
-    createdBefore?: string;
-  
-    @IsOptional()
-    @IsDateString()
-    @FieldType('date', false)
-    updatedAfter?: string;
-  
-    @IsOptional()
-    @IsDateString()
-    @FieldType('date', false)
-    updatedBefore?: string;
+  @IsOptional()
+  @IsString()
+  @FieldType('text', false)
+  search?: string;
 
-  }
+
+  @IsOptional()
+  @IsDateArray()
+  @TransformToArray()
+  @Between()
+  @FieldType('dateRange', false)
+  createdAt?: string[];
+
+  @IsOptional()
+  @IsDateString()
+  @FieldType('date', false)
+  createdAfter?: string;
+
+  @IsOptional()
+  @IsDateString()
+  @FieldType('date', false)
+  createdBefore?: string;
+
+  @IsOptional()
+  @IsDateString()
+  @FieldType('date', false)
+  updatedAfter?: string;
+
+  @IsOptional()
+  @IsDateString()
+  @FieldType('date', false)
+  updatedBefore?: string;
+
+
+  @IsOptional()
+  @IsArray()
+  @TransformToArray()
+  @FieldType('text', false)
+  _searchable?: string[]; // Comma-separated searchable fields: "email,profile.firstName,profile.lastName"
+
+}
+
+export class SingleQueryDto<T = any> extends BaseQueryDto<T> {
+  @IsOptional()
+  @IsString()
+  @FieldType('text', false)
+  id?: string;
+}

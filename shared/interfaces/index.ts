@@ -12,5 +12,4 @@ export * from './schedule.interface';
 export * from './queue.interface';
 export * from './worker.interface';
 export * from './notification.interface';
-export * from './crud-events.interface';
 export * from './role';

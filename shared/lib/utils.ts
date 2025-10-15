@@ -29,7 +29,7 @@ export function flatten<T>(arr: (T | T[])[]): T[] {
 
 export function formatValue(value: unknown): string {
   if (value instanceof Date) {
-    return value.toISOString().split("T")[0];
+    return value.toISOString();
   }
 
   if (typeof value === "boolean") {

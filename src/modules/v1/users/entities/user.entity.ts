@@ -26,7 +26,7 @@ export class User extends GeneralBaseEntity {
     example: 'email@example.com',
     description: "user's email address", 
   })
-  @Column({ type: 'varchar', length: 255, unique: true })
+  @Column({ type: 'varchar', length: 255, unique: true})
   email: string;
 
   @Exclude()

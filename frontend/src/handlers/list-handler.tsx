@@ -144,7 +144,9 @@ export function ListHandler<
             error: null,
             isSuccess: true,
             // Don't update filters here - they're managed by the form
-            sortBy: params.sortBy || 'createdAt',
+            _relations: params._relations || '',
+            _select: params._select || '',
+            sortBy: params.sortBy,
             sortOrder: params.sortOrder || 'DESC',
             search: params.search || ''
           });
@@ -179,6 +181,8 @@ export function ListHandler<
     sortBy: initialParams.sortBy || 'createdAt',
     sortOrder: initialParams.sortOrder || 'DESC',
     search: initialParams.search || '',
+    _relations: initialParams._relations || '',
+    _select: initialParams._select || '',
     filters: {
       ...initialParams.filters || {},
       ...filteredExtra || {}

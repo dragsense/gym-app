@@ -59,6 +59,12 @@ export default function UsersPage() {
         queryFn={(params) => fetchUsers(params, EUserLevels[EUserRole.USER])}
         ListComponent={UserList}
         dto={UserListDto}
+        initialParams={{
+          sortBy: 'profile.firstName',
+          sortOrder: 'ASC',
+          _relations: 'profile',
+          _select: 'email,profile.firstName,profile.lastName,profile.phoneNumber,isActive',
+        }}
         storeKey={STORE_KEY}
         listProps={{
           level: EUserLevels[EUserRole.USER],
