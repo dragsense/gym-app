@@ -251,15 +251,14 @@ The ${appName} Team
    */
   async sendPasswordResetConfirmation(user: User): Promise<void> {
     try {
-      const companyName = this.appConfig.superAdmin.companyName;
       const supportEmail = this.appConfig.superAdmin.email;
 
       await this.mailerService.sendMail({
         to: user.email,
         from: this.configService.get('MAIL_FROM'),
         subject: `Password Reset Successful - ${this.appConfig.name}`,
-        html: this.generatePasswordResetConfirmationHTML(user, companyName, supportEmail),
-        text: this.generatePasswordResetConfirmationText(user, companyName, supportEmail),
+        html: this.generatePasswordResetConfirmationHTML(user, supportEmail),
+        text: this.generatePasswordResetConfirmationText(user, supportEmail),
       });
 
       this.logger.log(`Password reset confirmation sent to ${user.email}`);
@@ -268,7 +267,7 @@ The ${appName} Team
     }
   }
 
-  private generatePasswordResetConfirmationHTML(user: User, companyName: string, supportEmail: string): string {
+  private generatePasswordResetConfirmationHTML(user: User, supportEmail: string): string {
     const userName = user.profile?.firstName || 'User';
     
     return `
@@ -295,24 +294,24 @@ The ${appName} Team
         
         <p>Hello ${userName},</p>
         
-        <p>Your password has been successfully reset for your ${companyName} account.</p>
+        <p>Your password has been successfully reset for your ${this.appConfig.name} account.</p>
         
         <div class="security-note">
             <strong>Security Notice:</strong> If you did not request this password reset, 
             please contact our support team immediately at ${supportEmail}.
         </div>
         
-        <p>Best regards,<br>The ${companyName} Team</p>
+        <p>Best regards,<br>The ${this.appConfig.name} Team</p>
 
         <div class="footer">
-            <p>&copy; ${new Date().getFullYear()} ${companyName}. All rights reserved.</p>
+            <p>&copy; ${new Date().getFullYear()} ${this.appConfig.name}. All rights reserved.</p>
         </div>
     </div>
 </body>
 </html>`;
   }
 
-  private generatePasswordResetConfirmationText(user: User, companyName: string, supportEmail: string): string {
+  private generatePasswordResetConfirmationText(user: User, supportEmail: string): string {
     const userName = user.profile?.firstName || 'User';
     
     return `
@@ -320,14 +319,14 @@ Password Reset Successful
 
 Hello ${userName},
 
-Your password has been successfully reset for your ${companyName} account.
+Your password has been successfully reset for your ${this.appConfig.name} account.
 
 Security Notice: If you did not request this password reset, please contact our support team immediately at ${supportEmail}.
 
 Best regards,
-The ${companyName} Team
+  The ${this.appConfig.name} Team
 
-© ${new Date().getFullYear()} ${companyName}. All rights reserved.
+© ${new Date().getFullYear()} ${this.appConfig.name}. All rights reserved.
     `.trim();
   }
 }

@@ -1,2 +1,2 @@
-export { default as ScheduleFormModal } from './schedule-form-modal';
+export * from './schedule-form-modal';
 

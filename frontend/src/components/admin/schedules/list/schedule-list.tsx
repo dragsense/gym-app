@@ -18,7 +18,7 @@ import { List as TList } from "@/components/list-ui/list";
 import { AppCard } from "@/components/layout-ui/app-card";
 
 // Local
-import { itemViews } from "./schedule-item-views";
+import { scheduleItemViews as itemViews } from "./schedule-item-views";
 import { ScheduleFilters } from "./schedule-filters";
 
 // Stores

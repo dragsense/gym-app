@@ -22,7 +22,7 @@ export interface IScheduleFormModalExtraProps {
 
 interface IScheduleFormModalProps extends THandlerComponentProps<TFormHandlerStore<TScheduleData, IMessageResponse, IScheduleFormModalExtraProps>> { }
 
-const ScheduleFormModal = React.memo(function ScheduleFormModal({
+export const ScheduleFormModal = React.memo(function ScheduleFormModal({
   storeKey,
   store,
 }: IScheduleFormModalProps) {
@@ -166,5 +166,4 @@ const ScheduleFormModal = React.memo(function ScheduleFormModal({
   );
 });
 
-export default ScheduleFormModal;
 

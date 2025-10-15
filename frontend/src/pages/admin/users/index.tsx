@@ -56,12 +56,10 @@ export default function UsersPage() {
       />
 
       <ListHandler<IUser, TUserListData, TUserExtraProps, IUser, TUserViewExtraProps>
-        queryFn={(params) => fetchUsers(params, EUserLevels[EUserRole.USER])}
+        queryFn={(params) => fetchUsers(params)}
         ListComponent={UserList}
         dto={UserListDto}
         initialParams={{
-          sortBy: 'profile.firstName',
-          sortOrder: 'ASC',
           _relations: 'profile',
           _select: 'email,profile.firstName,profile.lastName,profile.phoneNumber,isActive',
         }}

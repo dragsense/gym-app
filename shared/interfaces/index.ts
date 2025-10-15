@@ -1,4 +1,7 @@
 export * from './user.interface';
+export * from './trainer.interface';
+export * from './client.interface';
+export * from './trainer-client.interface';
 export * from './api/error.interface';
 export * from './api/param.interface';
 export * from './api/response.interface';

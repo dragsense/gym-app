@@ -38,6 +38,10 @@ export class User extends GeneralBaseEntity {
   @Column({ type: 'boolean', default: true })
   isActive?: boolean;
 
+  @ApiPropertyOptional({ example: 0, description: 'User level (0=USER, 1=TRAINER, 2=CLIENT)' })
+  @Column({ type: 'int', default: 0 })
+  level?: number;
+
 
   @OneToOne(() => Profile, { cascade: true, eager: true })
   @JoinColumn()

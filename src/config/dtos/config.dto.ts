@@ -271,4 +271,21 @@ export class EnvironmentVariables {
   @IsString()
   @IsOptional()
   ENCRYPTION_ALGORITHM: string;
+
+  // Admin User Configuration
+  @IsString()
+  @IsOptional()
+  SUPER_ADMIN_EMAIL: string;
+
+  @IsString()
+  @IsOptional()
+  SUPER_ADMIN_PASSWORD: string;
+
+  @IsString()
+  @IsOptional()
+  SUPER_ADMIN_FIRST_NAME: string;
+
+  @IsString()
+  @IsOptional()
+  SUPER_ADMIN_LAST_NAME: string;
 }

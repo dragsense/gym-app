@@ -7,6 +7,8 @@ import {
   NotificationDto,
   NotificationPaginatedDto,
 } from 'shared/dtos/notification-dtos';
+import { SingleQueryDto } from 'shared';
+import { Notification } from './entities/notification.entity';
 
 @ApiTags('Notifications')
 @ApiBearerAuth()
@@ -24,7 +26,7 @@ export class NotificationController {
     type: NotificationPaginatedDto,
   })
   async findAll(@Query() queryDto: NotificationListDto) {
-    return await this.notificationService.findAll(queryDto);
+    return await this.notificationService.get(queryDto, NotificationListDto);
   }
 
   @Get('user/:userId')
@@ -37,12 +39,13 @@ export class NotificationController {
     type: NotificationPaginatedDto,
   })
   async findByUser(
-    @Param('userId', ParseIntPipe) userId: number
+    @Param('userId', ParseIntPipe) userId: number,
+    @Query() queryDto: SingleQueryDto<Notification>
   ) {
-    return await this.notificationService.findOne({ userId });
+    return await this.notificationService.getSingle(userId, NotificationListDto);
   }
 
- @Get(':id')
+  @Get(':id')
   @ApiOperation({ summary: 'Get notification by ID' })
   @ApiParam({ name: 'id', description: 'Notification ID' })
   @ApiResponse({
@@ -69,7 +72,7 @@ export class NotificationController {
     @Request() req: any
   ) {
     const userId = req.user?.id;
-    return await this.notificationService.markAsRead(id, userId);
+    return await this.notificationService.markAsRead(id);
   }
 
   @Put('read-all')
@@ -138,6 +141,6 @@ export class NotificationController {
   })
   async deleteAllForUser(@Request() req: any) {
     const userId = req.user?.id;
-    return await this.notificationService.deleteAllForUser(userId);
+    return await this.notificationService.delete({ userId });
   }
 }

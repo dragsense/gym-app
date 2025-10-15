@@ -1,6 +1,5 @@
 // External Libraries
 import { useId, useMemo, useTransition } from "react";
-import { useShallow } from 'zustand/shallow';
 
 // Types
 import type { TListHandlerComponentProps } from "@/@types/handler-types";
@@ -8,7 +7,7 @@ import type { TListHandlerStore } from "@/stores";
 import type { IPermission } from '@shared/interfaces';
 
 // Components
-import { TTable } from "@/components/ui/table";
+import { Table as TTable } from "@/components/ui/table";
 import { AppCard } from "@/components/layout-ui/app-card";
 import { PermissionFilters } from "./permission-filters";
 import { itemViews } from "./permission-item-views";

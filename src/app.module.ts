@@ -6,7 +6,7 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 
-import { configOptions, appConfig, databaseConfig, jwtConfig, mailerConfig, getMailerConfig } from './config';
+import { configOptions, appConfig, databaseConfig, jwtConfig, mailerConfig, getMailerConfig, superAdminConfig } from './config';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -28,6 +28,8 @@ import { join } from 'path';
 import { ResponseEncryptionInterceptor } from './interceptors/response-encryption-interceptor';
 
 import { EncryptionService } from './lib/encryption.service';
+import { ClientsModule } from './modules/v1/clients/clients.module';
+import { TrainersModule } from './modules/v1/trainers/trainers.module';
 
 
 
@@ -36,7 +38,7 @@ import { EncryptionService } from './lib/encryption.service';
     // Configuration
     ConfigModule.forRoot({
       ...configOptions,
-      load: [appConfig, databaseConfig, jwtConfig, mailerConfig],
+      load: [appConfig, databaseConfig, jwtConfig, mailerConfig, superAdminConfig],
       isGlobal: true,
     }),
 
@@ -75,6 +77,8 @@ import { EncryptionService } from './lib/encryption.service';
 
 
     // Feature modules
+    TrainersModule,
+    ClientsModule,
     UsersModule,
     AuthModule,
   ],

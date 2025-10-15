@@ -7,9 +7,11 @@ export class PasswordService {
 
     async validatePasswordChange(user: User, newPassword: string): Promise<void> {
         // Check against password history
-        for (const oldPassword of user.passwordHistory) {
-            if (await bcrypt.compare(newPassword, oldPassword)) {
-                throw new BadRequestException('Cannot reuse previous passwords');
+        if (user.passwordHistory && Array.isArray(user.passwordHistory)) {
+            for (const oldPassword of user.passwordHistory) {
+                if (await bcrypt.compare(newPassword, oldPassword)) {
+                    throw new BadRequestException('Cannot reuse previous passwords');
+                }
             }
         }
     }

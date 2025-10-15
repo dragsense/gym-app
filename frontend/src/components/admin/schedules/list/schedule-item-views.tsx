@@ -51,7 +51,7 @@ const getFrequencyIcon = (frequency: EScheduleFrequency) => {
   }
 };
 
-export const itemViews = ({
+export const scheduleItemViews = ({
   handleEdit,
   handleDelete,
   handleView,

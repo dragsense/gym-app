@@ -53,6 +53,7 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
     try {
       let processedData = createDto;
 
+
       // Execute beforeCreate callback if provided
       if (callbacks?.beforeCreate) {
         processedData = await callbacks.beforeCreate(queryRunner.manager);
@@ -65,20 +66,19 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
       const savedEntity = await queryRunner.manager.save(entity);
       const finalEntity = Array.isArray(savedEntity) ? savedEntity[0] : savedEntity;
 
-      // Get the complete entity with relations for return
-      const completeEntity = await this.getSingle(finalEntity.id);
-
       // Execute afterCreate callback if provided
       if (callbacks?.afterCreate) {
-        await callbacks.afterCreate(completeEntity, queryRunner.manager);
+
+
+        await callbacks.afterCreate(finalEntity, queryRunner.manager);
       }
 
 
       // Commit transaction after all callbacks
       await queryRunner.commitTransaction();      // Emit after create event
-      await this.emitEvent('create', completeEntity, processedData);
+      await this.emitEvent('create', finalEntity, processedData);
 
-      return completeEntity;
+      return finalEntity;
 
     } catch (error) {
       await queryRunner.rollbackTransaction();
@@ -323,7 +323,7 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
       } else if (typeof key === 'object' && key !== null) {
         // If key is an object, handle nested conditions with dot notation
         // Only apply nested conditions if relations are defined
-        const relations = (queryDto as any)._relations || [];
+        const relations = (queryDto as any)?._relations || [];
 
         Object.entries(key).forEach(([field, value]) => {
           if (value !== undefined && value !== null && value !== '') {
@@ -499,6 +499,8 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
                 // First level: entity.profile
                 currentPath = `entity.${part}`;
                 currentAlias = part;
+                console.log('currentAlias' + index, currentAlias);
+
                 query.leftJoin(currentPath, currentAlias)
                   .addSelect(`${currentAlias}.id`);
               } else {
@@ -518,6 +520,7 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
         }
       });
     }
+
 
     // Helper function to check if field is restricted
     const isFieldRestricted = (field: string): boolean => {

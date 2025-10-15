@@ -1,4 +1,6 @@
 export * from "./user-dtos";
+export * from "./trainer-dtos";
+export * from "./client-dtos";
 export * from "./auth-dtos";
 export * from "./activity-log-dtos";
 export * from "./queue-dtos";
@@ -8,3 +10,5 @@ export * from "./notification-dtos";
 export * from "./role-dtos";
 export * from "./schedule-dtos";
 export * from "./worker-dtos";
+export * from "./trainer-dtos";
+export * from "./trainer-client-dtos";

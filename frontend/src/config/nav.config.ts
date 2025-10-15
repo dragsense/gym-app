@@ -1,4 +1,4 @@
-import {Activity, type LucideIcon, UserCheck, FileText, CalendarClock, Database, Workflow, Server, Cpu, Shield } from "lucide-react";
+import {Activity, type LucideIcon, UserCheck, FileText, CalendarClock, Database, Workflow, Server, Cpu, Shield, Users, UserPlus, UserCog } from "lucide-react";
 import { ADMIN_ROUTES } from "./routes.config";
 
 // Separate settings configuration object
@@ -18,6 +18,21 @@ export const navItems: {
             title: "Users",
             urls: [ADMIN_ROUTES.USERS],
             icon: UserCheck,
+        },
+        {
+            title: "Trainers",
+            urls: [ADMIN_ROUTES.TRAINERS],
+            icon: Users,
+        },
+        {
+            title: "Clients",
+            urls: [ADMIN_ROUTES.CLIENTS],
+            icon: UserPlus,
+        },
+        {
+            title: "Trainer-Clients",
+            urls: [ADMIN_ROUTES.TRAINER_CLIENTS],
+            icon: UserCog,
         },
         {
             title: "Activit Logs",

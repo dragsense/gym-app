@@ -99,9 +99,12 @@ export function FormHandler<TFormData, TResponse = any, TExtraProps extends Reco
             const isEditing = store.getState().isEditing;
             let processedData = formData;
 
+
+
             if (isEditing) {
               processedData = getDirtyData(formData, initialValues) as any;
             }
+
 
             const response = await mutationFn(processedData, { ...initialParams, filteredExtra });
             
@@ -144,6 +147,8 @@ export function FormHandler<TFormData, TResponse = any, TExtraProps extends Reco
   // React 19: Enhanced form submission with proper transitions
   const handleSubmit = useCallback(async (formData: any) => {
     const isEditing = store.getState().isEditing;
+
+
 
     if (isEditing) {
       formData = getDirtyData(formData, initialValues) as TFormData;
