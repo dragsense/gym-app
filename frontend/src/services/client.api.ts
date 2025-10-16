@@ -14,7 +14,7 @@ const clientService = new BaseService<IClient, TClientData, Partial<TClientData>
 
 // Re-export common CRUD operations
 export const fetchClients = (params: IListQueryParams) => clientService.get(params);
-export const fetchClient = (id: number) => clientService.getSingle(id);
+export const fetchClient = (id: number, params: IListQueryParams) => clientService.getSingle(id, params);
 export const createClient = (data: TClientData) => clientService.post(data);
 export const updateClient = (id: number) => clientService.patch(id);
 export const deleteClient = (id: number) => clientService.delete(id);

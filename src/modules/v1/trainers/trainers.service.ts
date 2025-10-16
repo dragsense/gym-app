@@ -25,6 +25,8 @@ export class TrainersService extends CrudService<Trainer> {
     eventService: EventService,
   ) {
     const crudOptions: CrudOptions = {
+      restrictedFields: ['user.password'],
+      searchableFields: ['user.email', 'user.profile.firstName', 'user.profile.lastName'],
     };
     super(trainerRepo, dataSource, eventService, crudOptions);
   }

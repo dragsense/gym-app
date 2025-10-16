@@ -39,6 +39,7 @@ export class UsersService extends CrudService<User> {
   ) {
     const crudOptions: CrudOptions = {
       restrictedFields: ['password'],
+      searchableFields: ['email', 'profile.firstName', 'profile.lastName'],
     };
     super(userRepo, dataSource, eventService, crudOptions);
   }

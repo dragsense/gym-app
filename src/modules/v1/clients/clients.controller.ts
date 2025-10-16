@@ -23,14 +23,15 @@ import {
 
 import { ClientsService } from './clients.service';
 import { JwtAuthGuard } from '@/guards/jwt-auth.gaurd';
-import { CreateClientDto, UpdateClientDto, ClientListDto, ClientPaginatedDto, ClientDto } from 'shared';
+import { CreateClientDto, UpdateClientDto, ClientListDto, ClientPaginatedDto, ClientDto, SingleQueryDto } from 'shared';
+import { Client } from './entities/client.entity';
 
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('access-token')
 @ApiTags('Clients')
 @Controller('clients')
 export class ClientsController {
-  constructor(private readonly clientsService: ClientsService) {}
+  constructor(private readonly clientsService: ClientsService) { }
 
   @ApiOperation({ summary: 'Get all clients with pagination and filtering' })
   @ApiResponse({
@@ -40,10 +41,7 @@ export class ClientsController {
   })
   @Get()
   findAll(@Query() query: ClientListDto) {
-    return this.clientsService.get(query, {
-      select: ['id', 'goal', 'fitnessLevel', 'startDate', 'targetDate', 'currentWeight', 'targetWeight', 'medicalConditions', 'isActive', 'createdAt', 'updatedAt'],
-      relations: ['user'],
-    });
+    return this.clientsService.get(query, ClientListDto);
   }
 
   @ApiOperation({ summary: 'Get client by ID' })
@@ -55,8 +53,10 @@ export class ClientsController {
   })
   @ApiResponse({ status: 404, description: 'Client not found' })
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.clientsService.getSingle({ id }, { relations: ['user'] });
+  findOne(@Param('id', ParseIntPipe) id: number,
+    @Query() query: SingleQueryDto<Client>
+  ) {
+    return this.clientsService.getSingle(id, query);
   }
 
   @ApiOperation({ summary: 'Add a new client' })

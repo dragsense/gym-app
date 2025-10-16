@@ -2,6 +2,7 @@ export * from './users';
 export * from './trainers';
 export * from './trainer-clients';
 export * from './clients';
+export * from './sessions';
 export * from "./activity-logs";
 export * from "./files";
 export * from "./queues";

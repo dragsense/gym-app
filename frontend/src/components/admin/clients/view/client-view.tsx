@@ -3,12 +3,11 @@ import { useShallow } from 'zustand/shallow';
 import { useId, useMemo, useTransition } from 'react';
 
 // Components
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AppCard } from "@/components/layout-ui/app-card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { AppDialog } from "@/components/layout-ui/app-dialog";
-import { User, MapPin, Calendar, Phone } from "lucide-react";
+import { User, MapPin, Phone, Target, Activity, Heart } from "lucide-react";
 
 // Types
 import { type IClient } from "@shared/interfaces/client.interface";
@@ -69,11 +68,11 @@ function ClientDetailContent({ client }: IClientDetailContentProps) {
     // React 19: Essential IDs
     const componentId = useId();
     
-    const profile = client.profile;
+    const profile = client.user?.profile;
 
     // React 19: Memoized client creation date for better performance
     const clientCreationDate = useMemo(() => 
-        new Date(client.createdAt).toLocaleDateString(), 
+        client.createdAt ? new Date(client.createdAt).toLocaleDateString() : '', 
         [client.createdAt]
     );
 
@@ -89,7 +88,7 @@ function ClientDetailContent({ client }: IClientDetailContentProps) {
                         <h2 className="text-2xl font-bold text-gray-900">
                             {profile?.firstName} {profile?.lastName}
                         </h2>
-                        <p className="text-blue-600 font-medium">{client.email}</p>
+                        <p className="text-blue-600 font-medium">{client.user?.email}</p>
                         <div className="flex items-center gap-2 mt-1">
                             <Badge variant={client.isActive ? "default" : "secondary"}>
                                 {client.isActive ? "Active" : "Inactive"}
@@ -102,7 +101,44 @@ function ClientDetailContent({ client }: IClientDetailContentProps) {
                 </div>
             </AppCard>
 
-            <div className="">
+            <div className="space-y-6">
+                {/* Client Information */}
+                <AppCard
+                    header={
+                        <div className="flex items-center gap-2">
+                            <Target className="w-5 h-5" />
+                            <div>
+                                <span className="font-semibold">Client Information</span>
+                                <p className="text-sm text-muted-foreground">Fitness goals and health details</p>
+                            </div>
+                        </div>
+                    }
+                >
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                            <div className="text-muted-foreground"><Target className="w-4 h-4" /></div>
+                            <div className="flex-1">
+                                <span className="text-sm text-muted-foreground">Goal:</span>
+                                <p className="font-medium">{client.goal || 'Not specified'}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div className="text-muted-foreground"><Activity className="w-4 h-4" /></div>
+                            <div className="flex-1">
+                                <span className="text-sm text-muted-foreground">Fitness Level:</span>
+                                <p className="font-medium">{client.fitnessLevel || 'Not specified'}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div className="text-muted-foreground"><Heart className="w-4 h-4" /></div>
+                            <div className="flex-1">
+                                <span className="text-sm text-muted-foreground">Medical Conditions:</span>
+                                <p className="font-medium">{client.medicalConditions || 'None specified'}</p>
+                            </div>
+                        </div>
+                    </div>
+                </AppCard>
+
                 {/* Personal Information */}
                 <AppCard
                     header={

@@ -26,6 +26,7 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
     // ✅ Merge default + custom options directly here
     this.options = {
       pagination: { defaultLimit: 10, maxLimit: 100 },
+      defaultSort: { field: 'id', order: 'ASC' }, // Default sort by ID ascending
       ...options,
     };
   }
@@ -418,10 +419,12 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
    * 2. Check if LEFT JOIN already exists before adding
    * 3. Check if SELECT already exists before adding
    * 4. Handle sorting simply
+   * 5. Apply default sort when no sort fields are provided
    */
   private applyRelationsAndSelect(query: any, queryDto: any, mergedSortFields: string[]) {
     const _relations = (queryDto as any)._relations || [];
     const _select = (queryDto as any)._select || [];
+    const _countable = (queryDto as any)._countable || [];
     const allRestrictedFields = this.options.restrictedFields || [];
 
     // Helper functions
@@ -439,7 +442,7 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
     if (_relations.length > 0) {
       _relations.forEach((relationPath: string) => {
         if (!relationPath?.trim()) return;
-
+        // Build the relation path for COUNT
         const parts = relationPath.split('.');
         let currentAlias = 'entity';
         let fullPath = '';
@@ -447,16 +450,16 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
         parts.forEach((part, index) => {
           fullPath = index === 0 ? part : `${fullPath}.${part}`;
           const newAlias = index === 0 ? part : `${currentAlias}_${part}`;
-          // Check if this JOIN already exists
           const joinKey = `${currentAlias}.${part}`;
 
           if (!addedJoins.has(joinKey)) {
             query.leftJoin(joinKey, newAlias);
             addedJoins.set(joinKey, newAlias);
           }
-
           currentAlias = newAlias;
         });
+
+
       });
     }
 
@@ -520,24 +523,33 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
       query.select(fieldsToSelect.map(field => `entity.${field}`));
     }
 
-  
-      addedJoins.forEach((value) => {
-        const fields = relationFields[value];
-        if (fields && fields.length > 0) {
-          query.addSelect(`${value}.id`);
 
-          fields.forEach(field => {
-            if (field !== 'id') {
-              query.addSelect(`${value}.${field}`);
-            }
-          });
+    addedJoins.forEach((value, joinKey) => {
+
+
+      const relationPath = joinKey.replace(/^entity\./, '').split('_').join('.');
+      const isCountable = _countable.some(c => c === relationPath);
+
+      if (isCountable) {
+        query.loadRelationCountAndMap(`entity.${value}Count`, `entity.${relationPath}`);
+
+      } else {
+        const fields = relationFields[value];
+        if (fields?.length > 0) {
+          query.addSelect(`${value}.id`);
+          fields.forEach(field => field !== 'id' && query.addSelect(`${value}.${field}`));
         } else {
           query.addSelect(value);
         }
-      });
-  
-    // Step 3: Apply sorting
+      }
+    });
 
+    // Step 3: Apply sorting
+    // If no sort fields are provided, apply default sort
+    if (mergedSortFields.length === 0 && this.options.defaultSort) {
+      const { field, order } = this.options.defaultSort;
+      mergedSortFields.push(`${field}:${order}`);
+    }
 
     mergedSortFields.forEach(sortField => {
       const [fieldName, order = 'ASC'] = sortField.split(':');

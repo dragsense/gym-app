@@ -7,3 +7,4 @@ export * from './worker.enum';
 export * from './notification.enum';
 export * from './trainer-client.enum';
 export * from './role';
+export * from './session.enum';

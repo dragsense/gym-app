@@ -1,0 +1,230 @@
+import {
+  IsString,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsBoolean,
+  IsDateString,
+  ValidateNested,
+  Min,
+  IsEnum,
+  IsArray,
+} from 'class-validator';
+import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
+import { Type, Transform } from 'class-transformer';
+import { PaginationMetaDto } from '../common/pagination.dto';
+import { ListQueryDto, SingleQueryDto } from '../common/list-query.dto';
+// import { ISession } from '../../interfaces/session.interface';
+import { FieldType } from '../../decorators/field.decorator';
+import { OmitType } from '../../lib/dto-type-adapter';
+import { TrainerDto } from '../trainer-dtos';
+import { ClientDto } from '../client-dtos';
+import {
+  Between,
+  LessThan,
+  GreaterThan,
+  LessThanOrEqual,
+  GreaterThanOrEqual,
+  Like,
+  In,
+  NotIn,
+  IsNull,
+  IsNotNull,
+  Equals,
+  NotEquals,
+  DateRange,
+  TransformToArray,
+  TransformToDate,
+  RelationFilter,
+} from '../../decorators/crud.dto.decorators';
+import { ESessionStatus, ESessionType } from '../../enums/session.enum';
+import { ISession } from '../../interfaces/session.interface';
+
+export class CreateSessionDto {
+  @ApiProperty({ example: 'Morning Workout', description: 'Session title' })
+  @IsString()
+  @IsNotEmpty()
+  @FieldType("text", true)
+  title: string;
+
+  @ApiProperty({ example: 'Cardio and strength training session', description: 'Session description' })
+  @IsString()
+  @IsNotEmpty()
+  @FieldType("textarea", true)
+  description: string;
+
+  @ApiProperty({ example: '2024-01-15T09:00:00.000Z', description: 'Session start date and time' })
+  @IsDateString()
+  @IsNotEmpty()
+  @FieldType("datetime", true)
+  startDateTime: string;
+
+  @ApiProperty({ example: '2024-01-15T10:00:00.000Z', description: 'Session end date and time' })
+  @IsDateString()
+  @IsNotEmpty()
+  @FieldType("datetime", true)
+  endDateTime: string;
+
+  @ApiProperty({ type: TrainerDto })
+  @ValidateNested()
+  @Type(() => TrainerDto)
+  @FieldType("nested", true, TrainerDto)
+  trainer: TrainerDto;
+
+  @ApiProperty({ type: [ClientDto] })
+  @ValidateNested({ each: true })
+  @Type(() => ClientDto)
+  @FieldType("nested", true, ClientDto)
+  clients: ClientDto[];
+
+  @ApiProperty({ example: 'PERSONAL', description: 'Session type', enum: ESessionType })
+  @IsEnum(ESessionType)
+  @IsNotEmpty()
+  @FieldType("select", true)
+  type: ESessionType;
+
+  @ApiPropertyOptional({ example: 'Gym Floor A', description: 'Session location' })
+  @IsOptional()
+  @IsString()
+  @FieldType("text")
+  location?: string;
+
+  @ApiPropertyOptional({ example: 50, description: 'Session price' })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @FieldType("number")
+  @Type(() => Number)
+  price?: number;
+
+  @ApiPropertyOptional({ example: 'Bring water bottle and towel', description: 'Session notes' })
+  @IsOptional()
+  @IsString()
+  @FieldType("textarea")
+  notes?: string;
+}
+
+export class UpdateSessionDto extends PartialType(OmitType(CreateSessionDto, [])) { }
+
+
+export class SessionPaginatedDto extends PaginationMetaDto {
+  @ApiProperty({ type: () => [SessionDto] })
+  @Type(() => SessionDto)
+  data: SessionDto[];
+}
+
+export class SessionListDto extends ListQueryDto<ISession> {
+  @ApiPropertyOptional({ example: 'SCHEDULED', description: 'Filter by session status' })
+  @IsOptional()
+  @IsEnum(ESessionStatus)
+  @Equals()
+  @FieldType('select', false)
+  status?: ESessionStatus;
+
+  @ApiPropertyOptional({ example: 'PERSONAL', description: 'Filter by session type' })
+  @IsOptional()
+  @IsEnum(ESessionType)
+  @Equals()
+  @FieldType('select', false)
+  type?: ESessionType;
+
+  @ApiPropertyOptional({ example: 'Morning', description: 'Filter by session title' })
+  @IsOptional()
+  @IsString()
+  @Like()
+  @FieldType('text', false)
+  title?: string;
+
+
+
+  @ApiPropertyOptional({ example: '2024-01-01', description: 'Filter by start date' })
+  @IsOptional()
+  @IsDateString()
+  @DateRange()
+  @FieldType('date', false)
+  startDate?: string;
+
+  @ApiPropertyOptional({ example: '2024-01-31', description: 'Filter by end date' })
+  @IsOptional()
+  @IsDateString()
+  @DateRange()
+  @FieldType('date', false)
+  endDate?: string;
+}
+
+export class SessionDto {
+  @ApiProperty({ example: 1, description: 'Session ID' })
+  @IsNotEmpty()
+  @IsNumber()
+  @Type(() => Number)
+  @FieldType("number", true)
+  @Min(1)
+  id: number;
+
+  @ApiProperty({ example: 'Morning Workout', description: 'Session title' })
+  @IsOptional()
+  @IsString()
+  title: string;
+
+  @ApiProperty({ example: 'Cardio and strength training session', description: 'Session description' })
+  @IsOptional()
+  @IsString()
+  description: string;
+
+  @ApiProperty({ example: '2024-01-15T09:00:00.000Z', description: 'Session start date and time' })
+  @IsOptional()
+  startDateTime: string;
+
+  @ApiProperty({ example: '2024-01-15T10:00:00.000Z', description: 'Session end date and time' })
+  @IsOptional()
+  endDateTime: string;
+
+  @ApiProperty({ example: 'PERSONAL', description: 'Session type' })
+  @IsOptional()
+  type: ESessionType;
+
+  @ApiPropertyOptional({ example: 'Gym Floor A', description: 'Session location' })
+  @IsOptional()
+  @IsString()
+  location?: string;
+
+  @ApiPropertyOptional({ example: 50, description: 'Session price' })
+  @IsOptional()
+  @IsNumber()
+  price?: number;
+
+  @ApiPropertyOptional({ example: 'Bring water bottle and towel', description: 'Session notes' })
+  @IsOptional()
+  @IsString()
+  notes?: string;
+
+  @ApiProperty({ example: 'SCHEDULED', description: 'Session status' })
+  @IsOptional()
+  status: ESessionStatus;
+
+  @ApiProperty({ type: TrainerDto })
+  @ValidateNested()
+  @Type(() => TrainerDto)
+  trainer: TrainerDto;
+
+  @ApiProperty({ type: [ClientDto] })
+  @ValidateNested()
+  @Type(() => ClientDto)
+  @IsArray()
+  clients: ClientDto[];
+
+
+  @ApiProperty({ example: 1, description: 'Number of clients' })
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  @FieldType("number", true)
+  @Min(0)
+  clientsCount?: number;
+
+  @IsOptional()
+  createdAt?: Date;
+
+  @IsOptional()
+  updatedAt?: Date;
+}

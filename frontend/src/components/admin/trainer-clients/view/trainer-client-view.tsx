@@ -16,6 +16,7 @@ import { type ITrainerClient } from "@shared/interfaces/trainer-client.interface
 // Stores
 import { type TSingleHandlerStore } from "@/stores";
 import { type THandlerComponentProps } from "@/@types/handler-types";
+import { ETrainerClientStatus } from '@shared/enums/trainer-client.enum';
 
 export type TTrainerClientViewExtraProps = {
    level: number;
@@ -72,16 +73,6 @@ function TrainerClientDetailContent({ trainerClient }: ITrainerClientDetailConte
     const trainer = trainerClient.trainer;
     const client = trainerClient.client;
 
-    // React 19: Memoized dates for better performance
-    const startDate = useMemo(() => 
-        trainerClient.startDate ? new Date(trainerClient.startDate).toLocaleDateString() : 'Not set',
-        [trainerClient.startDate]
-    );
-    
-    const endDate = useMemo(() => 
-        trainerClient.endDate ? new Date(trainerClient.endDate).toLocaleDateString() : 'Ongoing',
-        [trainerClient.endDate]
-    );
 
     return (
         <div className="space-y-6" data-component-id={componentId}>
@@ -93,16 +84,14 @@ function TrainerClientDetailContent({ trainerClient }: ITrainerClientDetailConte
                     </div>
                     <div className="flex-1">
                         <h2 className="text-2xl font-bold text-gray-900">
-                            {trainer?.profile?.firstName} {trainer?.profile?.lastName} - {client?.profile?.firstName} {client?.profile?.lastName}
+                            {trainer?.user?.profile?.firstName} {trainer?.user?.profile?.lastName} - {client?.user?.profile?.firstName} {client?.user?.profile?.lastName}
                         </h2>
                         <p className="text-purple-600 font-medium">Trainer-Client Relationship</p>
                         <div className="flex items-center gap-2 mt-1">
-                            <Badge variant={trainerClient.status === 'active' ? "default" : "secondary"}>
+                            <Badge variant={trainerClient.status === ETrainerClientStatus.ACTIVE ? "default" : "secondary"}>
                                 {trainerClient.status}
                             </Badge>
-                            <span className="text-sm text-muted-foreground">
-                                {startDate} - {endDate}
-                            </span>
+                         
                         </div>
                     </div>
                 </div>
@@ -126,21 +115,21 @@ function TrainerClientDetailContent({ trainerClient }: ITrainerClientDetailConte
                             <div className="text-muted-foreground"><User className="w-4 h-4" /></div>
                             <div className="flex-1">
                                 <span className="text-sm text-muted-foreground">Name:</span>
-                                <p className="font-medium">{trainer?.profile?.firstName} {trainer?.profile?.lastName}</p>
+                                <p className="font-medium">{trainer?.user?.profile?.firstName} {trainer?.user?.profile?.lastName}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
                             <div className="text-muted-foreground"><User className="w-4 h-4" /></div>
                             <div className="flex-1">
                                 <span className="text-sm text-muted-foreground">Email:</span>
-                                <p className="font-medium">{trainer?.email || 'Not specified'}</p>
+                                <p className="font-medium">{trainer?.user?.email || 'Not specified'}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
                             <div className="text-muted-foreground"><User className="w-4 h-4" /></div>
                             <div className="flex-1">
                                 <span className="text-sm text-muted-foreground">Phone:</span>
-                                <p className="font-medium">{trainer?.profile?.phoneNumber || 'Not specified'}</p>
+                                <p className="font-medium">{trainer?.user?.profile?.phoneNumber || 'Not specified'}</p>
                             </div>
                         </div>
                     </div>
@@ -163,21 +152,21 @@ function TrainerClientDetailContent({ trainerClient }: ITrainerClientDetailConte
                             <div className="text-muted-foreground"><User className="w-4 h-4" /></div>
                             <div className="flex-1">
                                 <span className="text-sm text-muted-foreground">Name:</span>
-                                <p className="font-medium">{client?.profile?.firstName} {client?.profile?.lastName}</p>
+                                <p className="font-medium">{client?.user?.profile?.firstName} {client?.user?.profile?.lastName}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
                             <div className="text-muted-foreground"><User className="w-4 h-4" /></div>
                             <div className="flex-1">
                                 <span className="text-sm text-muted-foreground">Email:</span>
-                                <p className="font-medium">{client?.email || 'Not specified'}</p>
+                                <p className="font-medium">{client?.user?.email || 'Not specified'}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
                             <div className="text-muted-foreground"><User className="w-4 h-4" /></div>
                             <div className="flex-1">
                                 <span className="text-sm text-muted-foreground">Phone:</span>
-                                <p className="font-medium">{client?.profile?.phoneNumber || 'Not specified'}</p>
+                                <p className="font-medium">{client?.user?.profile?.phoneNumber || 'Not specified'}</p>
                             </div>
                         </div>
                     </div>
@@ -200,22 +189,16 @@ function TrainerClientDetailContent({ trainerClient }: ITrainerClientDetailConte
                     <div className="flex items-center gap-3">
                         <div className="text-muted-foreground"><Calendar className="w-4 h-4" /></div>
                         <div className="flex-1">
-                            <span className="text-sm text-muted-foreground">Start Date:</span>
-                            <p className="font-medium">{startDate}</p>
+                            <span className="text-sm text-muted-foreground">Notes:</span>
+                            <p className="font-medium">{trainerClient.notes || 'Not specified'}</p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <div className="text-muted-foreground"><Calendar className="w-4 h-4" /></div>
-                        <div className="flex-1">
-                            <span className="text-sm text-muted-foreground">End Date:</span>
-                            <p className="font-medium">{endDate}</p>
-                        </div>
-                    </div>
+               
                     <div className="flex items-center gap-3">
                         <div className="text-muted-foreground"><Users className="w-4 h-4" /></div>
                         <div className="flex-1">
                             <span className="text-sm text-muted-foreground">Status:</span>
-                            <p className="font-medium">{trainerClient.status}</p>
+                            <p className="font-medium">{trainerClient.status === ETrainerClientStatus.ACTIVE ? "Active" : "Inactive"}</p>
                         </div>
                     </div>
                 </div>

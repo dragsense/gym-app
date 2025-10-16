@@ -16,3 +16,4 @@ export * from './queue.interface';
 export * from './worker.interface';
 export * from './notification.interface';
 export * from './role';
+export * from './session.interface';

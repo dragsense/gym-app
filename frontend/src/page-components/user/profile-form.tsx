@@ -13,6 +13,8 @@ import { EVALIDATION_MODES } from "@/enums/form.enums";
 import { type THandlerComponentProps } from "@/@types/handler-types";
 import { type TUpdateProfileData } from "@shared/types/user.type";
 import { type IUser } from "@shared/interfaces/user.interface";
+import { type ITrainer } from "@shared/interfaces/trainer.interface";
+import { type IClient } from "@shared/interfaces/client.interface";
 import { type IMessageResponse } from "@shared/interfaces/api/response.interface";
 
 
@@ -30,7 +32,8 @@ import { UpdateProfileDto } from "@shared/dtos";
 
 
 
-interface IProfileFormProps extends THandlerComponentProps<TSingleHandlerStore<IUser, any>> {
+
+interface IProfileFormProps extends THandlerComponentProps<TSingleHandlerStore<IUser | ITrainer | IClient, any>> {
 }
 
 export default function ProfileForm({
@@ -57,42 +60,34 @@ export default function ProfileForm({
         reset: state.reset
     })));
 
-
-    if (isLoading) {
-        return (
-            <div className="absolute inset-0 z-30 flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-        );
-    }
-
-    if(!response) {
-        return <div>No response found</div>;
-    }
+    const userProfile = response as IUser;
+    const trainerProfile = response as ITrainer;
+    const clientProfile = response as IClient;
+    const profile = userProfile?.profile ?? trainerProfile?.user?.profile ?? clientProfile?.user?.profile;
 
 
-    // React 19: Memoized initial values with deferred processing
+    const INITIAL_VALUES: TUpdateProfileData = {
+        firstName: "",
+        lastName: "",
+        phoneNumber: "",
+        dateOfBirth: new Date(
+            new Date().setFullYear(new Date().getFullYear() - 12)
+        ).toISOString(),
+        address: "",
+        gender: EUserGender.MALE,
+        image: undefined,
+        documents: undefined,
+        skills: []
+    };
+
     const initialValues = useMemo(() => {
-        const INITIAL_VALUES: TUpdateProfileData = {
-            firstName: "",
-            lastName: "",
-            phoneNumber: "",
-            dateOfBirth: new Date(
-                new Date().setFullYear(new Date().getFullYear() - 12)
-            ).toISOString(),
-            address: "",
-            gender: EUserGender.MALE,
-            image: undefined,
-            documents: undefined,
-            skills: []
-        };
-        return strictDeepMerge<TUpdateProfileData>(INITIAL_VALUES, response?.profile ?? {});
-    }, [response?.profile]);
+        return strictDeepMerge<TUpdateProfileData>(INITIAL_VALUES, profile ?? {});
+    }, [INITIAL_VALUES, profile?.id]);
 
-    // React 19: Deferred initial values for performance
-    const deferredInitialValues = useDeferredValue(initialValues);
 
-    // React 19: Enhanced handler with transitions
+
+
+
     const handleClose = useCallback(() => {
         startTransition(() => {
             reset();
@@ -106,13 +101,28 @@ export default function ProfileForm({
     const mutationFn = updateProfile;
     const dto = UpdateProfileDto;
 
+
+
+    if (isLoading) {
+        return (
+            <div className="absolute inset-0 z-30 flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+        );
+    }
+
+    if (!profile) {
+        return <div>No Profile found</div>;
+    }
+
+
     return (
         <div data-component-id={componentId}>
             <FormHandler<TUpdateProfileData, IMessageResponse, IProfileFormModalExtraProps>
                 mutationFn={mutationFn}
                 FormComponent={ProfileFormModal}
                 storeKey={storeKey}
-                initialValues={deferredInitialValues}
+                initialValues={initialValues}
                 dto={dto}
                 validationMode={EVALIDATION_MODES.OnSubmit}
                 isEditing={isEditing}

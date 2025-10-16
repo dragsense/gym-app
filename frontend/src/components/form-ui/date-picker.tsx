@@ -105,7 +105,7 @@ DatePicker.displayName = "DatePicker";
 
 interface DateTimePickerProps {
   value?: Date;
-  onChange: (date: Date | undefined) => void;
+  onChange: (date: string) => void;
   placeholder?: string;
   disabled?: boolean;
   className?: string;
@@ -150,7 +150,8 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = React.memo(({
         const current = new Date(value || new Date());
         date.setHours(current.getHours());
         date.setMinutes(current.getMinutes());
-        onChange(date);
+        const dateString = date.toISOString();
+        onChange(dateString);
       }
     });
   };
@@ -162,7 +163,8 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = React.memo(({
       const date = value ? new Date(value) : new Date();
       date.setHours(hours);
       date.setMinutes(minutes);
-      onChange(date);
+      const dateString = date.toISOString();
+      onChange(dateString);
     });
   };
 

@@ -14,7 +14,7 @@ const trainerClientService = new BaseService<ITrainerClient, TTrainerClientData,
 
 // Re-export common CRUD operations
 export const fetchTrainerClients = (params: IListQueryParams) => trainerClientService.get(params);
-export const fetchTrainerClient = (id: number) => trainerClientService.getSingle(id);
+export const fetchTrainerClient = (id: number, params: IListQueryParams) => trainerClientService.getSingle(id, params);
 export const createTrainerClient = (data: TTrainerClientData) => trainerClientService.post(data);
 export const updateTrainerClient = (id: number) => trainerClientService.patch(id);
 export const deleteTrainerClient = (id: number) => trainerClientService.delete(id);

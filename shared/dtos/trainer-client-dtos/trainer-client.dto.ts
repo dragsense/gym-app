@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
+  import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import { IsString, IsNumber, IsOptional, IsDateString, Min, Max, ValidateNested, IsEnum } from 'class-validator';
 import { Type } from 'class-transformer';
 import { FieldOptions, FieldType } from '../../decorators/field.decorator';
@@ -93,6 +93,13 @@ export class TrainerClientDto {
   @IsEnum(ETrainerClientStatus)
   @FieldType("select")
   status: ETrainerClientStatus;
+
+
+  @ApiPropertyOptional({ example: 'Personal training sessions', description: 'Assignment notes' })
+  @IsOptional()
+  @IsString()
+  @FieldType("textarea")
+  notes?: string;
 
   @IsOptional()
   createdAt?: Date;

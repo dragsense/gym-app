@@ -28,6 +28,13 @@ export class BaseQueryDto<T = any> {
   @FieldType('text', false)
   _select?: string[]; // Comma-separated selectable fields: "id,email,profile.firstName,profile.phoneNumber"
 
+
+  @IsOptional()
+  @IsArray()
+  @TransformToArray()
+  @FieldType('text', false)
+  _countable?: string[]; // If provided, returns only count instead of data payload
+
 }
 
 
@@ -60,6 +67,8 @@ export class PaginationDto<T> extends BaseQueryDto<T> {
   @TransformToArray()
   @FieldType('custom', false)
   sortFields?: string[]; // Comma-separated format: "createdAt:DESC,name:ASC"
+
+
 }
 
 
@@ -86,6 +95,8 @@ export class ListQueryDto<T = any> extends PaginationDto<T> {
   @TransformToArray()
   @FieldType('text', false)
   _searchable?: string[]; // Comma-separated searchable fields: "email,profile.firstName,profile.lastName"
+
+
 
 }
 

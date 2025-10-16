@@ -1,0 +1,308 @@
+// External Libraries
+import { useShallow } from 'zustand/shallow';
+import { useId, useMemo, useTransition } from 'react';
+import { format } from 'date-fns';
+
+// Components
+import { Badge } from "@/components/ui/badge";
+import { AppCard } from "@/components/layout-ui/app-card";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { AppDialog } from "@/components/layout-ui/app-dialog";
+import { Calendar, Clock, MapPin, DollarSign, User, Target, FileText, Mail } from "lucide-react";
+
+// Types
+import { type ISession } from "@shared/interfaces/session.interface";
+import { ESessionStatus, ESessionType } from "@shared/enums/session.enum";
+
+// Stores
+import { type TSingleHandlerStore } from "@/stores";
+import { type THandlerComponentProps } from "@/@types/handler-types";
+
+export type TSessionViewExtraProps = {
+  // Add any extra props if needed
+}
+
+interface ISessionViewProps extends THandlerComponentProps<TSingleHandlerStore<ISession, TSessionViewExtraProps>> {
+}
+
+export default function SessionView({ storeKey, store }: ISessionViewProps) {
+    // React 19: Essential IDs and transitions
+    const componentId = useId();
+    const [, startTransition] = useTransition();
+
+    if (!store) {
+        return <div>Single store "{storeKey}" not found. Did you forget to register it?</div>;
+    }
+
+    const { response: session, action, reset } = store(useShallow(state => ({
+        response: state.response,
+        action: state.action,
+        reset: state.reset,
+    })));
+
+    if (!session) {
+        return null;
+    }
+
+
+        const handleCloseView = () => {
+        startTransition(() => reset());
+    };
+
+   
+
+
+    return (
+        <Dialog open={action === 'view'} onOpenChange={handleCloseView} data-component-id={componentId}>
+            <DialogContent className="min-w-2xl max-h-[90vh] overflow-y-auto">
+                <AppDialog
+                    title="Session Details"
+                    description="View detailed information about this session"
+                >
+                    <SessionDetailContent session={session} />
+                </AppDialog>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+interface ISessionDetailContentProps {
+    session: ISession;
+}
+
+function SessionDetailContent({ session }: ISessionDetailContentProps) {
+    // React 19: Essential IDs
+    const componentId = useId();
+    
+    const trainer = session.trainer;
+    const clients = session.clients;
+
+    // React 19: Memoized session dates for better performance
+    const sessionStartDate = useMemo(() => 
+        session.startDateTime ? format(new Date(session.startDateTime), 'EEEE, MMMM dd, yyyy') : '', 
+        [session.startDateTime]
+    );
+
+    const sessionStartTime = useMemo(() => 
+        session.startDateTime ? format(new Date(session.startDateTime), 'HH:mm') : '', 
+        [session.startDateTime]
+    );
+
+    const sessionEndTime = useMemo(() => 
+        session.endDateTime ? format(new Date(session.endDateTime), 'HH:mm') : '', 
+        [session.endDateTime]
+    );
+
+    const sessionDuration = useMemo(() => {
+        if (session.startDateTime && session.endDateTime) {
+            const start = new Date(session.startDateTime);
+            const end = new Date(session.endDateTime);
+            const diffMs = end.getTime() - start.getTime();
+            const diffHours = Math.round(diffMs / (1000 * 60 * 60) * 10) / 10;
+            return `${diffHours} hours`;
+        }
+        return 'Unknown';
+    }, [session.startDateTime, session.endDateTime]);
+
+    const statusColors = {
+        [ESessionStatus.SCHEDULED]: 'bg-blue-100 text-blue-800 border-blue-200',
+        [ESessionStatus.IN_PROGRESS]: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+        [ESessionStatus.COMPLETED]: 'bg-green-100 text-green-800 border-green-200',
+        [ESessionStatus.CANCELLED]: 'bg-red-100 text-red-800 border-red-200',
+        [ESessionStatus.NO_SHOW]: 'bg-gray-100 text-gray-800 border-gray-200',
+    };
+
+    return (
+        <div className="space-y-6" data-component-id={componentId}>
+            {/* Quick Preview Card */}
+            <AppCard className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
+                <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 bg-blue-200 rounded-full flex items-center justify-center">
+                        <Calendar className="w-8 h-8 text-blue-600" />
+                    </div>
+                    <div className="flex-1">
+                        <h2 className="text-2xl font-bold text-gray-900">
+                            {session.title}
+                        </h2>
+                        <p className="text-blue-600 font-medium">{session.type} Session</p>
+                        <div className="flex items-center gap-2 mt-1">
+                            <Badge className={statusColors[session.status] || 'bg-gray-100 text-gray-800'}>
+                                {session.status.replace('_', ' ')}
+                            </Badge>
+                            <span className="text-sm text-muted-foreground">
+                                {sessionStartDate}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </AppCard>
+
+            <div className="space-y-6">
+                {/* Session Information */}
+                <AppCard
+                    header={
+                        <div className="flex items-center gap-2">
+                            <Target className="w-5 h-5" />
+                            <div>
+                                <span className="font-semibold">Session Information</span>
+                                <p className="text-sm text-muted-foreground">Details about this training session</p>
+                            </div>
+                        </div>
+                    }
+                >
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                            <div className="text-muted-foreground"><Clock className="w-4 h-4" /></div>
+                            <div className="flex-1">
+                                <span className="text-sm text-muted-foreground">Start Time:</span>
+                                <p className="font-medium">{sessionStartDate} at {sessionStartTime}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div className="text-muted-foreground"><Clock className="w-4 h-4" /></div>
+                            <div className="flex-1">
+                                <span className="text-sm text-muted-foreground">End Time:</span>
+                                <p className="font-medium">{sessionEndTime}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div className="text-muted-foreground"><Clock className="w-4 h-4" /></div>
+                            <div className="flex-1">
+                                <span className="text-sm text-muted-foreground">Duration:</span>
+                                <p className="font-medium">{sessionDuration}</p>
+                            </div>
+                        </div>
+                        {session.location && (
+                            <div className="flex items-center gap-3">
+                                <div className="text-muted-foreground"><MapPin className="w-4 h-4" /></div>
+                                <div className="flex-1">
+                                    <span className="text-sm text-muted-foreground">Location:</span>
+                                    <p className="font-medium">{session.location}</p>
+                                </div>
+                            </div>
+                        )}
+                        {session.price && (
+                            <div className="flex items-center gap-3">
+                                <div className="text-muted-foreground"><DollarSign className="w-4 h-4" /></div>
+                                <div className="flex-1">
+                                    <span className="text-sm text-muted-foreground">Price:</span>
+                                    <p className="font-medium">${session.price}</p>
+                                </div>
+                            </div>
+                        )}
+                        {session.description && (
+                            <div className="flex items-start gap-3">
+                                <div className="text-muted-foreground mt-1"><FileText className="w-4 h-4" /></div>
+                                <div className="flex-1">
+                                    <span className="text-sm text-muted-foreground">Description:</span>
+                                    <p className="font-medium mt-1">{session.description}</p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </AppCard>
+
+                {/* Trainer Information */}
+                <AppCard
+                    header={
+                        <div className="flex items-center gap-2">
+                            <User className="w-5 h-5" />
+                            <div>
+                                <span className="font-semibold">Trainer</span>
+                                <p className="text-sm text-muted-foreground">Session trainer details</p>
+                            </div>
+                        </div>
+                    }
+                >
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                            <div className="text-muted-foreground"><User className="w-4 h-4" /></div>
+                            <div className="flex-1">
+                                <span className="text-sm text-muted-foreground">Name:</span>
+                                <p className="font-medium">
+                                    {trainer?.user?.profile?.firstName} {trainer?.user?.profile?.lastName}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div className="text-muted-foreground"><User className="w-4 h-4" /></div>
+                            <div className="flex-1">
+                                <span className="text-sm text-muted-foreground">Email:</span>
+                                <p className="font-medium">{trainer?.user?.email}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div className="text-muted-foreground"><Target className="w-4 h-4" /></div>
+                            <div className="flex-1">
+                                <span className="text-sm text-muted-foreground">Specialization:</span>
+                                <p className="font-medium">{trainer?.specialization || 'Not specified'}</p>
+                            </div>
+                        </div>
+                    </div>
+                </AppCard>
+
+                {/* Clients Information */}
+                <AppCard
+                    header={
+                        <div className="flex items-center gap-2">
+                            <User className="w-5 h-5" />
+                            <div>
+                                <span className="font-semibold">Clients ({clients.length})</span>
+                                <p className="text-sm text-muted-foreground">Session participants</p>
+                            </div>
+                        </div>
+                    }
+                >
+                    <div className="space-y-4">
+                        {clients.map((client, index) => (
+                            <div key={client.id || index} className="border rounded-lg p-4 bg-gray-50">
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-3">
+                                        <div className="text-muted-foreground"><User className="w-4 h-4" /></div>
+                                        <div className="flex-1">
+                                            <span className="text-sm text-muted-foreground">Name:</span>
+                                            <p className="font-medium">
+                                                {client.user?.profile?.firstName} {client.user?.profile?.lastName}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <div className="text-muted-foreground"><Mail className="w-4 h-4" /></div>
+                                        <div className="flex-1">
+                                            <span className="text-sm text-muted-foreground">Email:</span>
+                                            <p className="font-medium">{client.user?.email}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <div className="text-muted-foreground"><Target className="w-4 h-4" /></div>
+                                        <div className="flex-1">
+                                            <span className="text-sm text-muted-foreground">Goal:</span>
+                                            <p className="font-medium">{client.goal || 'Not specified'}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </AppCard>
+
+                {/* Session Notes */}
+                {session.notes && (
+                    <AppCard
+                        header={
+                            <div className="flex items-center gap-2">
+                                <FileText className="w-5 h-5" />
+                                <div>
+                                    <span className="font-semibold">Session Notes</span>
+                                    <p className="text-sm text-muted-foreground">Additional information about this session</p>
+                                </div>
+                            </div>
+                        }
+                    >
+                        <p className="text-sm">{session.notes}</p>
+                    </AppCard>
+                )}
+            </div>
+        </div>
+    );
+}

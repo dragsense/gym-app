@@ -8,7 +8,7 @@ import type { ITrainerClient } from '@shared/interfaces/trainer-client.interface
 import { ListHandler, SingleHandler } from "@/handlers";
 
 // Components
-import { TrainerClientList } from "@/components/admin";
+import { TrainerClientList, TrainerClientView } from "@/components/admin";
 
 // Services
 import { fetchTrainerClients, fetchTrainerClient, deleteTrainerClient } from '@/services/trainer-client.api';
@@ -18,7 +18,7 @@ import { TrainerClientForm } from "@/page-components";
 
 // Layouts
 import { PageInnerLayout } from "@/layouts";
-import type { TTrainerClientData, TTrainerClientListData } from "@shared/types";
+import type { TTrainerClientListData } from "@shared/types";
 import type { TTrainerClientViewExtraProps } from "@/components/admin/trainer-clients/view/trainer-client-view";
 
 export default function TrainerClientsPage() {
@@ -30,10 +30,14 @@ export default function TrainerClientsPage() {
         <PageInnerLayout Header={<Header />}>
             <SingleHandler<ITrainerClient, any>
                 queryFn={fetchTrainerClient}
+                initialParams={{
+                    _relations: 'trainer.user, client.user, trainer.user.profile, client.user.profile',
+                    _select: 'trainer.id, client.id, trainer.user.email, client.user.email, trainer.user.profile.firstName, client.user.profile.firstName, trainer.user.profile.lastName, client.user.profile.lastName, status, notes, createdAt',
+                }}
                 deleteFn={deleteTrainerClient}
                 storeKey={TRAINER_CLIENTS_STORE_KEY}
                 onDeleteSuccess={() => queryClient.invalidateQueries({ queryKey: [TRAINER_CLIENTS_STORE_KEY + "-list"] })}
-                SingleComponent={() => <div>Trainer-Client View Component</div>}
+                SingleComponent={TrainerClientView}
                 actionComponents={[
                     {
                         action: 'createOrUpdate',

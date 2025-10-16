@@ -31,6 +31,7 @@ import { EncryptionService } from './lib/encryption.service';
 import { ClientsModule } from './modules/v1/clients/clients.module';
 import { TrainersModule } from './modules/v1/trainers/trainers.module';
 import { TrainerClientsModule } from './modules/v1/trainer-clients/trainer-clients.module';
+import { SessionsModule } from './modules/v1/sessions/sessions.module';
 
 
 
@@ -81,6 +82,7 @@ import { TrainerClientsModule } from './modules/v1/trainer-clients/trainer-clien
     TrainersModule,
     ClientsModule,
     TrainerClientsModule,
+    SessionsModule,
     UsersModule,
     AuthModule,
   ],

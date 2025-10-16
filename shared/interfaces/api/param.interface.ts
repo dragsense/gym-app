@@ -12,4 +12,5 @@ export interface IListQueryParams {
   _relations?: string;
   _select?: string;
   _searchable?: string;
+  _countable?: string;
 }
