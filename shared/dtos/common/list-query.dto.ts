@@ -70,25 +70,11 @@ export class ListQueryDto<T = any> extends PaginationDto<T> {
   @FieldType('dateRange', false)
   createdAt?: string[];
 
-  @IsOptional()
-  @IsDateString()
-  @FieldType('date', false)
-  createdAfter?: string;
 
   @IsOptional()
   @IsDateString()
-  @FieldType('date', false)
-  createdBefore?: string;
-
-  @IsOptional()
-  @IsDateString()
-  @FieldType('date', false)
-  updatedAfter?: string;
-
-  @IsOptional()
-  @IsDateString()
-  @FieldType('date', false)
-  updatedBefore?: string;
+  @FieldType('dateTimeRange', false)
+  updatedAt?: string;
 
 
   @IsOptional()

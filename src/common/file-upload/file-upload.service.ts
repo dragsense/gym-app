@@ -2,23 +2,28 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import * as fs from 'fs';
 import * as path from 'path';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, Repository } from 'typeorm';
+import { EntityManager, Repository, DataSource } from 'typeorm';
 import { FileUpload } from './entities/file-upload.entity';
 import { FileListDto, CreateFileUploadDto, UpdateFileUploadDto } from 'shared/dtos/file-upload-dtos/file-upload.dto';
 import { IPaginatedResponse } from 'shared/interfaces';
 import { ConfigService } from '@nestjs/config';
 import { detectFileType } from '@/lib/utils/detect-file-type.util';
 import { OmitType } from 'shared/lib/type-utils';
+import { CrudService } from '@/common/crud/crud.service';
+import { EventService } from '../events/event.service';
 
 @Injectable()
-export class FileUploadService {
+export class FileUploadService extends CrudService<FileUpload> {
   private readonly appUrl: string;
 
   constructor(
     @InjectRepository(FileUpload)
     private fileRepo: Repository<FileUpload>,
     private configService: ConfigService,
+    dataSource: DataSource,
+    eventService: EventService,
   ) {
+    super(fileRepo, dataSource, eventService);
     this.appUrl = this.configService.get<string>('app.url') || 'http://localhost:3000';
   }
   private ensureDirectoryExists(dir: string) {
@@ -61,7 +66,7 @@ export class FileUploadService {
       // Auto-detect and correct type from mimetype
       const detectedType = detectFileType(file.mimetype);
 
-      const saved = this.fileRepo.create({
+      const fileData = {
         name: createDto.name || file.originalname,
         originalName: file.originalname,
         type: detectedType, // Use detected type, ignore user-provided type
@@ -70,22 +75,22 @@ export class FileUploadService {
         path: relativePath,
         folder: folder,
         url,
-      });
+      };
 
-      return manager ? await manager.save(saved) : await this.fileRepo.save(saved);
+      return manager ? await manager.save(this.fileRepo.create(fileData)) : await this.create(fileData);
     }
 
     // If no file but URL is provided
     if (createDto.url) {
-      const saved = this.fileRepo.create({
+      const fileData = {
         name: createDto.name,
         type: createDto.type,
         path: createDto.url,
         folder: folder,
         url: createDto.url,
-      });
+      };
 
-      return manager ? await manager.save(saved) : await this.fileRepo.save(saved);
+      return manager ? await manager.save(this.fileRepo.create(fileData)) : await this.create(fileData);
     }
 
     throw new NotFoundException('Either file or url must be provided');
@@ -102,81 +107,11 @@ export class FileUploadService {
     }
 
     // Delete DB record
-    await this.fileRepo.remove(file);
+    await this.delete(file.id);
   }
 
-  async findAll(queryDto: FileListDto): Promise<IPaginatedResponse<FileUpload>> {
-    const {
-      page = 1,
-      limit = 10,
-      search,
-      type,
-      sortBy,
-      sortOrder,
-      createdAfter,
-      createdBefore,
-      updatedAfter,
-      updatedBefore,
-      ...filters
-    } = queryDto;
 
-    const skip = (page - 1) * limit;
-    const query = this.fileRepo.createQueryBuilder('file');
 
-    // Apply search
-    if (search) {
-      query.andWhere('(file.name ILIKE :search)', {
-        search: `%${search}%`,
-      });
-    }
-
-    // Apply type filter
-    if (type) {
-      query.andWhere('file.type = :type', { type });
-    }
-
-    // Apply extra filters dynamically
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined) {
-        query.andWhere(`file.${key} = :${key}`, { [key]: value });
-      }
-    });
-
-    // Apply sorting
-    const sortColumn = sortBy || 'createdAt';
-    const sortDirection = (sortOrder?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC') as 'ASC' | 'DESC';
-    query.orderBy(`file.${sortColumn}`, sortDirection);
-
-    if (createdAfter) query.andWhere('file.createdAt >= :createdAfter', { createdAfter });
-    if (createdBefore) query.andWhere('file.createdAt <= :createdBefore', { createdBefore });
-    if (updatedAfter) query.andWhere('file.updatedAt >= :updatedAfter', { updatedAfter });
-    if (updatedBefore) query.andWhere('file.updatedAt <= :updatedBefore', { updatedBefore });
-
-    const [data, total] = await query
-      .skip(skip)
-      .take(limit)
-      .getManyAndCount();
-
-    const lastPage = Math.ceil(total / limit);
-
-    return {
-      data,
-      total,
-      page,
-      limit,
-      lastPage,
-      hasNextPage: page < lastPage,
-      hasPrevPage: page > 1,
-    };
-  }
-
-  async findOne(id: number): Promise<FileUpload> {
-    const item = await this.fileRepo.findOne({ where: { id } });
-    if (!item) {
-      throw new NotFoundException(`File with ID ${id} not found`);
-    }
-    return item;
-  }
 
   /**
    * Update file: If file is provided, delete old and upload new (ignore URL). Otherwise, update metadata only.
@@ -189,7 +124,7 @@ export class FileUploadService {
   ): Promise<FileUpload> {
 
 
-    const existingFile = await this.findOne(id);
+    const existingFile = await this.getSingle(id);
 
     // If physical file is provided, delete old and upload new (ignore URL)
     if (file) {

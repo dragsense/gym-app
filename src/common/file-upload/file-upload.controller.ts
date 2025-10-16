@@ -33,6 +33,8 @@ import { Response } from 'express';
 import { User } from '@/modules/v1/users/entities/user.entity';
 import { FileValidationPipe } from '@/pipes/file-validation.pipe';
 import { OmitType } from 'shared/lib/type-utils';
+import { SingleQueryDto } from 'shared';
+import { FileUpload } from './entities/file-upload.entity';
 
 @ApiTags('File Upload')
 @UseGuards(JwtAuthGuard)
@@ -45,7 +47,7 @@ export class FileUploadController {
   @ApiOperation({ summary: 'Get paginated list of File' })
   @ApiResponse({ status: 200, description: 'File retrieved successfully' })
   findAll(@Query() queryDto: FileListDto) {
-    return this.fileUploadService.findAll(queryDto);
+    return this.fileUploadService.get(queryDto, FileListDto);
   }
 
   @Get(':id')
@@ -53,15 +55,15 @@ export class FileUploadController {
   @ApiResponse({ status: 200, description: 'File found' })
   @ApiResponse({ status: 404, description: 'File not found' })
   @ApiParam({ name: 'id', type: 'number', description: 'File ID' })
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.fileUploadService.findOne(id);
+  findOne(@Param('id', ParseIntPipe) id: number, @Query() queryDto: SingleQueryDto<FileUpload>) {
+    return this.fileUploadService.getSingle(id, queryDto);
   }
 
   @Post()
   @ApiOperation({ summary: 'Create or upload a file' })
   @ApiResponse({ status: 201, description: 'File created successfully' })
   @ApiConsumes('multipart/form-data')
-  @ApiBody({type: CreateFileUploadDto})
+  @ApiBody({ type: CreateFileUploadDto })
   @UseInterceptors(FileInterceptor('file'))
   async createFile(
     @Body() createDto: OmitType<CreateFileUploadDto, 'file'>,
@@ -86,7 +88,7 @@ export class FileUploadController {
   @ApiResponse({ status: 404, description: 'File not found' })
   @ApiParam({ name: 'id', type: 'number', description: 'File ID' })
   @ApiConsumes('multipart/form-data')
-  @ApiBody({type: UpdateFileUploadDto})
+  @ApiBody({ type: UpdateFileUploadDto })
   @UseInterceptors(FileInterceptor('file'))
   async updateFile(
     @Param('id', ParseIntPipe) id: number,
@@ -112,8 +114,8 @@ export class FileUploadController {
   @ApiResponse({ status: 200, description: 'File deleted successfully' })
   @ApiResponse({ status: 404, description: 'File not found' })
   @ApiParam({ name: 'id', type: 'number', description: 'File ID' })
-  async deleteFile(@Param('id', ParseIntPipe) id: number) {
-    const file = await this.fileUploadService.findOne(id);
+  async deleteFile(@Param('id', ParseIntPipe) id: number, @Query() queryDto: SingleQueryDto<FileUpload>) {
+    const file = await this.fileUploadService.getSingle(id, queryDto);
     await this.fileUploadService.deleteFile(file);
     return { message: 'File deleted successfully' };
   }
@@ -123,10 +125,11 @@ export class FileUploadController {
   @ApiParam({ name: 'id', type: 'number', description: 'File ID' })
   async downloadFile(
     @Param('id', ParseIntPipe) id: number,
+    @Query() queryDto: SingleQueryDto<FileUpload>,
     @AuthUser() user: User,
     @Res() res: Response,
   ) {
-    const file = await this.fileUploadService.findOne(id);
+    const file = await this.fileUploadService.getSingle(id, queryDto);
     if (!file) throw new NotFoundException('File not found');
 
     const filePath = join(process.cwd(), 'private', file.path);

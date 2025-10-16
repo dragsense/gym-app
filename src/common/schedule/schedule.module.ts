@@ -8,6 +8,7 @@ import { ScheduleRegistryService } from './services/schedule-registry.service';
 import { ScheduleExecutorService } from './services/schedule-executor.service';
 import { ScheduleSubscriber } from './subscribers/schedule.subscriber';
 import { BullQueueModule } from '../bull-queue/bull-queue.module';
+import { EventService } from '../events/event.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Schedule]), BullQueueModule],
@@ -17,7 +18,8 @@ import { BullQueueModule } from '../bull-queue/bull-queue.module';
     ScheduleBullService, 
     ScheduleRegistryService,
     ScheduleExecutorService,
-    ScheduleSubscriber
+    ScheduleSubscriber,
+    EventService
   ],
   exports: [ScheduleService, ScheduleRegistryService, ScheduleBullService, ScheduleExecutorService],
 })

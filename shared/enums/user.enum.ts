@@ -1,9 +1,15 @@
 export enum EUserRole {
+  ADMIN = 'ADMIN',
+  TRAINER = 'TRAINER',
+  CLIENT = 'CLIENT',
   USER = 'USER',
 }
 
 export const EUserLevels = {
-  [EUserRole.USER]: 0,
+  [EUserRole.ADMIN]: 0,
+  [EUserRole.TRAINER]: 1,
+  [EUserRole.CLIENT]: 2,
+  [EUserRole.USER]: 3,
 };
 
 export enum EUserGender {

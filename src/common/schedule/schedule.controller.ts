@@ -16,6 +16,7 @@ import {
   ApiResponse,
   ApiTags,
   ApiHeader,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { ScheduleService } from './schedule.service';
 import { 
@@ -25,30 +26,39 @@ import {
 } from 'shared/dtos/schedule-dtos/schedule.dto';
 import { JwtAuthGuard } from '@/guards/jwt-auth.gaurd';
 import { Timezone } from '@/decorators/timezone.decorator';
+import { SingleQueryDto } from 'shared';
+import { Schedule } from './entities/schedule.entity';
 
 @ApiTags('Schedule')
+@ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('schedules')
 export class ScheduleController {
   constructor(private readonly scheduleService: ScheduleService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get all schedules' })
+  @ApiOperation({ summary: 'Get all schedules with pagination and filtering' })
   @ApiResponse({ status: 200, description: 'Schedules retrieved successfully' })
-  findAll(@Query() queryDto: ScheduleListDto) {
-    return this.scheduleService.findAll(queryDto);
+  async findAll(@Query() queryDto: ScheduleListDto) {
+    return await this.scheduleService.get(queryDto, ScheduleListDto);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get schedule by ID' })
   @ApiParam({ name: 'id', type: 'number' })
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.scheduleService.findOne(id);
+  @ApiResponse({ status: 200, description: 'Schedule retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Schedule not found' })
+  async findOne(@Param('id', ParseIntPipe) id: number,
+  @Query() queryDto: SingleQueryDto<Schedule>
+) {
+    return await this.scheduleService.getSingle(id, queryDto);
   }
 
   @Post()
   @ApiOperation({ summary: 'Create schedule' })
   @ApiHeader({ name: 'X-Timezone', description: 'User timezone (e.g., America/New_York)', required: false })
+  @ApiResponse({ status: 201, description: 'Schedule created successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid schedule configuration' })
   async createSchedule(
     @Body() createDto: CreateScheduleDto,
     @Timezone() timezone: string,
@@ -65,6 +75,9 @@ export class ScheduleController {
   @ApiOperation({ summary: 'Update schedule' })
   @ApiParam({ name: 'id', type: 'number' })
   @ApiHeader({ name: 'X-Timezone', description: 'User timezone', required: false })
+  @ApiResponse({ status: 200, description: 'Schedule updated successfully' })
+  @ApiResponse({ status: 404, description: 'Schedule not found' })
+  @ApiResponse({ status: 400, description: 'Invalid schedule configuration' })
   async updateSchedule(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateData: UpdateScheduleDto,
@@ -81,8 +94,10 @@ export class ScheduleController {
   @Delete(':id')
   @ApiOperation({ summary: 'Delete schedule' })
   @ApiParam({ name: 'id', type: 'number' })
+  @ApiResponse({ status: 200, description: 'Schedule deleted successfully' })
+  @ApiResponse({ status: 404, description: 'Schedule not found' })
   async deleteSchedule(@Param('id', ParseIntPipe) id: number) {
-    await this.scheduleService.deleteSchedule(id);
+    await this.scheduleService.delete(id);
     return { message: 'Schedule deleted successfully' };
   }
 }

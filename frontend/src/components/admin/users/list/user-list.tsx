@@ -20,7 +20,7 @@ import { UserFilters } from "./user-filters";
 import { AppCard } from "@/components/layout-ui/app-card";
 
 // Local
-import { itemViews } from "./user-item-views";
+import { userItemViews as itemViews } from "./user-item-views";
 
 // Stores
 import { type TListHandlerStore, type TSingleHandlerStore } from "@/stores";

@@ -39,7 +39,7 @@ export class UsersService extends CrudService<User> {
   ) {
     const crudOptions: CrudOptions = {
       searchableFields: ['email'],
-      restrictedFields: ['password', 'refreshToken', 'resetPasswordToken', 'resetPasswordExpires'],
+      restrictedFields: ['refreshToken', 'resetPasswordToken', 'resetPasswordExpires'],
       selectableFields: ['id', 'email', 'isActive', 'createdAt', 'updatedAt', 'profile.firstName', 'profile.lastName', 'profile.phoneNumber'],
       pagination: {
         defaultLimit: 10,
@@ -116,15 +116,6 @@ export class UsersService extends CrudService<User> {
       }
     });
 
-    // Send onboarding email if temp password was generated
-    if (tempPassword) {
-      this.userEmailService.sendOnboardingEmail({
-        user,
-        tempPassword,
-      }).catch((error) =>
-        this.customLogger.error('Onboarding email failed', error.stack),
-      );
-    }
 
     return { message: 'User created successfully.', user };
   }
@@ -133,46 +124,38 @@ export class UsersService extends CrudService<User> {
     const { profile, ...userData } = updateUserDto;
 
     // Update user data with callbacks
-    if (Object.keys(userData).length > 0) {
-      await this.update(id, userData, {
-        beforeUpdate: async (existingEntity: User, manager: EntityManager) => {
-          // Check if email is being changed and if it already exists
-          if (userData.email && userData.email !== existingEntity.email) {
-            const emailExists = await manager.findOne(this.repository.target, {
-              where: { email: userData.email },
-            });
 
-            if (emailExists) {
-              throw new ConflictException('Email already exists');
-            }
+    await this.update(id, userData, {
+      beforeUpdate: async (existingEntity: User, manager: EntityManager) => {
+        // Check if email is being changed and if it already exists
+        if (userData.email && userData.email !== existingEntity.email) {
+          const emailExists = await manager.findOne(this.repository.target, {
+            where: { email: userData.email },
+          });
+
+          if (emailExists) {
+            throw new ConflictException('Email already exists');
           }
-        },
-        afterUpdate: async (updatedEntity: User, manager: EntityManager) => {
-          // Update profile within the same transaction if provided
-          await this.updateUserProfile(updatedEntity.id, profile);
         }
-      });
-    } else if (profile && Object.keys(profile).length > 0) {
-      // Only profile update, no user data changes
-      await this.updateUserProfile(id, profile);
-    }
+      },
+      afterUpdate: async (updatedEntity: User, manager: EntityManager) => {
+        try {
+        const existingUser = await this.getSingle({ id: updatedEntity.id }, { __relations: 'profile' });
+
+        if (profile && existingUser.profile) 
+            await manager.update(Profile, existingUser.profile.id, profile);
+        } catch (error) {
+          throw new Error('Failed to update user', error);
+        }
+      }
+    });
+
 
     return {
       message: 'User updated successfully',
     };
   }
 
-  /**
-   * Helper method to update user profile
-   */
-  private async updateUserProfile(userId: number, profile: any): Promise<void> {
-    if (profile && Object.keys(profile).length > 0) {
-      const userWithProfile = await this.getSingle({ id: userId }, { __relations: 'profile' });
-      if (userWithProfile.profile) {
-        await this.profielService.update(userWithProfile.profile.id, profile);
-      }
-    }
-  }
 
 
   async resetPassword(
@@ -199,9 +182,11 @@ export class UsersService extends CrudService<User> {
       }
     }
 
-    const isSameAsOld = await bcrypt.compare(password, user.password);
-    if (isSameAsOld) {
-      throw new ConflictException('New password must be different from the old password');
+    if (user.password) {
+      const isSameAsOld = await bcrypt.compare(password, user.password);
+      if (isSameAsOld) {
+        throw new ConflictException('New password must be different from the old password');
+      }
     }
 
     user.password = password;

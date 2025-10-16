@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, FindOptionsWhere } from 'typeorm';
+import { Repository, FindOptionsWhere, DataSource } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Notification } from './entities/notification.entity';
 import { 
@@ -8,6 +8,8 @@ import {
 } from 'shared/dtos/notification-dtos';
 import { IPaginatedResponse } from 'shared/interfaces';
 import { CreateNotificationDto } from './dtos/create-notification.dto';
+import { CrudService } from '@/common/crud/crud.service';
+import { EventService } from '../events/event.service';
 
 export interface NotificationConfig {
   enabled: boolean;
@@ -17,14 +19,17 @@ export interface NotificationConfig {
 }
 
 @Injectable()
-export class NotificationService {
+export class NotificationService extends CrudService<Notification> {
   private config: NotificationConfig;
 
   constructor(
     @InjectRepository(Notification)
     private readonly notificationRepository: Repository<Notification>,
     private readonly configService: ConfigService,
+    dataSource: DataSource,
+    eventService: EventService,
   ) {
+    super(notificationRepository, dataSource, eventService);
     this.loadConfig();
   }
 
@@ -99,7 +104,7 @@ export class NotificationService {
     return notification;
   }
 
-  async create(createNotificationDto: CreateNotificationDto): Promise<void> {
+  async createNotification(createNotificationDto: CreateNotificationDto): Promise<Notification | null> {
     // Check if notification should be logged based on configuration
     const shouldLog = this.shouldLogNotification(
       createNotificationDto.endpoint || '',
@@ -108,110 +113,19 @@ export class NotificationService {
     );
 
     if (!shouldLog) {
-      return;
+      return null;
     }
 
-    const notification = this.notificationRepository.create(createNotificationDto);
-    await this.notificationRepository.save(notification);
+    return await this.create(createNotificationDto);
   }
 
-  async findAll(queryDto: NotificationListDto): Promise<IPaginatedResponse<Notification>> {
-    const {
-      page = 1,
-      limit = 10,
-      search,
-      sortBy,
-      sortOrder,
-      createdAfter,
-      createdBefore,
-      type,
-      priority,
-      isRead,
-      userId,
-      ...filters
-    } = queryDto;
-
-    const skip = (page - 1) * limit;
-    const query = this.notificationRepository.createQueryBuilder('notification')
-      .leftJoinAndSelect('notification.user', 'user')
-      .leftJoinAndSelect('user.profile', 'profile');
-
-    // Apply search
-    if (search) {
-      query.andWhere(
-        '(notification.title ILIKE :search OR notification.message ILIKE :search OR user.email ILIKE :search)',
-        { search: `%${search}%` }
-      );
-    }
-
-    // Apply filters
-    if (type) {
-      query.andWhere('notification.type = :type', { type });
-    }
-
-    if (priority) {
-      query.andWhere('notification.priority = :priority', { priority });
-    }
-
-    if (isRead !== undefined) {
-      query.andWhere('notification.isRead = :isRead', { isRead });
-    }
-
-    if (userId) {
-      query.andWhere('notification.userId = :userId', { userId });
-    }
-
-    // Apply date filters
-    if (createdAfter) {
-      query.andWhere('notification.createdAt >= :createdAfter', { createdAfter });
-    }
-    if (createdBefore) {
-      query.andWhere('notification.createdAt <= :createdBefore', { createdBefore });
-    }
-
-    // Apply extra filters dynamically
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined) {
-        query.andWhere(`notification.${key} = :${key}`, { [key]: value });
-      }
-    });
-
-    // Apply sorting
-    const sortColumn = sortBy || 'createdAt';
-    const sortDirection = (sortOrder?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC') as 'ASC' | 'DESC';
-    query.orderBy(`notification.${String(sortColumn)}`, sortDirection);
-
-    const [data, total] = await query
-      .skip(skip)
-      .take(limit)
-      .getManyAndCount();
-
-    const lastPage = Math.ceil(total / limit);
-
-    return {
-      data,
-      total,
-      page,
-      limit,
-      lastPage,
-      hasNextPage: page < lastPage,
-      hasPrevPage: page > 1,
-    };
-  }
+ 
 
   /**
    * Mark a notification as read
    */
-  async markAsRead(id: number, userId?: number): Promise<Notification> {
-    const whereCondition: FindOptionsWhere<Notification> = { id };
-    if (userId) {
-      whereCondition.userId = userId;
-    }
-
-    const notification = await this.findOne(whereCondition);
-    await this.notificationRepository.update(id, { isRead: true });
-    
-    return this.findOne({ id });
+  async markAsRead(id: number): Promise<Notification> {
+    return await this.update(id, { isRead: true });
   }
 
   /**
@@ -226,26 +140,9 @@ export class NotificationService {
     return { count: result.affected || 0 };
   }
 
-  /**
-   * Delete a notification
-   */
-  async delete(id: number, userId?: number): Promise<void> {
-    const whereCondition: FindOptionsWhere<Notification> = { id };
-    if (userId) {
-      whereCondition.userId = userId;
-    }
 
-    await this.findOne(whereCondition); // This will throw if not found
-    await this.notificationRepository.delete(id);
-  }
 
-  /**
-   * Delete all notifications for a user
-   */
-  async deleteAllForUser(userId: number): Promise<{ count: number }> {
-    const result = await this.notificationRepository.delete({ userId });
-    return { count: result.affected || 0 };
-  }
+
 
   /**
    * Get unread count for a user

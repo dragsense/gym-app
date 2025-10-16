@@ -57,6 +57,12 @@ export class CreateUserDto {
   @MinLength(6)
   password?: string;
 
+  @ApiProperty({ example: 0, description: 'User level (0=ADMIN, 1=TRAINER, 2=CLIENT, 3=USER)' })
+  @IsNumber()
+  @IsOptional()
+  @FieldType("number")
+  level?: number;
+
 
   @ApiProperty({ example: true, required: false })
   @IsOptional()

@@ -1,22 +1,26 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, Repository, MoreThanOrEqual } from 'typeorm';
+import { EntityManager, Repository, MoreThanOrEqual, DataSource } from 'typeorm';
 import { Schedule } from './entities/schedule.entity';
 import { 
-  ScheduleListDto, 
   CreateScheduleDto, 
   UpdateScheduleDto 
 } from 'shared/dtos/schedule-dtos/schedule.dto';
-import { IPaginatedResponse } from 'shared/interfaces';
 import { EScheduleStatus, EScheduleFrequency } from 'shared/enums/schedule.enum';
 import { ScheduleUtils } from './utils/schedule.utils';
+import { CrudService } from '@/common/crud/crud.service';
+import { EventService } from '../events/event.service';
 
 @Injectable()
-export class ScheduleService {
+export class ScheduleService extends CrudService<Schedule> {
   constructor(
     @InjectRepository(Schedule)
     private scheduleRepo: Repository<Schedule>,
-  ) {}
+    dataSource: DataSource,
+    eventService: EventService,
+  ) {
+    super(scheduleRepo, dataSource, eventService);
+  }
 
   /**
    * Create schedule and calculate first nextRunDate
@@ -72,7 +76,7 @@ export class ScheduleService {
    * Track successful execution
    */
   async trackExecution(id: number, success: boolean, errorMessage?: string): Promise<void> {
-    const schedule = await this.findOne(id);
+    const schedule = await this.getSingle(id);
 
     schedule.executionCount += 1;
     schedule.lastRunAt = new Date();
@@ -125,82 +129,15 @@ export class ScheduleService {
     }
   }
 
-  /**
-   * Get all schedules
-   */
-  async findAll(queryDto: ScheduleListDto): Promise<IPaginatedResponse<Schedule>> {
-    const {
-      page = 1,
-      limit = 10,
-      search,
-      status,
-      frequency,
-      entityId,
-      sortBy,
-      sortOrder,
-      createdAfter,
-      createdBefore,
-      updatedAfter,
-      updatedBefore,
-      ...filters
-    } = queryDto;
 
-    const skip = (page - 1) * limit;
-    const query = this.scheduleRepo.createQueryBuilder('schedule');
 
-    if (search) {
-      query.andWhere('(schedule.title ILIKE :search OR schedule.action ILIKE :search)', {
-        search: `%${search}%`,
-      });
-    }
 
-    if (status) query.andWhere('schedule.status = :status', { status });
-    if (frequency) query.andWhere('schedule.frequency = :frequency', { frequency });
-    if (entityId) query.andWhere('schedule.entityId = :entityId', { entityId });
-
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined) {
-        query.andWhere(`schedule.${key} = :${key}`, { [key]: value });
-      }
-    });
-
-    if (createdAfter) query.andWhere('schedule.createdAt >= :createdAfter', { createdAfter });
-    if (createdBefore) query.andWhere('schedule.createdAt <= :createdBefore', { createdBefore });
-    if (updatedAfter) query.andWhere('schedule.updatedAt >= :updatedAfter', { updatedAfter });
-    if (updatedBefore) query.andWhere('schedule.updatedAt <= :updatedBefore', { updatedBefore });
-
-    const sortColumn = sortBy || 'nextRunDate';
-    const sortDirection = (sortOrder?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC') as 'ASC' | 'DESC';
-    query.orderBy(`schedule.${sortColumn}`, sortDirection);
-
-    const [data, total] = await query.skip(skip).take(limit).getManyAndCount();
-
-    const lastPage = Math.ceil(total / limit);
-
-    return {
-      data,
-      total,
-      page,
-      limit,
-      lastPage,
-      hasNextPage: page < lastPage,
-      hasPrevPage: page > 1,
-    };
-  }
-
-  async findOne(id: number): Promise<Schedule> {
-    const schedule = await this.scheduleRepo.findOne({ where: { id } });
-    if (!schedule) {
-      throw new NotFoundException(`Schedule with ID ${id} not found`);
-    }
-    return schedule;
-  }
 
   /**
    * Get schedule by ID (alias for findOne)
    */
   async getScheduleById(id: number): Promise<Schedule> {
-    return this.findOne(id);
+    return this.getSingle(id);
   }
 
   /**
@@ -223,7 +160,7 @@ export class ScheduleService {
    * Execute schedule and update nextRunDate
    */
   async executeAndUpdateNext(id: number): Promise<Schedule> {
-    const schedule = await this.findOne(id);
+    const schedule = await this.getSingle(id);
     
     schedule.lastRunAt = new Date();
     
@@ -254,7 +191,7 @@ export class ScheduleService {
     updateData: UpdateScheduleDto,
     manager?: EntityManager,
   ): Promise<Schedule> {
-    const schedule = await this.findOne(id);
+    const schedule = await this.getSingle(id);
     
     // If frequency-related fields changed, recalculate cron and nextRunDate
     if (updateData.startDate || updateData.frequency || updateData.timeOfDay ||
@@ -308,10 +245,7 @@ export class ScheduleService {
     return manager ? await manager.save(schedule) : await this.scheduleRepo.save(schedule);
   }
 
-  async deleteSchedule(id: number): Promise<void> {
-    const schedule = await this.findOne(id);
-    await this.scheduleRepo.remove(schedule);
-  }
+
 
 }
  

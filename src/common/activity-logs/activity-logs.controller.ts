@@ -7,6 +7,8 @@ import {
   ActivityLogDto,
   ActivityLogPaginatedDto,
 } from 'shared/dtos/activity-log-dtos';
+import { SingleQueryDto } from 'shared';
+import { ActivityLog } from './entities/activity-log.entity';
 
 
 
@@ -28,7 +30,7 @@ export class ActivityLogsController {
     type: ActivityLogPaginatedDto,
   })
   async findAll(@Query() queryDto: ActivityLogListDto) {
-    return await this.activityLogsService.findAll(queryDto);
+    return await this.activityLogsService.get(queryDto, ActivityLogListDto);
   }
 
 
@@ -43,9 +45,10 @@ export class ActivityLogsController {
   })
   async findByUser(
     @Param('userId', ParseIntPipe) userId: number,
+    @Query() queryDto: SingleQueryDto<ActivityLog>
 
   ) {
-    return await this.activityLogsService.findOne({ userId });
+    return await this.activityLogsService.getSingle({ userId }, queryDto);
   }
 
   @Get(':id')
@@ -57,7 +60,9 @@ export class ActivityLogsController {
     type: ActivityLogDto
   })
   @ApiResponse({ status: 404, description: 'Activity log not found' })
-  async findOne(@Param('id', ParseIntPipe) id: number) {
-    return await this.activityLogsService.findOne({ id });
+  async findOne(@Param('id', ParseIntPipe) id: number,
+    @Query() queryDto: SingleQueryDto<ActivityLog>
+  ) {
+    return await this.activityLogsService.get({ id }, queryDto);
   }
 }

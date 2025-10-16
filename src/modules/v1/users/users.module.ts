@@ -15,6 +15,7 @@ import { TokenService } from '../auth/services/tokens.service';
 import { RefreshToken } from '../auth/entities/tokens.entity';
 import { User } from '@/modules/v1/users/entities/user.entity';
 import { CrudModule } from '@/common/crud/crud.module';
+import { UserSeeder } from './seeders/user.seeder';
 
 @Module({
   imports: [
@@ -29,6 +30,6 @@ import { CrudModule } from '@/common/crud/crud.module';
   exports: [UsersService, UserEmailService],
   controllers: [UsersController],
   providers: [UsersService, UserEmailService, UserEventListenerService, UserSubscriber,
-     PasswordService, TokenService],
+     PasswordService, TokenService, UserSeeder],
 })
 export class UsersModule { }

@@ -111,6 +111,7 @@ const ResetPasswordForm = React.memo(function ResetPasswordForm({
           {inputs.confirmPassword}
         </div>
       </AppCard>
+
     </Form>
   );
 });

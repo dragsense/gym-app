@@ -4,6 +4,9 @@ import { AppLoader } from "@/components/layout-ui/app-loader";
 
 // React 19: Lazy load admin pages with enhanced performance
 const UsersPage = lazy(() => import("./users"));
+const TrainersPage = lazy(() => import("./trainers"));
+const ClientsPage = lazy(() => import("./clients"));
+const TrainerClientsPage = lazy(() => import("./trainer-clients"));
 const ActivityLogsPage = lazy(() => import("./activity-logs"));
 const FilesPage = lazy(() => import("./files"));
 const SchedulesPage = lazy(() => import("./schedules"));
@@ -37,6 +40,30 @@ const adminRoutes = [
     element: (
       <Suspense fallback={<AdminRouteLoadingFallback />}>
         <UsersPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: ADMIN_ROUTES.TRAINERS,
+    element: (
+      <Suspense fallback={<AdminRouteLoadingFallback />}>
+        <TrainersPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: ADMIN_ROUTES.CLIENTS,
+    element: (
+      <Suspense fallback={<AdminRouteLoadingFallback />}>
+        <ClientsPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: ADMIN_ROUTES.TRAINER_CLIENTS,
+    element: (
+      <Suspense fallback={<AdminRouteLoadingFallback />}>
+        <TrainerClientsPage />
       </Suspense>
     ),
   },

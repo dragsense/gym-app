@@ -93,9 +93,11 @@ export class AuthService {
       const user = await this.userService.getSingle(
         { email },
         {
-          select: ['id', 'email', 'password', 'isActive'],
-          relations: ['profile']
+          _select: ['id', 'email', 'password', 'isActive', 'level'],
+          _relations: ['profile']
         });
+
+      console.log('User...', user);
 
       if (!user) {
         // Log failed login attempt
@@ -114,6 +116,10 @@ export class AuthService {
           errorMessage: 'Invalid credentials',
           userId: undefined,
         });
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      if (!user.password) {
         throw new UnauthorizedException('Invalid credentials');
       }
 

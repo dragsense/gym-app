@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, FindOptionsWhere } from 'typeorm';
+import { Repository, FindOptionsWhere, DataSource } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { ActivityLog } from './entities/activity-log.entity';
 import { 
@@ -8,6 +8,8 @@ import {
 } from 'shared/dtos/activity-log-dtos';
 import { IPaginatedResponse } from 'shared/interfaces';
 import { CreateActivityLogDto } from './dtos/create-activity-log.dto';
+import { CrudService } from '@/common/crud/crud.service';
+import { EventService } from '../events/event.service';
 
 export interface ActivityLogConfig {
   enabled: boolean;
@@ -17,14 +19,17 @@ export interface ActivityLogConfig {
 }
 
 @Injectable()
-export class ActivityLogsService {
+export class ActivityLogsService extends CrudService<ActivityLog> {
   private config: ActivityLogConfig;
 
   constructor(
     @InjectRepository(ActivityLog)
     private readonly activityLogRepository: Repository<ActivityLog>,
     private readonly configService: ConfigService,
+    dataSource: DataSource,
+    eventService: EventService,
   ) {
+    super(activityLogRepository, dataSource, eventService);
     this.loadConfig();
   }
 
@@ -77,29 +82,9 @@ export class ActivityLogsService {
     return true;
   }
 
-  async findOne(
-    where: FindOptionsWhere<ActivityLog>,
-    options?: {
-      select?: (keyof ActivityLog)[];
-      relations?: string[];
-    }
-  ): Promise<ActivityLog> {
-    const { select, relations = ['user'] } = options || {};
 
-    const activityLog = await this.activityLogRepository.findOne({
-      where,
-      select,
-      relations,
-    });
 
-    if (!activityLog) {
-      throw new NotFoundException('Activity log not found');
-    }
-
-    return activityLog;
-  }
-
-  async create(createActivityLogDto: CreateActivityLogDto): Promise<void> {
+  async createActivityLog(createActivityLogDto: CreateActivityLogDto): Promise<ActivityLog | null> {
     // Check if activity should be logged based on configuration
     const shouldLog = this.shouldLogActivity(
       createActivityLogDto.endpoint || '',
@@ -108,83 +93,10 @@ export class ActivityLogsService {
     );
 
     if (!shouldLog) {
-      return;
+      return null;
     }
 
-    const activityLog = this.activityLogRepository.create(createActivityLogDto);
-    await this.activityLogRepository.save(activityLog);
+    return await this.create(createActivityLogDto);
   }
 
-  async findAll(queryDto: ActivityLogListDto): Promise<IPaginatedResponse<ActivityLog>> {
-    const {
-      page = 1,
-      limit = 10,
-      search,
-      sortBy,
-      sortOrder,
-      createdAfter,
-      createdBefore,
-      type,
-      ...filters
-    } = queryDto;
-
-    const skip = (page - 1) * limit;
-    const query = this.activityLogRepository.createQueryBuilder('activity')
-      .leftJoinAndSelect('activity.user', 'user')
-      .leftJoinAndSelect('user.profile', 'profile');
-
-    // Apply search
-    if (search) {
-      query.andWhere(
-        '(activity.action ILIKE :search OR activity.description ILIKE :search OR user.email ILIKE :search)',
-        { search: `%${search}%` }
-      );
-    }
-
-    // Apply filters
-
-
-    if (type) {
-      query.andWhere('activity.type = :type', { type });
-    }
-
-
-
-    // Apply date filters
-    if (createdAfter) {
-      query.andWhere('activity.createdAt >= :createdAfter', { createdAfter });
-    }
-    if (createdBefore) {
-      query.andWhere('activity.createdAt <= :createdBefore', { createdBefore });
-    }
-
-    // Apply extra filters dynamically
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined) {
-        query.andWhere(`activity.${key} = :${key}`, { [key]: value });
-      }
-    });
-
-    // Apply sorting
-    const sortColumn = sortBy || 'createdAt';
-    const sortDirection = (sortOrder?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC') as 'ASC' | 'DESC';
-    query.orderBy(`activity.${String(sortColumn)}`, sortDirection);
-
-    const [data, total] = await query
-      .skip(skip)
-      .take(limit)
-      .getManyAndCount();
-
-    const lastPage = Math.ceil(total / limit);
-
-    return {
-      data,
-      total,
-      page,
-      limit,
-      lastPage,
-      hasNextPage: page < lastPage,
-      hasPrevPage: page > 1,
-    };
-  }
 }

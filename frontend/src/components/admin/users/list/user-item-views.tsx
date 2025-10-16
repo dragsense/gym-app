@@ -104,7 +104,7 @@ const UserActions = ({
   );
 };
 
-export const itemViews = ({
+export const userItemViews = ({
   handleEdit,
   handleDelete,
   handleView,
