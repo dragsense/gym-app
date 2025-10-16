@@ -9,7 +9,7 @@ import {
   IsArray,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
-import { FieldType } from '../../decorators/field.decorator';
+import { FieldOptions, FieldType } from '../../decorators/field.decorator';
 import { Between, TransformToArray, IsDateArray } from '../../decorators/crud.dto.decorators';
 
 
@@ -54,14 +54,20 @@ export class PaginationDto<T> extends BaseQueryDto<T> {
   @Transform(({ value }) => value?.toUpperCase())
   @IsIn(['ASC', 'DESC'])
   sortOrder?: 'ASC' | 'DESC';
+
+  @IsOptional()
+  @IsString()
+  @TransformToArray()
+  @FieldType('custom', false)
+  sortFields?: string[]; // Comma-separated format: "createdAt:DESC,name:ASC"
 }
+
 
 export class ListQueryDto<T = any> extends PaginationDto<T> {
   @IsOptional()
   @IsString()
   @FieldType('text', false)
   search?: string;
-
 
   @IsOptional()
   @IsDateArray()
@@ -70,12 +76,10 @@ export class ListQueryDto<T = any> extends PaginationDto<T> {
   @FieldType('dateRange', false)
   createdAt?: string[];
 
-
   @IsOptional()
   @IsDateString()
   @FieldType('dateTimeRange', false)
   updatedAt?: string;
-
 
   @IsOptional()
   @IsArray()

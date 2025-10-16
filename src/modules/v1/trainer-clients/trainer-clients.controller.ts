@@ -38,7 +38,7 @@ export class TrainerClientsController {
     @ApiOperation({ summary: 'Get all trainer-client assignments with pagination and filtering' })
     @ApiResponse({ status: 200, description: 'Trainer-client assignments retrieved successfully' })
     async findAll(@Query() queryDto: TrainerClientListDto) {
-        return await this.trainerClientsService.getAll(queryDto, TrainerClientListDto);
+        return await this.trainerClientsService.get(queryDto, TrainerClientListDto);
     }
 
     @Get(':id')
@@ -61,9 +61,8 @@ export class TrainerClientsController {
     ) {
         return await this.trainerClientsService.get({
             trainerId,
-            _relations: ['client', 'client.profile'],
-            _select: ['client.email', 'client.profile.firstName', 'client.profile.lastName', 'client.profile.email']
-
+            _relations: ['client', 'client.user', 'client.user.profile'],
+            _select: ['client.user.email', 'client.user.profile.firstName', 'client.user.profile.lastName', 'client.user.profile.email']
         });
     }
 
@@ -75,8 +74,8 @@ export class TrainerClientsController {
     ) {
         return await this.trainerClientsService.get({
             clientId,
-            _relations: ['trainer', 'trainer.profile'],
-            _select: ['trainer.email', 'trainer.profile.firstName', 'trainer.profile.lastName', 'trainer.profile.email']
+            _relations: ['trainer', 'trainer.user', 'trainer.user.profile'],
+            _select: ['trainer.user.email', 'trainer.user.profile.firstName', 'trainer.user.profile.lastName', 'trainer.user.profile.email']
         });
     }
 

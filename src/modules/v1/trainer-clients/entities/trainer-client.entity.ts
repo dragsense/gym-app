@@ -7,7 +7,9 @@ import {
 } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { GeneralBaseEntity } from '@/common/entities';
-import { User } from '@/modules/v1/users/entities/user.entity';
+import { ETrainerClientStatus } from 'shared/enums/trainer-client.enum';
+import { Trainer } from '../../trainers/entities/trainer.entity';
+import { Client } from '../../clients/entities/client.entity';
 
 @Entity('trainer_clients')
 @Index(['trainerId', 'clientId'], { unique: true }) // Ensure unique trainer-client pairs
@@ -21,28 +23,28 @@ export class TrainerClient extends GeneralBaseEntity {
   @Column({ type: 'int' })
   clientId: number;
 
-  @ApiPropertyOptional({ example: 'Active', description: 'Assignment status' })
-  @Column({ type: 'varchar', length: 50, default: 'Active' })
-  status: string;
-
-  @ApiPropertyOptional({ example: '2024-01-01', description: 'Assignment start date' })
-  @Column({ type: 'date', nullable: true })
-  startDate?: Date;
-
-  @ApiPropertyOptional({ example: '2024-12-31', description: 'Assignment end date' })
-  @Column({ type: 'date', nullable: true })
-  endDate?: Date;
+  @ApiPropertyOptional({ 
+    example: ETrainerClientStatus.ACTIVE, 
+    description: 'Assignment status',
+    enum: ETrainerClientStatus
+  })
+  @Column({ 
+    type: 'enum', 
+    enum: ETrainerClientStatus, 
+    default: ETrainerClientStatus.ACTIVE 
+  })
+  status: ETrainerClientStatus;
 
   @ApiPropertyOptional({ example: 'Personal training sessions', description: 'Assignment notes' })
   @Column({ type: 'text', nullable: true })
   notes?: string;
 
   // Relations
-  @ManyToOne(() => User, { eager: true })
+  @ManyToOne(() => Trainer, { eager: true })
   @JoinColumn({ name: 'trainerId' })
-  trainer: User;
+  trainer: Trainer;
 
-  @ManyToOne(() => User, { eager: true })
+  @ManyToOne(() => Client, { eager: true })
   @JoinColumn({ name: 'clientId' })
-  client: User;
+  client: Client;
 }

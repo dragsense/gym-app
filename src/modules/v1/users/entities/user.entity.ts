@@ -39,7 +39,7 @@ export class User extends GeneralBaseEntity {
   isActive?: boolean;
 
   @ApiPropertyOptional({ example: 0, description: 'User level (0=USER, 1=TRAINER, 2=CLIENT)' })
-  @Column({ type: 'int', default: 0 })
+  @Column({ type: 'int', default: EUserLevels[EUserRole.USER] })
   level?: number;
 
 

@@ -167,8 +167,8 @@ export function ListHandler<
             error: err,
             isSuccess: false,
             // Don't reset filters on error - keep user's input
-            sortBy: 'createdAt',
-            sortOrder: 'DESC',
+            sortBy: initialParams.sortBy || 'createdAt',
+            sortOrder: initialParams.sortOrder || 'DESC',
             search: ''
           });
           reject(err);

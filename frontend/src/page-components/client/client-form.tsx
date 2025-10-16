@@ -27,7 +27,7 @@ import { EUserGender } from "@shared/enums";
 import { CreateClientDto, UpdateClientDto } from "@shared/dtos";
 
 export type TClientExtraProps = {
-  level: number;
+    level: number;
 }
 
 interface IClientFormProps extends THandlerComponentProps<TSingleHandlerStore<IClient, TClientExtraProps>> {
@@ -40,7 +40,7 @@ export function ClientForm({
     // React 19: Essential IDs and transitions
     const componentId = useId();
     const [, startTransition] = useTransition();
-    
+
     const queryClient = useQueryClient();
     const [credentialModalContent, setCredentialModalContent] = useState({
         open: false,
@@ -61,24 +61,29 @@ export function ClientForm({
     })));
 
     const INITIAL_VALUES: TClientData = {
-        email: "",
-        isActive: true,
-        profile: {
-            firstName: "",
-            lastName: "",
-            phoneNumber: "",
-            dateOfBirth: new Date(
-                new Date().setFullYear(new Date().getFullYear() - 12)
-            ).toISOString(),
-            address: "",
-            gender: EUserGender.MALE
-        }
+        user: {
+            email: "",
+            isActive: true,
+            profile: {
+                firstName: "",
+                lastName: "",
+                phoneNumber: "",
+                dateOfBirth: new Date(
+                    new Date().setFullYear(new Date().getFullYear() - 12)
+                ).toISOString(),
+                address: "",
+                gender: EUserGender.MALE
+            }
+        },
+        fitnessLevel: '',
+        goal: '',
+        medicalConditions: '',
     };
 
     // React 19: Memoized initial values with deferred processing
     const initialValues = useMemo(() => {
         return strictDeepMerge<TClientData>(INITIAL_VALUES, response ?? {});
-    }, [INITIAL_VALUES, response?.id]); 
+    }, [INITIAL_VALUES, response?.id]);
 
     const handleClose = useCallback(() => {
         startTransition(() => {
@@ -93,7 +98,7 @@ export function ClientForm({
     const mutationFn = useMemo(() => {
         return isEditing ? updateClient(response.id) : createClient;
     }, [isEditing, response?.id]);
-    
+
     // React 19: Memoized DTO to prevent unnecessary re-renders
     const dto = useMemo(() => {
         return isEditing ? UpdateClientDto : CreateClientDto;
@@ -138,9 +143,16 @@ export function ClientForm({
 
             <CredentialModal
                 open={credentialModalContent.open}
+                onOpenChange={(state: boolean) => {
+                    startTransition(() => {
+                        if (!state) {
+                            handleClose();
+                        }
+                    });
+                }}
                 email={credentialModalContent.email}
                 password={credentialModalContent.password}
-                onClose={() => setCredentialModalContent({ open: false, email: "", password: "" })}
+                closeModal={handleClose}
             />
         </div>
     );

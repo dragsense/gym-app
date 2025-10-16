@@ -47,6 +47,12 @@ export default function ClientsPage() {
 
             <ListHandler<IClient, TClientListData, IClientListExtraProps, IClient, TClientViewExtraProps>
                 queryFn={fetchClients}
+                initialParams={{
+                    _relations: 'user.profile',
+                    _select: 'user.email, user.profile.firstName, user.profile.lastName, user.profile.phoneNumber',
+                    sortBy: 'createdAt',
+                    sortOrder: 'DESC',
+                }}
                 ListComponent={ClientList}
                 storeKey={CLIENTS_STORE_KEY}
                 listProps={{

@@ -38,19 +38,17 @@ export class UsersService extends CrudService<User> {
     eventService: EventService,
   ) {
     const crudOptions: CrudOptions = {
-      searchableFields: ['email'],
-      restrictedFields: ['refreshToken', 'resetPasswordToken', 'resetPasswordExpires'],
-      selectableFields: ['id', 'email', 'isActive', 'createdAt', 'updatedAt', 'profile.firstName', 'profile.lastName', 'profile.phoneNumber'],
-      pagination: {
-        defaultLimit: 10,
-        maxLimit: 100
-      },
-      defaultSort: {
-        field: 'createdAt',
-        order: 'DESC'
-      }
+      restrictedFields: ['password'],
     };
     super(userRepo, dataSource, eventService, crudOptions);
+  }
+
+  async getUserByEmail(email: string): Promise<User | null> {
+    return this.userRepo.findOne({
+      where: { email },
+      select: ['id', 'email', 'password', 'isActive', 'level'],
+      relations: ['profile'],
+    });
   }
 
 
@@ -140,9 +138,9 @@ export class UsersService extends CrudService<User> {
       },
       afterUpdate: async (updatedEntity: User, manager: EntityManager) => {
         try {
-        const existingUser = await this.getSingle({ id: updatedEntity.id }, { __relations: 'profile' });
+          const existingUser = await this.getSingle({ id: updatedEntity.id }, { __relations: 'profile' });
 
-        if (profile && existingUser.profile) 
+          if (profile && existingUser.profile)
             await manager.update(Profile, existingUser.profile.id, profile);
         } catch (error) {
           throw new Error('Failed to update user', error);
@@ -166,7 +164,7 @@ export class UsersService extends CrudService<User> {
     const { currentPassword, password } = resetPasswordDto;
 
 
-    const user = await this.getSingle({ id }, { select: ['id', 'password', 'passwordHistory'] });
+    const user = await this.getSingle({ id }, { _select: ['id', 'password', 'passwordHistory'] });
 
     await this.passwordService.validatePasswordChange(user, password);
 

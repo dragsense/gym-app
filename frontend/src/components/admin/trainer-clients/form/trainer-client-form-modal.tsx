@@ -1,25 +1,29 @@
 // External Libraries
-import React, { useMemo, useId, useTransition } from "react";
+import React, { type ReactNode, useMemo, useId, useTransition } from "react";
 import { Loader2 } from "lucide-react";
 // Custom Hooks
 import { type FormInputs, useInput } from "@/hooks/use-input";
 
 // Types
 import type { TFormHandlerStore } from "@/stores";
-import type { TTrainerClientData, TUpdateTrainerClientData } from "@shared/types/trainer-client.type";
+import type { TTrainerClientData } from "@shared/types/trainer-client.type";
 
 // Components
 import { Button } from "@/components/ui/button";
 import { ModalForm } from "@/components/form-ui/modal-form";
 import type { THandlerComponentProps } from "@/@types/handler-types";
-import type { ITrainerClient } from "@shared/interfaces/trainer-client.interface";
+import type { TrainerDto } from "@shared/dtos/trainer-dtos/trainer.dto";
+import type { ClientDto } from "@shared/dtos/client-dtos/client.dto";
+import { SearchableInputWrapper } from "@/components/shared-ui/searchable-input-wrapper";
+import { useSearchableClients, useSearchableTrainers } from "@/hooks/use-searchable";
+import type { TCustomInputWrapper, TFieldConfigObject } from "@/@types/form/field-config.type";
 
 export interface ITrainerClientFormModalExtraProps {
   open: boolean;
   onClose: () => void;
 }
 
-interface ITrainerClientFormModalProps extends THandlerComponentProps<TFormHandlerStore<TTrainerClientData, ITrainerClient, ITrainerClientFormModalExtraProps>> {
+interface ITrainerClientFormModalProps extends THandlerComponentProps<TFormHandlerStore<TTrainerClientData, TTrainerClientData, ITrainerClientFormModalExtraProps>> {
 }
 
 export const TrainerClientFormModal = React.memo(function TrainerClientFormModal({
@@ -40,12 +44,61 @@ export const TrainerClientFormModal = React.memo(function TrainerClientFormModal
   const onClose = store((state) => state.extra.onClose)
 
   // React 19: Memoized fields for better performance
-  const fields = useMemo(() => store((state) => state.fields), [store]);
+  const storeFields = store((state) => state.fields)
 
-  const inputs = useInput<TTrainerClientData | TUpdateTrainerClientData>({
+  const TrainerSelect = React.memo(
+    (props: TCustomInputWrapper) => {
+      return <SearchableInputWrapper<TrainerDto>
+        {...props}
+        modal={true}
+        useSearchable={() => useSearchableTrainers({})}
+        getLabel={(item) => {
+       
+          return `${item.user?.profile?.firstName} ${item.user?.profile?.lastName}`
+        }}
+        getKey={(item) => item.id.toString()}
+        getValue={(item) => { return { id: item.id, user: item.user } }}
+        shouldFilter={false}
+      />
+    }
+  );
+
+  const ClientSelect = React.memo(
+    (props: TCustomInputWrapper) => (
+      <SearchableInputWrapper<ClientDto>
+        {...props}
+        modal={true}
+        useSearchable={() => useSearchableClients({})}
+        getLabel={(item) => {
+          return `${item.user?.profile?.firstName} ${item.user?.profile?.lastName}`
+        }}
+        getKey={(item) => item.id.toString()}
+        getValue={(item) => { return { id: item.id, user: item.user } }}
+        shouldFilter={false}
+      />
+    )
+  );
+
+  // React 19: Memoized fields for better performance
+  const fields = useMemo(() => ({
+    ...storeFields,
+    trainer: {
+      ...storeFields.trainer,
+      type: 'custom' as const,
+      Component: TrainerSelect
+    },
+    client: {
+      ...storeFields.client,
+      type: 'custom' as const,
+      Component: ClientSelect
+    }
+  } as TFieldConfigObject<TTrainerClientData>), [storeFields]);
+
+
+  const inputs = useInput<TTrainerClientData>({
     fields,
     showRequiredAsterisk: true,
-  }) as FormInputs<TTrainerClientData | TUpdateTrainerClientData>;
+  }) as FormInputs<TTrainerClientData>;
 
   // React 19: Smooth modal state changes
   const onOpenChange = (state: boolean) => {
@@ -80,7 +133,7 @@ export const TrainerClientFormModal = React.memo(function TrainerClientFormModal
   ), [componentId, isEditing, onClose]);
 
   return <>
-    <ModalForm<TTrainerClientData, ITrainerClient, ITrainerClientFormModalExtraProps>
+    <ModalForm<TTrainerClientData, TTrainerClientData, ITrainerClientFormModalExtraProps>
       title={`${isEditing ? "Edit" : "Add"} Trainer-Client Relationship`}
       description={`${isEditing ? "Edit" : "Add a new"} trainer-client relationship`}
       open={open}
@@ -94,21 +147,14 @@ export const TrainerClientFormModal = React.memo(function TrainerClientFormModal
         <div>
           <h3 className="text-sm font-semibold mb-3">Relationship Details</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-            {inputs.trainerId}
-            {inputs.clientId}
-            {inputs.status}
-            {inputs.startDate}
+            {inputs.trainer as ReactNode}
+            {inputs.client as ReactNode}
+            {inputs.status as ReactNode}
+            {inputs.notes as ReactNode}
           </div>
         </div>
 
-        {/* Additional Details */}
-        <div>
-          <h3 className="text-sm font-semibold mb-3">Additional Information</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-            {inputs.endDate}
-            {inputs.notes}
-          </div>
-        </div>
+
       </div>
     </ModalForm>
   </>

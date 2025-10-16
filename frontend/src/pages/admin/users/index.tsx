@@ -61,7 +61,9 @@ export default function UsersPage() {
         dto={UserListDto}
         initialParams={{
           _relations: 'profile',
-          _select: 'email,profile.firstName,profile.lastName,profile.phoneNumber,isActive',
+          _select: 'email, profile.firstName,profile.lastName,profile.phoneNumber, createdAt, password',
+          sortBy: 'createdAt',
+          sortOrder: 'ASC',
         }}
         storeKey={STORE_KEY}
         listProps={{

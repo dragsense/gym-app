@@ -55,10 +55,7 @@ export class UsersController {
     @Query() query: UserListDto,
     @AuthUser() user: any
   ) {
-    return this.usersService.get(query, {
-      select: ['id', 'email', 'isActive', 'createdAt', 'updatedAt'],
-      dtoClass: UserListDto, // Pass DTO class for dynamic relations and query decorators
-    });
+    return this.usersService.get(query,UserListDto);
   }
 
   @ApiOperation({ summary: 'Get authenticated user' })
@@ -71,10 +68,7 @@ export class UsersController {
   @Get('me')
   findMe(@AuthUser() user: any) {
     const userId = user.id;
-    return this.usersService.getSingle(
-      { id: userId },
-      { select: ['id', 'email'], relations: ['profile'] }
-    );
+    return this.usersService.getSingle(userId, { _relations: ['profile'] });
   }
 
   @ApiOperation({ summary: 'Get user by ID' })
@@ -90,9 +84,7 @@ export class UsersController {
     @Param('id', ParseIntPipe) id: number,
     @Query() query: SingleQueryDto<User>
   ) {
-    return this.usersService.getSingle(
-      { id },
-    );
+    return this.usersService.getSingle(id, query);
   }
 
 

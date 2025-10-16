@@ -1,5 +1,3 @@
-import { TrainerClientSafeDto } from "../dtos";
+import { TrainerClientDto } from "../dtos";
 
-
-export interface ITrainerClient extends TrainerClientSafeDto  {}
-
+export interface ITrainerClient extends TrainerClientDto {}

@@ -23,7 +23,7 @@ import {
 
 import { ClientsService } from './clients.service';
 import { JwtAuthGuard } from '@/guards/jwt-auth.gaurd';
-import { CreateClientDto, UpdateClientDto, ClientListDto, ClientPaginatedDto, ClientSafeDto } from 'shared';
+import { CreateClientDto, UpdateClientDto, ClientListDto, ClientPaginatedDto, ClientDto } from 'shared';
 
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('access-token')
@@ -51,7 +51,7 @@ export class ClientsController {
   @ApiResponse({
     status: 200,
     description: 'Returns client by ID',
-    type: ClientSafeDto,
+    type: ClientDto,
   })
   @ApiResponse({ status: 404, description: 'Client not found' })
   @Get(':id')

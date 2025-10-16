@@ -166,6 +166,13 @@ export class TrainerDto {
   @IsBoolean()
   isActive?: boolean;
 
-  createdAt: Date;
-  updatedAt: Date;
+  @ApiProperty({ example: { id: 1, email: 'test@test.com', profile: { firstName: 'John', lastName: 'Doe', phoneNumber: '1234567890' } }, description: 'User' })
+  @IsOptional()
+  user?: UserDto;
+
+  @IsOptional()
+  createdAt?: Date;
+
+  @IsOptional()
+  updatedAt?: Date;
 }

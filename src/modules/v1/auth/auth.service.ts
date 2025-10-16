@@ -90,15 +90,7 @@ export class AuthService {
     clientPassword: string,
   ): Promise<any> {
     try {
-      const user = await this.userService.getSingle(
-        { email },
-        {
-          _select: ['id', 'email', 'password', 'isActive', 'level'],
-          _relations: ['profile']
-        });
-
-      console.log('User...', user);
-
+      const user = await this.userService.getUserByEmail(email);
       if (!user) {
         // Log failed login attempt
         await this.activityLogsService.create({
@@ -222,7 +214,7 @@ export class AuthService {
 
   async sendResetLink(email: string): Promise<{ message: string }> {
     try {
-      const user = await this.userService.getSingle({ email }, { select: ['id', 'email'], relations: ['profile'] });
+      const user = await this.userService.getSingle({ email }, { _select: ['id', 'email'], _relations: ['profile'] });
 
       if (user) {
         const appConfig = this.configService.get('app');

@@ -144,9 +144,16 @@ export function TrainerForm({
 
             <CredentialModal
                 open={credentialModalContent.open}
+                onOpenChange={(state: boolean) => {
+                    startTransition(() => {
+                        if (!state) {
+                            handleClose();
+                        }
+                    });
+                }}
                 email={credentialModalContent.email}
                 password={credentialModalContent.password}
-                onClose={() => setCredentialModalContent({ open: false, email: "", password: "" })}
+                closeModal={handleClose}
             />
         </div>
     );

@@ -13,6 +13,7 @@ import { EventService } from '@/common/events/event.service';
 import { CrudOptions } from '@/common/crud/interfaces/crud.interface';
 import { User } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
+import { EUserLevels, EUserRole } from 'shared/enums';
 
 @Injectable()
 export class ClientsService extends CrudService<Client> {
@@ -24,16 +25,6 @@ export class ClientsService extends CrudService<Client> {
     eventService: EventService,
   ) {
     const crudOptions: CrudOptions = {
-      searchableFields: ['goal', 'fitnessLevel', 'medicalConditions'],
-      selectableFields: ['goal', 'fitnessLevel', 'medicalConditions', 'createdAt', 'updatedAt'],
-      pagination: {
-        defaultLimit: 10,
-        maxLimit: 100
-      },
-      defaultSort: {
-        field: 'createdAt',
-        order: 'DESC'
-      }
     };
     super(clientRepo, dataSource, eventService, crudOptions);
   }
@@ -44,7 +35,7 @@ export class ClientsService extends CrudService<Client> {
       afterCreate: async (savedEntity, manager) => {
 
         try {
-          const savedUser = await this.userService.createUser(user);
+          const savedUser = await this.userService.createUser({...user, level: EUserLevels[EUserRole.CLIENT]});
           savedEntity.user = savedUser.user;
 
           await manager.update(Client, savedEntity.id, { user: savedUser.user });

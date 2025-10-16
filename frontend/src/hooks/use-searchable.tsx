@@ -1,10 +1,13 @@
 // hooks/use-searchable-resource.ts
 import { useMemo, useDeferredValue } from "react";
-import { IListQueryParams } from "@shared/interfaces/api/param.interface";
+import type { IListQueryParams } from "@shared/interfaces/api/param.interface";
 import { useApiPaginatedQuery } from "./use-api-paginated-query";
 
-import { IUser } from "@shared/interfaces/user.interface";
+import type { IUser } from "@shared/interfaces/user.interface";
 import { fetchUsers } from "@/services/user.api";
+import { fetchTrainers } from "@/services/trainer.api";
+import type { IClient, ITrainer } from "@shared/interfaces";
+import { fetchClients } from "@/services/client.api";
 
 export function useSearchableResource<T>(
   key: string,
@@ -48,6 +51,49 @@ export function useSearchableUsers({ level, initialParams }: { level?: number, i
   );
 
   return useSearchableResource<IUser>(
+    memoizedKey,
+    memoizedFetcher,
+    initialParams
+  );
+}
+
+
+export function useSearchableTrainers({ initialParams }: { initialParams?: IListQueryParams }) {
+  // React 19: Memoized key generation for better performance
+  const memoizedKey = "searchable-trainers";
+  
+  // React 19: Memoized fetcher for better performance
+  const memoizedFetcher = useMemo(() => 
+    (params: IListQueryParams) => fetchTrainers({
+      ...params, 
+      _relations: 'user.profile',
+      _select: 'id, user.email, user.profile.firstName, user.profile.lastName',
+    }), 
+  []);
+
+  return useSearchableResource<ITrainer>(
+    memoizedKey,
+    memoizedFetcher,
+    initialParams
+  );
+}
+
+
+
+export function useSearchableClients({ initialParams }: { initialParams?: IListQueryParams }) {
+  // React 19: Memoized key generation for better performance
+  const memoizedKey = "searchable-clients";
+  
+  // React 19: Memoized fetcher for better performance
+  const memoizedFetcher = useMemo(() => 
+    (params: IListQueryParams) => fetchClients({
+      ...params, 
+      _relations: 'user.profile',
+      _select: 'id, user.email, user.profile.firstName, user.profile.lastName',
+    }), 
+  []);
+
+  return useSearchableResource<IClient>(
     memoizedKey,
     memoizedFetcher,
     initialParams

@@ -31,14 +31,6 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
   }
 
 
-  setOptions(options: CrudOptions) {
-    // Merge provided options with defaults instead of replacing
-    this.options = {
-      ...this.options,
-      ...options
-    }
-  }
-
   /**
    * Create a new entity with relation management and event emission
    */
@@ -156,49 +148,30 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
     try {
       const {
         search,
-        sortBy = this.options.defaultSort?.field,
-        sortOrder = this.options.defaultSort?.order,
+        sortFields,
+        sortOrder,
+        sortBy,
         ...filters
       } = queryDto as any;
 
       const query = this.repository.createQueryBuilder('entity');
 
+
+      const mergedSortFields = [...(sortFields || []), ...(sortBy ? [`${sortBy}:${sortOrder}`] : [])];
+
       // Apply simplified relations and select system
-      this.applyRelationsAndSelect(query, queryDto, dtoClass);
+      this.applyRelationsAndSelect(query, queryDto, mergedSortFields);
 
       // Apply search functionality
-      this.applySearch(query, queryDto, search);
+      this.applySearch(query, filters, search);
 
 
 
       // Apply query decorator filters
-      this.applyQueryFilters(query, queryDto, dtoClass);
+      this.applyQueryFilters(query, filters, dtoClass);
 
       // Apply relation filters
-      this.applyRelationFilters(query, queryDto, dtoClass);
-
-      // Apply legacy filters (for backward compatibility)
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
-          if (Array.isArray(value)) {
-            query.andWhere(`entity.${key} IN (:...${key})`, { [key]: value });
-          } else {
-            query.andWhere(`entity.${key} = :${key}`, { [key]: value });
-          }
-        }
-      });
-
-      // Apply sorting
-      const sortDirection = sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
-
-      // Add sort field to selection (handles nested relations too)
-      const allRestrictedFields = this.options.restrictedFields || [];
-      const sortField = this.addSortFieldToSelection(query, sortBy, queryDto, allRestrictedFields);
-
-      if (sortField) {
-        query.orderBy(sortField, sortDirection as 'ASC' | 'DESC');
-      }
-
+      this.applyRelationFilters(query, filters, dtoClass);
 
       // Execute beforeQuery callback if provided
       if (callbacks?.beforeQuery) {
@@ -232,8 +205,10 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
         page = 1,
         limit = this.options.pagination?.defaultLimit || 10,
         search,
-        sortBy = this.options.defaultSort?.field || 'createdAt',
-        sortOrder = this.options.defaultSort?.order || 'DESC',
+        sortFields,
+        sortOrder,
+        sortBy,
+        ...filters
       } = queryDto as any;
 
       // Validate pagination limits
@@ -245,34 +220,22 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
 
 
 
+      const mergedSortFields = [...(sortFields || []), ...(sortBy ? [`${sortBy}:${sortOrder}`] : [])];
 
       // Apply simplified relations and select system
-      this.applyRelationsAndSelect(query, queryDto, dtoClass);
+      this.applyRelationsAndSelect(query, queryDto, mergedSortFields);
 
       // Apply search functionality
-      this.applySearch(query, queryDto, search);
+      this.applySearch(query, filters, search);
 
 
 
       // Apply query decorator filters
-      this.applyQueryFilters(query, queryDto, dtoClass);
+      this.applyQueryFilters(query, filters, dtoClass);
 
       // Apply relation filters
-      this.applyRelationFilters(query, queryDto, dtoClass);
+      this.applyRelationFilters(query, filters, dtoClass);
 
-
-
-      // Apply sorting
-      const sortDirection = sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
-
-      // Add sort field to selection (handles nested relations too)
-      const allRestrictedFields = this.options.restrictedFields || [];
-
-      const sortField = this.addSortFieldToSelection(query, sortBy, queryDto, allRestrictedFields);
-
-      if (sortField) {
-        query.orderBy(sortField, sortDirection as 'ASC' | 'DESC');
-      }
 
       // Execute beforeQuery callback if provided
       if (callbacks?.beforeQuery) {
@@ -350,7 +313,7 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
 
       // Apply simplified relations and select system only
       if (queryDto) {
-        this.applyRelationsAndSelect(query, queryDto, dtoClass);
+        this.applyRelationsAndSelect(query, queryDto, []);
       }
 
       const entity = await query.getOne();
@@ -448,313 +411,156 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
 
 
   /**
-   * Apply simplified relations and select system using _relations, _select, and _searchable
+   * Apply relations and select system - SIMPLE VERSION
    * 
-   * Behavior:
-   * 1. _select can include both main entity fields and specific relation fields
-   * 2. _relations can include nested relations (e.g., "profile.documents")
-   * 3. Relation fields in _select are ONLY allowed if their parent relation is explicitly defined in _relations
-   * 4. Only the specific fields in _select are returned, not entire relations
-   * 5. ID fields are automatically included for all relations (e.g., profile.firstName includes profile.id)
-   * 6. If no _select provided: uses default selectableFields, or selects all if empty
-   * 7. Restricted fields are always filtered out silently (no errors thrown)
-   * 8. Restricted fields are defined in backend configuration only (security)
-   * 
-   * Examples:
-   * - GET /users?_relations=profile&_select=email,profile.firstName (gets email + profile.id + profile.firstName)
-   * - GET /users?_relations=profile.documents&_select=email,profile.documents.name (gets email + profile.id + documents.id + profile.documents.name)
-   * - GET /users?_relations=profile (gets default user fields + ALL profile fields)
-   * - GET /users?_relations=profile.documents (gets default user fields + ALL profile + ALL documents fields)
-   * - GET /users?_select=email,profile.documents.name (profile.documents.name IGNORED - profile.documents not in _relations)
-   * - GET /users?_relations=profile&_select=email,profile.documents.name (profile.documents.name IGNORED - profile.documents not in _relations)
-   * - GET /users?_select=id,email,password (password filtered out, only id,email returned)
-   * - GET /users (uses default selectableFields, no relations)
+   * Simple approach:
+   * 1. Add relations with centralized aliases
+   * 2. Check if LEFT JOIN already exists before adding
+   * 3. Check if SELECT already exists before adding
+   * 4. Handle sorting simply
    */
-  private applyRelationsAndSelect(query: any, queryDto: any, dtoClass?: any): void {
-    const _relations = (queryDto as any)._relations;
-    const _select = (queryDto as any)._select;
-
-    // Clear any default selections to start fresh, but keep entity.id for TypeORM internals
-    query.select([]);
-    query.addSelect('entity.id'); // Always include id for TypeORM's DISTINCT operations
-
-    // Get restricted fields from backend configuration only (security)
+  private applyRelationsAndSelect(query: any, queryDto: any, mergedSortFields: string[]) {
+    const _relations = (queryDto as any)._relations || [];
+    const _select = (queryDto as any)._select || [];
     const allRestrictedFields = this.options.restrictedFields || [];
 
-    // Apply relations if specified (including nested relations)
-    if (_relations && Array.isArray(_relations)) {
-      _relations.forEach((relationPath: string) => {
-        if (relationPath && relationPath.trim()) {
-          const cleanPath = relationPath.trim();
-
-          if (cleanPath.includes('.')) {
-            // Nested relation (e.g., "profile.documents")
-            // For "profile.documents" we need to join profile first, then documents
-            const parts = cleanPath.split('.');
-            let currentPath = '';
-            let currentAlias = '';
-
-            parts.forEach((part, index) => {
-              if (index === 0) {
-                // First level: entity.profile
-                currentPath = `entity.${part}`;
-                currentAlias = part;
-                console.log('currentAlias' + index, currentAlias);
-
-                query.leftJoin(currentPath, currentAlias)
-                  .addSelect(`${currentAlias}.id`);
-              } else {
-                // Subsequent levels: profile.documents
-                const newPath = `${currentAlias}.${part}`;
-                const newAlias = `${currentAlias}_${part}`;
-                query.leftJoin(newPath, newAlias)
-                  .addSelect(`${newAlias}.id`);
-                currentAlias = newAlias;
-              }
-            });
-          } else {
-            // Simple relation (e.g., "profile")
-            query.leftJoin(`entity.${cleanPath}`, cleanPath)
-              .addSelect(`${cleanPath}.id`);
-          }
-        }
-      });
-    }
-
-
-    // Helper function to check if field is restricted
+    // Helper functions
     const isFieldRestricted = (field: string): boolean => {
       return allRestrictedFields.includes(field) ||
         allRestrictedFields.some(restricted => field.startsWith(restricted + '.'));
     };
 
-    // Helper function to add field to select (with restriction check)
-    const addFieldToSelect = (field: string): boolean => {
-      const cleanField = field.trim();
+    const isMainEntityField = (field: string): boolean => !field.includes('.');
 
-      // Skip if field is restricted (silently filter, no error)
-      if (isFieldRestricted(cleanField)) {
-        return false;
-      }
+    // Track what we've already added to avoid duplicates
+    const addedJoins = new Map<string, string>();
 
-      // Add the field to select
-      if (cleanField.includes('.')) {
-        // Nested field (e.g., profile.firstName)
-        query.addSelect(cleanField);
-      } else {
-        // Direct entity field
-        // Skip adding entity.id since we already added it at the beginning
-        if (cleanField !== 'id') {
-          query.addSelect(`entity.${cleanField}`);
-        }
-      }
-      return true;
-    };
-
-    // Helper function to check if field is a main entity field (not a relation field)
-    const isMainEntityField = (field: string): boolean => {
-      // Main entity fields don't contain dots (e.g., "email", "id")
-      // Relation fields contain dots (e.g., "profile.firstName", "profile.documents.name")
-      return !field.includes('.');
-    };
-
-    // Helper function to get all relation paths needed from a field
-    const getRelationPaths = (field: string): string[] => {
-      // For "profile.documents.name" -> ["profile", "profile.documents"]
-      // For "profile.firstName" -> ["profile"]
-      const parts = field.split('.');
-      const paths: string[] = [];
-      let currentPath = '';
-
-      for (let i = 0; i < parts.length - 1; i++) {
-        currentPath = currentPath ? `${currentPath}.${parts[i]}` : parts[i];
-        paths.push(currentPath);
-      }
-
-      return paths;
-    };
-
-    // Get all explicitly defined relations from _relations parameter
-    const explicitlyDefinedRelations = new Set<string>();
-    if (_relations && Array.isArray(_relations)) {
+    // Step 1: Add relations with centralized aliases
+    if (_relations.length > 0) {
       _relations.forEach((relationPath: string) => {
-        if (relationPath && relationPath.trim()) {
-          const cleanPath = relationPath.trim();
-          explicitlyDefinedRelations.add(cleanPath);
+        if (!relationPath?.trim()) return;
 
-          // Also add all parent paths for nested relations
-          // For "profile.documents" also add "profile"
-          if (cleanPath.includes('.')) {
-            const parts = cleanPath.split('.');
-            let currentPath = '';
-            for (let i = 0; i < parts.length - 1; i++) {
-              currentPath = currentPath ? `${currentPath}.${parts[i]}` : parts[i];
-              explicitlyDefinedRelations.add(currentPath);
-            }
+        const parts = relationPath.split('.');
+        let currentAlias = 'entity';
+        let fullPath = '';
+
+        parts.forEach((part, index) => {
+          fullPath = index === 0 ? part : `${fullPath}.${part}`;
+          const newAlias = index === 0 ? part : `${currentAlias}_${part}`;
+          // Check if this JOIN already exists
+          const joinKey = `${currentAlias}.${part}`;
+
+          if (!addedJoins.has(joinKey)) {
+            query.leftJoin(joinKey, newAlias);
+            addedJoins.set(joinKey, newAlias);
           }
-        }
-      });
-    }
 
-    // Helper function to check if a relation field is allowed
-    const isRelationFieldAllowed = (field: string): boolean => {
-      // For "profile.documents.versions.number", we need "profile.documents.versions" to be defined
-      const parts = field.split('.');
-      let currentPath = '';
-
-      for (let i = 0; i < parts.length - 1; i++) {
-        currentPath = currentPath ? `${currentPath}.${parts[i]}` : parts[i];
-        if (!explicitlyDefinedRelations.has(currentPath)) {
-          return false;
-        }
-      }
-      return true;
-    };
-
-    // Collect relation paths needed from _select (only for explicitly defined relations)
-    const relationsFromSelect = new Set<string>();
-    if (_select && Array.isArray(_select)) {
-      _select.forEach((fieldPath: string) => {
-        if (fieldPath && fieldPath.trim()) {
-          const cleanField = fieldPath.trim();
-          if (!isMainEntityField(cleanField)) {
-            // Only collect relations if the field is allowed (parent relation is defined)
-            if (isRelationFieldAllowed(cleanField)) {
-              const relationPaths = getRelationPaths(cleanField);
-              relationPaths.forEach(path => relationsFromSelect.add(path));
-            }
-          }
-        }
-      });
-    }
-
-    // Apply select fields
-    if (_select && Array.isArray(_select) && _select.length > 0) {
-      // User provided specific fields to select
-      _select.forEach((fieldPath: string) => {
-        if (fieldPath && fieldPath.trim()) {
-          const cleanField = fieldPath.trim();
-
-          if (isMainEntityField(cleanField)) {
-            // Main entity field (e.g., "email", "id") - always allowed
-            addFieldToSelect(cleanField);
-          } else {
-            // Relation field (e.g., "profile.firstName", "profile.documents.name")
-            // Only allow if the parent relation is explicitly defined in _relations
-            if (isRelationFieldAllowed(cleanField)) {
-              addFieldToSelect(cleanField);
-            }
-            // If not allowed, silently ignore (no error)
-          }
-        }
-      });
-    } else {
-      // No specific select provided - use default selectable fields from configuration
-      const selectableFields = this.options.selectableFields || [];
-
-      if (selectableFields.length > 0) {
-        // Use ONLY the selectable fields (whitelist approach)
-        selectableFields.forEach(field => {
-          if (isMainEntityField(field)) {
-            // Main entity field - add it
-            addFieldToSelect(field);
-          } else {
-            // Relation field - only add if relation is explicitly defined
-            if (isRelationFieldAllowed(field)) {
-              addFieldToSelect(field);
-              // Add relation paths needed for this field
-              const relationPaths = getRelationPaths(field);
-              relationPaths.forEach(path => relationsFromSelect.add(path));
-            }
-          }
+          currentAlias = newAlias;
         });
+      });
+    }
+
+
+    // Step 2: Add SELECT fields - check if already added
+    const fieldsToSelect = new Set<string>();
+    const selectableFields = this.options.selectableFields || [];
+
+    // Add user selected fields
+    if (_select.length > 0) {
+      _select.forEach((field: string) => {
+        if (field?.trim() && !isFieldRestricted(field.trim())) {
+          fieldsToSelect.add(field.trim());
+        }
+      });
+    }
+
+    // Add selectable fields (always add these)
+    if (selectableFields.length > 0) {
+      selectableFields.forEach((field: string) => {
+        if (!isFieldRestricted(field)) {
+          fieldsToSelect.add(field);
+        }
+      });
+    }
+
+    // Don't add sorting fields to SELECT - only use them for ORDER BY
+    // This prevents ambiguous column references 
+
+    // Apply selections - use select() instead of addSelect() to avoid duplicates
+    const mainEntityFields: string[] = [];
+    const relationFields: { [alias: string]: string[] } = {};
+
+    fieldsToSelect.forEach(field => {
+      if (isMainEntityField(field)) {
+        mainEntityFields.push(field);
       } else {
-        // No default selectable fields - select all entity fields (filter restricted)
-        // Only select main entity fields, not relations
-        // Don't use query.addSelect('entity') as it selects ALL fields including restricted ones
-        // Instead, select only non-restricted main entity fields
-        const entityMetadata = this.repository.metadata;
-        entityMetadata.columns.forEach(column => {
-          const fieldName = column.propertyName;
-          if (!isFieldRestricted(fieldName)) {
-            query.addSelect(`entity.${fieldName}`);
+        // Relation field - find the appropriate alias
+        const parts = field.split('.');
+        if (parts.length >= 2) {
+          const relationName = parts[0];
+          const fieldName = parts[parts.length - 1];
+          const alias = parts.length === 2 ? relationName : parts.slice(0, -1).join('_');
+
+          if (!relationFields[alias]) {
+            relationFields[alias] = [];
           }
-        });
+
+          relationFields[alias].push(fieldName);
+        }
       }
-    }
-
-    // Special case: If no _select provided but _relations specified, 
-    // only select all fields from relations if no selectableFields are configured
-    if ((!_select || !Array.isArray(_select) || _select.length === 0) &&
-      _relations && Array.isArray(_relations) && _relations.length > 0) {
-
-      const selectableFields = this.options.selectableFields || [];
-
-      if (selectableFields.length === 0) {
-        // No selectableFields configured - select all fields from the explicitly defined relations
-        explicitlyDefinedRelations.forEach((relationPath: string) => {
-          query.addSelect(relationPath);
-        });
-      }
-      // If selectableFields exist, they are already handled in the _select logic above
-    }
-
-    // Merge relations from _relations and relations needed from _select
-    const allRelationsNeeded = new Set<string>();
-
-    // Add relations from _relations parameter
-    explicitlyDefinedRelations.forEach(relationPath => {
-      allRelationsNeeded.add(relationPath);
     });
 
-    // Add relations needed from _select parameter (already filtered for allowed relations)
-    relationsFromSelect.forEach(relationPath => {
-      allRelationsNeeded.add(relationPath);
+    // Apply main entity selection
+    if (mainEntityFields.length > 0) {
+      // Always include id if not already present
+      const fieldsToSelect = mainEntityFields.includes('id')
+        ? mainEntityFields
+        : ['id', ...mainEntityFields];
+
+      query.select(fieldsToSelect.map(field => `entity.${field}`));
+    }
+
+  
+      addedJoins.forEach((value) => {
+        const fields = relationFields[value];
+        if (fields && fields.length > 0) {
+          query.addSelect(`${value}.id`);
+
+          fields.forEach(field => {
+            if (field !== 'id') {
+              query.addSelect(`${value}.${field}`);
+            }
+          });
+        } else {
+          query.addSelect(value);
+        }
+      });
+  
+    // Step 3: Apply sorting
+
+
+    mergedSortFields.forEach(sortField => {
+      const [fieldName, order = 'ASC'] = sortField.split(':');
+      if (!fieldName?.trim()) return;
+
+      const cleanField = fieldName.trim();
+      const sortOrder = order.trim().toUpperCase();
+
+      if (isMainEntityField(cleanField)) {
+        query.addOrderBy(`entity.${cleanField}`, sortOrder);
+      } else {
+        // Relation field - find appropriate alias
+        const parts = cleanField.split('.');
+        if (parts.length >= 2) {
+          const relationName = parts[0];
+          const fieldName = parts.slice(1).join('.');
+          const alias = parts.length === 2 ? relationName : parts.slice(0, -1).join('_');
+
+          query.addOrderBy(`${alias}.${fieldName}`, sortOrder);
+        }
+      }
     });
 
-    // Apply relations but only select specific fields, not entire relations
-    // The relations are already joined above, now we just need to select specific fields
-    // No need to add entire relations here since we're selecting specific fields in the _select logic above
-  }
-
-
-  /**
-   * Add sort field to selection if relation exists in _relations
-   */
-  private addSortFieldToSelection(query: any, sortBy: string, queryDto: any, allRestrictedFields: string[]): string {
-    if (!sortBy || !sortBy.trim()) return '';
-
-    // Check if field is restricted
-    const isFieldRestricted = allRestrictedFields.includes(sortBy) ||
-      allRestrictedFields.some(restricted => sortBy.startsWith(restricted + '.'));
-
-    if (isFieldRestricted) return '';
-
-    // For nested fields, check if the relation is defined in _relations
-    if (sortBy.includes('.')) {
-      const _relations = (queryDto as any)._relations || [];
-      const relationPath = this.getRelationPath(sortBy, _relations);
-
-      // Only add if the relation path exists in _relations
-      if (!relationPath || !_relations.includes(relationPath)) {
-        return ''; // Don't add sort field if relation not defined
-      }
-    }
-
-    // Add the sort field if not already selected
-    const sortField = sortBy.includes('.') ? sortBy : `entity.${sortBy}`;
-    
-    // Check if sort field is already selected
-    const currentSelections = query.expressionMap.selects || [];
-    const isSortFieldAlreadySelected = currentSelections.some((select: any) => 
-      select.selection === sortField
-    );
-    
-    if (!isSortFieldAlreadySelected) {
-      query.addSelect(sortField);
-    }
-
-    return sortField;
   }
 
   /**
@@ -797,7 +603,7 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
           case 'between':
             if (Array.isArray(processedValue) && processedValue.length === 2) {
               const [startValue, endValue] = processedValue;
-              
+
               // Handle partial ranges intelligently
               if (startValue && endValue) {
                 // Both values provided - use BETWEEN
@@ -935,7 +741,7 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
           case 'between':
             if (Array.isArray(processedValue) && processedValue.length === 2) {
               const [startValue, endValue] = processedValue;
-              
+
               // Handle partial ranges intelligently
               if (startValue && endValue) {
                 // Both values provided - use BETWEEN

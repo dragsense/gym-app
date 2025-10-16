@@ -48,7 +48,7 @@ export default function TrainersPage() {
                 queryFn={fetchTrainers}
                 initialParams={{
                     _relations: 'user.profile',
-                    _select: 'user.email',
+                    _select: 'user.email, user.profile.firstName, user.profile.lastName, user.profile.phoneNumber',
                 }}
                 ListComponent={TrainerList} 
                 storeKey={TRAINERS_STORE_KEY}

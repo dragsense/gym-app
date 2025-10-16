@@ -119,10 +119,10 @@ export const clientItemViews = ({
 } => {
   const columns: ColumnDef<IClient>[] = [
     {
-      accessorKey: "profile.image",
+      accessorKey: "user.profile.image",
       header: "Profile",
       cell: ({ row }) => {
-        const profile = row.original.profile;
+        const profile = row.original.user?.profile;
         const name = profile ? `${profile.firstName} ${profile.lastName}` : '-';
         const imagePath = profile?.image?.url;
         return (
@@ -142,22 +142,22 @@ export const clientItemViews = ({
       },
     },
     {
-      accessorKey: "email",
+      accessorKey: "user.email",
       header: "Email",
     },
     {
-      accessorKey: "profile",
+      accessorKey: "user.profile",
       header: "Name",
       cell: ({ row }) => {
-        const profile = row.original.profile;
+        const profile = row.original.user?.profile;
         return profile ? `${profile.firstName} ${profile.lastName}` : '-';
       },
     },
     {
-      accessorKey: "profile.phoneNumber",
+      accessorKey: "user.profile.phoneNumber",
       header: "Phone",
       cell: ({ row }) => {
-        const profile = row.original.profile;
+        const profile = row.original.user?.profile;
         return profile?.phoneNumber || '-';
       },
     },
@@ -195,7 +195,7 @@ export const clientItemViews = ({
     // React 19: Essential IDs
     const componentId = useId();
     
-    const profile = item.profile;
+    const profile = item.user?.profile;
     const name = profile ? `${profile.firstName} ${profile.lastName}` : 'Unknown Client';
     const imagePath = profile?.image?.url;
     const phoneNumber = profile?.phoneNumber || '-';
@@ -244,7 +244,7 @@ export const clientItemViews = ({
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Mail className="h-3 w-3 flex-shrink-0" />
-                    <span className="truncate">{item.email}</span>
+                    <span className="truncate">{item.user?.email}</span>
                   </div>
                   {phoneNumber !== '-' && (
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">

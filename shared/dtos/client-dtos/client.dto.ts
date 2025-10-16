@@ -76,35 +76,12 @@ export class UpdateClientDto extends PartialType(OmitType(CreateClientDto, ['use
 
 } 
 
-export class ClientSafeDto {
-  @ApiProperty({ example: 1, description: 'Client ID' })
-  id: number;
 
-  @ApiProperty({ example: 'Weight Loss', description: 'Client goal' })
-  goal: string;
-
-  @ApiProperty({ example: 'Beginner', description: 'Fitness level' })
-  fitnessLevel: string;
-
-
-  @ApiPropertyOptional({ example: 'No injuries', description: 'Medical conditions' })
-  medicalConditions?: string;
-
-
-  @ApiProperty({ example: { id: 1, email: 'test@test.com', profile: { firstName: 'John', lastName: 'Doe', phoneNumber: '1234567890' } }, description: 'User' })
-  user: UserDto;
-
-  @ApiProperty({ example: '2024-01-01T00:00:00.000Z', description: 'Creation date' })
-  createdAt: Date;
-
-  @ApiProperty({ example: '2024-01-01T00:00:00.000Z', description: 'Last update date' })
-  updatedAt: Date;
-}
 
 export class ClientPaginatedDto extends PaginationMetaDto {
-  @ApiProperty({ type: () => [ClientSafeDto] })
-  @Type(() => ClientSafeDto)
-  data: ClientSafeDto[];
+  @ApiProperty({ type: () => [ClientDto] })
+  @Type(() => ClientDto)
+  data: ClientDto[];
 }
 
 export class ClientListDto extends ListQueryDto<IClient> {
@@ -149,26 +126,6 @@ export class ClientDto {
   @IsString()
   fitnessLevel: string;
 
-  @ApiProperty({ example: '2024-01-01', description: 'Start date' })
-  @IsOptional()
-  @IsString()
-  @FieldType("date", false)
-  startDate: string;
-
-  @ApiPropertyOptional({ example: '2024-12-31', description: 'Target date' })
-  @IsOptional()
-  @IsString()
-  targetDate?: string;
-
-  @ApiPropertyOptional({ example: 70, description: 'Current weight in kg' })
-  @IsOptional()
-  @IsNumber()
-  currentWeight?: number;
-
-  @ApiPropertyOptional({ example: 65, description: 'Target weight in kg' })
-  @IsOptional()
-  @IsNumber()
-  targetWeight?: number;
 
   @ApiPropertyOptional({ example: 'No injuries', description: 'Medical conditions' })
   @IsOptional()
@@ -180,6 +137,15 @@ export class ClientDto {
   @IsBoolean()
   isActive?: boolean;
 
-  createdAt: Date;
-  updatedAt: Date;
+
+ 
+  @ApiProperty({ example: { id: 1, email: 'test@test.com', profile: { firstName: 'John', lastName: 'Doe', phoneNumber: '1234567890' } }, description: 'User' })
+  @IsOptional()
+  user?: UserDto;
+
+  @IsOptional()
+  createdAt?: Date;
+
+  @IsOptional()
+  updatedAt?: Date;
 }

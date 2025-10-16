@@ -1,13 +1,14 @@
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
-import { IsString, IsNumber, IsOptional, IsDateString, Min, Max, ValidateNested } from 'class-validator';
+import { IsString, IsNumber, IsOptional, IsDateString, Min, Max, ValidateNested, IsEnum } from 'class-validator';
 import { Type } from 'class-transformer';
-import { FieldType } from '../../decorators/field.decorator';
+import { FieldOptions, FieldType } from '../../decorators/field.decorator';
 import { UserDto } from '../user-dtos';
 import { TrainerDto } from '../trainer-dtos';
-import { ClientDto, ClientSafeDto } from '../client-dtos';
+import { ClientDto } from '../client-dtos';
 import { ITrainerClient } from '../../interfaces/trainer-client.interface';
 import { ListQueryDto } from '../common/list-query.dto';
 import { PaginationMetaDto } from '../common/pagination.dto';
+import { ETrainerClientStatus } from '../../enums/trainer-client.enum';
 
 export class CreateTrainerClientDto { 
   @ApiProperty({ type: TrainerDto })
@@ -22,11 +23,16 @@ export class CreateTrainerClientDto {
   @FieldType("nested", true, ClientDto)
   client: ClientDto;
 
-  @ApiPropertyOptional({ example: 'Active', description: 'Assignment status' })
+  @ApiPropertyOptional({ 
+    example: ETrainerClientStatus.ACTIVE, 
+    description: 'Assignment status',
+    enum: ETrainerClientStatus
+  })
   @IsOptional()
-  @IsString()
-  @FieldType("text")
-  status?: string;
+  @IsEnum(ETrainerClientStatus)
+  @FieldType("select")
+  @FieldOptions(Object.values(ETrainerClientStatus).map(v => ({ value: v, label: v.charAt(0) + v.slice(1).toLowerCase() })))
+  status?: ETrainerClientStatus;
 
 
   @ApiPropertyOptional({ example: 'Personal training sessions', description: 'Assignment notes' })
@@ -54,13 +60,17 @@ export class TrainerClientListDto extends ListQueryDto<ITrainerClient> {
   @Type(() => Number)
   clientId?: number;
 
-  @ApiPropertyOptional({ example: 'Active', description: 'Filter by status' })
+  @ApiPropertyOptional({ 
+    example: ETrainerClientStatus.ACTIVE, 
+    description: 'Filter by status',
+    enum: ETrainerClientStatus
+  })
   @IsOptional()
-  @IsString()
-  status?: string;
+  @IsEnum(ETrainerClientStatus)
+  status?: ETrainerClientStatus;
 }
 
-export class TrainerClientSafeDto {
+export class TrainerClientDto {
   @ApiProperty({ example: 1, description: 'Client ID' })
   id: number;
 
@@ -74,19 +84,26 @@ export class TrainerClientSafeDto {
   @Type(() => ClientDto)
   client: ClientDto;
 
-  @ApiPropertyOptional({ example: 'Active', description: 'Assignment status' })
+  @ApiPropertyOptional({ 
+    example: ETrainerClientStatus.ACTIVE, 
+    description: 'Assignment status',
+    enum: ETrainerClientStatus
+  })
   @IsOptional()
-  @IsString()
-  @FieldType("text")
-  status: string;
+  @IsEnum(ETrainerClientStatus)
+  @FieldType("select")
+  status: ETrainerClientStatus;
 
-  createdAt: Date;
-  updatedAt: Date;
+  @IsOptional()
+  createdAt?: Date;
+
+  @IsOptional()
+  updatedAt?: Date;
 
 }
 
 export class TrainerClientPaginatedDto extends PaginationMetaDto {
-  @ApiProperty({ type: () => [TrainerClientSafeDto] })
-  @Type(() => TrainerClientSafeDto)
-  data: TrainerClientSafeDto[];
+  @ApiProperty({ type: () => [TrainerClientDto] })
+  @Type(() => TrainerClientDto)
+  data: TrainerClientDto[];
 }

@@ -23,7 +23,8 @@ import {
 
 import { TrainersService } from './trainers.service';
 import { JwtAuthGuard } from '@/guards/jwt-auth.gaurd';
-import { CreateTrainerDto, UpdateTrainerDto, TrainerListDto, TrainerPaginatedDto, TrainerSafeDto } from 'shared';
+import { CreateTrainerDto, UpdateTrainerDto, TrainerListDto, TrainerPaginatedDto, TrainerSafeDto, SingleQueryDto } from 'shared';
+import { Trainer } from './entities/trainer.entity';
 
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('access-token')
@@ -40,10 +41,7 @@ export class TrainersController {
   })
   @Get()
   findAll(@Query() query: TrainerListDto) {
-    return this.trainersService.get(query, {
-      select: ['id', 'specialization', 'experience', 'certification', 'hourlyRate', 'isActive', 'createdAt', 'updatedAt'],
-      relations: ['user'],
-    });
+    return this.trainersService.get(query, TrainerListDto);
   }
 
   @ApiOperation({ summary: 'Get trainer by ID' })
@@ -55,8 +53,8 @@ export class TrainersController {
   })
   @ApiResponse({ status: 404, description: 'Trainer not found' })
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.trainersService.getSingle({ id }, { relations: ['user'] });
+  findOne(@Param('id', ParseIntPipe) id: number, @Query() query: SingleQueryDto<Trainer>) {
+    return this.trainersService.getSingle({ id }, query);
   }
 
   @ApiOperation({ summary: 'Add a new trainer' })

@@ -6,13 +6,14 @@ import { type FormInputs, useInput } from "@/hooks/use-input";
 
 // Types
 import type { TFormHandlerStore } from "@/stores";
-import type { TClientData, TUpdateClientData, TProfileData } from "@shared/types/client.type";
+import type { TClientData, TUpdateClientData } from "@shared/types/client.type";
 import type { TClientResponse } from "@shared/interfaces/client.interface";
 
 // Components
 import { Button } from "@/components/ui/button";
 import { ModalForm } from "@/components/form-ui/modal-form";
 import type { THandlerComponentProps } from "@/@types/handler-types";
+import type { TUserData, TProfileData } from "@shared/types";
 
 export interface IClientFormModalExtraProps {
   open: boolean;

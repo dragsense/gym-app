@@ -7,30 +7,38 @@ import { IPaginatedResponse } from 'shared/interfaces';
 import { CrudService } from '@/common/crud/crud.service';
 import { EventService } from '@/common/events/event.service';
 import { UsersService } from '@/modules/v1/users/users.service';
+import { CrudOptions } from '@/common/crud/interfaces/crud.interface';
+import { EUserLevels, EUserRole } from 'shared';
+import { TrainersService } from '../trainers/trainers.service';
+import { ClientsService } from '../clients/clients.service';
 
 @Injectable()
 export class TrainerClientsService extends CrudService<TrainerClient> {
     constructor(
         @InjectRepository(TrainerClient)
         private readonly trainerClientRepo: Repository<TrainerClient>,
-        private readonly usersService: UsersService,
+        private readonly trainersService: TrainersService,
+        private readonly clientsService: ClientsService,
         dataSource: DataSource,
         eventService: EventService,
     ) {
-        super(trainerClientRepo, dataSource, eventService);
+        const crudOptions: CrudOptions = {
+        };
+        super(trainerClientRepo, dataSource, eventService, crudOptions);
     }
 
     async createTrainerClient(createDto: CreateTrainerClientDto): Promise<TrainerClient> {
 
         // Check if trainer exists and is actually a trainer
-        const trainer = await this.usersService.getSingle({ id: createDto.trainer.id });
-        if (!trainer || trainer.level !== 1) { // 1 = TRAINER level
+        const trainer = await this.trainersService.getSingle(createDto.trainer.id, { _relations: ['user'] });
+        
+        if (!trainer || trainer.user?.level !==  EUserLevels[EUserRole.TRAINER]) { // 1 = TRAINER level
             throw new NotFoundException('Trainer not found or invalid trainer level');
         }
 
         // Check if client exists and is actually a client
-        const client = await this.usersService.getSingle({ id: createDto.client.id });
-        if (!client || client.level !== 2) { // 2 = CLIENT level
+        const client = await this.clientsService.getSingle(createDto.client.id, { _relations: ['user'] });
+        if (!client || client.user?.level !==  EUserLevels[EUserRole.CLIENT]) { // 2 = CLIENT level
             throw new NotFoundException('Client not found or invalid client level');
         }
 
@@ -54,16 +62,16 @@ export class TrainerClientsService extends CrudService<TrainerClient> {
 
         if (updateDto.trainer && updateDto.trainer.id) {
             // Check if trainer exists and is actually a trainer
-            const trainer = await this.usersService.getSingle({ id: updateDto.trainer.id });
-            if (!trainer || trainer.level !== 1) { // 1 = TRAINER level
+                const trainer = await this.trainersService.getSingle(updateDto.trainer.id, { _relations: ['user'] });
+            if (!trainer || trainer.user?.level !==  EUserLevels[EUserRole.TRAINER]) { // 1 = TRAINER level
                 throw new NotFoundException('Trainer not found or invalid trainer level');
             }
         }
 
         if (updateDto.client && updateDto.client.id) {
             // Check if client exists and is actually a client
-            const client = await this.usersService.getSingle({ id: updateDto.client.id });
-            if (!client || client.level !== 2) { // 2 = CLIENT level
+                const client = await this.clientsService.getSingle(updateDto.client.id, { _relations: ['user'] });
+            if (!client || client.user?.level !==  EUserLevels[EUserRole.CLIENT]) { // 2 = CLIENT level
                 throw new NotFoundException('Client not found or invalid client level');
             }
         }

@@ -2,7 +2,7 @@
 import { useShallow } from 'zustand/shallow';
 import { Loader2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState, useMemo, useCallback, useId, useTransition, useDeferredValue } from "react";
+import { useMemo, useCallback, useId, useTransition } from "react";
 
 // Handlers
 import { FormHandler } from "@/handlers";
@@ -23,6 +23,7 @@ import { TrainerClientFormModal, type ITrainerClientFormModalExtraProps } from "
 import { createTrainerClient, updateTrainerClient } from "@/services/trainer-client.api";
 import { strictDeepMerge } from "@/utils";
 import { CreateTrainerClientDto, UpdateTrainerClientDto } from "@shared/dtos";
+import { ETrainerClientStatus } from "@shared/enums/trainer-client.enum";
 
 export type TTrainerClientExtraProps = {
   level: number;
@@ -54,11 +55,9 @@ export default function TrainerClientForm({
     })));
 
     const INITIAL_VALUES: TTrainerClientData = {
-        trainerId: 0,
-        clientId: 0,
-        status: 'active',
-        startDate: new Date().toISOString(),
-        endDate: null,
+        trainer: {} as any, // Will be set by the form
+        client: {} as any, // Will be set by the form
+        status: ETrainerClientStatus.ACTIVE,
         notes: ""
     };
 
@@ -95,7 +94,7 @@ export default function TrainerClientForm({
 
     return (
         <div data-component-id={componentId}>
-            <FormHandler<TTrainerClientData, TTrainerClientResponse, ITrainerClientFormModalExtraProps>
+            <FormHandler<TTrainerClientData, TTrainerClientData, ITrainerClientFormModalExtraProps>
                 mutationFn={mutationFn}
                 FormComponent={TrainerClientFormModal}
                 storeKey={storeKey}
@@ -103,7 +102,7 @@ export default function TrainerClientForm({
                 dto={dto}
                 validationMode={EVALIDATION_MODES.OnSubmit}
                 isEditing={isEditing}
-                onSuccess={(response: any) => {
+                onSuccess={() => {
                     startTransition(() => {
                         queryClient.invalidateQueries({ queryKey: [storeKey + "-list"] });
                     });

@@ -41,6 +41,7 @@ export const SearchableInputWrapper = <T,>({
     const { response, isLoading, error, setFilters } = useSearchable();
     const [search, setSearch] = useState("");
 
+
     // React 19: Memoized search handler for better performance
     const handleSearchChange = useMemo(() => (newSearch: string) => {
         startTransition(() => {

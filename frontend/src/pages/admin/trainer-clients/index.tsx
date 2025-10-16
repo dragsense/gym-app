@@ -18,6 +18,8 @@ import { TrainerClientForm } from "@/page-components";
 
 // Layouts
 import { PageInnerLayout } from "@/layouts";
+import type { TTrainerClientData, TTrainerClientListData } from "@shared/types";
+import type { TTrainerClientViewExtraProps } from "@/components/admin/trainer-clients/view/trainer-client-view";
 
 export default function TrainerClientsPage() {
     const queryClient = useQueryClient();
@@ -40,8 +42,14 @@ export default function TrainerClientsPage() {
                 ]}
             />
 
-            <ListHandler<ITrainerClient, any>
+            <ListHandler<ITrainerClient, TTrainerClientListData, any, ITrainerClient, TTrainerClientViewExtraProps>
                 queryFn={fetchTrainerClients}
+                initialParams={{
+                    _relations: 'trainer.user, client.user',
+                    _select: 'trainer.user.email, client.user.email, status, notes, createdAt',
+                    sortBy: 'createdAt',
+                    sortOrder: 'DESC',
+                }}
                 ListComponent={TrainerClientList}
                 storeKey={TRAINER_CLIENTS_STORE_KEY}
             />

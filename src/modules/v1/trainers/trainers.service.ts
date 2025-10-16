@@ -13,6 +13,7 @@ import { EventService } from '@/common/events/event.service';
 import { CrudOptions } from '@/common/crud/interfaces/crud.interface';
 import { User } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
+import { EUserLevels, EUserRole } from 'shared/enums';
 
 @Injectable()
 export class TrainersService extends CrudService<Trainer> {
@@ -24,16 +25,6 @@ export class TrainersService extends CrudService<Trainer> {
     eventService: EventService,
   ) {
     const crudOptions: CrudOptions = {
-      searchableFields: ['specialization', 'certification'],
-      selectableFields: ['specialization', 'experience', 'certification', 'hourlyRate', 'createdAt', 'updatedAt'],
-      pagination: {
-        defaultLimit: 10,
-        maxLimit: 100
-      },
-      defaultSort: {
-        field: 'createdAt',
-        order: 'DESC'
-      }
     };
     super(trainerRepo, dataSource, eventService, crudOptions);
   }
@@ -47,7 +38,7 @@ export class TrainersService extends CrudService<Trainer> {
 
 
         try {
-          const savedUser = await this.userService.createUser(user);
+          const savedUser = await this.userService.createUser({...user, level: EUserLevels[EUserRole.TRAINER]});
           savedEntity.user = savedUser.user;
 
           await manager.update(Trainer, savedEntity.id, { user: savedUser.user });

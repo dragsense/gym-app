@@ -30,11 +30,9 @@ import { type TListHandlerComponentProps } from "@/@types/handler-types";
 import type { TTrainerClientListData } from "@shared/types/trainer-client.type";
 import type { TTrainerClientViewExtraProps } from "../view/trainer-client-view";
 
-export interface ITrainerClientListExtraProps {
-  level: number;
-}
 
-interface ITrainerClientListProps extends TListHandlerComponentProps<TListHandlerStore<ITrainerClient, TTrainerClientListData, ITrainerClientListExtraProps>,
+
+interface ITrainerClientListProps extends TListHandlerComponentProps<TListHandlerStore<ITrainerClient, TTrainerClientListData, any>,
   TSingleHandlerStore<ITrainerClient, TTrainerClientViewExtraProps>> {
 }
 

@@ -8,7 +8,7 @@ import { ProfilesService } from './profiles.service';
 import { Profile } from './entities/profile.entity';
 import { UpdateProfileDto } from 'shared/dtos';
 
-import {  FileFieldsInterceptor } from '@nestjs/platform-express';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { OmitType } from 'shared/lib/type-utils';
 
 
@@ -24,7 +24,7 @@ export class ProfilesController {
   @ApiResponse({ status: 200, description: 'Profile found', type: Profile })
   @ApiResponse({ status: 404, description: 'Profile not found' })
   findMe(@Req() req: any) {
-    return this.profilesService.getSingle({ id: req.user.id });
+    return this.profilesService.getSingle({userId: req.user.id}, { _relations: ['user'] });
   }
 
 
@@ -45,7 +45,7 @@ export class ProfilesController {
     @UploadedFiles() files: { image?: Express.Multer.File[], documents?: Express.Multer.File[] },
     @Body() updateProfileDto: OmitType<UpdateProfileDto, 'image' | 'documents'>
   ) {
-    const profile = await this.profilesService.getSingle({ id: req.user.id });
+    const profile = await this.profilesService.getSingle({ userId: req.user.id });
 
     const image = files?.image?.[0];
     const documents = files?.documents;
@@ -61,7 +61,7 @@ export class ProfilesController {
   @ApiResponse({ status: 200, description: 'Profile found', type: Profile })
   @ApiResponse({ status: 404, description: 'Profile not found' })
   findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.profilesService.getSingle({ id });
+    return this.profilesService.getSingle({ userId: id });
   }
 
   @UseInterceptors(

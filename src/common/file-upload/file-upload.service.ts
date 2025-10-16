@@ -121,6 +121,8 @@ export class FileUploadService extends CrudService<FileUpload> {
     id: number,
     updateData: OmitType<UpdateFileUploadDto, 'file'>,
     file?: Express.Multer.File,
+    saveFile: boolean = true,
+    manager?: EntityManager,
   ): Promise<FileUpload> {
 
 
@@ -130,7 +132,7 @@ export class FileUploadService extends CrudService<FileUpload> {
     if (file) {
       // Delete old physical file
       const oldFilePath = path.join(process.cwd(), 'public', existingFile.path);
-      if (fs.existsSync(oldFilePath)) {
+      if (fs.existsSync(oldFilePath) && saveFile) {
         fs.unlinkSync(oldFilePath);
       }
 
@@ -143,7 +145,9 @@ export class FileUploadService extends CrudService<FileUpload> {
       const ext = path.extname(file.originalname);
       const fileName = `${timestamp}-${file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
       const physicalPath = path.join(uploadDir, fileName);
-      fs.writeFileSync(physicalPath, file.buffer);
+      if (saveFile) {
+        fs.writeFileSync(physicalPath, file.buffer);
+      }
 
       const relativePath = `uploads/${uploadFolder}/${fileName}`;
       const url = `${this.appUrl}/${relativePath}`;
@@ -164,11 +168,11 @@ export class FileUploadService extends CrudService<FileUpload> {
       if (updateData.type) existingFile.type = updateData.type;
     }
 
-    return await this.fileRepo.save(existingFile);
+    return manager ? await manager.save(existingFile) : await this.update(id, existingFile);
   }
 
 
-  async saveFiles(fileUploads: {file: Express.Multer.File, fileUpload: FileUpload}[]): Promise<void> {
+  async saveFiles(fileUploads: { file: Express.Multer.File, fileUpload: FileUpload }[]): Promise<void> {
 
 
     for (let i = 0; i < fileUploads.length; i++) {
@@ -183,5 +187,14 @@ export class FileUploadService extends CrudService<FileUpload> {
       fs.writeFileSync(physicalPath, fileUploads[i].file.buffer);
     }
 
+  }
+
+  async deleteFiles(fileUploads: FileUpload[]): Promise<void> {
+    for (let i = 0; i < fileUploads.length; i++) {
+      const filePath = path.join(process.cwd(), 'public', fileUploads[i].path);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    }
   }
 }

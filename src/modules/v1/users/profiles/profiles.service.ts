@@ -58,27 +58,39 @@ export class ProfilesService extends CrudService<Profile> {
     await this.update(id, profileData, {
       afterUpdate: async (entity, manager) => {
         // Handle profile image upload
+        let uploaded: FileUpload | null = null;
+        let oldImage: FileUpload | null = null;
+
+        let oldDocuments: FileUpload[] = [];
+        const uploadedDocuments: { fileUpload: FileUpload, file: Express.Multer.File }[] = [];
+
         if (profileImage) {
-          let uploaded: FileUpload;
           if (entity.image) {
+            oldImage = entity.image;
             uploaded = await this.fileUploadService.updateFile(
               entity.image.id,
               {
                 name: profileImage.originalname,
                 type: EFileType.IMAGE,
               },
-              profileImage
-            );
+              profileImage,
+              false,
+              manager);
           } else {
             uploaded = await this.fileUploadService.createFile(
               {
                 name: profileImage.originalname,
                 type: EFileType.IMAGE,
               },
-              profileImage
-            );
+              profileImage,
+              true,
+              manager);
           }
           entity.image = uploaded;
+        }
+
+        if (entity.documents) {
+          oldDocuments = entity.documents;
         }
 
         // Handle documents upload (up to 10 files)
@@ -86,7 +98,6 @@ export class ProfilesService extends CrudService<Profile> {
           // Limit to 10 documents
           const filesToUpload = documents.slice(0, 10);
 
-          const uploadedDocuments: FileUpload[] = [];
 
           for (const doc of filesToUpload) {
             const uploaded = await this.fileUploadService.createFile(
@@ -94,16 +105,18 @@ export class ProfilesService extends CrudService<Profile> {
                 name: doc.originalname,
                 type: EFileType.DOCUMENT,
               },
-              doc
+              doc,
+              false,
+              manager
             );
-            uploadedDocuments.push(uploaded);
+            uploadedDocuments.push({ fileUpload: uploaded, file: doc });
           }
 
           // Append new documents to existing ones (if any)
           if (entity.documents) {
-            entity.documents = [...entity.documents, ...uploadedDocuments];
+            entity.documents = [...entity.documents, ...uploadedDocuments.map(doc => doc.fileUpload)];
           } else {
-            entity.documents = uploadedDocuments;
+            entity.documents = uploadedDocuments.map(doc => doc.fileUpload);
           }
 
           // Ensure we don't exceed 10 documents total
@@ -118,6 +131,19 @@ export class ProfilesService extends CrudService<Profile> {
         }
         if (entity.documents && entity.documents.length > 0) {
           await manager.save(entity.documents);
+        }
+
+        if (uploaded && profileImage) {
+          await this.fileUploadService.saveFiles([{ file: profileImage, fileUpload: uploaded }]);
+          if (oldImage) {
+            await this.fileUploadService.deleteFiles([oldImage]);
+          }
+        }
+        if (uploadedDocuments.length > 0) {
+          await this.fileUploadService.saveFiles(uploadedDocuments.map(doc => ({ file: doc.file, fileUpload: doc.fileUpload })));
+        /*   if (entity.documents) {
+            await this.fileUploadService.deleteFiles(entity.documents);
+          } */
         }
       }
     });
