@@ -7,6 +7,7 @@ const UsersPage = lazy(() => import("./users"));
 const TrainersPage = lazy(() => import("./trainers"));
 const ClientsPage = lazy(() => import("./clients"));
 const TrainerClientsPage = lazy(() => import("./trainer-clients"));
+const SessionsPage = lazy(() => import("./sessions"));
 const ActivityLogsPage = lazy(() => import("./activity-logs"));
 const FilesPage = lazy(() => import("./files"));
 const SchedulesPage = lazy(() => import("./schedules"));
@@ -64,6 +65,14 @@ const adminRoutes = [
     element: (
       <Suspense fallback={<AdminRouteLoadingFallback />}>
         <TrainerClientsPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: ADMIN_ROUTES.SESSIONS,
+    element: (
+      <Suspense fallback={<AdminRouteLoadingFallback />}>
+        <SessionsPage />
       </Suspense>
     ),
   },

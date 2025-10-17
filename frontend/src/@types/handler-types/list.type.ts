@@ -10,6 +10,7 @@ export interface IListQueryState {
   search: string;
   _relations: string;
   _select: string;
+  _countable: string;
 }
 
 export interface IListHandlerBaseState<TResponse> {
@@ -35,6 +36,7 @@ export interface IListHandlerState<TResponse, TUserListData = any, TExtra extend
   setSearch: (search: string) => void;
   setRelations: (relations: string) => void;
   setSelect: (select: string) => void;
+  setCountable: (countable: string) => void;
   setPagination: (pagination: Partial<IListPaginationState>) => void;
   setIsLoading: (isLoading: boolean) => void;
   setError: (error: Error | null) => void;

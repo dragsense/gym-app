@@ -22,6 +22,7 @@ import { EUserLevels, EUserRole } from "@shared/enums";
 import type { ITrainerListExtraProps } from "@/components/admin/trainers/list/trainer-list";
 import type { TTrainerListData } from "@shared/types";
 import type { TTrainerViewExtraProps } from "@/components/admin/trainers/view/trainer-view";
+import { ProfileForm } from "@/page-components";
 
 export default function TrainersPage() {
     const queryClient = useQueryClient();
@@ -32,6 +33,9 @@ export default function TrainersPage() {
         <PageInnerLayout Header={<Header />}>
             <SingleHandler<ITrainer, any>
                 queryFn={fetchTrainer}
+                initialParams={{ 
+                    _relations: 'user.profile',
+                }}
                 deleteFn={deleteTrainer}
                 storeKey={TRAINERS_STORE_KEY}
                 onDeleteSuccess={() => queryClient.invalidateQueries({ queryKey: [TRAINERS_STORE_KEY + "-list"] })}
@@ -40,7 +44,11 @@ export default function TrainersPage() {
                     {
                         action: 'createOrUpdate',
                         comp: TrainerForm
-                    }
+                    },
+                    {
+                        action: 'updateProfile',
+                        comp: ProfileForm  as any
+                      }
                 ]}
             />
 

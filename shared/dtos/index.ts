@@ -12,3 +12,4 @@ export * from "./schedule-dtos";
 export * from "./worker-dtos";
 export * from "./trainer-dtos";
 export * from "./trainer-client-dtos";
+export * from "./session-dtos";

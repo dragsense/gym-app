@@ -27,7 +27,7 @@ export const fetchUsers = (params: IListQueryParams, level?: number) => {
     return userService.get({...params, ...additionalParams});
 };
 
-export const fetchUser = (id: number) => userService.getSingle(id);
+export const fetchUser = (id: number, params: IListQueryParams) => userService.getSingle(id, params);
 export const createUser = (data: TUserData) => userService.post(data);
 export const updateUser = (id: number) => userService.patch(id);
 export const deleteUser = (id: number) => userService.delete(id);

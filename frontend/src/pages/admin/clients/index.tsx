@@ -8,13 +8,13 @@ import type { IClient } from '@shared/interfaces/client.interface';
 import { ListHandler, SingleHandler } from "@/handlers";
 
 // Components
-import { ClientList } from "@/components/admin";
+import { ClientList, ClientView } from "@/components/admin";
 
 // Services
 import { fetchClients, fetchClient, deleteClient } from '@/services/client.api';
 
 // Page Components
-import { ClientForm } from "@/page-components";
+import { ClientForm, ProfileForm } from "@/page-components";
 
 // Layouts
 import { PageInnerLayout } from "@/layouts";
@@ -33,14 +33,21 @@ export default function ClientsPage() {
         <PageInnerLayout Header={<Header />}>
             <SingleHandler<IClient, any>
                 queryFn={fetchClient}
+                initialParams={{
+                    _relations: 'user.profile',
+                }}
                 deleteFn={deleteClient}
                 storeKey={CLIENTS_STORE_KEY}
                 onDeleteSuccess={() => queryClient.invalidateQueries({ queryKey: [CLIENTS_STORE_KEY + "-list"] })}
-                SingleComponent={() => <div>Client View Component</div>}
+                SingleComponent={ClientView}
                 actionComponents={[
                     {
                         action: 'createOrUpdate',
                         comp: ClientForm
+                    },
+                    {
+                        action: 'updateProfile',
+                        comp: ProfileForm as any
                     }
                 ]}
             />

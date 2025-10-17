@@ -10,3 +10,4 @@ export * from './schedule.type';
 export * from './queue.type';
 export * from './worker.type';
 export * from './role';
+export * from './session.type';

@@ -23,6 +23,8 @@ export class TrainerClientsService extends CrudService<TrainerClient> {
         eventService: EventService,
     ) {
         const crudOptions: CrudOptions = {
+            restrictedFields: ['trainer.user.password', 'client.user.password'],
+            searchableFields: ['trainer.user.email',  'client.user.email'],
         };
         super(trainerClientRepo, dataSource, eventService, crudOptions);
     }

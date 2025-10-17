@@ -54,7 +54,7 @@ export class TrainersController {
   @ApiResponse({ status: 404, description: 'Trainer not found' })
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number, @Query() query: SingleQueryDto<Trainer>) {
-    return this.trainersService.getSingle({ id }, query);
+    return this.trainersService.getSingle(id, query);
   }
 
   @ApiOperation({ summary: 'Add a new trainer' })

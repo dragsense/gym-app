@@ -148,7 +148,8 @@ export function ListHandler<
             _select: params._select || '',
             sortBy: params.sortBy,
             sortOrder: params.sortOrder || 'DESC',
-            search: params.search || ''
+            search: params.search || '',
+            _countable: params._countable || '',
           });
           resolve(response);
         } catch (error) {
@@ -183,6 +184,7 @@ export function ListHandler<
     search: initialParams.search || '',
     _relations: initialParams._relations || '',
     _select: initialParams._select || '',
+    _countable: initialParams._countable || '',
     filters: {
       ...initialParams.filters || {},
       ...filteredExtra || {}

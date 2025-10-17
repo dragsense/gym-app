@@ -25,6 +25,8 @@ export class ClientsService extends CrudService<Client> {
     eventService: EventService,
   ) {
     const crudOptions: CrudOptions = {
+      restrictedFields: ['user.password'],
+      searchableFields: ['user.email', 'user.profile.firstName', 'user.profile.lastName'],
     };
     super(clientRepo, dataSource, eventService, crudOptions);
   }

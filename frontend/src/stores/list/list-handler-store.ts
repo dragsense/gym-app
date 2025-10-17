@@ -43,6 +43,7 @@ export const useListHandlerStore = <TResponse, TUserListData = any, TExtra exten
         search: '',
         _relations: '',
         _select: '',
+        _countable: '',
         // Setters
         setFilters: (filters) => set({ filters }),
         setFilteredFields: (fields) => set({ filteredFields: fields }),
@@ -50,6 +51,7 @@ export const useListHandlerStore = <TResponse, TUserListData = any, TExtra exten
         setSearch: (search) => set({ search }),
         setRelations: (relations) => set({ _relations: relations }),
         setSelect: (select) => set({ _select: select }),
+        setCountable: (countable) => set({ _countable: countable }),
         setPagination: (pagination) => set((state) => ({
           pagination: { ...state.pagination, ...pagination }
         })),
@@ -99,7 +101,10 @@ export const useListHandlerStore = <TResponse, TUserListData = any, TExtra exten
           filters: initialFilters,
           sortBy: 'createdAt',
           sortOrder: 'DESC',
-          search: ''
+          search: '',
+          _relations: '',
+          _select: '',
+          _countable: '',
         })
       }),
       {

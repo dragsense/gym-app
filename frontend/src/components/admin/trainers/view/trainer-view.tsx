@@ -3,12 +3,11 @@ import { useShallow } from 'zustand/shallow';
 import { useId, useMemo, useTransition } from 'react';
 
 // Components
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AppCard } from "@/components/layout-ui/app-card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { AppDialog } from "@/components/layout-ui/app-dialog";
-import { User, MapPin, Calendar, Phone } from "lucide-react";
+import { User, MapPin, Phone, Award, DollarSign, Clock, Target } from "lucide-react";
 
 // Types
 import { type ITrainer } from "@shared/interfaces/trainer.interface";
@@ -69,11 +68,11 @@ function TrainerDetailContent({ trainer }: ITrainerDetailContentProps) {
     // React 19: Essential IDs
     const componentId = useId();
     
-    const profile = trainer.profile;
+    const profile = trainer.user?.profile;
 
     // React 19: Memoized trainer creation date for better performance
     const trainerCreationDate = useMemo(() => 
-        new Date(trainer.createdAt).toLocaleDateString(), 
+        trainer.createdAt ? new Date(trainer.createdAt).toLocaleDateString() : '', 
         [trainer.createdAt]
     );
 
@@ -89,7 +88,7 @@ function TrainerDetailContent({ trainer }: ITrainerDetailContentProps) {
                         <h2 className="text-2xl font-bold text-gray-900">
                             {profile?.firstName} {profile?.lastName}
                         </h2>
-                        <p className="text-green-600 font-medium">{trainer.email}</p>
+                        <p className="text-green-600 font-medium">{trainer.user?.email}</p>
                         <div className="flex items-center gap-2 mt-1">
                             <Badge variant={trainer.isActive ? "default" : "secondary"}>
                                 {trainer.isActive ? "Active" : "Inactive"}
@@ -102,7 +101,51 @@ function TrainerDetailContent({ trainer }: ITrainerDetailContentProps) {
                 </div>
             </AppCard>
 
-            <div className="">
+            <div className="space-y-6">
+                {/* Trainer Information */}
+                <AppCard
+                    header={
+                        <div className="flex items-center gap-2">
+                            <Target className="w-5 h-5" />
+                            <div>
+                                <span className="font-semibold">Trainer Information</span>
+                                <p className="text-sm text-muted-foreground">Professional details and expertise</p>
+                            </div>
+                        </div>
+                    }
+                >
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                            <div className="text-muted-foreground"><Target className="w-4 h-4" /></div>
+                            <div className="flex-1">
+                                <span className="text-sm text-muted-foreground">Specialization:</span>
+                                <p className="font-medium">{trainer.specialization || 'Not specified'}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div className="text-muted-foreground"><Clock className="w-4 h-4" /></div>
+                            <div className="flex-1">
+                                <span className="text-sm text-muted-foreground">Experience:</span>
+                                <p className="font-medium">{trainer.experience ? `${trainer.experience} years` : 'Not specified'}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div className="text-muted-foreground"><Award className="w-4 h-4" /></div>
+                            <div className="flex-1">
+                                <span className="text-sm text-muted-foreground">Certification:</span>
+                                <p className="font-medium">{trainer.certification || 'Not specified'}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div className="text-muted-foreground"><DollarSign className="w-4 h-4" /></div>
+                            <div className="flex-1">
+                                <span className="text-sm text-muted-foreground">Hourly Rate:</span>
+                                <p className="font-medium">{trainer.hourlyRate ? `$${trainer.hourlyRate}/hour` : 'Not specified'}</p>
+                            </div>
+                        </div>
+                    </div>
+                </AppCard>
+
                 {/* Personal Information */}
                 <AppCard
                     header={

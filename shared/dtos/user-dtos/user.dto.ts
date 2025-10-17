@@ -192,6 +192,12 @@ export class UserDto {
   @IsBoolean()
   isActive?: boolean;
 
+  @ApiProperty({ example: 0, description: 'User level (0=ADMIN, 1=TRAINER, 2=CLIENT, 3=USER)' })
+  @IsOptional()
+  @IsNumber()
+  @FieldType("number")
+  level?: number;
+
   @ApiProperty({ type: () => ProfileDto })
   @Type(() => ProfileDto)
   profile: ProfileDto;
