@@ -11,3 +11,8 @@ export * from './queue.type';
 export * from './worker.type';
 export * from './role';
 export * from './session.type';
+export * from './billing.type';
+export * from './referral-link.type';
+export * from './user-settings.type';
+export * from './user-availability.type';
+export * from './payment-methods.type';

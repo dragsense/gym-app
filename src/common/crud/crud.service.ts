@@ -2,13 +2,13 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { Repository, FindOptionsWhere, FindManyOptions, DataSource, QueryRunner, ObjectLiteral, EntityManager, Between as TypeOrmBetween } from 'typeorm';
 import { IPaginatedResponse } from 'shared/interfaces';
 import { CrudOptions, ICrudService } from './interfaces/crud.interface';
-import { EventService } from '../events/event.service';
+import { EventPayload, EventService } from '../helper/services/event.service';
 import { LoggerService } from '../logger/logger.service';
 import { getQueryFilters, getRelationFilters, QueryFilterOptions, RelationFilterOptions } from 'shared/decorators/crud.dto.decorators';
 
 @Injectable()
 export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
-  private readonly logger = new LoggerService(CrudService.name);
+  protected readonly logger = new LoggerService(CrudService.name);
   protected readonly repository: Repository<T>;
   protected readonly dataSource: DataSource;
   protected readonly eventService: EventService;
@@ -45,16 +45,12 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
 
     try {
       let processedData = createDto;
-
-
       // Execute beforeCreate callback if provided
       if (callbacks?.beforeCreate) {
         processedData = await callbacks.beforeCreate(queryRunner.manager);
       }
 
       // Emit before create event
-      await this.emitEvent('before:create', null, processedData);
-
       const entity = this.repository.create(processedData as any);
       const savedEntity = await queryRunner.manager.save(entity);
       const finalEntity = Array.isArray(savedEntity) ? savedEntity[0] : savedEntity;
@@ -69,7 +65,7 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
 
       // Commit transaction after all callbacks
       await queryRunner.commitTransaction();      // Emit after create event
-      await this.emitEvent('create', finalEntity, processedData);
+      await this.emitEvent('crud.create', finalEntity, undefined, processedData);
 
       return finalEntity;
 
@@ -104,11 +100,6 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
         processedData = await callbacks.beforeUpdate(existingEntity, queryRunner.manager);
       }
 
-
-
-      // Emit before update event
-      await this.emitEvent('before:update', existingEntity, processedData);
-
       await queryRunner.manager.update(this.repository.target, existingEntity.id, processedData as any);
 
       // Get updated entity with relations for return
@@ -123,7 +114,7 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
       await queryRunner.commitTransaction();
 
       // Emit after update event
-      await this.emitEvent('update', updatedEntity, processedData);
+      await this.emitEvent('crud.update', updatedEntity, existingEntity, processedData);
 
       return updatedEntity;
 
@@ -353,9 +344,6 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
         await callbacks.beforeDelete(existingEntity, queryRunner.manager);
       }
 
-      // Emit before delete event
-      await this.emitEvent('before:delete', existingEntity);
-
       await queryRunner.manager.delete(this.repository.target, existingEntity.id);
 
       // Execute afterDelete callback if provided
@@ -367,7 +355,7 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
       await queryRunner.commitTransaction();
 
       // Emit after delete event
-      await this.emitEvent('delete', existingEntity);
+      await this.emitEvent('crud.delete', existingEntity);
 
       return existingEntity;
 
@@ -391,19 +379,23 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
   /**
    * Emit CRUD events using NestJS EventEmitter
    */
-  private emitEvent(operation: string, entity: T | null, data?: any): void {
+  private emitEvent(operation: string, entity: T | null, oldEntity?: T, data?: any): void {
     try {
-      const eventData = {
+
+      const source = this.repository.metadata.name.toLowerCase();
+
+      const payload: EventPayload = {
         entity: entity as T,
         entityId: entity ? (entity as any).id : undefined,
         operation,
-        source: this.repository.metadata.name,
+        source,
         tableName: this.repository.metadata.tableName,
         timestamp: new Date(),
-        ...data
+        oldEntity: oldEntity as T,
+        data,
       };
 
-      this.eventService.emit(`crud.${operation}`, eventData);
+      this.eventService.emit(source+"."+operation, payload);
     } catch (error) {
       this.logger.error(`Error emitting ${operation} event: ${error.message}`, error.stack);
       // Don't throw error for event emission failures

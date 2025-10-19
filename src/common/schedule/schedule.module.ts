@@ -1,27 +1,28 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { BullModule } from '@nestjs/bull';
 import { Schedule } from './entities/schedule.entity';
 import { ScheduleService } from './schedule.service';
 import { ScheduleController } from './schedule.controller';
-import { ScheduleBullService } from './services/schedule-bull.service';
-import { ScheduleRegistryService } from './services/schedule-registry.service';
 import { ScheduleExecutorService } from './services/schedule-executor.service';
+import { ScheduleProcessor } from './services/schedule.processor';
 import { ScheduleSubscriber } from './subscribers/schedule.subscriber';
-import { BullQueueModule } from '../bull-queue/bull-queue.module';
-import { EventService } from '../events/event.service';
+import { EventService } from '../helper/services/event.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Schedule]), BullQueueModule],
+  imports: [
+    TypeOrmModule.forFeature([Schedule]),
+    BullModule.registerQueue({ name: 'schedule' })
+  ],
   controllers: [ScheduleController],
   providers: [
     ScheduleService, 
-    ScheduleBullService, 
-    ScheduleRegistryService,
-    ScheduleExecutorService,
     ScheduleSubscriber,
-    EventService
+    EventService,
+    ScheduleExecutorService,
+    ScheduleProcessor
   ],
-  exports: [ScheduleService, ScheduleRegistryService, ScheduleBullService, ScheduleExecutorService],
+  exports: [ScheduleService],
 })
 export class ScheduleModule {}
 

@@ -1,186 +1,66 @@
-import { NestFactory } from '@nestjs/core';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { apiReference } from '@scalar/nestjs-api-reference';
-import { ValidationPipe } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import * as hpp from 'hpp';
+import * as dotenv from 'dotenv';
+dotenv.config({ path: '.env' });
 
-import { AppModule } from './app.module';
-import { scalarConfig, scalarThemes } from './config/scalar.config';
+import * as _cluster from 'cluster';
+const cluster = _cluster as unknown as _cluster.Cluster;
+import * as os from 'os';
+import * as process from 'process';
+import { app } from './app';
 
-import * as cookieParser from 'cookie-parser';
-import helmet from 'helmet';
-import * as compression from 'compression';
-import * as csurf from 'csurf';
-import { ResponseEncryptionInterceptor } from './interceptors/response-encryption-interceptor';
-import { BrowserHtmlInterceptor } from './interceptors/BrowserHtmlInterceptor';
-import { ExceptionsFilter } from './exceptions/exceptions-filter';
-import { LoggerService } from './common/logger/logger.service';
-import { LoggerInterceptor } from './common/logger/interceptors/logger.interceptor';
-import { ActivityLogInterceptor } from './common/activity-logs/interceptors/activity-log.interceptor';
+export function startCluster() {
+  const clusterEnabled = process.env.CLUSTER_ENABLED === 'true';
+  const numWorkers = os.cpus().length;
 
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
-    rawBody: true,
-  });
-  const configService = app.get(ConfigService);
+  if (!clusterEnabled) {
+    console.log('Cluster mode disabled - running in single process');
+    app();
+    return;
+  }
 
-  // Use custom logger globally
-  const loggerService = app.get(LoggerService);
-  loggerService.setContext('Bootstrap');
-  app.useLogger(loggerService);
+  if (cluster.isPrimary) {
+    console.log(`Master ${process.pid} is running`);
 
-  // Security middleware
-  app.use(helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'"],
-        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-        imgSrc: ["'self'", "data:"],
-      },
-    },
-    crossOriginEmbedderPolicy: true,
-    hidePoweredBy: true,
-  }));
-  app.use(hpp());
-  app.use((req, res, next) => {
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('X-Frame-Options', 'DENY');
-    res.setHeader('X-XSS-Protection', '1; mode=block');
-    next();
-  });
+    // Fork workers
+    for (let i = 0; i < numWorkers; i++) {
+      const worker = cluster.fork();
 
-  app.use(cookieParser(configService.get('app').cookieSecret));
-  app.use(compression());
-  app.use(
-    csurf({
-      cookie: {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-      },
-    }),
-  );
+      worker.on('message', (message) => {
+        console.log(`Message from worker ${worker.process.pid}: ${JSON.stringify(message)}`);
+      });
 
-  const port = configService.get<number>('app.port', 3000);
+      worker.on('exit', (code, signal) => {
+        console.log(`Worker ${worker.process.pid} died with code ${code} signal ${signal}`);
+        cluster.fork(); // restart worker
+      });
+    }
 
-  // API documentation with Scalar
-  if (process.env.NODE_ENV !== 'production') {
-    const config = new DocumentBuilder()
-      .setTitle('Customer App Web API')
-      .setDescription(
-        'Empower coaches to manage clients, track progress, and deliver results — all in one simple, powerful tool.',
-      )
-      .setVersion('1.0')
-      .addBearerAuth(
-        {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT',
-          in: 'header',
-        },
-        'access-token',
-      )
-      .addTag('Auth', 'Authentication endpoints')
-      .addTag('Users', 'User management endpoints')
-      .addTag('Sessions', 'Training session management')
-      .addTag('Payments', 'Payment processing and history')
-      .addTag('Invoices', 'Invoice management')
-      .addTag('Settings', 'Application settings')
-      .addTag('Roles & Permissions', 'Role and permission management')
-      .addTag('Health', 'System health and monitoring')
-      .addTag('Cache', 'Cache management')
-      .addTag('Queue', 'Background job management')
-      .addTag('Schedule', 'Scheduled task management')
-      .addTag('Activity Logs', 'User activity tracking')
-      .addTag('Notifications', 'Notification management')
-      .addTag('File Upload', 'File upload and management')
-      .build();
-
-    const document = SwaggerModule.createDocument(app, config);
-
-    // Setup Scalar API Reference with dynamic theme
-    const scalarTheme = configService.get<string>('scalar.theme', 'purple');
-    const selectedTheme = scalarThemes[scalarTheme] || scalarThemes.purple;
+    const shutdown = () => {
+      console.log('Master shutting down, killing all workers...');
     
-    app.use(
-      '/api/docs',
-      apiReference({
-        content: document,
-        ...selectedTheme,
-        title: configService.get<string>('scalar.title', 'Customer App Web API'),
-        meta: {
-          description: configService.get<string>('scalar.description', 'Empower coaches to manage clients, track progress, and deliver results — all in one simple, powerful tool.'),
-        },
-      }),
-    );
+      const workerIds = cluster.workers ? Object.keys(cluster.workers) : [];
+      let remaining = workerIds.length;
+    
+      if (remaining === 0) process.exit(0);
+    
+      workerIds.forEach((id) => {
+        const worker = cluster.workers![id];
+        if (!worker) return;
+        worker.on('exit', () => {
+          remaining--;
+          if (remaining === 0) process.exit(0);
+        });
+        worker.kill('SIGTERM');
+      });
+    };
+    
 
-    // Also keep the JSON endpoint for external tools
-    SwaggerModule.setup('api/docs-json', app, document);
-
-    loggerService.log(
-      `🚀 Scalar API documentation available at: http://localhost:${port}/api/docs`,
-    );
-    loggerService.log(
-      `📄 OpenAPI JSON available at: http://localhost:${port}/api/docs-json`,
-    );
-  }
-
-  // Build interceptors array based on environment
-  const interceptors: any[] = [new BrowserHtmlInterceptor()];
-
-  // Only use encryption in production
-  if (process.env.NODE_ENV === 'production') {
-    const encryptionInterceptor = app.get(ResponseEncryptionInterceptor);
-    interceptors.push(encryptionInterceptor);
-    loggerService.log('✅ Encryption interceptor enabled');
+    process.on('SIGINT', shutdown);
+    process.on('SIGTERM', shutdown);
   } else {
-    loggerService.warn('⚠️ Encryption disabled (development mode)');
+    console.log(`Worker ${process.pid} started`);
+    app(); // each worker starts the NestJS app
   }
-
-  const loggerInterceptor = app.get(LoggerInterceptor);
-  interceptors.push(loggerInterceptor);
-
-  const activityLogInterceptor = app.get(ActivityLogInterceptor)
-  interceptors.push(activityLogInterceptor);
-
-  app.useGlobalInterceptors(...interceptors);
-
-
-
-  app.useGlobalFilters(new ExceptionsFilter());
-
-
-  // Global validation pipe
-  app.useGlobalPipes(
-    new ValidationPipe({
-      transform: true,
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      forbidUnknownValues: true,
-      validationError: { target: false },
-    }),
-  );
-
-
-
-  // CORS configuration
-  const corsOrigins = configService.get<string>('app.corsOrigins', 'http://localhost:5173').split(',');
-  app.enableCors({
-    origin: corsOrigins,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'X-Timezone'],
-    exposedHeaders: ['Content-Disposition'],
-    credentials: true,
-    maxAge: 3600,
-  });
-
-  app.setGlobalPrefix('api');
-
-  await app.listen(port);
-
-  loggerService.log(`Application is running on: http://localhost:${port}`);
 }
 
-bootstrap();
+// Start clustering
+startCluster();

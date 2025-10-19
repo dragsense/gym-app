@@ -10,7 +10,7 @@ import { type TListHandlerComponentProps } from "@/@types/handler-types";
 import type { IRole, IPermission } from '@shared/interfaces';
 
 // Store
-import { type TListHandlerStore } from "@/stores";
+import { type TListHandlerStore, type TSingleHandlerStore } from "@/stores";
 
 // Components
 import { PermissionList } from "@/components/admin/roles/list/permission-list";
@@ -20,7 +20,7 @@ import { Dialog, DialogContent } from '@radix-ui/react-dialog';
 import { AppDialog } from '@/components/layout-ui/app-dialog';
 import type { TPermissionListExtraProps } from '@/components/admin/roles/list/permission-list';
 
-interface IViewRolePermissionsProps extends TListHandlerComponentProps<TListHandlerStore<IRole, any, any>> {}
+interface IViewRolePermissionsProps extends TListHandlerComponentProps<TSingleHandlerStore<IRole, any>> {}
 
 export default function ViewRolePermissions({
   storeKey,

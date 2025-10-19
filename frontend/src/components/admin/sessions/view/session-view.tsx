@@ -255,12 +255,13 @@ function SessionDetailContent({ session }: ISessionDetailContentProps) {
                 >
                     <div className="space-y-4">
                         {clients.map((client, index) => (
-                            <div key={client.id || index} className="border rounded-lg p-4 bg-gray-50">
-                                <div className="space-y-3">
+                            <div key={client.id || index}>
+                                <div className="space-y-2">
+                                    <AppCard className="p-0">
+                                        <div className="flex gap-3 items-center">
                                     <div className="flex items-center gap-3">
                                         <div className="text-muted-foreground"><User className="w-4 h-4" /></div>
                                         <div className="flex-1">
-                                            <span className="text-sm text-muted-foreground">Name:</span>
                                             <p className="font-medium">
                                                 {client.user?.profile?.firstName} {client.user?.profile?.lastName}
                                             </p>
@@ -269,17 +270,12 @@ function SessionDetailContent({ session }: ISessionDetailContentProps) {
                                     <div className="flex items-center gap-3">
                                         <div className="text-muted-foreground"><Mail className="w-4 h-4" /></div>
                                         <div className="flex-1">
-                                            <span className="text-sm text-muted-foreground">Email:</span>
                                             <p className="font-medium">{client.user?.email}</p>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-3">
-                                        <div className="text-muted-foreground"><Target className="w-4 h-4" /></div>
-                                        <div className="flex-1">
-                                            <span className="text-sm text-muted-foreground">Goal:</span>
-                                            <p className="font-medium">{client.goal || 'Not specified'}</p>
-                                        </div>
                                     </div>
+                                    </AppCard>
+                                 
                                 </div>
                             </div>
                         ))}

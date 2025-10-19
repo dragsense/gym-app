@@ -5,7 +5,7 @@ import { TrainerClient } from './entities/trainer-client.entity';
 import { CreateTrainerClientDto, UpdateTrainerClientDto, TrainerClientListDto } from 'shared/dtos/trainer-client-dtos';
 import { IPaginatedResponse } from 'shared/interfaces';
 import { CrudService } from '@/common/crud/crud.service';
-import { EventService } from '@/common/events/event.service';
+import { EventService } from '@/common/helper/services/event.service';
 import { UsersService } from '@/modules/v1/users/users.service';
 import { CrudOptions } from '@/common/crud/interfaces/crud.interface';
 import { EUserLevels, EUserRole } from 'shared';

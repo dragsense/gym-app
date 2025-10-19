@@ -10,7 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { detectFileType } from '@/lib/utils/detect-file-type.util';
 import { OmitType } from 'shared/lib/type-utils';
 import { CrudService } from '@/common/crud/crud.service';
-import { EventService } from '../events/event.service';
+import { EventService } from '../helper/services/event.service';
 
 @Injectable()
 export class FileUploadService extends CrudService<FileUpload> {

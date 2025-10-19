@@ -4,7 +4,7 @@ import { ActivityLog } from './entities/activity-log.entity';
 import { ActivityLogsService } from './activity-logs.service';
 import { ActivityLogsController } from './activity-logs.controller';
 import { ActivityLogInterceptor } from './interceptors/activity-log.interceptor';
-import { EventService } from '../events/event.service';
+import { EventService } from '../helper/services/event.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([ActivityLog])],

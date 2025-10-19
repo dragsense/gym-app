@@ -12,8 +12,8 @@ export class AppService {
     this.logger.log('Getting app info');
     
     return {
-      "name": "PaybackBilling",
-      "description": "Provides APIs for authentication, customer management, billing, payments, and notifications in a fitness-focused web platform.",
+      "name": "Customer App Web API",
+      "description": "Empower coaches to manage clients, track progress, and deliver results — all in one simple, powerful tool.",
       "version": "1.0.0",
       "documentation": "/api/docs"
     };

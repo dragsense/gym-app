@@ -249,9 +249,9 @@ The ${appName} Team
   /**
    * Send password reset success notification
    */
-  async sendPasswordResetConfirmation(user: User): Promise<void> {
+  async sendPasswordResetConfirmation(user: User, superAdmin: User): Promise<void> {
     try {
-      const supportEmail = this.appConfig.superAdmin.email;
+      const supportEmail = superAdmin.email;
 
       await this.mailerService.sendMail({
         to: user.email,

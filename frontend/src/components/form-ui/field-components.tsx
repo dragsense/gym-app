@@ -190,6 +190,7 @@ export const SelectField = React.memo(function SelectField({
                         options={field.options ?? []}
                         multiple={field.type === "multiSelect"}
                         disabled={isDisabled}
+                        modal={true}
                     />
                 );
             }}
@@ -431,10 +432,53 @@ export const MultiFileField = React.memo(function MultiFileField({
     );
 });
 
+interface UseObjectFieldProps<T> extends BaseFieldProps<T> {
+    renderField: (field: any, parentName?: string) => any;
+}
+
+
+export function useObjectField<T>({
+    field,
+    fieldName,
+    renderField,
+    showRequiredAsterisk,
+    layout = "vertical"
+}: UseObjectFieldProps<T>) {
+
+    const commonClass = cn(
+        field.startAdornment && "pl-10",
+        field.endAdornment && "pr-10",
+        field.className
+    );
+
+    const renderItem = field.renderItem;
+
+    const item = renderField(field.subFields, `${fieldName}`);
+
+    return (
+        <FormFieldWrapper
+            field={field}
+            fieldName={fieldName}
+            showRequiredAsterisk={showRequiredAsterisk}
+            layout={layout}
+        >
+            {({ isDisabled }) => {
+                return (
+                    <div className={cn(isDisabled && "opacity-50 pointer-events-none", commonClass)}>
+                        
+                        {renderItem ? renderItem(item) : Object.keys(item).map((key) => item[key])}
+                    </div>
+                );
+            }}
+        </FormFieldWrapper>
+    );
+}
 
 interface UseArrayFieldProps<T> extends BaseFieldProps<T> {
     renderField: (field: any, parentName?: string) => any;
 }
+
+
 
 
 export function useArrayField<T>({
@@ -447,7 +491,7 @@ export function useArrayField<T>({
     const { control } = useFormContext();
 
     const maxItems = field.maxItems || 10;
-    const minItems = field.minItems || 1;
+    const minItems = field.minItems || 0;
     const RemoveButton = field.RemoveButton;
     const renderItem = field.renderItem;
 
@@ -457,6 +501,7 @@ export function useArrayField<T>({
     });
 
     const addItem = () => {
+
         if (maxItems && fields.length >= maxItems) return;
         append({} as T);
     };
@@ -482,7 +527,7 @@ export function useArrayField<T>({
         ((index: number) => <Button type="button" onClick={() => removeItem(index)}>Remove</Button>)
         ;
 
-    const items = (fields?.length > 0 ? fields : [{} as T]).map((_, index) => {
+    const items = (fields?.length > 0 ? fields : minItems > 0 ? [{} as T] : []).map((_, index) => {
         return renderField(field.subFields, `${fieldName}.${index}`);
 
     });
@@ -496,16 +541,16 @@ export function useArrayField<T>({
         {({ isDisabled }) => {
             return (
                 <div className={cn(isDisabled && "opacity-50 pointer-events-none", commonClass)}>
-                    {renderItem ? renderItem(items, AddButton, removeButton) : items.map((item, index) => {
+                    {renderItem ? renderItem(items, AddButton, removeButton) : items.length > 0 ? items.map((item, index) => {
                         return (
                             <div className="flex items-end gap-2" key={index}>
                                 {Object.keys(item).map((key) => item[key])}
-                                {index === fields.length - 1 ?
+                                {index === items.length - 1 && minItems > 0 ?
                                     AddButton : removeButton(index)
                                 }
                             </div>
                         );
-                    })}
+                    }) : AddButton}
                 </div>
 
             );

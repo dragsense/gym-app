@@ -9,36 +9,26 @@ import {
   Min,
   IsEnum,
   IsArray,
+  ValidateIf,
+  ArrayMinSize,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import { Type, Transform } from 'class-transformer';
 import { PaginationMetaDto } from '../common/pagination.dto';
 import { ListQueryDto, SingleQueryDto } from '../common/list-query.dto';
 // import { ISession } from '../../interfaces/session.interface';
-import { FieldType } from '../../decorators/field.decorator';
+import { FieldType, FieldOptions } from '../../decorators/field.decorator';
 import { OmitType } from '../../lib/dto-type-adapter';
-import { TrainerDto } from '../trainer-dtos';
-import { ClientDto } from '../client-dtos';
+import { UserDto } from '../user-dtos';
 import {
-  Between,
-  LessThan,
-  GreaterThan,
-  LessThanOrEqual,
-  GreaterThanOrEqual,
   Like,
-  In,
-  NotIn,
-  IsNull,
-  IsNotNull,
   Equals,
-  NotEquals,
   DateRange,
-  TransformToArray,
-  TransformToDate,
-  RelationFilter,
 } from '../../decorators/crud.dto.decorators';
 import { ESessionStatus, ESessionType } from '../../enums/session.enum';
 import { ISession } from '../../interfaces/session.interface';
+import { ReminderDto } from '../reminder-dtos';
+
 
 export class CreateSessionDto {
   @ApiProperty({ example: 'Morning Workout', description: 'Session title' })
@@ -49,9 +39,9 @@ export class CreateSessionDto {
 
   @ApiProperty({ example: 'Cardio and strength training session', description: 'Session description' })
   @IsString()
-  @IsNotEmpty()
-  @FieldType("textarea", true)
-  description: string;
+  @IsOptional()
+  @FieldType("textarea", false)
+  description?: string;
 
   @ApiProperty({ example: '2024-01-15T09:00:00.000Z', description: 'Session start date and time' })
   @IsDateString()
@@ -59,28 +49,34 @@ export class CreateSessionDto {
   @FieldType("datetime", true)
   startDateTime: string;
 
-  @ApiProperty({ example: '2024-01-15T10:00:00.000Z', description: 'Session end date and time' })
-  @IsDateString()
-  @IsNotEmpty()
-  @FieldType("datetime", true)
-  endDateTime: string;
+  @ApiPropertyOptional({ example: 60, description: 'Session duration in minutes' })
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  @FieldType("number")
+  @Type(() => Number)
+  duration?: number;
 
-  @ApiProperty({ type: TrainerDto })
+
+  @ApiProperty({ type: UserDto })
   @ValidateNested()
-  @Type(() => TrainerDto)
-  @FieldType("nested", true, TrainerDto)
-  trainer: TrainerDto;
+  @Type(() => UserDto)
+  @FieldType("nested", true, UserDto)
+  trainerUser: UserDto;
 
-  @ApiProperty({ type: [ClientDto] })
+  @ApiProperty({ type: [UserDto], description: 'Associated clients (at least one required)' })
   @ValidateNested({ each: true })
-  @Type(() => ClientDto)
-  @FieldType("nested", true, ClientDto)
-  clients: ClientDto[];
+  @Type(() => UserDto)
+  @FieldType("nested", true, UserDto)
+  @IsArray()
+  @ArrayMinSize(1, { message: 'At least one client must be selected' })
+  clientsUsers: UserDto[];
 
   @ApiProperty({ example: 'PERSONAL', description: 'Session type', enum: ESessionType })
   @IsEnum(ESessionType)
   @IsNotEmpty()
   @FieldType("select", true)
+  @FieldOptions(Object.values(ESessionType).map(v => ({ value: v, label: v.charAt(0) + v.slice(1).toLowerCase() })))
   type: ESessionType;
 
   @ApiPropertyOptional({ example: 'Gym Floor A', description: 'Session location' })
@@ -102,6 +98,22 @@ export class CreateSessionDto {
   @IsString()
   @FieldType("textarea")
   notes?: string;
+
+  @ApiPropertyOptional({ type: ReminderDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => ReminderDto)
+  @FieldType("nested", false, ReminderDto)
+  @ValidateIf((o) => o.enableReminder === true)
+  reminderConfig?: ReminderDto;
+
+  @ApiPropertyOptional({ example: true, description: 'Whether reminders are enabled for this session' })
+  @IsOptional()
+  @IsBoolean()
+  @FieldType("switch")
+  enableReminder?: boolean;
+
+ 
 }
 
 export class UpdateSessionDto extends PartialType(OmitType(CreateSessionDto, [])) { }
@@ -175,9 +187,14 @@ export class SessionDto {
   @IsOptional()
   startDateTime: string;
 
-  @ApiProperty({ example: '2024-01-15T10:00:00.000Z', description: 'Session end date and time' })
+  @ApiPropertyOptional({ example: 60, description: 'Session duration in minutes' })
   @IsOptional()
-  endDateTime: string;
+  @IsNumber()
+  duration?: number;
+
+  @ApiPropertyOptional({ example: '2024-01-15T10:00:00.000Z', description: 'Session end date and time (auto-calculated)' })
+  @IsOptional()
+  endDateTime?: string;
 
   @ApiProperty({ example: 'PERSONAL', description: 'Session type' })
   @IsOptional()
@@ -202,16 +219,16 @@ export class SessionDto {
   @IsOptional()
   status: ESessionStatus;
 
-  @ApiProperty({ type: TrainerDto })
+  @ApiProperty({ type: UserDto })
   @ValidateNested()
-  @Type(() => TrainerDto)
-  trainer: TrainerDto;
+  @Type(() => UserDto)
+  trainerUser: UserDto;
 
-  @ApiProperty({ type: [ClientDto] })
+  @ApiProperty({ type: [UserDto] })
   @ValidateNested()
-  @Type(() => ClientDto)
+  @Type(() => UserDto)
   @IsArray()
-  clients: ClientDto[];
+  clientsUsers: UserDto[];
 
 
   @ApiProperty({ example: 1, description: 'Number of clients' })
@@ -221,6 +238,19 @@ export class SessionDto {
   @FieldType("number", true)
   @Min(0)
   clientsCount?: number;
+
+  @ApiPropertyOptional({ example: true, description: 'Whether reminders are enabled for this session' })
+  @IsOptional()
+  @IsBoolean()
+  enableReminders?: boolean;
+
+  @ApiPropertyOptional({ type: ReminderDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => ReminderDto)
+  @FieldType("nested", false, ReminderDto)
+  @ValidateIf((o) => o.enableReminder === true)
+  reminderConfig?: ReminderDto;
 
   @IsOptional()
   createdAt?: Date;

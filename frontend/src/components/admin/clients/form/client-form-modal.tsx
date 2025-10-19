@@ -1,5 +1,5 @@
 // External Libraries
-import React, { useMemo, useId, useTransition } from "react";
+import React, { useMemo, useId, useTransition, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 // Custom Hooks
 import { type FormInputs, useInput } from "@/hooks/use-input";
@@ -14,6 +14,8 @@ import { Button } from "@/components/ui/button";
 import { ModalForm } from "@/components/form-ui/modal-form";
 import type { THandlerComponentProps } from "@/@types/handler-types";
 import type { TUserData, TProfileData } from "@shared/types";
+import { addRenderItem } from "@/lib/fields/dto-to-feilds";
+import type { TFieldConfigObject } from "@/@types/form/field-config.type";
 
 export interface IClientFormModalExtraProps {
   open: boolean;
@@ -41,8 +43,33 @@ export const ClientFormModal = React.memo(function ClientFormModal({
   const onClose = store((state) => state.extra.onClose)
 
   // React 19: Memoized fields for better performance
-  const fields = useMemo(() => store((state) => state.fields), [store]);
+  const storeFields = store((state) => state.fields);
 
+  const fields = useMemo(() => {
+    const renderers = {
+      user: (user: FormInputs<TUserData>) => (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {user.email as ReactNode}
+            {user.isActive as ReactNode}
+          </div>
+
+          {user.profile as ReactNode}
+        </div>
+      ),
+      profile: (profile: FormInputs<TProfileData>) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {profile.firstName as ReactNode}
+          {profile.lastName as ReactNode}
+          {profile.address as ReactNode}
+          {profile.phoneNumber as ReactNode}
+        </div>
+      ),
+    };
+
+    return addRenderItem(storeFields, renderers) as TFieldConfigObject<TClientData | TUpdateClientData>;
+  }, [storeFields]);
+  
   const inputs = useInput<TClientData | TUpdateClientData>({
     fields,
     showRequiredAsterisk: true,
@@ -80,8 +107,8 @@ export const ClientFormModal = React.memo(function ClientFormModal({
     </div>
   ), [componentId, isEditing, onClose]);
 
-  const userInputs = inputs.user as FormInputs<TUserData>;
-  const profileInputs = userInputs.profile as FormInputs<TProfileData>;
+  const userInputs = inputs.user;
+
 
   return <>
     <ModalForm<TClientData, TClientResponse, IClientFormModalExtraProps>
@@ -97,25 +124,8 @@ export const ClientFormModal = React.memo(function ClientFormModal({
           {/* Basic Info */}
           <div>
           <h3 className="text-sm font-semibold mb-3">Basic Info</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-           {userInputs.email}
-           {userInputs.isActive}
-           {profileInputs.firstName}
-           {profileInputs.lastName}
-          </div>
+           {userInputs as ReactNode}
         </div>
-
-        {/* Personal Details */}
-        <div>
-          <h3 className="text-sm font-semibold  mb-3">Personal Details</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-            {profileInputs.phoneNumber}
-            {profileInputs.gender}
-            {profileInputs.dateOfBirth}
-            {profileInputs.address}
-          </div>
-        </div>
-
         {/* Trainer Details */}
         <div>
           <h3 className="text-sm font-semibold  mb-3">Trainer Details</h3>

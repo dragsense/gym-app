@@ -20,7 +20,7 @@ export interface IPermissionFormModalExtraProps {
 
 interface IPermissionFormModalProps extends THandlerComponentProps<TFormHandlerStore<TPermissionFormData, any, IPermissionFormModalExtraProps>> {}
 
-const PermissionFormModal = React.memo(function PermissionFormModal({
+export const PermissionFormModal = React.memo(function PermissionFormModal({
   storeKey,
   store,
 }: IPermissionFormModalProps) {
@@ -120,4 +120,3 @@ const PermissionFormModal = React.memo(function PermissionFormModal({
   );
 });
 
-export default PermissionFormModal;

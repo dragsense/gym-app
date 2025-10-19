@@ -63,11 +63,7 @@ export class ScheduleController {
     @Body() createDto: CreateScheduleDto,
     @Timezone() timezone: string,
   ) {
-    // Auto-set timezone if not provided
-    if (!createDto.timezone) {
-      createDto.timezone = timezone;
-    }
-    const schedule = await this.scheduleService.createSchedule(createDto);
+    const schedule = await this.scheduleService.createSchedule(createDto, timezone);
     return { message: 'Schedule created successfully', data: schedule };
   }
 
@@ -83,11 +79,7 @@ export class ScheduleController {
     @Body() updateData: UpdateScheduleDto,
     @Timezone() timezone: string,
   ) {
-    // Auto-set timezone if not provided
-    if (!updateData.timezone) {
-      updateData.timezone = timezone;
-    }
-    const schedule = await this.scheduleService.updateSchedule(id, updateData);
+    const schedule = await this.scheduleService.updateSchedule(id, updateData, timezone);
     return { message: 'Schedule updated successfully', data: schedule };
   }
 

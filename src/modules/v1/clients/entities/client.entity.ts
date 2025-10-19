@@ -26,5 +26,10 @@ export class Client extends GeneralBaseEntity {
   @ApiProperty({ type: () => User, description: 'Associated user' })
   @ManyToOne(() => User, { eager: true })
   @JoinColumn()
-  user: User;
+  user: User; 
+
+  @ApiProperty({ type: () => User, description: 'Created by user' })
+  @ManyToOne(() => User, { eager: true })
+  @JoinColumn({ name: 'createdByUserId' })
+  createdBy: User;
 }

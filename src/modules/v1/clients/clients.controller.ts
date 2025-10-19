@@ -25,6 +25,7 @@ import { ClientsService } from './clients.service';
 import { JwtAuthGuard } from '@/guards/jwt-auth.gaurd';
 import { CreateClientDto, UpdateClientDto, ClientListDto, ClientPaginatedDto, ClientDto, SingleQueryDto } from 'shared';
 import { Client } from './entities/client.entity';
+import { AuthUser } from '@/decorators/user.decorator';
 
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('access-token')
@@ -40,8 +41,8 @@ export class ClientsController {
     type: ClientPaginatedDto,
   })
   @Get()
-  findAll(@Query() query: ClientListDto) {
-    return this.clientsService.get(query, ClientListDto);
+  findAll(@Query() query: ClientListDto, @AuthUser() user: any) {
+    return this.clientsService.get({...query, createdByUserId: user.id }, ClientListDto);
   }
 
   @ApiOperation({ summary: 'Get client by ID' })
@@ -66,8 +67,8 @@ export class ClientsController {
   })
   @ApiResponse({ status: 201, description: 'Client created successfully' })
   @Post()
-  create(@Body() createClientDto: CreateClientDto) {
-    return this.clientsService.createClient(createClientDto);
+  create(@Body() createClientDto: CreateClientDto, @AuthUser() user: any) {
+    return this.clientsService.createClient(createClientDto, user.id);
   }
 
   @ApiOperation({ summary: 'Update client by ID' })

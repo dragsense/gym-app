@@ -8,3 +8,7 @@ export * from './notification.enum';
 export * from './trainer-client.enum';
 export * from './role';
 export * from './session.enum';
+export * from './reminder.enum';
+export * from './billing.enum';
+export * from './referral-link.enum';
+export * from './payment-methods.enum'; 

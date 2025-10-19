@@ -8,9 +8,11 @@ import {
 } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { GeneralBaseEntity } from '@/common/entities';
-import { Trainer } from '@/modules/v1/trainers/entities/trainer.entity';
-import { Client } from '@/modules/v1/clients/entities/client.entity';
 import { ESessionStatus, ESessionType } from 'shared/enums/session.enum';
+import { BeforeInsert, BeforeUpdate } from 'typeorm';
+import { ReminderDto } from 'shared/dtos/reminder-dtos';
+import { User } from '../../users/entities/user.entity';
+import { EScheduleFrequency } from 'shared/enums/schedule.enum';
 
 @Entity('sessions')
 export class Session extends GeneralBaseEntity {
@@ -20,16 +22,20 @@ export class Session extends GeneralBaseEntity {
   title: string;
 
   @ApiProperty({ example: 'Cardio and strength training session', description: 'Session description' })
-  @Column({ type: 'text' })
+  @Column({ type: 'text', nullable: true })
   description: string;
 
   @ApiProperty({ example: '2024-01-15T09:00:00.000Z', description: 'Session start date and time' })
   @Column({ type: 'timestamptz' })
   startDateTime: Date;
 
-  @ApiProperty({ example: '2024-01-15T10:00:00.000Z', description: 'Session end date and time' })
-  @Column({ type: 'timestamptz' })
-  endDateTime: Date;
+  @ApiPropertyOptional({ example: 60, description: 'Session duration in minutes' })
+  @Column({ type: 'int', nullable: true, default: 60 })
+  duration?: number;
+
+  @ApiPropertyOptional({ example: '2024-01-15T10:00:00.000Z', description: 'Session end date and time (auto-calculated from startDateTime + duration)' })
+  @Column({ type: 'timestamptz', nullable: true })
+  endDateTime?: Date;
 
   @ApiProperty({ example: 'PERSONAL', description: 'Session type', enum: ESessionType })
   @Column({ type: 'enum', enum: ESessionType })
@@ -51,13 +57,39 @@ export class Session extends GeneralBaseEntity {
   @Column({ type: 'enum', enum: ESessionStatus, default: ESessionStatus.SCHEDULED })
   status: ESessionStatus;
 
-  @ApiProperty({ type: () => Trainer, description: 'Associated trainer' })
-  @ManyToOne(() => Trainer, { eager: true })
-  @JoinColumn()
-  trainer: Trainer;
+  @ApiProperty({ type: () => User, description: 'Associated trainer' })
+  @ManyToOne(() => User, { eager: true })
+  @JoinColumn({ name: 'trainerUserId' })
+  trainerUser: User;
 
-  @ApiProperty({ type: () => [Client], description: 'Associated clients' })
-  @ManyToMany(() => Client, { eager: true })
-  @JoinTable()
-  clients: Client[];
+  @ApiProperty({ type: () => [User], description: 'Associated clients (at least one required)' })
+  @ManyToMany(() => User, { eager: true })
+  @JoinTable({ name: 'session_clients_users' })
+  clientsUsers: User[];
+
+  @ApiPropertyOptional({ example: EScheduleFrequency.DAILY, description: 'Session recurrence', enum: EScheduleFrequency })
+  @Column({ type: 'enum', enum: EScheduleFrequency, nullable: true })
+  recurrence?: EScheduleFrequency;  
+
+
+  @ApiProperty({ type: () => ReminderDto, description: 'Reminder configuration' })
+  @Column({ type: 'jsonb', nullable: true })
+  reminderConfig?: ReminderDto;
+
+  @ApiPropertyOptional({ example: true, description: 'Whether reminders are enabled for this session' })
+  @Column({ type: 'boolean', default: false })
+  enableReminder?: boolean;
+
+  // Automatically calculate endDateTime before insert
+  @BeforeInsert()
+  @BeforeUpdate()
+  beforeInsert() {
+    if (!this.startDateTime || !this.duration) {
+      return;
+    }
+
+    const durationInMilliseconds = this.duration * 1000;
+    const startDateTime = new Date(this.startDateTime);
+    this.endDateTime = new Date(startDateTime.getTime() + durationInMilliseconds);
+  }
 }

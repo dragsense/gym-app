@@ -10,9 +10,9 @@ import { FieldOptions, FieldType } from '../../decorators/field.decorator';
 export class CreateScheduleDto {
   @ApiProperty({ example: 'Daily Report Generation' })
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   @FieldType("text", true)
-  title: string;
+  title?: string;
 
   @ApiPropertyOptional({ example: 123 })
   @IsNumber()
@@ -33,16 +33,16 @@ export class CreateScheduleDto {
 
   @ApiProperty({ enum: EScheduleFrequency, example: EScheduleFrequency.DAILY })
   @IsEnum(EScheduleFrequency)
-  @IsNotEmpty()
+  @IsOptional()
   @FieldType("select", true)
   @FieldOptions(Object.values(EScheduleFrequency).map(v => ({ value: v, label: v.charAt(0) + v.slice(1).toLowerCase() })))
-  frequency: EScheduleFrequency;
+  frequency?: EScheduleFrequency;
 
   @ApiProperty({ example: '2025-10-15T00:00:00Z', description: 'Start date' })
   @IsDateString()
-  @IsNotEmpty()
+  @IsOptional()
   @FieldType("date", true)
-  startDate: string;
+  startDate?: string;
 
   @ApiPropertyOptional({ example: '2025-12-31T00:00:00Z', description: 'End date (when schedule expires)' })
   @IsDateString()

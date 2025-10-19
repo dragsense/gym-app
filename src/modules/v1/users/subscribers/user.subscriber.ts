@@ -32,7 +32,6 @@ export class UserSubscriber implements EntitySubscriberInterface<User> {
         return;
       }
 
-      this.logger.log(`Setting up initial configuration for user ${user.id} (${user.email})`);
 
     } catch (error) {
       this.logger.error(`Failed to initialize user settings for user ${event.entity?.id}:`, error);

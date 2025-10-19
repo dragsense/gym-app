@@ -13,3 +13,8 @@ export * from "./worker-dtos";
 export * from "./trainer-dtos";
 export * from "./trainer-client-dtos";
 export * from "./session-dtos";
+export * from "./billing-dtos";
+export * from "./referral-link-dtos";
+export * from "./user-settings-dtos";
+export * from "./payment-methods-dtos";
+export * from "./stripe-dtos";

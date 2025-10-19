@@ -59,6 +59,16 @@ export function sessionItemViews({ handleEdit, handleDelete, handleView }: ISess
       ),
     },
     {
+      id: 'duration',
+      header: 'Duration',
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          <Clock className="h-4 w-4 text-muted-foreground" />
+          <span>{row.original.duration} minutes</span>
+        </div>
+      ),
+    },
+    {
       id: 'type',
       header: 'Type',
       cell: ({ row }) => (
@@ -93,7 +103,7 @@ export function sessionItemViews({ handleEdit, handleDelete, handleView }: ISess
       cell: ({ row }) => (
         <div className="flex items-center gap-1">
           <DollarSign className="h-4 w-4 text-muted-foreground" />
-          <span>{row.original.price ? `$${row.original.price}` : 'Free'}</span>
+          <span>{row.original.price ? `${row.original.price}` : 'Free'}</span>
         </div>
       ),
     },
@@ -134,7 +144,7 @@ export function sessionItemViews({ handleEdit, handleDelete, handleView }: ISess
   // List item renderer
   const listItem = (session: ISession) => (
     <AppCard className="p-4 hover:shadow-md transition-shadow" data-component-id={componentId}>
-      <div className="flex items-center justify-between">
+      <div className="space-y-4">
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
             <h3 className="font-semibold text-lg">{session.title}</h3>
@@ -150,18 +160,22 @@ export function sessionItemViews({ handleEdit, handleDelete, handleView }: ISess
             </Badge>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
+          <div className="space-y-2 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <User className="h-4 w-4" />
               <span><strong>Trainer:</strong> {session.trainer?.user?.profile?.firstName} {session.trainer?.user?.profile?.lastName}</span>
             </div>
             <div className="flex items-center gap-2">
               <User className="h-4 w-4" />
-              <span><strong>Clients:</strong> {session.clients?.length || 0} client(s)</span>
+              <span><strong>Clients:</strong> {session.clientsCount} client(s)</span>
             </div>
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4" />
               <span><strong>Start:</strong> {format(new Date(session.startDateTime), 'MMM dd, yyyy HH:mm')}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              <span><strong>Duration:</strong> {session.duration} minutes</span>
             </div>
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4" />

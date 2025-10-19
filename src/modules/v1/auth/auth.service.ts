@@ -17,6 +17,8 @@ import { UsersService } from '../users/users.service';
 import { LoggerService } from '@/common/logger/logger.service';
 import { ActivityLogsService } from '@/common/activity-logs/activity-logs.service';
 import { EActivityType, EActivityStatus } from 'shared/enums/activity-log.enum';
+import { EUserLevels, EUserRole } from 'shared/enums/user.enum';
+import { RewardsService } from '@/modules/v1/rewards/rewards.service';
 
 @Injectable()
 export class AuthService {
@@ -28,21 +30,29 @@ export class AuthService {
     private readonly mailerService: MailerService,
     private readonly userService: UsersService,
     private readonly activityLogsService: ActivityLogsService,
+    private readonly rewardsService: RewardsService,
   ) {}
 
   async signup(
     signupDto: SignupDto,
   ): Promise<IMessageResponse> {
     try {
-      const {firstName, lastName, ...userData} = signupDto;
+      const {firstName, lastName, referralCode, ...userData} = signupDto;
 
       const res = await this.userService.create({
         ...userData,
+        level: EUserLevels[EUserRole.ADMIN],
         isActive: true,
         profile: {
           firstName,
           lastName,
         }
+      }, {
+        afterCreate: async (savedEntity, manager) => {
+          if (referralCode) {
+            await this.rewardsService.processReferralSignup(savedEntity.id, referralCode);
+          }
+        },
       });
 
       // Log successful signup activity
@@ -57,6 +67,7 @@ export class AuthService {
           email: signupDto.email,
           firstName,
           lastName,
+          referralCode: referralCode || null,
           timestamp: new Date().toISOString(),
         },
         userId: res.id,

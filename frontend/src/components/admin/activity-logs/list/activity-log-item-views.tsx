@@ -1,5 +1,5 @@
 // External Libraries
-import { type JSX } from "react";
+import { useState, type JSX } from "react";
 import { type ColumnDef } from "@tanstack/react-table";
 import { useId, useMemo, useTransition } from "react";
 
@@ -93,6 +93,24 @@ export const itemViews = (): {
     {
       accessorKey: "errorMessage",
       header: "Error Message",
+      cell: ({ row }) => {
+        const errorMessage = row.getValue<string>("errorMessage") || '';
+    
+        return (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <p className="max-w-50 truncate cursor-help text-red-600">
+                  {errorMessage || ''}
+                </p>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">
+                <p className="whitespace-pre-wrap break-words">{errorMessage || 'No error message'}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        );
+      },
     },
     {
       accessorKey: "user.email",
@@ -114,7 +132,8 @@ export const itemViews = (): {
       accessorKey: "metadata",
       header: "Metadata",
       cell: ({ row }) => {
-        const metadata = row.original.metadata;
+        const metadata = row.getValue<any>("metadata") || {};
+
         if (!metadata) return <span className="text-muted-foreground">-</span>;
 
         const { duration, responseSize, bodyKeys } = metadata;
@@ -153,7 +172,7 @@ export const itemViews = (): {
                         <div className="font-semibold mb-1">Body Fields:</div>
                         <div className="flex flex-wrap gap-1">
                           {bodyKeys.map((key: string, idx: number) => (
-                            <Badge key={idx} variant="outline" className="text-xs">
+                            <Badge key={idx} variant="outline" className="text-xs text-background">
                               {key}
                             </Badge>
                           ))}

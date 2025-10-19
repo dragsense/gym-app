@@ -4,7 +4,7 @@ import { TrainerClientsController } from './trainer-clients.controller';
 import { TrainerClientsService } from './trainer-clients.service';
 import { TrainerClient } from './entities/trainer-client.entity';
 import { CrudModule } from '@/common/crud/crud.module';
-import { EventService } from '@/common/events/event.service';
+import { EventService } from '@/common/helper/services/event.service';
 import { TrainersModule } from '../trainers/trainers.module';
 import { ClientsModule } from '../clients/clients.module';
 

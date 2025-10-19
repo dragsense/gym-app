@@ -25,6 +25,7 @@ import { TrainersService } from './trainers.service';
 import { JwtAuthGuard } from '@/guards/jwt-auth.gaurd';
 import { CreateTrainerDto, UpdateTrainerDto, TrainerListDto, TrainerPaginatedDto, TrainerSafeDto, SingleQueryDto } from 'shared';
 import { Trainer } from './entities/trainer.entity';
+import { AuthUser } from '@/decorators/user.decorator';
 
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('access-token')
@@ -40,8 +41,8 @@ export class TrainersController {
     type: TrainerPaginatedDto,
   })
   @Get()
-  findAll(@Query() query: TrainerListDto) {
-    return this.trainersService.get(query, TrainerListDto);
+  findAll(@Query() query: TrainerListDto, @AuthUser() user: any) {
+    return this.trainersService.get({...query, createdByUserId: user.id }, TrainerListDto);
   }
 
   @ApiOperation({ summary: 'Get trainer by ID' })
@@ -64,8 +65,8 @@ export class TrainersController {
   })
   @ApiResponse({ status: 201, description: 'Trainer created successfully' })
   @Post()
-  create(@Body() createTrainerDto: CreateTrainerDto) {
-    return this.trainersService.createTrainer(createTrainerDto);
+  create(@Body() createTrainerDto: CreateTrainerDto, @AuthUser() user: any) {
+    return this.trainersService.createTrainer(createTrainerDto, user.id);
   }
 
   @ApiOperation({ summary: 'Update trainer by ID' })

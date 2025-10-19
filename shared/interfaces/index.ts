@@ -1,4 +1,5 @@
 export * from './user.interface';
+export * from './payment-methods.interface';
 export * from './trainer.interface';
 export * from './client.interface';
 export * from './trainer-client.interface';
@@ -17,3 +18,5 @@ export * from './worker.interface';
 export * from './notification.interface';
 export * from './role';
 export * from './session.interface';
+export * from './billing.interface';
+export * from './referral-link.interface';

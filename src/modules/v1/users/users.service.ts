@@ -19,7 +19,7 @@ import { TokenService } from '../auth/services/tokens.service';
 import { UserEmailService } from './services/user-email.service';
 import { LoggerService } from '@/common/logger/logger.service';
 import { CrudService } from '@/common/crud/crud.service';
-import { EventService } from '@/common/events/event.service';
+import { EventService } from '@/common/helper/services/event.service';
 import { ProfilesService } from './profiles/profiles.service';
 import { CrudOptions } from '@/common/crud/interfaces/crud.interface';
 
@@ -112,7 +112,8 @@ export class UsersService extends CrudService<User> {
         firstName: profile.firstName,
         lastName: profile.lastName,
         phoneNumber: profile.phoneNumber,
-      }
+      },
+      tempPassword
     });
 
 
@@ -165,7 +166,15 @@ export class UsersService extends CrudService<User> {
     const { currentPassword, password } = resetPasswordDto;
 
 
-    const user = await this.getSingle({ id }, { _select: ['id', 'password', 'passwordHistory'] });
+    const user = await this.userRepo.findOne({
+      where: { id },
+      select: ['id', 'email', 'password', 'passwordHistory'],
+      relations: ['profile'],
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
 
     await this.passwordService.validatePasswordChange(user, password);
 
@@ -190,15 +199,21 @@ export class UsersService extends CrudService<User> {
 
     user.password = password;
 
-    await this.userRepo.save(user);
+    const savedUser = await this.userRepo.save(user);
 
     await this.tokenService.invalidateAllTokens(user.id);
 
     // Emit password reset event for email sending
     this.eventService.emit('user.password.reset', {
-      email: user.email,
-      user,
-      type: 'confirmation'
+      entity: savedUser,
+      entityId: user.id,
+      operation: 'resetPassword',
+      source: 'user',
+      tableName: 'users',
+      timestamp: new Date(),
+      data: {
+        type: 'confirmation'
+      }
     });
 
     return {

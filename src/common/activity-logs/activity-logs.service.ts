@@ -9,18 +9,10 @@ import {
 import { IPaginatedResponse } from 'shared/interfaces';
 import { CreateActivityLogDto } from './dtos/create-activity-log.dto';
 import { CrudService } from '@/common/crud/crud.service';
-import { EventService } from '../events/event.service';
-
-export interface ActivityLogConfig {
-  enabled: boolean;
-  logEndpoints: string[];
-  logMethods: string[];
-  logActivityTypes: string[];
-}
+import { EventService } from '../helper/services/event.service';
 
 @Injectable()
 export class ActivityLogsService extends CrudService<ActivityLog> {
-  private config: ActivityLogConfig;
 
   constructor(
     @InjectRepository(ActivityLog)
@@ -30,20 +22,8 @@ export class ActivityLogsService extends CrudService<ActivityLog> {
     eventService: EventService,
   ) {
     super(activityLogRepository, dataSource, eventService);
-    this.loadConfig();
   }
 
-  /**
-   * Load activity log configuration from environment
-   */
-  private loadConfig(): void {
-    this.config = {
-      enabled: this.configService.get<boolean>('activityLogs.enabled', true),
-      logEndpoints: this.configService.get<string[]>('activityLogs.logEndpoints', []),
-      logMethods: this.configService.get<string[]>('activityLogs.logMethods', ['POST', 'PUT', 'DELETE', 'PATCH']),
-      logActivityTypes: this.configService.get<string[]>('activityLogs.logActivityTypes', []),
-    };
-  }
 
   /**
    * Check if activity should be logged based on configuration
@@ -53,27 +33,33 @@ export class ActivityLogsService extends CrudService<ActivityLog> {
     method: string,
     activityType?: string
   ): boolean {
+
+    const config = this.configService.get('activityLogs');
+
+
     // If logging is disabled, don't log
-    if (!this.config.enabled) {
+    if (!config.enabled) {
       return false;
     }
 
     // Check if endpoint should be logged (if logEndpoints is empty, log all)
-    if (this.config.logEndpoints.length > 0) {
-      const shouldLogEndpoint = this.config.logEndpoints.some(logged => endpoint.includes(logged));
+    if (config.logEndpoints.length > 0) {
+      const shouldLogEndpoint = config.logEndpoints.some(logged => endpoint.includes(logged));
       if (!shouldLogEndpoint) {
         return false;
       }
+    } else {
+      return false; // If logEndpoints is empty, don't log
     }
 
     // Check if method should be logged
-    if (!this.config.logMethods.includes(method.toUpperCase())) {
+    if (config.logMethods.length <= 0 || !config.logMethods.includes(method.toUpperCase())) {
       return false;
-    }
+    } 
 
     // Check activity type filtering
-    if (activityType && this.config.logActivityTypes.length > 0) {
-      const shouldLogType = this.config.logActivityTypes.includes(activityType);
+    if (activityType && config.logActivityTypes.length > 0) {
+      const shouldLogType = config.logActivityTypes.includes(activityType);
       if (!shouldLogType) {
         return false;
       }

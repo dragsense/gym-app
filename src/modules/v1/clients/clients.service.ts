@@ -9,7 +9,7 @@ import { DataSource, Repository } from 'typeorm';
 import { Client } from './entities/client.entity';
 import { CreateClientDto, UpdateClientDto } from 'shared/dtos';
 import { CrudService } from '@/common/crud/crud.service';
-import { EventService } from '@/common/events/event.service';
+import { EventService } from '@/common/helper/services/event.service';
 import { CrudOptions } from '@/common/crud/interfaces/crud.interface';
 import { User } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
@@ -31,13 +31,13 @@ export class ClientsService extends CrudService<Client> {
     super(clientRepo, dataSource, eventService, crudOptions);
   }
 
-  async createClient(createClientDto: CreateClientDto): Promise<Client> {
+  async createClient(createClientDto: CreateClientDto, userId: number): Promise<Client> {
     const { user, ...clientData } = createClientDto;
-    return await this.create(clientData, {
+    return await this.create({ ...clientData, createdBy: { id: userId } }, {
       afterCreate: async (savedEntity, manager) => {
 
         try {
-          const savedUser = await this.userService.createUser({...user, level: EUserLevels[EUserRole.CLIENT]});
+          const savedUser = await this.userService.createUser({ ...user, level: EUserLevels[EUserRole.CLIENT] });
           savedEntity.user = savedUser.user;
 
           await manager.update(Client, savedEntity.id, { user: savedUser.user });

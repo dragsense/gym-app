@@ -40,11 +40,7 @@ export function PermissionFilters({ store }: IPermissionFiltersProps) {
   return (
     <div className="flex-1 flex items-end gap-2 flex-wrap" data-component-id={componentId}>
       {inputs.search}
-      {inputs.action}
-      {inputs.status}
-      {inputs.resourceId}
-      {inputs.createdAfter}
-      {inputs.createdBefore}
+      {inputs.createdAt}
 
       {hasActiveFilters && (
         <Button

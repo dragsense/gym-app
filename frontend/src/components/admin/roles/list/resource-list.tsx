@@ -8,7 +8,7 @@ import type { TListHandlerStore } from "@/stores";
 import type { IResource } from '@shared/interfaces';
 
 // Components
-import { TTable } from "@/components/ui/table";
+import { Table as TTable } from "@/components/table-ui/table";
 import { AppCard } from "@/components/layout-ui/app-card";
 import { ResourceFilters } from "./resource-filters";
 import { itemViews } from "./resource-item-views";
@@ -21,10 +21,10 @@ export interface TResourceListExtraProps {
 
 interface IResourceListProps extends TListHandlerComponentProps<TListHandlerStore<IResource, TResourceListData, TResourceListExtraProps>> {}
 
-export default function ResourceList({
+export const ResourceList = ({
   storeKey,
   store
-}: IResourceListProps) {
+}: IResourceListProps) => {
   // React 19: Essential IDs and transitions
   const componentId = useId();
   const [, startTransition] = useTransition();

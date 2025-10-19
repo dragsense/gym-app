@@ -224,19 +224,19 @@ export class EnvironmentVariables {
   // Dragonfly Configuration (for Bull Queue)
   @IsString()
   @IsOptional()
-  DRAGONFLY_HOST: string;
+  REDIS_HOST: string;
 
   @IsNumber()
   @IsOptional()
-  DRAGONFLY_PORT: number;
+  REDIS_PORT: number;
 
   @IsString()
   @IsOptional()
-  DRAGONFLY_PASSWORD: string;
+  REDIS_PASSWORD: string;
 
   @IsNumber()
   @IsOptional()
-  DRAGONFLY_DB: number;
+  REDIS_DB: number;
 
   // Bull Queue Configuration - Only Dragonfly config is used
 
@@ -288,4 +288,18 @@ export class EnvironmentVariables {
   @IsString()
   @IsOptional()
   SUPER_ADMIN_LAST_NAME: string;
+
+
+    // Stripe Configuration
+    @IsOptional()
+    @IsString()
+    STRIPE_SECRET_KEY?: string;
+  
+    @IsOptional()
+    @IsString()
+    STRIPE_PUBLISHABLE_KEY?: string;
+  
+    @IsOptional()
+    @IsString()
+    STRIPE_WEBHOOK_SECRET?: string;
 }
