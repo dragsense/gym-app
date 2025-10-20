@@ -101,7 +101,7 @@ export type NestedArrayField<T> = BaseField<T> & {
   Component?: never;
   minItems: number;
   maxItems: number;
-  renderItem?: (item: T[], AddButton: React.ReactNode, removeButton: (index: number) => React.ReactNode) => React.ReactNode;
+  renderItem?: (item: T[] | T, AddButton?: React.ReactNode, removeButton?: (index: number) => React.ReactNode) => React.ReactNode;
 };
 
 // Custom field must have Component
@@ -122,7 +122,6 @@ export type PrimitiveField<T, Type extends Exclude<TFieldType, "nested" | "custo
   BaseField<T> & {
     type: Type;
     subFields?: never;
-    itemFields?: never;
     Component?: never;
     minItems?: never;
     maxItems?: never;

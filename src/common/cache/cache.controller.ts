@@ -1,43 +1,27 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Delete,
-  Body,
-  Query,
-  HttpCode,
-  HttpStatus,
-  Logger,
-} from '@nestjs/common';
+import { Controller, Get, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { CacheService } from './cache.service';
+import { ConfigService } from '@nestjs/config';
+import { JwtAuthGuard } from '@/guards/jwt-auth.gaurd';
 
 @ApiTags('Cache')
 @Controller('cache')
+@UseGuards(JwtAuthGuard)
 export class CacheController {
-  private readonly logger = new Logger(CacheController.name);
+  constructor(private readonly configService: ConfigService) {}
 
-  constructor(private readonly cacheService: CacheService) {}
-
-  @Get('stats')
-  @ApiOperation({ summary: 'Get cache statistics' })
-  @ApiResponse({ status: 200, description: 'Cache statistics retrieved successfully' })
-  getCacheStats() {
+  @Get('monitor-url')
+  @ApiOperation({ summary: 'Get Dragonfly cache monitor URL' })
+  @ApiResponse({ status: 200, description: 'Cache monitor URL retrieved successfully' })
+  getCacheMonitorUrl() {
+    const cacheConfig = this.configService.get('cache');
+    const host = cacheConfig?.host || 'localhost';
+    const port = cacheConfig?.port || 6380;
+    const dragonflyUrl = `http://${host}:${port}/`;
+    
     return {
-      stats: this.cacheService.getStats(),
-      hitRatio: this.cacheService.getHitRatio(),
+      url: dragonflyUrl,
+      name: 'Dragonfly Cache Monitor',
+      description: 'Monitor Dragonfly cache in real-time'
     };
   }
-
-  @Delete('clear')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Clear all cache' })
-  @ApiResponse({ status: 200, description: 'All cache cleared successfully' })
-  async clearAllCache() {
-    this.logger.log('Clearing all cache');
-    await this.cacheService.clear();
-    return { message: 'Cache cleared successfully' };
-  }
-
-
 }

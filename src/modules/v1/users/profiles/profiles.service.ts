@@ -16,7 +16,7 @@ import { UpdateProfileDto } from 'shared/dtos/user-dtos/profile.dto';
 import { FileUploadService } from '@/common/file-upload/file-upload.service';
 import { FileUpload } from '@/common/file-upload/entities/file-upload.entity';
 import { EFileType } from 'shared';
-import { EventService } from '@/common/events/event.service';
+import { EventService } from '@/common/helper/services/event.service';
 import { CrudOptions } from '@/common/crud/interfaces/crud.interface';
 
 @Injectable()

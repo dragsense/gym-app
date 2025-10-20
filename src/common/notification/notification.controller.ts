@@ -7,8 +7,6 @@ import {
   NotificationDto,
   NotificationPaginatedDto,
 } from 'shared/dtos/notification-dtos';
-import { SingleQueryDto } from 'shared';
-import { Notification } from './entities/notification.entity';
 
 @ApiTags('Notifications')
 @ApiBearerAuth()
@@ -40,9 +38,8 @@ export class NotificationController {
   })
   async findByUser(
     @Param('userId', ParseIntPipe) userId: number,
-    @Query() queryDto: SingleQueryDto<Notification>
   ) {
-    return await this.notificationService.getSingle(userId, NotificationListDto);
+    return await this.notificationService.getSingle({ entityId: userId, entityType: 'user' });
   }
 
   @Get(':id')
@@ -55,7 +52,7 @@ export class NotificationController {
   })
   @ApiResponse({ status: 404, description: 'Notification not found' })
   async findOne(@Param('id', ParseIntPipe) id: number) {
-    return await this.notificationService.findOne({ id });
+    return await this.notificationService.getSingle({ id });
   }
 
   @Put(':id/read')
@@ -72,7 +69,7 @@ export class NotificationController {
     @Request() req: any
   ) {
     const userId = req.user?.id;
-    return await this.notificationService.markAsRead(id);
+    return await this.notificationService.update(id, { isRead: true });
   }
 
   @Put('read-all')
@@ -89,25 +86,7 @@ export class NotificationController {
   })
   async markAllAsRead(@Request() req: any) {
     const userId = req.user?.id;
-    return await this.notificationService.markAllAsRead(userId);
-  }
-
-  @Get('unread-count')
-  @ApiOperation({ summary: 'Get unread notification count for current user' })
-  @ApiResponse({
-    status: 200,
-    description: 'Unread count retrieved successfully',
-    schema: {
-      type: 'object',
-      properties: {
-        count: { type: 'number', description: 'Number of unread notifications' }
-      }
-    }
-  })
-  async getUnreadCount(@Request() req: any) {
-    const userId = req.user?.id;
-    const count = await this.notificationService.getUnreadCount(userId);
-    return { count };
+    return await this.notificationService.update({ entityId: userId, entityType: 'user' }, { isRead: true });
   }
 
   @Delete(':id')
@@ -122,12 +101,11 @@ export class NotificationController {
     @Param('id', ParseIntPipe) id: number,
     @Request() req: any
   ) {
-    const userId = req.user?.id;
-    await this.notificationService.delete(id, userId);
+    await this.notificationService.delete(id);
     return { message: 'Notification deleted successfully' };
   }
 
-  @Delete('all')
+  @Delete('user/:userId')
   @ApiOperation({ summary: 'Delete all notifications for current user' })
   @ApiResponse({
     status: 200,
@@ -139,8 +117,8 @@ export class NotificationController {
       }
     }
   })
-  async deleteAllForUser(@Request() req: any) {
+  async deleteAll(@Request() req: any) {
     const userId = req.user?.id;
-    return await this.notificationService.delete({ userId });
+    return await this.notificationService.delete({ entityId: userId, entityType: 'user' });
   }
 }

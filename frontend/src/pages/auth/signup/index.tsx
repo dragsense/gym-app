@@ -1,5 +1,5 @@
 // External Libraries
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { useTransition, useId } from "react";
 
@@ -28,13 +28,18 @@ export default function SignupPage() {
   const [, startTransition] = useTransition();
   
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  
+  // Extract referral code from URL
+  const referralCodeFromUrl = searchParams.get('ref') || "";
 
   const SIGNUP_INITIAL_VALUES: TSignupData = {
     firstName: "",
     lastName: "",
     email: "",
     password: "",
-    confirmPassword: ""
+    confirmPassword: "",
+    referralCode: referralCodeFromUrl
   };
 
   return (

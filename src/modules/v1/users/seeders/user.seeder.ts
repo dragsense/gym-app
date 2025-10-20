@@ -2,7 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../users.service';
 import { CreateUserDto } from 'shared';
-import { EUserLevels } from 'shared';
+import { EUserLevels, EUserRole } from 'shared';
 
 @Injectable()
 export class UserSeeder implements OnModuleInit {
@@ -41,19 +41,19 @@ export class UserSeeder implements OnModuleInit {
         email: adminConfig.email,
         password: adminConfig.password,
         isActive: true,
-        level: EUserLevels.ADMIN, // Set level directly in creation
+        level: EUserLevels[EUserRole.SUPER_ADMIN], // Set level directly in creation
         profile: {
           firstName: adminConfig.firstName,
           lastName: adminConfig.lastName
         }
       };
 
-      console.log('Creating admin user...', adminConfig);
+      console.log('Creating super admin user...', adminConfig);
 
 
        await this.usersService.createUser(createUserDto);
 
-      console.log('Admin user seeded successfully:', adminConfig.email);
+      console.log('Super Admin user seeded successfully:', adminConfig.email);
     } catch (error) {
       console.error('Error seeding admin user:', error);
     }

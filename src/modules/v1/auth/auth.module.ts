@@ -20,12 +20,14 @@ import { User } from '@/modules/v1/users/entities/user.entity';
 import { TrustedDevice } from '@/modules/v1/auth/entities/trusted-device.entity';
 import { OtpCode } from '@/modules/v1/auth/entities/otp-code.entity';
 import { ActivityLogsModule } from '@/common/activity-logs/activity-logs.module';
+import { RewardsModule } from '@/modules/v1/rewards/rewards.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([RefreshToken, User, TrustedDevice, OtpCode]),
     UsersModule,
     ActivityLogsModule,
+    RewardsModule,
     PassportModule,
     JwtModule.registerAsync({
       useFactory: getJwtConfig,

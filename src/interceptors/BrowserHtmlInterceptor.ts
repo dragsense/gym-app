@@ -21,7 +21,6 @@ export class BrowserHtmlInterceptor implements NestInterceptor {
       !req.xhr;
 
     if (!isBrowserNavigation) {
-      // 🚀 Non-browser → return JSON as-is
       return next.handle();
     }
 

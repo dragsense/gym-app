@@ -1,5 +1,5 @@
-import { IsString, IsNotEmpty, MinLength, Validate, ValidatorConstraint, ValidatorConstraintInterface, ValidationArguments, Length, IsEmail } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { IsString, IsNotEmpty, MinLength, Validate, ValidatorConstraint, ValidatorConstraintInterface, ValidationArguments, Length, IsEmail, IsOptional } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {  FieldType } from '../../decorators/field.decorator';
 
 @ValidatorConstraint({ name: 'passwordMatch', async: false })
@@ -53,5 +53,14 @@ export class SignupDto {
   @Validate(PasswordMatchConstraint)
   @FieldType('password', true)
   confirmPassword: string;
+
+  @ApiPropertyOptional({ 
+    example: 'abc123', 
+    description: 'Referral code (optional)' 
+  })
+  @IsString()
+  @IsOptional()
+  @FieldType('text', false)
+  referralCode?: string;
 
 }

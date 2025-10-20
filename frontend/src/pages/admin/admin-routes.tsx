@@ -8,14 +8,18 @@ const TrainersPage = lazy(() => import("./trainers"));
 const ClientsPage = lazy(() => import("./clients"));
 const TrainerClientsPage = lazy(() => import("./trainer-clients"));
 const SessionsPage = lazy(() => import("./sessions"));
+const BillingsPage = lazy(() => import("./billings"));
+const ReferralLinksPage = lazy(() => import("./referral-links"));
 const ActivityLogsPage = lazy(() => import("./activity-logs"));
 const FilesPage = lazy(() => import("./files"));
 const SchedulesPage = lazy(() => import("./schedules"));
-const QueuesPage = lazy(() => import("./queues"));
 const DashboardPage = lazy(() => import("./dashboard").then(module => ({ default: module.DashboardPage })));
 const WorkersPage = lazy(() => import("./workers"));
 const RolesPage = lazy(() => import("./roles"));
+const QueuesPage = lazy(() => import("./queues"));
 
+const SettingsPage = lazy(() => import("./settings"));
+const CachePage = lazy(() => import("./cache"));
 // React 19: Enhanced loading component for admin routes
 const AdminRouteLoadingFallback = () => {
   const componentId = useId();
@@ -77,6 +81,22 @@ const adminRoutes = [
     ),
   },
   {
+    path: ADMIN_ROUTES.BILLINGS,
+    element: (
+      <Suspense fallback={<AdminRouteLoadingFallback />}>
+        <BillingsPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: ADMIN_ROUTES.REFERRAL_LINKS,
+    element: (
+      <Suspense fallback={<AdminRouteLoadingFallback />}>
+        <ReferralLinksPage />
+      </Suspense>
+    ),
+  },
+  {
     path: ADMIN_ROUTES.ACTIVITY_LOGS,
     element: (
       <Suspense fallback={<AdminRouteLoadingFallback />}>
@@ -129,6 +149,30 @@ const adminRoutes = [
     element: (
       <Suspense fallback={<AdminRouteLoadingFallback />}>
         <RolesPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: ADMIN_ROUTES.QUEUE_BOARD,
+    element: (
+      <Suspense fallback={<AdminRouteLoadingFallback />}>
+        <QueuesPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: ADMIN_ROUTES.SETTINGS,
+    element: (
+      <Suspense fallback={<AdminRouteLoadingFallback />}>
+        <SettingsPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: ADMIN_ROUTES.CACHE,
+    element: (
+      <Suspense fallback={<AdminRouteLoadingFallback />}>
+        <CachePage />
       </Suspense>
     ),
   },

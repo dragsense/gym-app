@@ -4,7 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { FileUpload } from './entities/file-upload.entity';
 import { FileUploadService } from './file-upload.service';
 import { FileUploadController } from './file-upload.controller';
-import { EventService } from '../events/event.service';
+import { EventService } from '../helper/services/event.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([FileUpload])],

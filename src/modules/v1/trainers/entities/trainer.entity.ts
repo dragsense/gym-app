@@ -31,4 +31,9 @@ export class Trainer extends GeneralBaseEntity {
   @ManyToOne(() => User, { eager: true })
   @JoinColumn()
   user: User;
+
+  @ApiProperty({ type: () => User, description: 'Created by user' })
+  @ManyToOne(() => User, { eager: true })
+  @JoinColumn({ name: 'createdByUserId' })
+  createdBy: User;
 }

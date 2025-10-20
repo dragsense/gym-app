@@ -8,7 +8,7 @@ import type { TListHandlerStore } from "@/stores";
 import type { IRole } from '@shared/interfaces';
 
 // Components
-import { TTable } from "@/components/ui/table";
+import { Table as TTable } from "@/components/table-ui/table";
 import { AppCard } from "@/components/layout-ui/app-card";
 import { RoleFilters } from "./role-filters";
 import { itemViews } from "./role-item-views";
@@ -21,10 +21,10 @@ export interface TRoleListExtraProps {
 
 interface IRoleListProps extends TListHandlerComponentProps<TListHandlerStore<IRole, TRoleListData, TRoleListExtraProps>> {}
 
-export default function RoleList({
+export const RoleList = ({
   storeKey,
   store
-}: IRoleListProps) {
+}: IRoleListProps) => {
   // React 19: Essential IDs and transitions
   const componentId = useId();
   const [, startTransition] = useTransition();

@@ -77,3 +77,26 @@ export function dtoToFields<T>(
 
   return result;
 }
+
+
+export function addRenderItem<T>(fields: TFieldConfigObject<T>, renderers: Record<string, (item: any) => ReactNode>): TFieldConfigObject<T> {
+  const result: any = {};
+
+  for (const key in fields) {
+    const field = fields[key];
+
+    result[key] = { ...field };
+
+    // Attach renderItem if a renderer exists for this field
+    if (renderers[key]) {
+      result[key].renderItem = renderers[key];
+    }
+
+    // Recursively apply to subFields
+    if (typeof field === 'object' && 'subFields' in field && field.subFields) {
+      result[key].subFields = addRenderItem(field.subFields, renderers);
+    }
+  }
+
+  return result;
+}

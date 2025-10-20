@@ -1,25 +1,27 @@
-import { 
-  Controller, 
-  Get, 
-  Post, 
-  Put, 
-  Delete, 
-  Body, 
-  Query, 
-  Param, 
-  UseGuards, 
-  ParseIntPipe 
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Query,
+  Param,
+  UseGuards,
+  ParseIntPipe
 } from '@nestjs/common';
-import { 
-  ApiTags, 
-  ApiOperation, 
-  ApiResponse, 
-  ApiBearerAuth, 
-  ApiQuery, 
-  ApiParam 
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiQuery,
+  ApiParam
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@/guards/jwt-auth.gaurd';
 import { RolesService } from './roles.service';
+import { PermissionsService } from './services/permissions.service';
+import { ResourcesService } from './services/resources.service';
 import {
   RoleListDto,
   RoleDto,
@@ -37,12 +39,17 @@ import {
   UpdateResourceDto
 } from 'shared/dtos/role-dtos';
 
+
 @ApiTags('Roles & Permissions')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('roles')
 export class RolesController {
-  constructor(private readonly rolesService: RolesService) {}
+  constructor(
+    private readonly rolesService: RolesService,
+    private readonly permissionService: PermissionsService,
+    private readonly resourceService: ResourcesService,
+  ) { }
 
   // Role endpoints
   @Get()
@@ -54,7 +61,7 @@ export class RolesController {
     type: RolePaginatedDto,
   })
   async findAllRoles(@Query() queryDto: RoleListDto) {
-    return await this.rolesService.findAllRoles(queryDto);
+    return await this.rolesService.get(queryDto);
   }
 
   @Get(':id')
@@ -67,7 +74,7 @@ export class RolesController {
   })
   @ApiResponse({ status: 404, description: 'Role not found' })
   async findRole(@Param('id', ParseIntPipe) id: number) {
-    return await this.rolesService.findRole({ id });
+    return await this.rolesService.getSingle(id);
   }
 
   @Post()
@@ -78,7 +85,7 @@ export class RolesController {
     type: RoleDto
   })
   async createRole(@Body() createRoleDto: CreateRoleDto) {
-    return await this.rolesService.createRole(createRoleDto);
+    return await this.rolesService.create(createRoleDto);
   }
 
   @Put(':id')
@@ -94,7 +101,7 @@ export class RolesController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updateRoleDto: UpdateRoleDto
   ) {
-    return await this.rolesService.updateRole(id, updateRoleDto);
+    return await this.rolesService.update(id, updateRoleDto);
   }
 
   @Delete(':id')
@@ -103,7 +110,7 @@ export class RolesController {
   @ApiResponse({ status: 200, description: 'Role deleted successfully' })
   @ApiResponse({ status: 404, description: 'Role not found' })
   async deleteRole(@Param('id', ParseIntPipe) id: number) {
-    await this.rolesService.deleteRole(id);
+    await this.rolesService.delete(id);
     return { message: 'Role deleted successfully' };
   }
 
@@ -117,7 +124,7 @@ export class RolesController {
     type: PermissionPaginatedDto,
   })
   async findAllPermissions(@Query() queryDto: PermissionListDto) {
-    return await this.rolesService.findAllPermissions(queryDto);
+    return await this.permissionService.get(queryDto);
   }
 
   @Get('permissions/:id')
@@ -130,7 +137,7 @@ export class RolesController {
   })
   @ApiResponse({ status: 404, description: 'Permission not found' })
   async findPermission(@Param('id', ParseIntPipe) id: number) {
-    return await this.rolesService.findPermission({ id });
+    return await this.permissionService.getSingle(id);
   }
 
   @Get(':id/permissions')
@@ -146,7 +153,11 @@ export class RolesController {
     @Param('id', ParseIntPipe) roleId: number,
     @Query() queryDto: PermissionListDto
   ) {
-    return await this.rolesService.findPermissionsByRole(roleId, queryDto);
+    return await this.permissionService.get({
+      ...queryDto,
+      roleId,
+      _relations: [...(queryDto._relations || []), 'role']
+    }, PermissionListDto);
   }
 
   @Post('permissions')
@@ -157,7 +168,7 @@ export class RolesController {
     type: PermissionDto
   })
   async createPermission(@Body() createPermissionDto: CreatePermissionDto) {
-    return await this.rolesService.createPermission(createPermissionDto);
+    return await this.permissionService.create(createPermissionDto);
   }
 
   @Put('permissions/:id')
@@ -173,7 +184,7 @@ export class RolesController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updatePermissionDto: UpdatePermissionDto
   ) {
-    return await this.rolesService.updatePermission(id, updatePermissionDto);
+    return await this.permissionService.update(id, updatePermissionDto);
   }
 
   @Delete('permissions/:id')
@@ -182,7 +193,7 @@ export class RolesController {
   @ApiResponse({ status: 200, description: 'Permission deleted successfully' })
   @ApiResponse({ status: 404, description: 'Permission not found' })
   async deletePermission(@Param('id', ParseIntPipe) id: number) {
-    await this.rolesService.deletePermission(id);
+    await this.permissionService.delete(id);
     return { message: 'Permission deleted successfully' };
   }
 
@@ -196,7 +207,7 @@ export class RolesController {
     type: ResourcePaginatedDto,
   })
   async findAllResources(@Query() queryDto: ResourceListDto) {
-    return await this.rolesService.findAllResources(queryDto);
+    return await this.resourceService.get(queryDto);
   }
 
   @Get('resources/:id')
@@ -209,9 +220,8 @@ export class RolesController {
   })
   @ApiResponse({ status: 404, description: 'Resource not found' })
   async findResource(@Param('id', ParseIntPipe) id: number) {
-    return await this.rolesService.findResource({ id });
+    return await this.resourceService.getSingle(id);
   }
-
 
   @Put('resources/:id')
   @ApiOperation({ summary: 'Update resource by ID' })
@@ -226,6 +236,6 @@ export class RolesController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updateResourceDto: UpdateResourceDto
   ) {
-    return await this.rolesService.updateResource(id, updateResourceDto);
+    return await this.resourceService.update(id, updateResourceDto);
   }
 }

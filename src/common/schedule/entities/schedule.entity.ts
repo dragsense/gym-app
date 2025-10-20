@@ -7,8 +7,8 @@ import { GeneralBaseEntity } from '@/common/entities';
 export class Schedule extends GeneralBaseEntity {
 
   @ApiProperty({ example: 'Daily Report Generation' })
-  @Column()
-  title: string;
+  @Column({ default: "Schedule"})
+  title?: string;
 
 
   @ApiProperty({ example: 123 })
@@ -24,15 +24,15 @@ export class Schedule extends GeneralBaseEntity {
   data?: Record<string, any>;
 
   @ApiProperty({ enum: EScheduleFrequency })
-  @Column({ type: 'enum', enum: EScheduleFrequency })
+  @Column({ type: 'enum', enum: EScheduleFrequency, default: EScheduleFrequency.ONCE })
   frequency: EScheduleFrequency;
 
   @ApiProperty({ example: '2025-10-15T00:00:00Z' })
-  @Column({ type: 'timestamptz' })
+  @Column({ type: 'date' })
   startDate: Date;
 
   @ApiProperty({ example: '2025-12-31T00:00:00Z' })
-  @Column({ type: 'timestamptz', nullable: true })
+  @Column({ type: 'date', nullable: true })
   endDate?: Date;
 
   @ApiProperty({ example: '09:00' })

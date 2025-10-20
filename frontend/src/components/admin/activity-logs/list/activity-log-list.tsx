@@ -36,14 +36,13 @@ export default function ActivityLogList({
 }: IActivityLogListProps) {
   // React 19: Essential IDs and transitions
   const componentId = useId();
-  const [, startTransition] = useTransition();
 
   if (!store) {
     return (`List store "${storeKey}" not found. Did you forget to register it?`);
   }
 
   // React 19: Memoized columns for better performance
-  const { columns } = useMemo(() => itemViews(), []);
+  const { columns } = itemViews();
 
   return (
     <div className="space-y-2" data-component-id={componentId}>

@@ -13,9 +13,5 @@ export enum ESessionType {
   WORKSHOP = 'WORKSHOP',
 }
 
-export enum ESessionRecurrence {
-  NONE = 'NONE',
-  DAILY = 'DAILY',
-  WEEKLY = 'WEEKLY',
-  MONTHLY = 'MONTHLY',
-}
+
+

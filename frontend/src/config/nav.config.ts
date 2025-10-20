@@ -1,4 +1,4 @@
-import {Activity, type LucideIcon, UserCheck, FileText, CalendarClock, Database, Workflow, Server, Cpu, Shield, Users, UserPlus, UserCog, Calendar } from "lucide-react";
+import {Activity, type LucideIcon, UserCheck, FileText, CalendarClock, Database, Workflow, Server, Cpu, Shield, Users, UserPlus, UserCog, Calendar, DollarSign, BarChart3, Settings, Link } from "lucide-react";
 import { ADMIN_ROUTES } from "./routes.config";
 
 // Separate settings configuration object
@@ -40,6 +40,16 @@ export const navItems: {
             icon: Calendar,
         },
         {
+            title: "Billings",
+            urls: [ADMIN_ROUTES.BILLINGS],
+            icon: DollarSign,
+        },
+        {
+            title: "Referral Links",
+            urls: [ADMIN_ROUTES.REFERRAL_LINKS],
+            icon: Link,
+        },
+        {
             title: "Activit Logs",
             urls: [ADMIN_ROUTES.ACTIVITY_LOGS],
             icon: Activity,
@@ -54,7 +64,26 @@ export const navItems: {
             urls: [ADMIN_ROUTES.SCHEDULES],
             icon: CalendarClock,
         },
-       
+        {
+            title: "Roles",
+            urls: [ADMIN_ROUTES.ROLES],
+            icon: Shield,
+        },
+        {
+            title: "Queue Board",
+            urls: [ADMIN_ROUTES.QUEUE_BOARD],
+            icon: BarChart3,
+        },
+        {
+            title: "Cache",
+            urls: [ADMIN_ROUTES.CACHE],
+            icon: Database,
+        },
+        {
+            title: "Settings",
+            urls: [ADMIN_ROUTES.SETTINGS],
+            icon: Settings,
+        }
     ];
 
 

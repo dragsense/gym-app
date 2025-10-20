@@ -20,10 +20,10 @@ export interface TPermissionListExtraProps {
 
 interface IPermissionListProps extends TListHandlerComponentProps<TListHandlerStore<IPermission, TPermissionListData, TPermissionListExtraProps>> {}
 
-export default function PermissionList({
+export const PermissionList = ({
   storeKey,
   store
-}: IPermissionListProps) {
+}: IPermissionListProps) => {
   // React 19: Essential IDs and transitions
   const componentId = useId();
   const [, startTransition] = useTransition();

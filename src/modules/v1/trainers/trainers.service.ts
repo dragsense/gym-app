@@ -9,7 +9,7 @@ import { DataSource, Repository } from 'typeorm';
 import { Trainer } from './entities/trainer.entity';
 import { CreateTrainerDto, UpdateTrainerDto } from 'shared/dtos';
 import { CrudService } from '@/common/crud/crud.service';
-import { EventService } from '@/common/events/event.service';
+import { EventService } from '@/common/helper/services/event.service';
 import { CrudOptions } from '@/common/crud/interfaces/crud.interface';
 import { User } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
@@ -31,11 +31,11 @@ export class TrainersService extends CrudService<Trainer> {
     super(trainerRepo, dataSource, eventService, crudOptions);
   }
 
-  async createTrainer(createTrainerDto: CreateTrainerDto): Promise<Trainer> {
+  async createTrainer(createTrainerDto: CreateTrainerDto, userId: number): Promise<Trainer> {
 
     const { user, ...trainerData } = createTrainerDto;
 
-    return await this.create(trainerData, {
+    return await this.create({ ...trainerData, createdByUser: { id: userId } }, {
       afterCreate: async (savedEntity, manager) => {
 
 

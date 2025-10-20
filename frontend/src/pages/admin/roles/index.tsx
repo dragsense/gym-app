@@ -17,8 +17,8 @@ import { ResourceList } from "@/components/admin/roles/list/resource-list";
 import { fetchRoles, fetchRole, deleteRole, fetchPermissions, fetchPermission, deletePermission, fetchResources, fetchResource, updateResource } from '@/services/roles.api';
 
 // Page Components
-import { RoleForm, DeleteRole, ViewRolePermissions } from "@/page-components/roles";
-import { PermissionForm, DeletePermission } from "@/page-components/permissions";
+import { RoleForm, ViewRolePermissions } from "@/page-components/roles";
+import { PermissionForm } from "@/page-components/permissions";
 import { ResourceForm } from "@/page-components/resources";
 
 // Layouts
@@ -53,7 +53,8 @@ export default function RolesPage() {
                                 action: 'createOrUpdate',
                                 comp: RoleForm
                             },
-                            { action: 'viewPermissions', comp: ViewRolePermissions },
+                            { action: 'viewPermissions', 
+                                comp: ViewRolePermissions },
                         ]}
                     />
 

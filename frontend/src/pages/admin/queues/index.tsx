@@ -1,55 +1,27 @@
-import { useQueryClient } from "@tanstack/react-query";
+import { PageInnerLayout } from '@/layouts';
+import { config } from '@/config';
 
-// Types
-import { type IQueue } from "@shared/interfaces/queue.interface";
+const BASE_URL = config.baseUrl;
 
-// Handlers
-import { ListHandler } from "@/handlers";
-
-// Custom UI Components
-import { QueueList } from "@/components/admin";
-
-// API
-import { fetchQueues } from "@/services/queue.api";
-import type { TQueueListData } from "@shared/types";
-
-// Layouts
-import { PageInnerLayout } from "@/layouts";
-import { QueueListDto } from "@shared/dtos/queue-dtos/queue.dto";
-
-// Components
-import { CleanQueue, PauseQueue, QueueJobList, ResumeQueue } from "@/page-components";
-
-export default function QueueManagementPage() {
-
-  const QUEUE_STORE_KEY = 'queue';
+export default function QueuesPage() {
+  const handleOpenBullBoard = () => {
+    window.open(`${BASE_URL}/bull-board`, '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
+  };
 
   return (
     <PageInnerLayout Header={<Header />}>
-      <ListHandler<IQueue, TQueueListData>
-        queryFn={fetchQueues}
-        ListComponent={QueueList}
-        dto={QueueListDto}
-        storeKey={QUEUE_STORE_KEY}
-        actionComponents={[
-          {
-            action: "viewJobs",
-            comp: QueueJobList,
-          },
-          {
-            action: "pauseQueue",
-            comp: PauseQueue,
-          },
-          {
-            action: "resumeQueue",
-            comp: ResumeQueue,
-          },
-          {
-            action: 'cleanQueue',
-            comp: CleanQueue,
-          }
-        ]}
-      />
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4">Bull Queue Board</h2>
+          <p className="text-gray-600 mb-6">Monitor and manage your background job queues</p>
+          <button
+            onClick={handleOpenBullBoard}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+          >
+            Open Bull Board
+          </button>
+        </div>
+      </div>
     </PageInnerLayout>
   );
 }

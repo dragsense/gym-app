@@ -2,14 +2,14 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository, MoreThanOrEqual, DataSource } from 'typeorm';
 import { Schedule } from './entities/schedule.entity';
-import { 
-  CreateScheduleDto, 
-  UpdateScheduleDto 
+import {
+  CreateScheduleDto,
+  UpdateScheduleDto
 } from 'shared/dtos/schedule-dtos/schedule.dto';
 import { EScheduleStatus, EScheduleFrequency } from 'shared/enums/schedule.enum';
 import { ScheduleUtils } from './utils/schedule.utils';
 import { CrudService } from '@/common/crud/crud.service';
-import { EventService } from '../events/event.service';
+import { EventService } from '../helper/services/event.service';
 
 @Injectable()
 export class ScheduleService extends CrudService<Schedule> {
@@ -27,20 +27,20 @@ export class ScheduleService extends CrudService<Schedule> {
    */
   async createSchedule(
     createDto: CreateScheduleDto,
+    timezone?: string,
     manager?: EntityManager,
   ): Promise<Schedule> {
     // Validate frequency-specific fields
     this.validateScheduleConfig(createDto);
 
     // Keep dates with timezone info as sent from frontend
-    const startDate = new Date(createDto.startDate);
+    const startDate = new Date(createDto.startDate || new Date());
     const endDate = createDto.endDate ? new Date(new Date(createDto.endDate).setHours(23, 59, 59, 999)) : undefined;
-    const timezone = createDto.timezone || 'UTC';
-
+    const selectedTimezone = createDto.timezone || timezone || 'UTC';
     // Generate cron expression
     const cronExpression = ScheduleUtils.generateCronExpression(
       {
-        frequency: createDto.frequency,
+        frequency: createDto.frequency || EScheduleFrequency.ONCE,
         weekDays: createDto.weekDays,
         monthDays: createDto.monthDays,
         months: createDto.months,
@@ -54,11 +54,13 @@ export class ScheduleService extends CrudService<Schedule> {
       cronExpression,
       startDate,
       endDate || null,
-      timezone
+      selectedTimezone
     );
 
     const schedule = this.scheduleRepo.create({
       ...createDto,
+      frequency: createDto.frequency || EScheduleFrequency.ONCE,
+      timezone: selectedTimezone,
       startDate,
       endDate,
       cronExpression,
@@ -161,9 +163,9 @@ export class ScheduleService extends CrudService<Schedule> {
    */
   async executeAndUpdateNext(id: number): Promise<Schedule> {
     const schedule = await this.getSingle(id);
-    
+
     schedule.lastRunAt = new Date();
-    
+
     // Calculate next run date using cron expression
     if (schedule.frequency === EScheduleFrequency.ONCE) {
       schedule.status = EScheduleStatus.COMPLETED;
@@ -189,28 +191,30 @@ export class ScheduleService extends CrudService<Schedule> {
   async updateSchedule(
     id: number,
     updateData: UpdateScheduleDto,
+    timezone?: string,
     manager?: EntityManager,
   ): Promise<Schedule> {
     const schedule = await this.getSingle(id);
-    
+
     // If frequency-related fields changed, recalculate cron and nextRunDate
     if (updateData.startDate || updateData.frequency || updateData.timeOfDay ||
-        updateData.weekDays !== undefined || updateData.monthDays || updateData.months) {
-      
+      updateData.weekDays !== undefined || updateData.monthDays || updateData.months) {
+
       // Merge with existing schedule for validation
       const merged = { ...schedule, ...updateData };
       this.validateScheduleConfig(merged);
 
-      const newStartDate = updateData.startDate 
-        ? new Date(updateData.startDate) 
+      const newStartDate = updateData.startDate
+        ? new Date(updateData.startDate)
         : schedule.startDate;
-      
+
       const newEndDate = updateData.endDate !== undefined
         ? (updateData.endDate ? new Date(new Date(updateData.endDate).setHours(23, 59, 59, 999)) : undefined)
         : schedule.endDate;
 
-      const timezone = updateData.timezone || schedule.timezone || 'UTC';
-      
+
+      const selectedTimezone = merged.timezone || timezone || 'UTC';
+
       // Regenerate cron expression
       const cronExpression = ScheduleUtils.generateCronExpression(
         {
@@ -228,15 +232,16 @@ export class ScheduleService extends CrudService<Schedule> {
         cronExpression,
         newStartDate,
         newEndDate || null,
-        timezone
+        selectedTimezone
       );
-      
-      Object.assign(schedule, updateData, { 
+
+      Object.assign(schedule, updateData, {
         startDate: newStartDate,
         endDate: newEndDate,
         cronExpression,
         nextRunDate: nextRunAt,
-        status: isActive ? schedule.status : EScheduleStatus.COMPLETED
+        status: isActive ? schedule.status : EScheduleStatus.COMPLETED,
+        timezone: selectedTimezone,
       });
     } else {
       Object.assign(schedule, updateData);
@@ -248,4 +253,4 @@ export class ScheduleService extends CrudService<Schedule> {
 
 
 }
- 
+

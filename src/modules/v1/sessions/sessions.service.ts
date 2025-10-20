@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, Repository } from 'typeorm';
@@ -11,10 +12,9 @@ import { CreateSessionDto, UpdateSessionDto, SessionListDto } from 'shared/dtos'
 import { IMessageResponse } from 'shared/interfaces';
 import { LoggerService } from '@/common/logger/logger.service';
 import { CrudService } from '@/common/crud/crud.service';
-import { EventService } from '@/common/events/event.service';
+import { EventService } from '@/common/helper/services/event.service';
 import { CrudOptions } from '@/common/crud/interfaces/crud.interface';
-import { TrainersService } from '../trainers/trainers.service';
-import { ClientsService } from '../clients/clients.service';
+import { UsersService } from '../users/users.service';
 import { EUserLevels, EUserRole } from 'shared';
 
 @Injectable()
@@ -24,8 +24,7 @@ export class SessionsService extends CrudService<Session> {
   constructor(
     @InjectRepository(Session)
     private readonly sessionRepo: Repository<Session>,
-    private readonly trainersService: TrainersService,
-    private readonly clientsService: ClientsService,
+    private readonly usersService: UsersService,
     dataSource: DataSource,
     eventService: EventService,
   ) {
@@ -37,42 +36,64 @@ export class SessionsService extends CrudService<Session> {
   }
 
   async createSession(createSessionDto: CreateSessionDto): Promise<IMessageResponse & { session: Session }> {
+   
+    if(!createSessionDto.trainerUser || !createSessionDto.trainerUser.id) {
+      throw new BadRequestException('Trainer user is required');
+    }
+   
     // Check if trainer exists and is actually a trainer
-    const trainer = await this.trainersService.getSingle(createSessionDto.trainer.id, { _relations: ['user'] });
-    
-    if (!trainer || trainer.user?.level !== EUserLevels[EUserRole.TRAINER]) {
+    const trainerUser = await this.usersService.getSingle(createSessionDto.trainerUser.id);
+    if(!trainerUser || trainerUser.level !== EUserLevels[EUserRole.TRAINER]) {
       throw new NotFoundException('Trainer not found or invalid trainer level');
     }
 
+    if(createSessionDto.clientsUsers?.length <= 0) {
+      throw new BadRequestException('At least one client user must be selected');
+    }
+
     // Check if all clients exist and are actually clients
-    for (const clientDto of createSessionDto.clients) {
-      const client = await this.clientsService.getSingle(clientDto.id, { _relations: ['user'] });
-      if (!client || client.user?.level !== EUserLevels[EUserRole.CLIENT]) {
-        throw new NotFoundException(`Client with ID ${clientDto.id} not found or invalid client level`);
+    for (const clientUserDto of createSessionDto.clientsUsers) {
+      const clientUser = await this.usersService.getSingle(clientUserDto.id);
+      if (!clientUser || clientUser.level !== EUserLevels[EUserRole.CLIENT]) {
+        throw new NotFoundException(`Client with ID ${clientUserDto.id} not found or invalid client level`);
       }
     }
 
     // Use CRUD service create method
-    const session = await this.create(createSessionDto);
+    const session = await this.create(createSessionDto,
+      {
+        beforeCreate: async (manager: EntityManager) => {
+          return {
+            ...createSessionDto,
+            trainerUser: {
+              id: createSessionDto.trainerUser.id,
+            },
+            clientsUsers: createSessionDto.clientsUsers.map(clientUser => ({
+              id: clientUser.id,
+            })),
+          };
+        },
+      }
+    );
 
     return { message: 'Session created successfully.', session };
   }
 
   async updateSession(id: number, updateSessionDto: UpdateSessionDto): Promise<IMessageResponse> {
-    if (updateSessionDto.trainer && updateSessionDto.trainer.id) {
+    if (updateSessionDto.trainerUser && updateSessionDto.trainerUser.id) {
       // Check if trainer exists and is actually a trainer
-      const trainer = await this.trainersService.getSingle(updateSessionDto.trainer.id, { _relations: ['user'] });
-      if (!trainer || trainer.user?.level !== EUserLevels[EUserRole.TRAINER]) {
+      const trainerUser = await this.usersService.getSingle(updateSessionDto.trainerUser.id);
+      if (!trainerUser || trainerUser.level !== EUserLevels[EUserRole.TRAINER]) {
         throw new NotFoundException('Trainer not found or invalid trainer level');
       }
     }
 
-    if (updateSessionDto.clients && updateSessionDto.clients.length > 0) {
+    if (updateSessionDto.clientsUsers && updateSessionDto.clientsUsers.length > 0) {
       // Check if all clients exist and are actually clients
-      for (const clientDto of updateSessionDto.clients) {
-        const client = await this.clientsService.getSingle(clientDto.id, { _relations: ['user'] });
-        if (!client || client.user?.level !== EUserLevels[EUserRole.CLIENT]) {
-          throw new NotFoundException(`Client with ID ${clientDto.id} not found or invalid client level`);
+      for (const clientUserDto of updateSessionDto.clientsUsers) {
+        const clientUser = await this.usersService.getSingle(clientUserDto.id);
+        if (!clientUser || clientUser.level !== EUserLevels[EUserRole.CLIENT]) {
+          throw new NotFoundException(`Client with ID ${clientUserDto.id} not found or invalid client level`);
         }
       }
     }

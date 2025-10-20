@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { EventService } from '../events/event.service';
+import { EventService } from '../helper/services/event.service';
 
 @Module({
   imports: [TypeOrmModule],

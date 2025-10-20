@@ -6,7 +6,7 @@ import { type FormInputs, useInput } from "@/hooks/use-input";
 
 // Types
 import type { TFormHandlerStore } from "@/stores";
-import type { TResourceFormData } from "@/page-components/resources/resource-form";
+import type { TResourceData } from "@shared/types/role/resource.type";
 
 // Components
 import { Button } from "@/components/ui/button";
@@ -18,9 +18,9 @@ export interface IResourceFormModalExtraProps {
   onClose: () => void;
 }
 
-interface IResourceFormModalProps extends THandlerComponentProps<TFormHandlerStore<TResourceFormData, any, IResourceFormModalExtraProps>> {}
+interface IResourceFormModalProps extends THandlerComponentProps<TFormHandlerStore<TResourceData, any, IResourceFormModalExtraProps>> {}
 
-const ResourceFormModal = React.memo(function ResourceFormModal({
+export const ResourceFormModal = React.memo(function ResourceFormModal({
   storeKey,
   store,
 }: IResourceFormModalProps) {
@@ -39,10 +39,10 @@ const ResourceFormModal = React.memo(function ResourceFormModal({
   // React 19: Memoized fields for better performance
   const fields = useMemo(() => store((state) => state.fields), [store]);
 
-  const inputs = useInput<TResourceFormData>({
+  const inputs = useInput<TResourceData>({
     fields,
     showRequiredAsterisk: true,
-  }) as FormInputs<TResourceFormData>;
+  }) as FormInputs<TResourceData>;
 
   // React 19: Smooth modal state changes
   const onOpenChange = (state: boolean) => {
@@ -78,7 +78,7 @@ const ResourceFormModal = React.memo(function ResourceFormModal({
 
   return (
     <>
-      <ModalForm<TResourceFormData, any, IResourceFormModalExtraProps>
+      <ModalForm<TResourceData, any, IResourceFormModalExtraProps>
         title={`${isEditing ? "Edit" : "Add"} Resource`}
         description={`${isEditing ? "Edit" : "Add a new"} Resource`}
         open={open}
@@ -111,4 +111,3 @@ const ResourceFormModal = React.memo(function ResourceFormModal({
   );
 });
 
-export default ResourceFormModal;

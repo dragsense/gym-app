@@ -31,6 +31,7 @@ type BaseProps = {
     className?: string;
     disabled?: boolean;
     emptyText?: string;
+    modal?: boolean;
 };
 
 type MultiProps = BaseProps & {
@@ -60,6 +61,7 @@ export function AppSelect({
     multiple = false,
     disabled = false,
     emptyText = "No options found.",
+    modal = true,
 }: AppSelectProps) {
     // React 19: Essential IDs and transitions
     const componentId = useId();
@@ -117,7 +119,7 @@ export function AppSelect({
         : value !== undefined && value !== null && value !== "";
 
     return (
-            <Popover open={open} onOpenChange={setOpen}>
+            <Popover data-component-id={componentId} open={open} onOpenChange={setOpen} modal={modal}>
             <PopoverTrigger asChild>
                 <Button
                     disabled={disabled}
@@ -125,7 +127,7 @@ export function AppSelect({
                     role="combobox"
                     aria-expanded={open}
                     className={cn(
-                        "w-full px-2",
+                        "w-full px-2 h-auto",
                         "justify-between items-start",
                         "text-left whitespace-normal",
                         "flex flex-wrap gap-1",
@@ -182,7 +184,7 @@ export function AppSelect({
                             return (
                                 <CommandItem
                                     key={toKey(option.value)}
-                                    value={`${option.label} ${toKey(option.value)}`}
+                                    value={`${toKey(option.value)}`}
                                     onSelect={() => toggle(option.value)}
                                     aria-selected={selected}
                                 >

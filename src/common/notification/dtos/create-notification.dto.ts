@@ -28,11 +28,6 @@ export class CreateNotificationDto {
   @IsEnum(ENotificationPriority)
   priority?: ENotificationPriority;
 
-  @ApiPropertyOptional({ example: 1, description: 'User ID who will receive the notification' })
-  @IsOptional()
-  @IsNumber()
-  userId?: number;
-
   @ApiPropertyOptional({ example: 123, description: 'Entity ID related to the notification' })
   @IsOptional()
   @IsNumber()
@@ -59,14 +54,4 @@ export class CreateNotificationDto {
   @IsOptional()
   @IsBoolean()
   isRead?: boolean;
-
-  @ApiPropertyOptional({ example: '/api/v1/notifications', description: 'API endpoint accessed' })
-  @IsOptional()
-  @IsString()
-  endpoint?: string;
-
-  @ApiPropertyOptional({ example: 'POST', description: 'HTTP method used' })
-  @IsOptional()
-  @IsString()
-  method?: string;
 }

@@ -40,7 +40,7 @@ export default function SessionsCalendar({ onCreateSession, onEventClick }: ISes
       id: session.id,
       title: session.title,
       startDateTime: session.startDateTime,
-      endDateTime: session.endDateTime,
+      endDateTime: session.endDateTime || session.startDateTime, // Fallback to startDateTime if undefined
       type: session.type,
       status: session.status,
       color: getEventColor(session.status),

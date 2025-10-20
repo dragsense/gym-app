@@ -51,6 +51,8 @@ export class ScheduleSubscriber implements EntitySubscriberInterface<Schedule> {
      */
     private setupIfToday(schedule: Schedule) {
 
+        console.log('schedule', schedule);
+
         if(schedule.status !== EScheduleStatus.ACTIVE) return;
         setImmediate(() => {
             this.scheduleExecutor.setupSchedule(schedule).catch(err => {

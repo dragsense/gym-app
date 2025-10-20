@@ -20,7 +20,7 @@ export interface IRoleFormModalExtraProps {
 
 interface IRoleFormModalProps extends THandlerComponentProps<TFormHandlerStore<TRoleFormData, any, IRoleFormModalExtraProps>> {}
 
-const RoleFormModal = React.memo(function RoleFormModal({
+export const RoleFormModal = React.memo(function RoleFormModal({
   storeKey,
   store,
 }: IRoleFormModalProps) {
@@ -112,4 +112,3 @@ const RoleFormModal = React.memo(function RoleFormModal({
   );
 });
 
-export default RoleFormModal;

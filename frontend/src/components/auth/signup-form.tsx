@@ -137,6 +137,16 @@ const SignupForm = React.memo(function SignupForm({
               {inputs.lastName}
             </div>
           </div>
+
+          {/* Referral Code Section */}
+          {inputs.referralCode && (
+            <div>
+              <h3 className="text-sm font-medium text-muted-foreground mb-3">Referral Code</h3>
+              <div className="space-y-4">
+                {inputs.referralCode}
+              </div>
+            </div>
+          )}
         </div>
       </AppCard>
     </Form>

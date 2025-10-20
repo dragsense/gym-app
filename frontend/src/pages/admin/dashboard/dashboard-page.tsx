@@ -1,8 +1,7 @@
-import { useQuery, useQueries, useMutation, useQueryClient } from "@tanstack/react-query";
+import {  useQueries, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDeferredValue, useTransition, useId } from "react";
 import { PageInnerLayout } from "@/layouts";
-import { ClusterDashboard, CacheDashboard, HealthDashboard } from "@/components/admin";
-import { getDetailedClusterInfo } from "@/services/cluster.api";
+import { CacheDashboard, HealthDashboard } from "@/components/admin";
 import { getCacheStats, clearAllCache } from "@/services/cache.api";
 import { getDetailedHealth } from "@/services/health.api";
 
@@ -17,11 +16,6 @@ export default function DashboardPage() {
   const queries = useQueries({
     queries: [
       {
-        queryKey: ['cluster-data'],
-        queryFn: getDetailedClusterInfo,
-        refetchInterval: 5000,
-      },
-      {
         queryKey: ['cache-stats'],
         queryFn: getCacheStats,
         refetchInterval: 5000,
@@ -35,7 +29,7 @@ export default function DashboardPage() {
   });
 
   // Extract individual query results
-  const [clusterQuery, cacheQuery, healthQuery] = queries;
+  const [cacheQuery, healthQuery] = queries;
   
   // Combined loading and error states
   const isLoading = queries.some(query => query.isLoading);
@@ -73,11 +67,9 @@ export default function DashboardPage() {
   });
 
   // React 19: Transition-wrapped data with deferred values
-  const clusterData = getTransitionData(clusterQuery);
   const cacheData = getTransitionData(cacheQuery);
   const healthData = getTransitionData(healthQuery);
   
-  const deferredClusterData = useDeferredValue(clusterData.data);
   const deferredCacheData = useDeferredValue(cacheData.data);
   const deferredHealthData = useDeferredValue(healthData.data);
 
@@ -107,17 +99,6 @@ export default function DashboardPage() {
               Refresh All
             </button>
           </div>
-        </div>
-
-        {/* Cluster Dashboard */}
-        <div>
-          <h2 className="text-xl font-semibold mb-4">System Overview</h2>
-          <ClusterDashboard 
-            data={deferredClusterData}
-            loading={clusterData.loading}
-            error={clusterData.error}
-            onRefresh={() => startTransition(() => clusterQuery.refetch())}
-          />
         </div>
 
         {/* Cache Dashboard */}

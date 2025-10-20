@@ -121,7 +121,7 @@ export class ActivityLogInterceptor implements NestInterceptor {
           // Get all nested keys from request body (not values for privacy)
           const bodyKeys = request.body ? this.getNestedKeys(request.body) : [];
           
-          await this.activityLogsService.create({
+          await this.activityLogsService.createActivityLog({
             description,
             type: activityType,
             status: EActivityStatus.FAILED,

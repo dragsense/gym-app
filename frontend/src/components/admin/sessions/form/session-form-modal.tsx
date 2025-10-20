@@ -13,11 +13,12 @@ import type { ISessionResponse } from "@shared/interfaces/session.interface";
 import { Button } from "@/components/ui/button";
 import { ModalForm } from "@/components/form-ui/modal-form";
 import type { THandlerComponentProps } from "@/@types/handler-types";
-import type { TrainerDto } from "@shared/dtos/trainer-dtos/trainer.dto";
-import type { ClientDto } from "@shared/dtos/client-dtos/client.dto";
 import { SearchableInputWrapper } from "@/components/shared-ui/searchable-input-wrapper";
-import { useSearchableClients, useSearchableTrainers } from "@/hooks/use-searchable";
 import type { TCustomInputWrapper, TFieldConfigObject } from "@/@types/form/field-config.type";
+import type { UserDto } from "@shared/dtos";
+import type { ReminderDto } from "@shared/dtos/reminder-dtos";
+import { useSearchableUsers } from "@/hooks/use-searchable";
+import { EUserLevels, EUserRole } from "@shared/enums";
 
 export interface ISessionFormModalExtraProps {
   open: boolean;
@@ -49,15 +50,15 @@ const SessionFormModal = React.memo(function SessionFormModal({
 
   const TrainerSelect = React.memo(
     (props: TCustomInputWrapper) => {
-      return <SearchableInputWrapper<TrainerDto>
+      return <SearchableInputWrapper<UserDto>
         {...props}
         modal={true}
-        useSearchable={() => useSearchableTrainers({})}
+        useSearchable={() => useSearchableUsers({level: EUserLevels[EUserRole.TRAINER]})}
         getLabel={(item) => {
-          return `${item.user?.profile?.firstName} ${item.user?.profile?.lastName}`
+          return `${item.profile?.firstName} ${item.profile?.lastName}`
         }}
         getKey={(item) => item.id.toString()}
-        getValue={(item) => { return { id: item.id, user: item.user } }}
+        getValue={(item) => { return { id: item.id, user: item.profile } }}
         shouldFilter={false}
       />
     }
@@ -65,15 +66,15 @@ const SessionFormModal = React.memo(function SessionFormModal({
 
   const ClientsSelect = React.memo(
     (props: TCustomInputWrapper) => (
-      <SearchableInputWrapper<ClientDto>
+        <SearchableInputWrapper<UserDto>
         {...props}
         modal={true}
-        useSearchable={() => useSearchableClients({})}
+        useSearchable={() => useSearchableUsers({level: EUserLevels[EUserRole.CLIENT]})}
         getLabel={(item) => {
-          return `${item.user?.profile?.firstName} ${item.user?.profile?.lastName}`
+          return `${item.profile?.firstName} ${item.profile?.lastName}`
         }}
         getKey={(item) => item.id.toString()}
-        getValue={(item) => { return { id: item.id, user: item.user } }}
+        getValue={(item) => { return { id: item.id, user: item.profile } }}
         shouldFilter={false}
         multiple={true}
       />
@@ -83,16 +84,27 @@ const SessionFormModal = React.memo(function SessionFormModal({
   // React 19: Memoized fields for better performance
   const fields = useMemo(() => ({
     ...storeFields,
-    trainer: {
-      ...storeFields.trainer,
+    trainerUser: {
+      ...storeFields.trainerUser,
       type: 'custom' as const,
       Component: TrainerSelect
     },
-    clients: {
-      ...storeFields.clients,
+    clientsUsers: {
+      ...storeFields.clientsUsers,
       type: 'custom' as const,
       Component: ClientsSelect
-    }
+    },
+
+    reminderConfig: {
+      ...storeFields.reminderConfig,
+      visible: (ctx: { values: Record<string, any> }) => ctx.values.enableReminder,
+      renderItem: (items: ReminderDto) => {
+        return <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {items.sendBefore as ReactNode}
+          {items.reminderTypes as ReactNode}
+        </div>
+      }
+    },
   } as TFieldConfigObject<TSessionData>), [storeFields]);
 
   const inputs = useInput<TSessionData>({
@@ -160,7 +172,7 @@ const SessionFormModal = React.memo(function SessionFormModal({
           <h3 className="text-sm font-semibold mb-3">Schedule</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
             {inputs.startDateTime}
-            {inputs.endDateTime}
+            {inputs.duration}
           </div>
         </div>
 
@@ -168,8 +180,8 @@ const SessionFormModal = React.memo(function SessionFormModal({
         <div>
           <h3 className="text-sm font-semibold mb-3">Participants</h3>
           <div className="grid grid-cols-2 gap-6 items-start">
-            {inputs.trainer as ReactNode}
-            {inputs.clients as ReactNode}
+            {inputs.trainerUser as ReactNode}
+            {inputs.clientsUsers as ReactNode}
           </div>
         </div>
 
@@ -184,8 +196,19 @@ const SessionFormModal = React.memo(function SessionFormModal({
             {inputs.notes}
           </div>
         </div>
+
+        {/* Reminders */}
+        <div>
+
+          <div className="space-y-4">
+
+            {inputs.enableReminder}
+            {inputs.reminderConfig as ReactNode}
+          </div>
+
+        </div>
       </div>
-    </ModalForm>
+    </ModalForm >
   </>
 });
 

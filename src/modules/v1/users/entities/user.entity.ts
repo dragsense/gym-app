@@ -15,6 +15,7 @@ import { Profile } from '../profiles/entities/profile.entity';
 import { EUserLevels, EUserRole } from 'shared/enums/user.enum';
 import { RefreshToken } from '@/modules/v1/auth/entities/tokens.entity';
 import * as bcrypt from 'bcrypt';
+import { StripeConnectAccount } from '@/modules/v1/stripe/entities/stripe-connect-account.entity';
 
 export type UserLevelType = typeof EUserLevels[EUserRole];
 export const UserLevelValues = Object.values(EUserLevels);
@@ -56,6 +57,19 @@ export class User extends GeneralBaseEntity {
   @Column('text', { array: true, default: [], select: false })
   passwordHistory: string[];
 
+  @Column({ type: 'varchar', nullable: true })
+  stripeCustomerId: string;
+
+
+  @ApiProperty({
+    type: () => StripeConnectAccount,
+    description: "Stripe Connect account of the trainer",
+    required: false,
+  })
+  @OneToOne(() => StripeConnectAccount, (stripeConnect) => stripeConnect.user, {
+    cascade: true,
+  })
+  stripeConnectAccount: StripeConnectAccount;
 
   @BeforeInsert()
   @BeforeUpdate()

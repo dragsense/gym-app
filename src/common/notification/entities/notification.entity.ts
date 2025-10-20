@@ -1,12 +1,9 @@
 import {
   Entity,
   Column,
-  ManyToOne,
-  JoinColumn,
 } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { GeneralBaseEntity } from '@/common/entities';
-import { User } from '@/modules/v1/users/entities/user.entity';
 import { ENotificationType, ENotificationPriority } from 'shared/enums/notification.enum';
 
 @Entity('notifications')
@@ -44,13 +41,10 @@ export class Notification extends GeneralBaseEntity {
   })
   priority: ENotificationPriority;
 
-  @ApiPropertyOptional({ example: 1, description: 'User ID who will receive the notification' })
-  @Column({ type: 'int', nullable: true })
-  userId?: number;
-
   @ApiPropertyOptional({ example: 123, description: 'Entity ID related to the notification' })
   @Column({ type: 'int', nullable: true })
   entityId?: number;
+
 
   @ApiPropertyOptional({ example: 'user', description: 'Entity type related to the notification' })
   @Column({ type: 'varchar', length: 100, nullable: true })
@@ -63,8 +57,4 @@ export class Notification extends GeneralBaseEntity {
   @ApiPropertyOptional({ example: false, description: 'Whether the notification has been read' })
   @Column({ type: 'boolean', default: false })
   isRead?: boolean;
-
-  @ManyToOne(() => User, { eager: true })
-  @JoinColumn({ name: 'userId' })
-  user?: User;
 }

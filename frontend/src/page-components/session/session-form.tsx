@@ -24,12 +24,14 @@ import { createSession, updateSession } from "@/services/session.api";
 import { strictDeepMerge } from "@/utils";
 import { ESessionType } from "@shared/enums/session.enum";
 import { CreateSessionDto, UpdateSessionDto } from "@shared/dtos/session-dtos";
-import type { TrainerDto } from '@shared/dtos/trainer-dtos';
-import type { ClientDto } from '@shared/dtos/client-dtos';
 import type { ISessionFormModalExtraProps } from '@/components/admin/sessions/form/session-form-modal';
+import { EReminderType } from '@shared/enums';
+import type { TUserData } from '@shared/types/user.type';
+import type { UserDto } from '@shared/dtos';
+import type { ReminderDto } from '@shared/dtos/reminder-dtos';
 
 export type TSessionExtraProps = {
-  // Add any extra props if needed
+    // Add any extra props if needed
 }
 
 interface ISessionFormProps extends THandlerComponentProps<TSingleHandlerStore<ISession, TSessionExtraProps>> {
@@ -60,14 +62,16 @@ export default function SessionForm({
     const INITIAL_VALUES: TSessionData = {
         title: "",
         description: "",
-        startDateTime: "",
-        endDateTime: "",
-        trainer: {} as TrainerDto,
-        clients: [] as ClientDto[],
+        startDateTime: new Date().toISOString(),
+        duration: 60,
+        trainerUser: {} as UserDto,
+        clientsUsers: [] as UserDto[], // Will be validated to require at least one
         type: ESessionType.PERSONAL,
         location: "",
         price: 0,
         notes: "",
+        reminderConfig: { reminderTypes: [EReminderType.EMAIL] } as ReminderDto,
+        enableReminder: false
     };
 
     // React 19: Memoized initial values with deferred processing

@@ -1,16 +1,15 @@
-import { registerAs } from '@nestjs/config';
-import { ConfigService } from '@nestjs/config';
+import { ConfigService, registerAs } from '@nestjs/config';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { join } from 'path';
 
 // Database modes
 export enum DatabaseMode {
   SINGLE = 'single',
-  MULTI_SCHEMA = 'multi-schema', 
+  MULTI_SCHEMA = 'multi-schema',
   MULTI_DATABASE = 'multi-database',
 }
 
-// Connection configuration
+// Connection interface
 export interface DatabaseConnection {
   name: string;
   type: 'postgres';
@@ -27,10 +26,12 @@ export interface DatabaseConnection {
     idle: number;
     connTimeout: number;
   };
+  synchronize?: boolean;
+  logging?: boolean;
   extra?: Record<string, any>;
 }
 
-// Main database configuration
+// Main config interface
 export interface DatabaseConfig {
   mode: DatabaseMode;
   defaultConnection: string;
@@ -49,32 +50,30 @@ export interface DatabaseConfig {
   };
 }
 
+// Full configuration
 export default registerAs('database', (): DatabaseConfig => {
   // Validate database mode
   const validateDatabaseMode = (mode: string): DatabaseMode | null => {
-    if (Object.values(DatabaseMode).includes(mode as DatabaseMode)) {
-      return mode as DatabaseMode;
-    }
-    return null;
+    return Object.values(DatabaseMode).includes(mode as DatabaseMode)
+      ? (mode as DatabaseMode)
+      : null;
   };
 
   const dbMode = process.env.DB_MODE || DatabaseMode.SINGLE;
-
   const mode = validateDatabaseMode(dbMode);
-  
+
   if (!mode) {
-    throw new Error('Invalid database mode. Please check DB_MODE environment variable.');
+    throw new Error('Invalid DB_MODE environment variable.');
   }
 
-  const dbDefaultConnection = process.env.DB_DEFAULT_CONNECTION || 'default';
+  const defaultConnectionName = process.env.DB_DEFAULT_CONNECTION || 'default';
 
-
-  // Base connection configuration with validation
+  // Base connection
   const baseConnection: DatabaseConnection = {
-    name: dbDefaultConnection,
+    name: defaultConnectionName,
     type: 'postgres',
     host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT ?? '5432', 10),
+    port: parseInt(process.env.DB_PORT || '5432', 10),
     username: process.env.DB_USER || 'postgres',
     password: process.env.DB_PASS || 'postgres',
     database: process.env.DB_NAME || 'Customer_app',
@@ -85,21 +84,25 @@ export default registerAs('database', (): DatabaseConfig => {
       idle: parseInt(process.env.DB_POOL_IDLE || '30000', 10),
       connTimeout: parseInt(process.env.DB_POOL_CONN_TIMEOUT || '5000', 10),
     },
+    synchronize: Boolean(process.env.TYPEORM_SYNCHRONIZE),
+    logging: Boolean(process.env.TYPEORM_LOGGING),
   };
 
   // Validate required fields
   if (!baseConnection.host || !baseConnection.username || !baseConnection.password) {
-    throw new Error('Database configuration is incomplete. Please check DB_HOST, DB_USER, and DB_PASS environment variables.');
+    throw new Error(
+      'Database configuration incomplete. Check DB_HOST, DB_USER, DB_PASS.'
+    );
   }
 
   return {
     mode,
-    defaultConnection: dbDefaultConnection,
+    defaultConnection: defaultConnectionName,
     connections: {
-      [dbDefaultConnection]: baseConnection,
+      [defaultConnectionName]: baseConnection,
     },
-    autoReplica: process.env.DB_AUTO_REPLICA === 'true',
-    autoArchive: process.env.DB_AUTO_ARCHIVE === 'true',
+    autoReplica: Boolean(process.env.DB_AUTO_REPLICA),
+    autoArchive: Boolean(process.env.DB_AUTO_ARCHIVE),
     healthCheck: {
       interval: parseInt(process.env.DB_HEALTH_CHECK_INTERVAL || '30000', 10),
       timeout: parseInt(process.env.DB_HEALTH_CHECK_TIMEOUT || '5000', 10),
@@ -113,42 +116,23 @@ export default registerAs('database', (): DatabaseConfig => {
   };
 });
 
-// Legacy function for backward compatibility
-export const getTypeOrmConfig = (
-  configService: ConfigService,
-): TypeOrmModuleOptions => {
+
+
+export const getTypeOrmConfig = (configService: ConfigService): TypeOrmModuleOptions => {
   const dbConfig = configService.get<DatabaseConfig>('database');
-  
-  if (!dbConfig) {
-    throw new Error('Database configuration not found. Please check your environment variables.');
-  }
+
+  if (!dbConfig) throw new Error('Database config not found.');
 
   const defaultConnection = dbConfig.connections[dbConfig.defaultConnection];
-  
-  if (!defaultConnection) {
-    throw new Error(`Default connection '${dbConfig.defaultConnection}' not found in configuration.`);
-  }
+
+  if (!defaultConnection)
+    throw new Error(`Database config not found.`);
 
   return {
-    type: defaultConnection.type,
-    host: defaultConnection.host,
-    port: defaultConnection.port,
-    username: defaultConnection.username,
-    password: defaultConnection.password,
-    database: defaultConnection.database,
-    schema: defaultConnection.schema,
+    ...defaultConnection,
     entities: [join(__dirname, '../**/*.entity{.ts,.js}')],
     migrations: [join(__dirname, '../migrations/*{.ts,.js}')],
     autoLoadEntities: true,
-    synchronize: process.env.TYPEORM_SYNCHRONIZE === 'true',
-    logging: false,
-    ssl: defaultConnection.ssl,
-    extra: {
-      max: defaultConnection.pool?.max  ?? 20,
-      min: defaultConnection.pool?.min  ?? 5,
-      idleTimeoutMillis: defaultConnection.pool?.idle  ?? 30000,
-      connectionTimeoutMillis: defaultConnection.pool?.connTimeout  ?? 5000,
-      ...defaultConnection.extra,
-    },
+
   };
 };
