@@ -33,7 +33,7 @@ COPY shared/package.json ./shared/
 # Development stage
 FROM base AS dev
 EXPOSE 5173
-CMD ["npm", "run", "dev"]
+CMD ["pnpm", "run", "dev"]
 
 # Production build stage
 FROM base AS build

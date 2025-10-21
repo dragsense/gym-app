@@ -10,3 +10,4 @@ export * from "./workers";
 export * from "./health";
 export * from "./schedules";
 export * from "./referral-links";
+export * from "./settings";

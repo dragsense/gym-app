@@ -1,3 +1,5 @@
+import 'reflect-metadata';
+
 import { 
   registerDecorator, 
   ValidationOptions, 
@@ -6,8 +8,6 @@ import {
   ValidationArguments
 } from 'class-validator';
 import { Transform, TransformOptions } from 'class-transformer';
-import { plainToClass } from 'class-transformer';
-import 'reflect-metadata';
 
 // Number comparison decorators
 @ValidatorConstraint({ name: 'isGreaterThan', async: false })

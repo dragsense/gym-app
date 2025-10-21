@@ -11,4 +11,5 @@ export * from './session.enum';
 export * from './reminder.enum';
 export * from './billing.enum';
 export * from './referral-link.enum';
-export * from './payment-methods.enum'; 
+export * from './payment-methods.enum';
+export * from './user-availability.enum'; 

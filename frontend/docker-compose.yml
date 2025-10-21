@@ -12,8 +12,10 @@ services:
       NODE_ENV: development
       CHOKIDAR_USEPOLLING: true
       WATCHPACK_POLLING: true
-    env_file:
-      - .env.dev
+      WATCHPACK_POLL: true
+      WATCHPACK_AGGREGATE_TIMEOUT: 300
+      VITE_HOST: 0.0.0.0
+      VITE_PORT: 5173
     volumes:
       - ./src:/app/src
       - ./public:/app/public
@@ -24,7 +26,6 @@ services:
       - ./tsconfig.node.json:/app/tsconfig.node.json
       - ./eslint.config.js:/app/eslint.config.js
       - ./package.json:/app/package.json
-      - ./pnpm-lock.yaml:/app/pnpm-lock.yaml
       - /app/node_modules
       # Shared folder for imports
       - ../shared:/app/shared

@@ -7,9 +7,10 @@
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "cd backend && docker-compose up -d",
     "dev:frontend": "cd frontend && docker-compose up -d",
-    "build": "npm run build:backend && npm run build:frontend",
-    "build:backend": "cd backend && docker-compose build",
-    "build:frontend": "cd frontend && docker-compose build",
+    "shared:install": "cd shared && pnpm install",
+    "build": "pnpm install && pnpm shared:install && pnpm run build:backend && pnpm run build:frontend",
+    "build:backend": "cd backend && pnpm install && docker-compose build",
+    "build:frontend": "cd frontend && pnpm install && docker-compose build",
     "up": "npm run up:backend && npm run up:frontend",
     "up:backend": "cd backend && docker-compose up -d",
     "up:frontend": "cd frontend && docker-compose up -d",
@@ -25,7 +26,16 @@
     "clean": "npm run clean:backend && npm run clean:frontend",
     "clean:backend": "cd backend && docker-compose down -v && docker rmi backend-app:latest || true",
     "clean:frontend": "cd frontend && docker-compose down -v && docker rmi frontend-app:latest || true",
-    "setup": "npm run clean && npm run build && npm run up"
+    "setup": "npm run clean && npm run build && npm run up",
+    "d:install:backend": "cd backend && docker-compose exec app pnpm install",
+    "d:install:frontend": "cd frontend && docker-compose exec app pnpm install",
+    "d:install-force:backend": "cd backend && docker-compose exec app pnpm install --force",
+    "d:install-force:frontend": "cd frontend && docker-compose exec app pnpm install --force",
+    "d:cache-clear:backend": "cd backend && docker-compose exec app pnpm store prune",
+    "d:cache-clear:frontend": "cd frontend && docker-compose exec app pnpm store prune",
+    "d:rebuild:backend": "cd backend && docker-compose build --no-cache && docker-compose up -d",
+    "d:rebuild:frontend": "cd frontend && docker-compose build --no-cache && docker-compose up -d",
+    "d:rebuild": "npm run d:rebuild:backend && npm run d:rebuild:frontend"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
