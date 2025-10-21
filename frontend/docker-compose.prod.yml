@@ -1,0 +1,12 @@
+# Frontend without Nginx Docker Compose
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: frontend/Dockerfile
+      target: prod
+    environment:
+      NODE_ENV: production
+    env_file:
+      - .env.prod
+    restart: unless-stopped

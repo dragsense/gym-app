@@ -59,6 +59,7 @@ export function startCluster() {
   } else {
     console.log(`Worker ${process.pid} started`);
     app(); // each worker starts the NestJS app
+
   }
 }
 

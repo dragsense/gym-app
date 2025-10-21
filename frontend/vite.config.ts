@@ -15,6 +15,13 @@ export default defineConfig({
       "bcrypt": path.resolve(__dirname, "./src/utils/bcrypt-stub.ts"),
       "#": path.resolve(__dirname, "../src")
     },
-  }
+  },
+  server: {
+    host: '0.0.0.0',
+    port: 5173,
+    watch: {
+      usePolling: true,
+    },
+  },
 
 })

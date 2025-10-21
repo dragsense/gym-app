@@ -1,0 +1,34 @@
+# Frontend Docker Compose
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: frontend/Dockerfile
+      target: dev
+    ports:
+      - "5173:5173"
+    environment:
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: true
+      WATCHPACK_POLLING: true
+    env_file:
+      - .env.dev
+    volumes:
+      - ./src:/app/src
+      - ./public:/app/public
+      - ./index.html:/app/index.html
+      - ./vite.config.ts:/app/vite.config.ts
+      - ./tsconfig.json:/app/tsconfig.json
+      - ./tsconfig.app.json:/app/tsconfig.app.json
+      - ./tsconfig.node.json:/app/tsconfig.node.json
+      - ./eslint.config.js:/app/eslint.config.js
+      - ./package.json:/app/package.json
+      - ./pnpm-lock.yaml:/app/pnpm-lock.yaml
+      - /app/node_modules
+      # Shared folder for imports
+      - ../shared:/app/shared
+    restart: unless-stopped
+
+
+#docker-compose up -d

@@ -1,0 +1,67 @@
+# Backend Docker Compose
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+      target: dev
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: true
+      WATCHPACK_POLLING: true
+    env_file:
+      - .env
+      - .env.development
+    volumes:
+      - ./src:/app/src
+      - ../shared:/app/shared
+      - ./package.json:/app/package.json
+      - ./pnpm-lock.yaml:/app/pnpm-lock.yaml
+      - ./nest-cli.json:/app/nest-cli.json
+      - ./tsconfig.json:/app/tsconfig.json
+      - ./tsconfig.app.json:/app/tsconfig.app.json
+      - ./tsconfig.node.json:/app/tsconfig.node.json
+      - ./eslint.config.js:/app/eslint.config.js
+      - ./tsconfig.build.json:/app/tsconfig.build.json
+      - ./tsconfig.esm.json:/app/tsconfig.esm.json
+    depends_on:
+      redis:
+        condition: service_healthy
+      dragonfly:
+        condition: service_started
+      mailpit:
+        condition: service_started
+    restart: unless-stopped
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Web UI
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  dragonfly:
+    image: docker.dragonflydb.io/dragonflydb/dragonfly:latest
+    container_name: dragonfly
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+
+
+#docker-compose up -d
