@@ -19,10 +19,11 @@ services:
       - ../backend/.env.development
       - ../frontend/.env.dev
     volumes:
-      - ..:/app:cached
-      - /app/backend/node_modules
-      - /app/frontend/node_modules
-      - /app/shared/node_modules
+      - ../.git:/app/.git:cached
+      - ../.gitignore:/app/.gitignore:cached
+      - /app/backend
+      - /app/frontend
+      - /app/shared
     depends_on:
       redis:
         condition: service_healthy
