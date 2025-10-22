@@ -4,7 +4,7 @@
   "service": "app",
   "workspaceFolder": "/app",
   "mounts": [
-    "source=${localEnv:HOME}/.ssh,target=/root/.ssh,type=bind,consistency=cached,readonly"
+    "source=${localEnv:HOME}/.ssh,target=/root/.ssh,type=bind,consistency=cached"
   ],
   "runArgs": ["--user", "root"],
   "postCreateCommand": "bash -c 'ls -la /app && if [ -d /root/.ssh ]; then chmod 700 /root/.ssh && chmod 600 /root/.ssh/config 2>/dev/null || true && chmod 600 /root/.ssh/id_ed25519 2>/dev/null || true && chmod 600 /root/.ssh/id_ed25519_octa 2>/dev/null || true && chmod 644 /root/.ssh/id_ed25519.pub 2>/dev/null || true && chmod 644 /root/.ssh/id_ed25519_octa.pub 2>/dev/null || true && chmod 644 /root/.ssh/known_hosts 2>/dev/null || true; fi'",

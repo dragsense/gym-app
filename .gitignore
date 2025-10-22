@@ -93,7 +93,16 @@ ehthumbs.db
 Thumbs.db
 
 # Docker
-.dockerignore
+Dockerfile
+docker-compose.yml
+docker-compose.backend.yml
+docker-compose.frontend.yml
+docker-compose.backend.prod.yml
+docker-compose.frontend.prod.yml
+docker-compose.frontend.nginx.yml
+dev.sh
+README.md
+.devcontainer/
 
 # Database
 *.sqlite
@@ -110,3 +119,5 @@ documentation/
 test/
 *.test.js
 *.spec.js
+
+
