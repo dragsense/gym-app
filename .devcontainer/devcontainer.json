@@ -3,11 +3,7 @@
   "dockerComposeFile": "../shared/docker-compose.yml",
   "service": "app",
   "workspaceFolder": "/app",
-  "mounts": [
-    "source=${localEnv:HOME}/.ssh,target=/root/.ssh,type=bind,consistency=cached"
-  ],
-  "runArgs": ["--user", "root"],
-  "postCreateCommand": "bash -c 'ls -la /app && if [ -d /root/.ssh ]; then chmod 700 /root/.ssh && chmod 600 /root/.ssh/config 2>/dev/null || true && chmod 600 /root/.ssh/id_ed25519 2>/dev/null || true && chmod 600 /root/.ssh/id_ed25519_octa 2>/dev/null || true && chmod 644 /root/.ssh/id_ed25519.pub 2>/dev/null || true && chmod 644 /root/.ssh/id_ed25519_octa.pub 2>/dev/null || true && chmod 644 /root/.ssh/known_hosts 2>/dev/null || true; fi'",
+  "runArgs": ["--user", "root", "--env", "SSH_AUTH_SOCK=/ssh-agent"],
   "features": {
     "ghcr.io/devcontainers/features/git:1": {},
     "ghcr.io/devcontainers/features/node:1": {
@@ -44,5 +40,9 @@
     }
   },
   "shutdownAction": "stopCompose",
-  "remoteUser": "root"
+  "remoteUser": "root",
+  "mounts": [
+    "${localEnv:SSH_AUTH_SOCK}:/ssh-agent:ro"
+  ],
+  "postCreateCommand": "chmod 600 /ssh-agent && chown root:root /ssh-agent"
 }

@@ -14,14 +14,13 @@ services:
       VITE_HOST: 0.0.0.0
       VITE_PORT: 5173
       VITE_API_URL: http://localhost:3000
+      SSH_AUTH_SOCK: /ssh-agent
     env_file:
       - ../backend/.env
       - ../backend/.env.development
       - ../frontend/.env.dev
     volumes:
-      # Mount workspace files
       - ..:/app:cached
-      # Preserve node_modules from Docker build
       - /app/backend/node_modules
       - /app/frontend/node_modules
       - /app/shared/node_modules
