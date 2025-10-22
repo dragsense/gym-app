@@ -1,19 +1,44 @@
 # Backend Dockerfile - Shared Folder Context
 FROM node:22 AS base
 
+
+# 1️⃣ Install basic tools
+RUN apt-get update && apt-get install -y \
+    git \
+    openssh-client \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# 2️⃣ Fix DNS (Google DNS)
+ENV DNS_SERVERS="8.8.8.8 1.1.1.1"
+RUN echo "DNS servers set to $DNS_SERVERS"
+ENV NODE_OPTIONS="--dns-result-order=ipv4first"
+
+# 3️⃣ Configure SSH (optional)
+RUN mkdir -p /root/.ssh && chmod 700 /root/.ssh
+# If you plan to mount your host SSH keys, they’ll be placed here at runtime
+
+# 4️⃣ Improve npm/pnpm performance (fast mirror)
+RUN npm config set registry https://registry.npmmirror.com \
+    && npm config set fetch-retries 5 \
+    && npm config set fetch-retry-mintimeout 20000 \
+    && npm config set fetch-retry-maxtimeout 120000 \
+    && npm config set prefer-offline true \
+    && npm config set progress false
+
+# Create app directory and set proper permissions
+RUN mkdir -p /app && chown -R node:node /app
+
 WORKDIR /app
 
 # Install pnpm, NestJS CLI, Git and SSH client
 RUN npm install -g pnpm @nestjs/cli
 
-# Install Git and SSH client
-RUN apt-get update && apt-get install -y git openssh-client && rm -rf /var/lib/apt/lists/*
+# 6️⃣ Optional: set pnpm mirror + persistent cache
+RUN pnpm config set registry https://registry.npmmirror.com \
+    && pnpm config set store-dir /root/.pnpm-store
 
-# Create SSH directory and set permissions
-RUN mkdir -p /root/.ssh && chmod 700 /root/.ssh
-
-# Add GitHub to known hosts
-RUN ssh-keyscan github.com >> /root/.ssh/known_hosts
 
 # Copy backend package files
 COPY backend/package.json ./backend/
