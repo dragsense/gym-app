@@ -4,6 +4,9 @@
   "service": "app",
   "workspaceFolder": "/app",
   "runArgs": ["--user", "root", "--env", "SSH_AUTH_SOCK=/ssh-agent"],
+  "remoteUser": "root",
+  "mounts": ["${localEnv:SSH_AUTH_SOCK}:/ssh-agent:ro"],
+  "postCreateCommand": "chmod 600 /ssh-agent && chown root:root /ssh-agent",
   "features": {
     "ghcr.io/devcontainers/features/git:1": {},
     "ghcr.io/devcontainers/features/node:1": {
@@ -39,10 +42,5 @@
       ]
     }
   },
-  "shutdownAction": "stopCompose",
-  "remoteUser": "root",
-  "mounts": [
-    "${localEnv:SSH_AUTH_SOCK}:/ssh-agent:ro"
-  ],
-  "postCreateCommand": "chmod 600 /ssh-agent && chown root:root /ssh-agent"
+  "shutdownAction": "stopCompose"
 }

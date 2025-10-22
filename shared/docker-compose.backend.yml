@@ -9,7 +9,6 @@ services:
       - "3000:3000"
     environment:
       NODE_ENV: development
-      SSH_AUTH_SOCK: /ssh-agent
     env_file:
       - ../backend/.env
       - ../backend/.env.development
