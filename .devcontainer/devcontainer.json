@@ -7,9 +7,13 @@
 
   // 👇 SSH forwarding setup
   "runArgs": [
-    "--user", "root"
+    "--user", "root",
+    "--env", "SSH_AUTH_SOCK=/ssh-agent"
   ],
-  "postCreateCommand": "mkdir -p /root/.ssh && echo 'Host github.com\n  HostName github.com\n  User git\n  IdentityFile /root/.ssh/id_ed25519_github\n  IdentitiesOnly yes' > /root/.ssh/config && chmod 600 /root/.ssh/config",
+  "mounts": [
+    "source=${localEnv:SSH_AUTH_SOCK},target=/ssh-agent,type=bind"
+  ],
+  "postCreateCommand": "echo 'Host github.com\n  HostName github.com\n  User git\n  ForwardAgent yes' > /root/.ssh/config && chmod 600 /root/.ssh/config",
   // Node + Git features
   "features": {
     "ghcr.io/devcontainers/features/git:1": {},
