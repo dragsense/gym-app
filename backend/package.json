@@ -31,7 +31,12 @@
     "d:restart": "docker-compose restart",
     "d:build": "docker-compose build",
     "d:logs": "docker-compose logs -f",
-    "d:setup": "pnpm install && docker-compose build && docker-compose up -d"
+    "d:setup": "pnpm install && docker-compose build && docker-compose up -d",
+    "d:install": "docker-compose exec app pnpm install",
+    "d:install-force": "docker-compose exec app pnpm install --force",
+    "d:cache-clear": "docker-compose exec app pnpm store prune",
+    "d:rebuild": "docker-compose build --no-cache && docker-compose up -d",
+    "d:clean": "docker-compose down && docker-compose build --no-cache && docker-compose up -d"
   },
   "dependencies": {
     "@bull-board/api": "^6.13.1",

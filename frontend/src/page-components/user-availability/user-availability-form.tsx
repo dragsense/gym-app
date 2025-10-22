@@ -16,30 +16,13 @@ import { type IUserAvailability } from "@shared/interfaces/user-availability.int
 import { type TSingleHandlerStore } from "@/stores";
 
 // Components
-import { UserAvailabilityFormModal } from "@/components/admin";
 
 // Services
 import { createUserAvailability, updateUserAvailability } from "@/services/user-availability.api";
 import { strictDeepMerge } from "@/utils";
 import { CreateUserAvailabilityDto, UpdateUserAvailabilityDto } from "@shared/dtos/user-availability-dtos";
-
-export type TUserAvailabilityFormData = {
-  weeklySchedule: {
-    monday: { enabled: boolean; timeSlots: Array<{ start: string; end: string }> };
-    tuesday: { enabled: boolean; timeSlots: Array<{ start: string; end: string }> };
-    wednesday: { enabled: boolean; timeSlots: Array<{ start: string; end: string }> };
-    thursday: { enabled: boolean; timeSlots: Array<{ start: string; end: string }> };
-    friday: { enabled: boolean; timeSlots: Array<{ start: string; end: string }> };
-    saturday: { enabled: boolean; timeSlots: Array<{ start: string; end: string }> };
-    sunday: { enabled: boolean; timeSlots: Array<{ start: string; end: string }> };
-  };
-  unavailablePeriods: Array<{
-    id?: string;
-    reason: string;
-    startDate: string;
-    endDate: string;
-  }>;
-};
+import type { TUserAvailabilityData } from '@shared/types';
+import {UserAvailabilityFormModal} from '@/components/admin';
 
 export type TUserAvailabilityExtraProps = {
   // Add any extra props if needed
@@ -70,7 +53,7 @@ export default function UserAvailabilityForm({
         reset: state.reset
     })));
 
-    const INITIAL_VALUES: TUserAvailabilityFormData = {
+    const INITIAL_VALUES = {
         weeklySchedule: {
             monday: { enabled: true, timeSlots: [{ start: "09:00", end: "17:00" }] },
             tuesday: { enabled: true, timeSlots: [{ start: "09:00", end: "17:00" }] },
@@ -85,7 +68,7 @@ export default function UserAvailabilityForm({
 
     // React 19: Memoized initial values with deferred processing
     const initialValues = useMemo(() => {
-        return strictDeepMerge<TUserAvailabilityFormData>(INITIAL_VALUES, response ?? {});
+        return strictDeepMerge<TUserAvailabilityData>(INITIAL_VALUES, response ?? {});
     }, [INITIAL_VALUES, response?.id]);
 
     const handleClose = useCallback(() => {
@@ -116,7 +99,7 @@ export default function UserAvailabilityForm({
 
     return (
         <div data-component-id={componentId}>
-            <FormHandler<TUserAvailabilityFormData, any, any>
+            <FormHandler<any, any, any>
                 mutationFn={mutationFn}
                 FormComponent={UserAvailabilityFormModal}
                 storeKey={storeKey}

@@ -7,12 +7,15 @@ import {
   IsObject,
   IsOptional,
   IsString,
+  IsNumber,
   Matches,
   ValidateNested,
+  Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { PartialType, createPartialType } from '../../lib/type-utils';
+import { FieldType } from '../../decorators/field.decorator';
 
 export class TimeSlotDto {
   @ApiProperty({
@@ -24,7 +27,7 @@ export class TimeSlotDto {
   @Matches(/^([01]\d|2[0-3]):([0-5]\d)$/, {
     message: 'Start time must be in HH:mm format',
   })
-  start: string;
+  start!: string;
 
   @ApiProperty({
     type: String,
@@ -35,7 +38,7 @@ export class TimeSlotDto {
   @Matches(/^([01]\d|2[0-3]):([0-5]\d)$/, {
     message: 'End time must be in HH:mm format',
   })
-  end: string;
+  end!: string;
 }
 
 export class DayScheduleDto {
@@ -45,7 +48,7 @@ export class DayScheduleDto {
     description: 'Whether the day is enabled for availability',
   })
   @IsBoolean()
-  enabled: boolean;
+  enabled!: boolean;
 
   @ApiProperty({
     type: [TimeSlotDto],
@@ -55,7 +58,7 @@ export class DayScheduleDto {
   @ValidateNested({ each: true })
   @Type(() => TimeSlotDto)
   @ArrayMaxSize(5)
-  timeSlots: TimeSlotDto[];
+  timeSlots!: TimeSlotDto[];
 }
 
 export class UnavailablePeriodDto {
@@ -74,7 +77,7 @@ export class UnavailablePeriodDto {
     description: 'Reason for unavailability',
   })
   @IsString()
-  reason: string;
+  reason!: string;
 
   @ApiProperty({
     type: String,
@@ -82,7 +85,7 @@ export class UnavailablePeriodDto {
     description: 'Start date of the unavailable period (ISO 8601)',
   })
   @IsDateString()
-  startDate: Date;
+  startDate!: Date;
 
   @ApiProperty({
     type: String,
@@ -90,7 +93,7 @@ export class UnavailablePeriodDto {
     description: 'End date of the unavailable period (ISO 8601)',
   })
   @IsDateString()
-  endDate: Date;
+  endDate!: Date;
 }
 
 export class WeeklyScheduleDto {
@@ -100,7 +103,7 @@ export class WeeklyScheduleDto {
   })
   @ValidateNested()
   @Type(() => DayScheduleDto)
-  monday: DayScheduleDto;
+  monday!: DayScheduleDto;
 
   @ApiProperty({
     type: DayScheduleDto,
@@ -108,7 +111,7 @@ export class WeeklyScheduleDto {
   })
   @ValidateNested()
   @Type(() => DayScheduleDto)
-  tuesday: DayScheduleDto;
+  tuesday!: DayScheduleDto;
 
   @ApiProperty({
     type: DayScheduleDto,
@@ -116,7 +119,7 @@ export class WeeklyScheduleDto {
   })
   @ValidateNested()
   @Type(() => DayScheduleDto)
-  wednesday: DayScheduleDto;
+  wednesday!: DayScheduleDto;
 
   @ApiProperty({
     type: DayScheduleDto,
@@ -124,7 +127,7 @@ export class WeeklyScheduleDto {
   })
   @ValidateNested()
   @Type(() => DayScheduleDto)
-  thursday: DayScheduleDto;
+  thursday!: DayScheduleDto;
 
   @ApiProperty({
     type: DayScheduleDto,
@@ -132,7 +135,7 @@ export class WeeklyScheduleDto {
   })
   @ValidateNested()
   @Type(() => DayScheduleDto)
-  friday: DayScheduleDto;
+  friday!: DayScheduleDto;
 
   @ApiProperty({
     type: DayScheduleDto,
@@ -140,7 +143,7 @@ export class WeeklyScheduleDto {
   })
   @ValidateNested()
   @Type(() => DayScheduleDto)
-  saturday: DayScheduleDto;
+  saturday!: DayScheduleDto;
 
   @ApiProperty({
     type: DayScheduleDto,
@@ -148,18 +151,25 @@ export class WeeklyScheduleDto {
   })
   @ValidateNested()
   @Type(() => DayScheduleDto)
-  sunday: DayScheduleDto;
+  sunday!: DayScheduleDto;
 }
 
 export class UserAvailabilityDto {
-  @ApiProperty({
-    type: () => [UnavailablePeriodDto],
-    description: 'List of unavailable periods',
-  })
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => UnavailablePeriodDto)
-  unavailablePeriods: UnavailablePeriodDto[];
+  @ApiProperty({ example: 1, description: 'User Availability ID' })
+  @IsNotEmpty()
+  @IsNumber()
+  @Type(() => Number)
+  @FieldType("number", true)
+  @Min(1)
+  id!: number;
+
+  @ApiProperty({ example: 1, description: 'User ID' })
+  @IsNotEmpty()
+  @IsNumber()
+  @Type(() => Number)
+  @FieldType("number", true)
+  @Min(1)
+  userId!: number;
 
   @ApiProperty({
     type: () => WeeklyScheduleDto,
@@ -168,7 +178,24 @@ export class UserAvailabilityDto {
   @IsObject()
   @ValidateNested()
   @Type(() => WeeklyScheduleDto)
-  weeklySchedule: WeeklyScheduleDto;
+  @FieldType("nested", true, WeeklyScheduleDto)
+  weeklySchedule!: WeeklyScheduleDto;
+
+  @ApiProperty({
+    type: () => [UnavailablePeriodDto],
+    description: 'List of unavailable periods',
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => UnavailablePeriodDto)
+  @FieldType("nested", true, UnavailablePeriodDto)
+  unavailablePeriods!: UnavailablePeriodDto[];
+
+  @ApiProperty({ example: '2024-01-01T00:00:00.000Z', description: 'Creation timestamp' })
+  createdAt!: Date;
+
+  @ApiProperty({ example: '2024-01-01T00:00:00.000Z', description: 'Last update timestamp' })
+  updatedAt!: Date;
 }
 
 export class CreateUserAvailabilityDto {
@@ -178,7 +205,7 @@ export class CreateUserAvailabilityDto {
   })
   @IsNotEmpty()
   @IsObject()
-  weeklySchedule: {
+  weeklySchedule!: {
     monday: DayScheduleDto;
     tuesday: DayScheduleDto;
     wednesday: DayScheduleDto;

@@ -1,3 +1,4 @@
+
 // React & Hooks
 import { RouterProvider } from "react-router-dom";
 
@@ -11,14 +12,14 @@ import { AuthUserProvider } from "./hooks/use-auth-user";
 import { ThemeProvider } from "./hooks/use-theme";
 
 const queryClient = new QueryClient({
-  defaultOptions: {
+  defaultOptions: {  
     queries: {
       staleTime: 0,// 5 * 60 * 1000,
       refetchOnWindowFocus: false,
       retry: 1,
     },
   },
-});
+}); 
 
 function App() {
   return (

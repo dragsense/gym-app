@@ -3,12 +3,11 @@ import { PageInnerLayout } from "@/layouts";
 import { SettingsLayout } from "@/components/admin/settings";
 
 // Settings components
-import { UserSettingsForm } from "@/page-components/user-settings";
-import { UserAvailabilityForm } from "@/page-components/user-availability";
-import { PaymentMethodsManagement } from "@/components/admin/settings";
+
 
 // UI Components
 import { User, Clock, CreditCard } from "lucide-react";
+import { UserAvailabilityForm } from "@/page-components";
 
 export default function SettingsPage() {
     const [activeTab, setActiveTab] = useState<string>('user-settings');
@@ -19,24 +18,14 @@ export default function SettingsPage() {
                 activeTab={activeTab}
                 onTabChange={setActiveTab}
                 tabs={[
-                    {
-                        id: 'user-settings',
-                        label: 'User Settings',
-                        icon: User,
-                        content: <UserSettingsForm />
-                    },
+                  
                     {
                         id: 'availability',
                         label: 'Availability',
                         icon: Clock,
-                        content: <UserAvailabilityForm />
+                        content: <div>ssdsd</div>
                     },
-                    {
-                        id: 'payment-methods',
-                        label: 'Payment Methods',
-                        icon: CreditCard,
-                        content: <PaymentMethodsManagement />
-                    }
+                 
                 ]}
             />
         </PageInnerLayout>

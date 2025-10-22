@@ -1,25 +1,18 @@
 import {  useQueries, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDeferredValue, useTransition, useId } from "react";
 import { PageInnerLayout } from "@/layouts";
-import { CacheDashboard, HealthDashboard } from "@/components/admin";
-import { getCacheStats, clearAllCache } from "@/services/cache.api";
+import { HealthDashboard } from "@/components/admin";
 import { getDetailedHealth } from "@/services/health.api";
 
 export default function DashboardPage() {
-  // React 19: Essential IDs and transitions
+
   const componentId = useId();
   const [isPending, startTransition] = useTransition();
   
   const queryClient = useQueryClient();
   
-  // React Query: Use useQueries for multiple parallel queries
   const queries = useQueries({
     queries: [
-      {
-        queryKey: ['cache-stats'],
-        queryFn: getCacheStats,
-        refetchInterval: 5000,
-      },
       {
         queryKey: ['health-detailed'],
         queryFn: getDetailedHealth,
@@ -29,7 +22,7 @@ export default function DashboardPage() {
   });
 
   // Extract individual query results
-  const [cacheQuery, healthQuery] = queries;
+  const [healthQuery] = queries;
   
   // Combined loading and error states
   const isLoading = queries.some(query => query.isLoading);
@@ -67,12 +60,10 @@ export default function DashboardPage() {
   });
 
   // React 19: Transition-wrapped data with deferred values
-  const cacheData = getTransitionData(cacheQuery);
   const healthData = getTransitionData(healthQuery);
   
-  const deferredCacheData = useDeferredValue(cacheData.data);
   const deferredHealthData = useDeferredValue(healthData.data);
-
+ 
   return (
     <PageInnerLayout Header={<Header />}>
       <div className="space-y-8" data-component-id={componentId}>
@@ -99,19 +90,6 @@ export default function DashboardPage() {
               Refresh All
             </button>
           </div>
-        </div>
-
-        {/* Cache Dashboard */}
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Cache Performance</h2>
-          <CacheDashboard 
-            data={deferredCacheData}
-            loading={cacheData.loading}
-            error={cacheData.error}
-            onRefresh={() => startTransition(() => cacheQuery.refetch())}
-            onClearCache={() => clearCacheMutation.mutate()}
-            clearingCache={clearCacheMutation.isPending}
-          />
         </div>
 
         {/* Health Dashboard */}

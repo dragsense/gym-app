@@ -1,1 +1,1 @@
-export * from './user-availability-form';
+export { default as UserAvailabilityForm, type TUserAvailabilityExtraProps } from './user-availability-form';

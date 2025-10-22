@@ -6,6 +6,13 @@ import { defineConfig } from "vite"
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  define: {
+    global: 'globalThis',
+  },
+  optimizeDeps: {
+    include: ['reflect-metadata'],
+    exclude: ['reflect-metadata/Reflect']
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

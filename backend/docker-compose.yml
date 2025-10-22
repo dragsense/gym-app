@@ -12,6 +12,8 @@ services:
       NODE_ENV: development
       CHOKIDAR_USEPOLLING: true
       WATCHPACK_POLLING: true
+      WATCHPACK_POLL: true
+      WATCHPACK_AGGREGATE_TIMEOUT: 300
     env_file:
       - .env
       - .env.development
@@ -19,7 +21,6 @@ services:
       - ./src:/app/src
       - ../shared:/app/shared
       - ./package.json:/app/package.json
-      - ./pnpm-lock.yaml:/app/pnpm-lock.yaml
       - ./nest-cli.json:/app/nest-cli.json
       - ./tsconfig.json:/app/tsconfig.json
       - ./tsconfig.app.json:/app/tsconfig.app.json
@@ -35,6 +36,8 @@ services:
       mailpit:
         condition: service_started
     restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   mailpit:
     image: axllent/mailpit:latest
