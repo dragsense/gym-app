@@ -7,23 +7,8 @@
     "dev": "vite --mode=dev",
     "build": "tsc -b && vite build --mode=prod",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "docker:up": "docker-compose up -d",
-    "docker:down": "docker-compose down",
-    "docker:restart": "docker-compose restart",
-    "docker:build": "docker-compose build",
-    "docker:logs": "docker-compose logs -f",
-    "d:up": "docker-compose up -d",
-    "d:down": "docker-compose down",
-    "d:restart": "docker-compose restart",
-    "d:build": "docker-compose build",
-    "d:install": "docker-compose exec app pnpm install",
-    "d:install-force": "docker-compose exec app pnpm install --force",
-    "d:cache-clear": "docker-compose exec app pnpm store prune",
-    "d:rebuild": "docker-compose build --no-cache && docker-compose up -d",
-    "d:clean": "docker-compose down && docker-compose build --no-cache && docker-compose up -d",
-    "d:logs": "docker-compose logs -f",
-    "d:setup": "pnpm install && docker-compose build && docker-compose up -d"
+    "preview": "vite preview"
+
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.15",

@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ..
+      dockerfile: shared/Dockerfile.frontend
+      target: prod-nginx
+    container_name: app-nginx-container
+    ports:
+      - "80:80"
+    environment:
+      NODE_ENV: production
+    env_file:
+      - ../frontend/.env.prod
+    restart: unless-stopped

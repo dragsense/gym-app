@@ -45,6 +45,7 @@ import { SeedsModule } from './common/seeds/seeds.module';
 import { ActionModule } from './common/helper/action.module';
 import { getBullQueueConfig } from './config/bull-queue.config';
 import { CacheModule } from './common/cache/cache.module';
+import { RolesModule } from './common/roles/roles.module';
 
 
 
@@ -120,6 +121,7 @@ import { CacheModule } from './common/cache/cache.module';
     ActivityLogsModule,
     CacheModule,
     WorkerModule,
+    RolesModule,
 
 
     // Feature modules

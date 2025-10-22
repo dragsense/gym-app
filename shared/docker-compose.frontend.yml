@@ -1,0 +1,25 @@
+services:
+  frontend:
+    build:
+      context: ..
+      dockerfile: shared/Dockerfile.frontend
+      target: dev
+    container_name: app-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      NODE_ENV: development
+      VITE_HOST: 0.0.0.0
+      VITE_PORT: 5173
+    env_file:
+      - ../frontend/.env.dev
+    volumes:
+      # Mount workspace files
+      - ..:/app:cached
+      # Preserve node_modules from Docker build
+      - /app/frontend/node_modules
+      - /app/shared/node_modules
+    working_dir: /app/frontend
+    restart: unless-stopped
+
+#docker-compose up -d

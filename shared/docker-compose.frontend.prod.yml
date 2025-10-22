@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ..
+      dockerfile: shared/Dockerfile.frontend
+      target: prod
+    container_name: app-container-prod
+    environment:
+      NODE_ENV: production
+    env_file:
+      - ../frontend/.env.prod
+    restart: unless-stopped

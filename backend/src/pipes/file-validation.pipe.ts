@@ -15,7 +15,7 @@ export interface FileValidationOptions {
   allowedTypes?: EFileType[];
   required?: boolean;
   // Image specific options
-  minWidth?: number;
+  minWidth?: number; 
   maxWidth?: number;
   minHeight?: number;
   maxHeight?: number;
