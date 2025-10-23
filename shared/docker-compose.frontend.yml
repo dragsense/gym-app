@@ -14,10 +14,9 @@ services:
     env_file:
       - ../frontend/.env.dev
     volumes:
-      - ../.git:/app/.git:cached
-      - ../.gitignore:/app/.gitignore:cached
-      - /app/frontend
-      - /app/shared
+      - ..:/app:cached
+      - /app/frontend/node_modules
+      - /app/shared/node_modules
     working_dir: /app/frontend
     restart: unless-stopped
 

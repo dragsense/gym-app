@@ -14,16 +14,11 @@ services:
       VITE_HOST: 0.0.0.0
       VITE_PORT: 5173
       VITE_API_URL: http://localhost:3000
-    env_file:
-      - ../backend/.env
-      - ../backend/.env.development
-      - ../frontend/.env.dev
     volumes:
-      - ../.git:/app/.git:cached
-      - ../.gitignore:/app/.gitignore:cached
-      - /app/backend
-      - /app/frontend
-      - /app/shared
+      - ..:/app:cached
+      - /app/frontend/node_modules
+      - /app/backend/node_modules
+      - /app/shared/node_modules
     depends_on:
       redis:
         condition: service_healthy
