@@ -7,9 +7,7 @@
     "watchAssets": true,
     "preserveWatchOutput": true
   },
-  "watchIgnore": ["**/client/**"],
-  "watchOptions": {
-    "usePolling": true,
-    "interval": 1000
-  }
+  "watchIgnore": [
+    "**/client/**"
+  ]
 }

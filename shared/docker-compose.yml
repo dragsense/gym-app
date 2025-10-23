@@ -13,12 +13,6 @@ services:
       NODE_ENV: development
       VITE_HOST: 0.0.0.0
       VITE_PORT: 5173
-      VITE_API_URL: http://localhost:3000
-      CHOKIDAR_USEPOLLING: true
-      WATCHPACK_POLLING: true
-      WATCHPACK_POLLING_INTERVAL: 1000
-      CHOKIDAR_INTERVAL: 1000
-      FAST_REFRESH: true
     volumes:
       - ..:/app
       - /app/frontend/node_modules

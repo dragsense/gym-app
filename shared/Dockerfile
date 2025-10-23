@@ -43,11 +43,8 @@ RUN pnpm config set registry https://registry.npmmirror.com \
 
 # Copy package files from all services
 COPY backend/package.json ./backend/
-COPY backend/pnpm-lock.yaml ./backend/
 COPY frontend/package.json ./frontend/
-COPY frontend/pnpm-lock.yaml ./frontend/
 COPY shared/package.json ./shared/
-COPY shared/pnpm-lock.yaml ./shared/
 
 # Install shared dependencies first
 WORKDIR /app/shared
