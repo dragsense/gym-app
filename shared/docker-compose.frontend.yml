@@ -14,11 +14,10 @@ services:
     env_file:
       - ../frontend/.env.dev
     volumes:
-      # Mount workspace files
-      - ..:/app:cached
-      # Preserve node_modules from Docker build
-      - /app/frontend/node_modules
-      - /app/shared/node_modules
+      - ../.git:/app/.git:cached
+      - ../.gitignore:/app/.gitignore:cached
+      - /app/frontend
+      - /app/shared
     working_dir: /app/frontend
     restart: unless-stopped
 
