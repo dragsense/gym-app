@@ -25,7 +25,14 @@ import {
 
 import { BillingsService } from './billings.service';
 import { JwtAuthGuard } from '@/guards/jwt-auth.gaurd';
-import { CreateBillingDto, UpdateBillingDto, BillingListDto, BillingPaginatedDto, BillingDto, SingleQueryDto } from 'shared';
+import {
+  CreateBillingDto,
+  UpdateBillingDto,
+  BillingListDto,
+  BillingPaginatedDto,
+  BillingDto,
+  SingleQueryDto,
+} from '@shared/dtos';
 import { Billing } from './entities/billing.entity';
 import { AuthUser } from '@/decorators/user.decorator';
 import { User } from '../users/entities/user.entity';
@@ -38,7 +45,8 @@ import { ConfigService } from '@nestjs/config';
 @ApiTags('Billings')
 @Controller('billings')
 export class BillingsController {
-  constructor(private readonly billingsService: BillingsService,
+  constructor(
+    private readonly billingsService: BillingsService,
     private readonly stripeBillingService: StripeBillingService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
@@ -64,7 +72,10 @@ export class BillingsController {
   })
   @ApiResponse({ status: 404, description: 'Billing not found' })
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number, @Query() query: SingleQueryDto<Billing>) {
+  findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @Query() query: SingleQueryDto<Billing>,
+  ) {
     return this.billingsService.getSingle(id, query);
   }
 
@@ -88,7 +99,10 @@ export class BillingsController {
   @ApiResponse({ status: 200, description: 'Billing updated successfully' })
   @ApiResponse({ status: 404, description: 'Billing not found' })
   @Patch(':id')
-  update(@Param('id', ParseIntPipe) id: number, @Body() updateBillingDto: UpdateBillingDto) {
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateBillingDto: UpdateBillingDto,
+  ) {
     return this.billingsService.updateBilling(id, updateBillingDto);
   }
 
@@ -101,42 +115,55 @@ export class BillingsController {
     await this.billingsService.delete(id);
   }
 
-
-
   @Post(':id/checkout-url')
   @ApiOperation({ summary: 'Create checkout URL for billing payment' })
-  @ApiResponse({ status: 201, description: 'Checkout URL created successfully' })
+  @ApiResponse({
+    status: 201,
+    description: 'Checkout URL created successfully',
+  })
   @ApiResponse({ status: 404, description: 'Billing not found' })
   @ApiParam({ name: 'id', type: 'number', description: 'Billing ID' })
   @ApiBody({
     schema: {
       type: 'object',
       properties: {
-        paymentSuccessUrl: { type: 'string', description: 'Success URL from frontend' },
-        paymentCancelUrl: { type: 'string', description: 'Cancel URL from frontend' }
+        paymentSuccessUrl: {
+          type: 'string',
+          description: 'Success URL from frontend',
+        },
+        paymentCancelUrl: {
+          type: 'string',
+          description: 'Cancel URL from frontend',
+        },
       },
-      required: ['paymentSuccessUrl', 'paymentCancelUrl']
-    }
+      required: ['paymentSuccessUrl', 'paymentCancelUrl'],
+    },
   })
   async createCheckoutUrl(
     @AuthUser() user: User,
     @Param('id', ParseIntPipe) id: number,
     @Body() body: { paymentSuccessUrl: string; paymentCancelUrl: string },
   ) {
-    const billing = await this.billingsService.getSingle(id, { _relations: ['recipientUser'] });
+    const billing = await this.billingsService.getSingle(id, {
+      _relations: ['recipientUser'],
+    });
     const payerUserId = user.id; // ✅ Track who is making the payment
 
     // Get or create Stripe customer for the person who is paying
     let stripeCustomerId;
     try {
-      stripeCustomerId = await this.stripeBillingService.createOrGetStripeCustomer(billing.recipientUser);
+      stripeCustomerId =
+        await this.stripeBillingService.createOrGetStripeCustomer(
+          billing.recipientUser,
+        );
     } catch (error) {
-      throw new BadRequestException(`Failed to create or get Stripe customer: ${error.message}`);
+      throw new BadRequestException(
+        `Failed to create or get Stripe customer: ${error.message}`,
+      );
     }
 
     // Create line items - first try Stripe invoice, then fallback to billing
     const lineItems: any[] = [];
-
 
     lineItems.push({
       price_data: {
@@ -149,7 +176,6 @@ export class BillingsController {
       },
       quantity: 1,
     });
-
 
     // Create JWT token for success/cancel URLs
     const token = this.jwtService.sign({
@@ -181,24 +207,23 @@ export class BillingsController {
 
       // Update billing with checkout session ID
       await this.billingsService.update(billing.id, {
-        stripeCheckoutSessionId: checkoutSession.id
+        stripeCheckoutSessionId: checkoutSession.id,
       });
 
       return {
         checkoutUrl: checkoutSession.url,
         message: 'Checkout URL created successfully',
       };
-
     } catch (error) {
       // Both checkout session and Stripe invoice failed
       return {
         checkoutUrl: null,
-        message: 'Unable to process automatic payment. Please use manual payment method.',
-        error: 'Payment processing unavailable'
+        message:
+          'Unable to process automatic payment. Please use manual payment method.',
+        error: 'Payment processing unavailable',
       };
     }
   }
-
 
   @Get('checkout/success')
   @ApiOperation({ summary: 'Handle successful Order checkout' })
@@ -220,14 +245,17 @@ export class BillingsController {
             status: { type: 'string' },
             paidAt: { type: 'string', format: 'date-time' },
             stripeInvoiceId: { type: 'string' },
-            stripeCheckoutSessionId: { type: 'string' }
-          }
-        }
-      }
-    }
+            stripeCheckoutSessionId: { type: 'string' },
+          },
+        },
+      },
+    },
   })
   @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiQuery({ name: 'token', description: 'JWT token containing purchase details' })
+  @ApiQuery({
+    name: 'token',
+    description: 'JWT token containing purchase details',
+  })
   @ApiQuery({ name: 'session_id', description: 'Stripe checkout session ID' })
   async handleCheckoutSuccess(
     @Query('token') token: string,
@@ -246,13 +274,12 @@ export class BillingsController {
       properties: {
         message: { type: 'string' },
         success: { type: 'boolean' },
-        invoice: { type: 'null' }
-      }
-    }
+        invoice: { type: 'null' },
+      },
+    },
   })
   @ApiResponse({ status: 400, description: 'Bad request' })
-  async handleCheckoutCancel(
-  ) {
+  async handleCheckoutCancel() {
     return this.billingsService.handleCheckoutCancel();
   }
 }

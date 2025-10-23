@@ -19,14 +19,14 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { ScheduleService } from './schedule.service';
-import { 
-  ScheduleListDto, 
-  CreateScheduleDto, 
-  UpdateScheduleDto 
-} from 'shared/dtos/schedule-dtos/schedule.dto';
+import {
+  ScheduleListDto,
+  CreateScheduleDto,
+  UpdateScheduleDto,
+} from '@shared/dtos/schedule-dtos/schedule.dto';
 import { JwtAuthGuard } from '@/guards/jwt-auth.gaurd';
 import { Timezone } from '@/decorators/timezone.decorator';
-import { SingleQueryDto } from 'shared';
+import { SingleQueryDto } from '@shared/dtos';
 import { Schedule } from './entities/schedule.entity';
 
 @ApiTags('Schedule')
@@ -48,29 +48,41 @@ export class ScheduleController {
   @ApiParam({ name: 'id', type: 'number' })
   @ApiResponse({ status: 200, description: 'Schedule retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Schedule not found' })
-  async findOne(@Param('id', ParseIntPipe) id: number,
-  @Query() queryDto: SingleQueryDto<Schedule>
-) {
+  async findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @Query() queryDto: SingleQueryDto<Schedule>,
+  ) {
     return await this.scheduleService.getSingle(id, queryDto);
   }
 
   @Post()
   @ApiOperation({ summary: 'Create schedule' })
-  @ApiHeader({ name: 'X-Timezone', description: 'User timezone (e.g., America/New_York)', required: false })
+  @ApiHeader({
+    name: 'X-Timezone',
+    description: 'User timezone (e.g., America/New_York)',
+    required: false,
+  })
   @ApiResponse({ status: 201, description: 'Schedule created successfully' })
   @ApiResponse({ status: 400, description: 'Invalid schedule configuration' })
   async createSchedule(
     @Body() createDto: CreateScheduleDto,
     @Timezone() timezone: string,
   ) {
-    const schedule = await this.scheduleService.createSchedule(createDto, timezone);
+    const schedule = await this.scheduleService.createSchedule(
+      createDto,
+      timezone,
+    );
     return { message: 'Schedule created successfully', data: schedule };
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update schedule' })
   @ApiParam({ name: 'id', type: 'number' })
-  @ApiHeader({ name: 'X-Timezone', description: 'User timezone', required: false })
+  @ApiHeader({
+    name: 'X-Timezone',
+    description: 'User timezone',
+    required: false,
+  })
   @ApiResponse({ status: 200, description: 'Schedule updated successfully' })
   @ApiResponse({ status: 404, description: 'Schedule not found' })
   @ApiResponse({ status: 400, description: 'Invalid schedule configuration' })
@@ -79,7 +91,11 @@ export class ScheduleController {
     @Body() updateData: UpdateScheduleDto,
     @Timezone() timezone: string,
   ) {
-    const schedule = await this.scheduleService.updateSchedule(id, updateData, timezone);
+    const schedule = await this.scheduleService.updateSchedule(
+      id,
+      updateData,
+      timezone,
+    );
     return { message: 'Schedule updated successfully', data: schedule };
   }
 
@@ -93,4 +109,3 @@ export class ScheduleController {
     return { message: 'Schedule deleted successfully' };
   }
 }
-

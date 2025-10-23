@@ -7,7 +7,7 @@ import {
 import { ApiProperty } from '@nestjs/swagger';
 import { GeneralBaseEntity } from '@/common/entities/base.entity';
 import { User } from '../../users/entities/user.entity';
-import { UnavailablePeriodDto, WeeklyScheduleDto } from 'shared/dtos/user-availability-dtos/user-availability.dto';
+import { UnavailablePeriodDto, WeeklyScheduleDto } from '@shared/dtos/user-availability-dtos/user-availability.dto';
 
 @Entity('user_availability')
 export class UserAvailability extends GeneralBaseEntity {

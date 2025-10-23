@@ -1,4 +1,4 @@
-import { EFileType } from 'shared/enums/file-upload.enum';
+import { EFileType } from '@shared/enums/file-upload.enum';
 
 /**
  * Detect file type based on MIME type

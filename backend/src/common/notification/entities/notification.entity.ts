@@ -4,7 +4,7 @@ import {
 } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { GeneralBaseEntity } from '@/common/entities';
-import { ENotificationType, ENotificationPriority } from 'shared/enums/notification.enum';
+import { ENotificationType, ENotificationPriority } from '@shared/enums/notification.enum';
 
 @Entity('notifications')
 export class Notification extends GeneralBaseEntity {

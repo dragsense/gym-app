@@ -6,7 +6,7 @@ import { SessionsService } from '../sessions.service';
 import { Session } from '../entities/session.entity';
 import { ScheduleService } from '@/common/schedule/schedule.service';
 import { EventPayload } from '@/common/helper/services/event.service';
-import { EReminderSendBefore } from 'shared';
+import { EReminderSendBefore } from '@shared/enums';
 import { SessionEmailService } from './session-email.service';
 import { UsersService } from '@/modules/v1/users/users.service';
 import { ActionRegistryService } from '@/common/helper/services/action-registry.service';
@@ -22,7 +22,7 @@ export class SessionEventListenerService implements OnModuleInit {
     private readonly sessionEmailService: SessionEmailService,
     private readonly userService: UsersService,
     private readonly actionRegistryService: ActionRegistryService,
-  ) { }
+  ) {}
 
   onModuleInit() {
     // Register session actions with action registry
@@ -34,17 +34,12 @@ export class SessionEventListenerService implements OnModuleInit {
     });
   }
 
-
-
-
   /**
    * Handle session created event - setup reminders if enabled
    */
   @OnEvent('session.crud.create')
   async handleSessionCreated(payload: EventPayload): Promise<void> {
-
-    if (!payload.entity)
-      return;
+    if (!payload.entity) return;
 
     try {
       const session = await this.sessionsService.getSingle(payload.entityId, {
@@ -53,31 +48,39 @@ export class SessionEventListenerService implements OnModuleInit {
       });
       this.logger.log(`Session created: ${session.title} (ID: ${session.id})`);
 
-
-
-      await this.sessionQueue.add('send-session-confirmation', {
-        sessionId: session.id,
-        recipientId: session.trainerUser.id,
-      }, {
-        delay: 10000,
-      });
+      await this.sessionQueue.add(
+        'send-session-confirmation',
+        {
+          sessionId: session.id,
+          recipientId: session.trainerUser.id,
+        },
+        {
+          delay: 10000,
+        },
+      );
 
       for (const clientUser of session.clientsUsers) {
-        await this.sessionQueue.add('send-session-confirmation', {
-          sessionId: session.id,
-          recipientId: clientUser.id,
-        }, {
-          delay: 10000,
-        });
+        await this.sessionQueue.add(
+          'send-session-confirmation',
+          {
+            sessionId: session.id,
+            recipientId: clientUser.id,
+          },
+          {
+            delay: 10000,
+          },
+        );
       }
 
       // Setup reminders if enabled
       if (session.enableReminder) {
         await this.setupSessionReminders(session);
       }
-
     } catch (error) {
-      this.logger.error(`Failed to handle session creation for session ${payload.entityId}:`, error);
+      this.logger.error(
+        `Failed to handle session creation for session ${payload.entityId}:`,
+        error,
+      );
     }
   }
 
@@ -86,7 +89,6 @@ export class SessionEventListenerService implements OnModuleInit {
    */
   @OnEvent('session.crud.update')
   async handleSessionUpdated(payload: EventPayload): Promise<void> {
-
     try {
       const session = payload.entity as Session;
       this.logger.log(`Session updated: ${session.title} (ID: ${session.id})`);
@@ -102,25 +104,35 @@ export class SessionEventListenerService implements OnModuleInit {
       }
 
       if (oldSession.status !== session.status) {
-        await this.sessionQueue.add('send-session-status-update', {
-          sessionId: session.id,
-          recipientId: session.trainerUser.id,
-        }, {
-          delay: 10000,
-        });
+        await this.sessionQueue.add(
+          'send-session-status-update',
+          {
+            sessionId: session.id,
+            recipientId: session.trainerUser.id,
+          },
+          {
+            delay: 10000,
+          },
+        );
 
         for (const clientUser of session.clientsUsers) {
-          await this.sessionQueue.add('send-session-status-update', {
-            sessionId: session.id,
-            recipientId: clientUser.id,
-          }, {
-            delay: 10000,
-          });
+          await this.sessionQueue.add(
+            'send-session-status-update',
+            {
+              sessionId: session.id,
+              recipientId: clientUser.id,
+            },
+            {
+              delay: 10000,
+            },
+          );
         }
       }
-
     } catch (error) {
-      this.logger.error(`Failed to handle session update for session ${payload.entityId}:`, error);
+      this.logger.error(
+        `Failed to handle session update for session ${payload.entityId}:`,
+        error,
+      );
     }
   }
 
@@ -133,50 +145,63 @@ export class SessionEventListenerService implements OnModuleInit {
       const session = payload.entity as Session;
       this.logger.log(`Session deleted: ID ${session.id}`);
 
-      await this.sessionQueue.add('send-session-deleted', {
-        sessionId: session.id,
-        recipientId: session.trainerUser.id,
-      }, {
-        delay: 10000,
-      });
-
-        for (const clientUser of session.clientsUsers) {
-        await this.sessionQueue.add('send-session-deleted', {
+      await this.sessionQueue.add(
+        'send-session-deleted',
+        {
           sessionId: session.id,
-          recipientId: clientUser.id,
-        }, {
+          recipientId: session.trainerUser.id,
+        },
+        {
           delay: 10000,
-        });
-      }
+        },
+      );
 
+      for (const clientUser of session.clientsUsers) {
+        await this.sessionQueue.add(
+          'send-session-deleted',
+          {
+            sessionId: session.id,
+            recipientId: clientUser.id,
+          },
+          {
+            delay: 10000,
+          },
+        );
+      }
 
       // Remove all associated reminders
       await this.removeSessionReminders(session.id);
     } catch (error) {
-      this.logger.error(`Failed to handle session deletion for session ${payload.entityId}:`, error);
+      this.logger.error(
+        `Failed to handle session deletion for session ${payload.entityId}:`,
+        error,
+      );
     }
   }
-
 
   /**
    * Handle send session reminder
    */
   private async handleSendSessionReminder(data: any): Promise<void> {
     const { sessionId, recipientId } = data;
-    
+
     try {
       const session = await this.sessionsService.getSingle(sessionId);
       const recipient = await this.userService.getSingle(recipientId, {
         _relations: ['profile'],
       });
 
-      const recipientName = recipient.profile?.firstName + ' ' + recipient.profile?.lastName;
+      const recipientName =
+        recipient.profile?.firstName + ' ' + recipient.profile?.lastName;
       if (!recipientName) {
         throw new Error('Recipient name not found');
       }
 
-      await this.sessionEmailService.sendSessionReminder(session, recipient.email, recipientName);
-
+      await this.sessionEmailService.sendSessionReminder(
+        session,
+        recipient.email,
+        recipientName,
+      );
     } catch (error) {
       this.logger.error(`Failed to send session reminder:`, error);
       throw error;
@@ -188,9 +213,9 @@ export class SessionEventListenerService implements OnModuleInit {
    */
   private async setupSessionReminders(session: Session): Promise<void> {
     try {
-
       const reminderConfig = session.reminderConfig;
-      const { sendBefore = [EReminderSendBefore.ONE_DAY] } = reminderConfig || {};
+      const { sendBefore = [EReminderSendBefore.ONE_DAY] } =
+        reminderConfig || {};
 
       // Remove existing reminders first
       await this.removeSessionReminders(session.id);
@@ -199,12 +224,16 @@ export class SessionEventListenerService implements OnModuleInit {
         await this.createReminderSchedule(session, sendBeforeValue);
       }
 
-      this.logger.log(`Setup ${reminderConfig?.sendBefore?.length || 0} reminder(s) for session: ${session.title}`);
+      this.logger.log(
+        `Setup ${reminderConfig?.sendBefore?.length || 0} reminder(s) for session: ${session.title}`,
+      );
     } catch (error) {
-      this.logger.error(`Failed to setup reminders for session ${session.id}:`, error);
+      this.logger.error(
+        `Failed to setup reminders for session ${session.id}:`,
+        error,
+      );
     }
   }
-
 
   /**
    * Remove all reminders for a session
@@ -212,15 +241,23 @@ export class SessionEventListenerService implements OnModuleInit {
   private async removeSessionReminders(sessionId: number): Promise<void> {
     try {
       // Find and remove all schedules associated with this session
-      const schedules = await this.scheduleService.getAll({ entityId: sessionId }, {});
+      const schedules = await this.scheduleService.getAll(
+        { entityId: sessionId },
+        {},
+      );
 
       for (const schedule of schedules) {
         await this.scheduleService.delete(schedule.id);
       }
 
-      this.logger.log(`Removed ${schedules.length} reminder(s) for session ID: ${sessionId}`);
+      this.logger.log(
+        `Removed ${schedules.length} reminder(s) for session ID: ${sessionId}`,
+      );
     } catch (error) {
-      this.logger.error(`Failed to remove reminders for session ${sessionId}:`, error);
+      this.logger.error(
+        `Failed to remove reminders for session ${sessionId}:`,
+        error,
+      );
     }
   }
 
@@ -237,7 +274,9 @@ export class SessionEventListenerService implements OnModuleInit {
 
       // Skip if reminder time has already passed
       if (reminderDate <= new Date()) {
-        this.logger.warn(`Reminder time has passed for session ${session.title}, skipping`);
+        this.logger.warn(
+          `Reminder time has passed for session ${session.title}, skipping`,
+        );
         return;
       }
 
@@ -265,9 +304,14 @@ export class SessionEventListenerService implements OnModuleInit {
         await this.scheduleService.createSchedule(scheduleData);
       }
 
-      this.logger.log(`Created reminder for session ${session.title} at ${reminderDate.toISOString()}`);
+      this.logger.log(
+        `Created reminder for session ${session.title} at ${reminderDate.toISOString()}`,
+      );
     } catch (error) {
-      this.logger.error(`Failed to create reminder schedule for session ${session.id}:`, error);
+      this.logger.error(
+        `Failed to create reminder schedule for session ${session.id}:`,
+        error,
+      );
     }
   }
 }

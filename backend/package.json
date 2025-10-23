@@ -9,7 +9,7 @@
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
-    "dev": "nest start --watch",
+    "dev": "nest start --watch --watchAssets --preserveWatchOutput --watchOptions.usePolling=true --watchOptions.interval=1000",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "start:cluster": "CLUSTER_ENABLED=true node dist/cluster-bootstrap",

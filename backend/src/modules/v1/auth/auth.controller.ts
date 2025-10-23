@@ -25,7 +25,7 @@ import {
 import { LoginDto, LoginResponseDto, SignupDto, ForgotPasswordDto, ResetPasswordWithTokenDto,
   RefreshTokenResponseDto,
   VerifyOtpDto,
-  MessageResponseDto } from 'shared/dtos';
+  MessageResponseDto } from '@shared/dtos';
 
 
 
@@ -35,7 +35,7 @@ import { TokenService } from './services/tokens.service';
 import { MfaService } from './services/mfa-device.service';
 import { UsersService } from '../users/users.service';
 import { ActivityLogsService } from '@/common/activity-logs/activity-logs.service';
-import { EActivityType, EActivityStatus } from 'shared/enums/activity-log.enum';
+import { EActivityType, EActivityStatus } from '@shared/enums/activity-log.enum';
 
 @ApiTags('Auth')
 @Controller('auth')

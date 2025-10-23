@@ -7,15 +7,20 @@ services:
       target: dev
     container_name: app-container
     ports:
-      - "3000:3000"  # Backend port
-      - "5173:5173"  # Frontend port
+      - "3000:3000" # Backend port
+      - "5173:5173" # Frontend port
     environment:
       NODE_ENV: development
       VITE_HOST: 0.0.0.0
       VITE_PORT: 5173
       VITE_API_URL: http://localhost:3000
+      CHOKIDAR_USEPOLLING: true
+      WATCHPACK_POLLING: true
+      WATCHPACK_POLLING_INTERVAL: 1000
+      CHOKIDAR_INTERVAL: 1000
+      FAST_REFRESH: true
     volumes:
-      - ..:/app:cached
+      - ..:/app
       - /app/frontend/node_modules
       - /app/backend/node_modules
       - /app/shared/node_modules
@@ -57,7 +62,7 @@ services:
     container_name: app-mailpit
     restart: unless-stopped
     ports:
-      - "1025:1025"   # SMTP
-      - "8025:8025"   # Web UI
+      - "1025:1025" # SMTP
+      - "8025:8025" # Web UI
 
 #docker-compose up -d

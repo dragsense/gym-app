@@ -8,11 +8,11 @@ import {
 } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { GeneralBaseEntity } from '@/common/entities';
-import { ESessionStatus, ESessionType } from 'shared/enums/session.enum';
+import { ESessionStatus, ESessionType } from '@shared/enums/session.enum';
 import { BeforeInsert, BeforeUpdate } from 'typeorm';
-import { ReminderDto } from 'shared/dtos/reminder-dtos';
+import { ReminderDto } from '@shared/dtos/reminder-dtos';
 import { User } from '../../users/entities/user.entity';
-import { EScheduleFrequency } from 'shared/enums/schedule.enum';
+import { EScheduleFrequency } from '@shared/enums/schedule.enum';
 
 @Entity('sessions')
 export class Session extends GeneralBaseEntity {

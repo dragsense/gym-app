@@ -5,8 +5,8 @@ import { ConfigService } from '@nestjs/config';
 import { ActivityLog } from './entities/activity-log.entity';
 import { 
   ActivityLogListDto, 
-} from 'shared/dtos/activity-log-dtos';
-import { IPaginatedResponse } from 'shared/interfaces';
+} from '@shared/dtos/activity-log-dtos';
+import { IPaginatedResponse } from '@shared/interfaces';
 import { CreateActivityLogDto } from './dtos/create-activity-log.dto';
 import { CrudService } from '@/common/crud/crud.service';
 import { EventService } from '../helper/services/event.service';

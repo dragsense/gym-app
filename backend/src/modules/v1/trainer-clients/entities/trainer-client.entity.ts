@@ -7,7 +7,7 @@ import {
 } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { GeneralBaseEntity } from '@/common/entities';
-import { ETrainerClientStatus } from 'shared/enums/trainer-client.enum';
+import { ETrainerClientStatus } from '@shared/enums/trainer-client.enum';
 import { Trainer } from '../../trainers/entities/trainer.entity';
 import { Client } from '../../clients/entities/client.entity';
 

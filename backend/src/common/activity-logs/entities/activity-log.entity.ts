@@ -4,7 +4,7 @@ import {
 } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { GeneralBaseEntity } from '@/common/entities';
-import { EActivityType, EActivityStatus } from 'shared/enums/activity-log.enum';
+import { EActivityType, EActivityStatus } from '@shared/enums/activity-log.enum';
 
 @Entity('activity_logs')
 export class ActivityLog extends GeneralBaseEntity {

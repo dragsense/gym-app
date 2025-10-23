@@ -23,7 +23,14 @@ import {
 
 import { SessionsService } from './sessions.service';
 import { JwtAuthGuard } from '@/guards/jwt-auth.gaurd';
-import { CreateSessionDto, UpdateSessionDto, SessionListDto, SessionPaginatedDto, SessionDto, SingleQueryDto } from 'shared';
+import {
+  CreateSessionDto,
+  UpdateSessionDto,
+  SessionListDto,
+  SessionPaginatedDto,
+  SessionDto,
+  SingleQueryDto,
+} from '@shared/dtos';
 import { Session } from './entities/session.entity';
 
 @UseGuards(JwtAuthGuard)
@@ -53,7 +60,10 @@ export class SessionsController {
   })
   @ApiResponse({ status: 404, description: 'Session not found' })
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number, @Query() query: SingleQueryDto<Session>) {
+  findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @Query() query: SingleQueryDto<Session>,
+  ) {
     return this.sessionsService.getSingle(id, query);
   }
 
@@ -77,7 +87,10 @@ export class SessionsController {
   @ApiResponse({ status: 200, description: 'Session updated successfully' })
   @ApiResponse({ status: 404, description: 'Session not found' })
   @Patch(':id')
-  update(@Param('id', ParseIntPipe) id: number, @Body() updateSessionDto: UpdateSessionDto) {
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateSessionDto: UpdateSessionDto,
+  ) {
     return this.sessionsService.updateSession(id, updateSessionDto);
   }
 

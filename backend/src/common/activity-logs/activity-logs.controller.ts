@@ -1,16 +1,30 @@
-import { Controller, Get, Post, Body, Query, Param, UseGuards, ParseIntPipe } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery, ApiParam } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Query,
+  Param,
+  UseGuards,
+  ParseIntPipe,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiQuery,
+  ApiParam,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '@/guards/jwt-auth.gaurd';
 import { ActivityLogsService } from './activity-logs.service';
 import {
   ActivityLogListDto,
   ActivityLogDto,
   ActivityLogPaginatedDto,
-} from 'shared/dtos/activity-log-dtos';
-import { SingleQueryDto } from 'shared';
+} from '@shared/dtos/activity-log-dtos';
+import { SingleQueryDto } from '@shared/dtos';
 import { ActivityLog } from './entities/activity-log.entity';
-
-
 
 @ApiTags('Activity Logs')
 @ApiBearerAuth()
@@ -19,10 +33,10 @@ import { ActivityLog } from './entities/activity-log.entity';
 export class ActivityLogsController {
   constructor(private readonly activityLogsService: ActivityLogsService) { }
 
-
-
   @Get()
-  @ApiOperation({ summary: 'Get all activity logs with pagination and filtering' })
+  @ApiOperation({
+    summary: 'Get all activity logs with pagination and filtering',
+  })
   @ApiQuery({ type: ActivityLogListDto })
   @ApiResponse({
     status: 200,
@@ -32,7 +46,6 @@ export class ActivityLogsController {
   async findAll(@Query() queryDto: ActivityLogListDto) {
     return await this.activityLogsService.get(queryDto, ActivityLogListDto);
   }
-
 
   @Get('user/:userId')
   @ApiOperation({ summary: 'Get activity logs for a specific user' })
@@ -45,8 +58,7 @@ export class ActivityLogsController {
   })
   async findByUser(
     @Param('userId', ParseIntPipe) userId: number,
-    @Query() queryDto: SingleQueryDto<ActivityLog>
-
+    @Query() queryDto: SingleQueryDto<ActivityLog>,
   ) {
     return await this.activityLogsService.getSingle({ userId }, queryDto);
   }
@@ -57,11 +69,12 @@ export class ActivityLogsController {
   @ApiResponse({
     status: 200,
     description: 'Activity log retrieved successfully',
-    type: ActivityLogDto
+    type: ActivityLogDto,
   })
   @ApiResponse({ status: 404, description: 'Activity log not found' })
-  async findOne(@Param('id', ParseIntPipe) id: number,
-    @Query() queryDto: SingleQueryDto<ActivityLog>
+  async findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @Query() queryDto: SingleQueryDto<ActivityLog>,
   ) {
     return await this.activityLogsService.get({ id }, queryDto);
   }

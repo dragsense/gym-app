@@ -1,7 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '../../logger/logger.service';
 import { ActivityLogsService } from '../../activity-logs/activity-logs.service';
-import { EActivityType, EActivityStatus } from 'shared/enums/activity-log.enum';
+import { EActivityType, EActivityStatus } from '@shared/enums/activity-log.enum';
 import { ActionHandler, ActionResult } from '../interface/action.interface';
 
 

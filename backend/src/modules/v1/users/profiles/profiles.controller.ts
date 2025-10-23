@@ -6,10 +6,10 @@ import { JwtAuthGuard } from '@/guards/jwt-auth.gaurd';
 import { ProfilesService } from './profiles.service';
 
 import { Profile } from './entities/profile.entity';
-import { UpdateProfileDto } from 'shared/dtos';
+import { UpdateProfileDto } from '@shared/dtos';
 
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
-import { OmitType } from 'shared/lib/type-utils';
+import { OmitType } from '@shared/lib/type-utils';
 
 
 @UseGuards(JwtAuthGuard)

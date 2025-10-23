@@ -11,7 +11,7 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@/guards/jwt-auth.gaurd';
 import { UserSettingsService } from './user-settings.service';
-import { CreateUserSettingsDto, UpdateUserSettingsDto } from 'shared/dtos/user-settings-dtos';
+import { CreateUserSettingsDto, UpdateUserSettingsDto } from '@shared/dtos/user-settings-dtos';
 
 @ApiTags('User Settings')
 @ApiBearerAuth()

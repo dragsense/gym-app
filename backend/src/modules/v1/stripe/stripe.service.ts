@@ -2,10 +2,10 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PaymentMethodsService } from '@/common/payment-methods/payment-methods.service';
 import Stripe from 'stripe';
-import { EPaymentMethodType } from 'shared/enums/payment-methods.enum';
+import { EPaymentMethodType } from '@shared/enums/payment-methods.enum';
 import { DataSource } from 'typeorm';
 import { Billing } from '../billings/entities/billing.entity';
-import { EBillingStatus } from 'shared/enums/billing.enum';
+import { EBillingStatus } from '@shared/enums/billing.enum';
 import { BaseStripeService } from './services/base-stripe.service';
 
 @Injectable()

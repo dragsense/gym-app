@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { SettingsService } from '@/common/settings/settings.service';
-import { CreateUserSettingsDto, UpdateUserSettingsDto } from 'shared/dtos/user-settings-dtos';
-import { ESettingType } from 'shared/enums/setting.enum';
+import { CreateUserSettingsDto, UpdateUserSettingsDto } from '@shared/dtos/user-settings-dtos';
+import { ESettingType } from '@shared/enums/setting.enum';
 
 @Injectable()
 export class UserSettingsService {

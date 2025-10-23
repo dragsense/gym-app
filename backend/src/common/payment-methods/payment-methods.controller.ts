@@ -29,7 +29,7 @@ import {
   PaymentMethodListDto, 
   PaymentMethodPaginatedDto, 
   PaymentMethodDto, 
-} from 'shared/dtos/payment-methods-dtos';
+} from '@shared/dtos/payment-methods-dtos';
 
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('access-token')

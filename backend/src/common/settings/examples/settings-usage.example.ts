@@ -4,7 +4,7 @@
  */
 
 import { SettingsService } from '../settings.service';
-import { ESettingType } from 'shared/enums/setting.enum';
+import { ESettingType } from '@shared/enums/setting.enum';
 
 export class SettingsUsageExample {
   constructor(private readonly settingsService: SettingsService) {}

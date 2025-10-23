@@ -1,4 +1,4 @@
-import { QueueDto, QueueJobDto } from "shared/dtos";
+import { QueueDto, QueueJobDto } from "../dtos/queue-dtos/queue.dto";
 
 export interface IQueue extends QueueDto { }
 export interface IQueueJob extends QueueJobDto { }

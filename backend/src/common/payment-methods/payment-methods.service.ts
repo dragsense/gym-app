@@ -3,10 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { CrudService } from '@/common/crud/crud.service';
 import { PaymentMethod } from './entities/payment-method.entity';
-import { CreatePaymentMethodDto, UpdatePaymentMethodDto, PaymentMethodListDto } from 'shared/dtos/payment-methods-dtos';
+import { CreatePaymentMethodDto, UpdatePaymentMethodDto, PaymentMethodListDto } from '@shared/dtos/payment-methods-dtos';
 import { EventService } from '@/common/helper/services/event.service';
 import { CrudOptions } from '@/common/crud/interfaces/crud.interface';
-import { EPaymentMethodType } from 'shared/enums';
+import { EPaymentMethodType } from '@shared/enums';
 
 @Injectable()
 export class PaymentMethodsService extends CrudService<PaymentMethod> {

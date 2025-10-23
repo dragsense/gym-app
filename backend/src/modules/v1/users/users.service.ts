@@ -11,9 +11,9 @@ import * as bcrypt from 'bcrypt';
 
 import { User } from '@/modules/v1/users/entities/user.entity';
 import { Profile } from '@/modules/v1/users/profiles/entities/profile.entity';
-import { CreateUserDto, UpdateUserDto, UserListDto } from 'shared/dtos';
-import { IMessageResponse, IPaginatedResponse } from 'shared/interfaces';
-import { ResetPasswordDto } from 'shared/dtos/user-dtos/reset-password.dto';
+import { CreateUserDto, UpdateUserDto, UserListDto } from '@shared/dtos';
+import { IMessageResponse, IPaginatedResponse } from '@shared/interfaces';
+import { ResetPasswordDto } from '@shared/dtos/user-dtos/reset-password.dto';
 import { PasswordService } from './services/password.service';
 import { TokenService } from '../auth/services/tokens.service';
 import { UserEmailService } from './services/user-email.service';

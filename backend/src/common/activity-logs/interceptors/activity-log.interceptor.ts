@@ -8,7 +8,7 @@ import { Observable } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { Request, Response } from 'express';
 import { ActivityLogsService } from     '@/common/activity-logs/activity-logs.service';
-import { EActivityType, EActivityStatus } from 'shared/enums/activity-log.enum';
+import { EActivityType, EActivityStatus } from '@shared/enums/activity-log.enum';
 import { LoggerService } from '@/common/logger/logger.service';
 
 @Injectable()

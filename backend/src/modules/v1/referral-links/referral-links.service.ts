@@ -3,9 +3,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { CrudService } from '@/common/crud/crud.service';
 import { ReferralLink } from './entities/referral-link.entity';
-import { CreateReferralLinkDto, UpdateReferralLinkDto, ReferralLinkListDto } from 'shared/dtos/referral-link-dtos';
+import { CreateReferralLinkDto, UpdateReferralLinkDto, ReferralLinkListDto } from '@shared/dtos/referral-link-dtos';
 import { User } from '@/modules/v1/users/entities/user.entity';
-import { EReferralLinkStatus } from 'shared/enums/referral-link.enum';
+import { EReferralLinkStatus } from '@shared/enums/referral-link.enum';
 import { EventService } from '@/common/helper/services/event.service';
 import { UsersService } from '../users/users.service';
 

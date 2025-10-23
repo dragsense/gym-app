@@ -3,7 +3,7 @@ import {
   Injectable,
   BadRequestException,
 } from '@nestjs/common';
-import { EFileType } from 'shared/enums/file-upload.enum';
+import { EFileType } from '@shared/enums/file-upload.enum';
 import * as sharp from 'sharp';
 import { detectFileType, isImageFile } from '@/lib/utils/detect-file-type.util';
 

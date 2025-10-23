@@ -5,8 +5,8 @@ import { Schedule } from './entities/schedule.entity';
 import {
   CreateScheduleDto,
   UpdateScheduleDto
-} from 'shared/dtos/schedule-dtos/schedule.dto';
-import { EScheduleStatus, EScheduleFrequency } from 'shared/enums/schedule.enum';
+} from '@shared/dtos/schedule-dtos/schedule.dto';
+import { EScheduleStatus, EScheduleFrequency } from '@shared/enums/schedule.enum';
 import { ScheduleUtils } from './utils/schedule.utils';
 import { CrudService } from '@/common/crud/crud.service';
 import { EventService } from '../helper/services/event.service';

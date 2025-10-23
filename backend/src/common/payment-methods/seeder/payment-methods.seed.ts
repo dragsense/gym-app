@@ -1,4 +1,4 @@
-import { EPaymentMethodType } from 'shared/enums/payment-methods.enum';
+import { EPaymentMethodType } from '@shared/enums/payment-methods.enum';
 import { PaymentMethodsService } from '../payment-methods.service';
 import { LoggerService } from '@/common/logger/logger.service';
 

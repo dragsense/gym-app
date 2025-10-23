@@ -4,7 +4,6 @@ import {
   UseGuards,
   Body,
   Post,
-  Put,
   Delete,
   Param,
   Query,
@@ -23,7 +22,14 @@ import {
 
 import { TrainersService } from './trainers.service';
 import { JwtAuthGuard } from '@/guards/jwt-auth.gaurd';
-import { CreateTrainerDto, UpdateTrainerDto, TrainerListDto, TrainerPaginatedDto, TrainerSafeDto, SingleQueryDto } from 'shared';
+import {
+  CreateTrainerDto,
+  UpdateTrainerDto,
+  TrainerListDto,
+  TrainerPaginatedDto,
+  TrainerSafeDto,
+  SingleQueryDto,
+} from '@shared/dtos';
 import { Trainer } from './entities/trainer.entity';
 import { AuthUser } from '@/decorators/user.decorator';
 
@@ -42,7 +48,10 @@ export class TrainersController {
   })
   @Get()
   findAll(@Query() query: TrainerListDto, @AuthUser() user: any) {
-    return this.trainersService.get({...query, createdByUserId: user.id }, TrainerListDto);
+    return this.trainersService.get(
+      { ...query, createdByUserId: user.id },
+      TrainerListDto,
+    );
   }
 
   @ApiOperation({ summary: 'Get trainer by ID' })
@@ -54,7 +63,10 @@ export class TrainersController {
   })
   @ApiResponse({ status: 404, description: 'Trainer not found' })
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number, @Query() query: SingleQueryDto<Trainer>) {
+  findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @Query() query: SingleQueryDto<Trainer>,
+  ) {
     return this.trainersService.getSingle(id, query);
   }
 
@@ -78,7 +90,10 @@ export class TrainersController {
   @ApiResponse({ status: 200, description: 'Trainer updated successfully' })
   @ApiResponse({ status: 404, description: 'Trainer not found' })
   @Patch(':id')
-  update(@Param('id', ParseIntPipe) id: number, @Body() updateTrainerDto: UpdateTrainerDto) {
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateTrainerDto: UpdateTrainerDto,
+  ) {
     return this.trainersService.updateTrainer(id, updateTrainerDto);
   }
 

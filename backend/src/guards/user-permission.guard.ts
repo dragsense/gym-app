@@ -2,7 +2,7 @@ import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@
 import { Reflector } from '@nestjs/core';
 import { PermissionService } from '@/common/roles/services/permission.service';
 import { RESOURCE_KEY, ACTION_KEY, PERMISSION_KEY, ROLES_KEY } from '@/decorators';
-import { EPermissionAction } from 'shared/enums';
+import { EPermissionAction } from '@shared/enums';
 import { InjectEntity } from '@/decorators/inject-entity.decorator';
 import { User } from '@/modules/v1/users/entities/user.entity';
 

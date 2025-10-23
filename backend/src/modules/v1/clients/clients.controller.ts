@@ -23,7 +23,14 @@ import {
 
 import { ClientsService } from './clients.service';
 import { JwtAuthGuard } from '@/guards/jwt-auth.gaurd';
-import { CreateClientDto, UpdateClientDto, ClientListDto, ClientPaginatedDto, ClientDto, SingleQueryDto } from 'shared';
+import {
+  CreateClientDto,
+  UpdateClientDto,
+  ClientListDto,
+  ClientPaginatedDto,
+  ClientDto,
+  SingleQueryDto,
+} from '@shared/dtos';
 import { Client } from './entities/client.entity';
 import { AuthUser } from '@/decorators/user.decorator';
 
@@ -32,7 +39,7 @@ import { AuthUser } from '@/decorators/user.decorator';
 @ApiTags('Clients')
 @Controller('clients')
 export class ClientsController {
-  constructor(private readonly clientsService: ClientsService) { }
+  constructor(private readonly clientsService: ClientsService) {}
 
   @ApiOperation({ summary: 'Get all clients with pagination and filtering' })
   @ApiResponse({
@@ -42,7 +49,10 @@ export class ClientsController {
   })
   @Get()
   findAll(@Query() query: ClientListDto, @AuthUser() user: any) {
-    return this.clientsService.get({...query, createdByUserId: user.id }, ClientListDto);
+    return this.clientsService.get(
+      { ...query, createdByUserId: user.id },
+      ClientListDto,
+    );
   }
 
   @ApiOperation({ summary: 'Get client by ID' })
@@ -54,8 +64,9 @@ export class ClientsController {
   })
   @ApiResponse({ status: 404, description: 'Client not found' })
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number,
-    @Query() query: SingleQueryDto<Client>
+  findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @Query() query: SingleQueryDto<Client>,
   ) {
     return this.clientsService.getSingle(id, query);
   }
@@ -80,7 +91,10 @@ export class ClientsController {
   @ApiResponse({ status: 200, description: 'Client updated successfully' })
   @ApiResponse({ status: 404, description: 'Client not found' })
   @Patch(':id')
-  update(@Param('id', ParseIntPipe) id: number, @Body() updateClientDto: UpdateClientDto) {
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateClientDto: UpdateClientDto,
+  ) {
     return this.clientsService.updateClient(id, updateClientDto);
   }
 

@@ -11,13 +11,13 @@ import * as bcrypt from 'bcrypt';
 import { MailerService } from '@nestjs-modules/mailer';
 import { ConfigService } from '@nestjs/config';
 
-import { IMessageResponse } from 'shared/interfaces';
-import { ResetPasswordWithTokenDto, SignupDto } from 'shared/dtos';
+import { IMessageResponse } from '@shared/interfaces';
+import { ResetPasswordWithTokenDto, SignupDto } from '@shared/dtos';
 import { UsersService } from '../users/users.service';
 import { LoggerService } from '@/common/logger/logger.service';
 import { ActivityLogsService } from '@/common/activity-logs/activity-logs.service';
-import { EActivityType, EActivityStatus } from 'shared/enums/activity-log.enum';
-import { EUserLevels, EUserRole } from 'shared/enums/user.enum';
+import { EActivityType, EActivityStatus } from '@shared/enums/activity-log.enum';
+import { EUserLevels, EUserRole } from '@shared/enums/user.enum';
 import { RewardsService } from '@/modules/v1/rewards/rewards.service';
 
 @Injectable()

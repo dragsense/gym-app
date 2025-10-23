@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EntityRouterService } from '../database/entity-router.service';
 import { DatabaseManager } from '../database/database-manager.service';
-import { ConnectionHealth, DatabaseHealth, DiskHealth, HealthStatus, MemoryHealth, NetworkHealth, ServiceHealth } from 'shared/interfaces/health.interface';
+import { ConnectionHealth, DatabaseHealth, DiskHealth, HealthStatus, MemoryHealth, NetworkHealth, ServiceHealth } from '@shared/interfaces/health.interface';
 
 
 @Injectable()

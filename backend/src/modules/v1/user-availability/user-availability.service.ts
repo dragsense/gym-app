@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { CrudService } from '@/common/crud/crud.service';
 import { UserAvailability } from './entities/user-availability.entity';
-import { CreateUserAvailabilityDto, UpdateUserAvailabilityDto } from 'shared/dtos/user-availability-dtos';
+import { CreateUserAvailabilityDto, UpdateUserAvailabilityDto } from '@shared/dtos/user-availability-dtos';
 import { EventService } from '@/common/helper/services/event.service';
 import { CrudOptions } from '@/common/crud/interfaces/crud.interface';
 

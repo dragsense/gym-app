@@ -59,7 +59,7 @@ FROM base AS dev
 WORKDIR /app/backend
 
 EXPOSE 3000
-CMD ["sleep", "infinity"]
+CMD ["tail", "-f", "/dev/null"]
 
 # Production build stage
 FROM base AS build

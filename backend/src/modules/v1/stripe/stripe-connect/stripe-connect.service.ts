@@ -6,39 +6,44 @@ import { ConfigService } from '@nestjs/config';
 import { StripeConnectAccount } from '../entities/stripe-connect-account.entity';
 import { CrudService } from '@/common/crud/crud.service';
 import { EventService } from '@/common/helper/services/event.service';
-import { CreateStripeConnectDto, StripeConnectCreateResponseDto, StripeConnectStatusDto } from 'shared';
+import {
+  CreateStripeConnectDto,
+  StripeConnectCreateResponseDto,
+  StripeConnectStatusDto,
+} from '@shared/dtos';
 import { User } from '../../users/entities/user.entity';
 import { BaseStripeService } from '../services/base-stripe.service';
 
 @Injectable()
 export class StripeConnectService extends CrudService<StripeConnectAccount> {
-
   constructor(
     @InjectRepository(StripeConnectAccount)
     private stripeConnectRepository: Repository<StripeConnectAccount>,
     private readonly configService: ConfigService,
     private readonly baseStripeService: BaseStripeService,
     dataSource: DataSource,
-    eventService: EventService
-
+    eventService: EventService,
   ) {
     super(stripeConnectRepository, dataSource, eventService);
   }
 
-
-  async connectStripeAccount(authUser: User, createDto: CreateStripeConnectDto): Promise<StripeConnectCreateResponseDto> {
+  async connectStripeAccount(
+    authUser: User,
+    createDto: CreateStripeConnectDto,
+  ): Promise<StripeConnectCreateResponseDto> {
     const stripe = await this.baseStripeService.getStripe();
-
 
     const existingAccount = await this.getSingle({ userId: authUser.id });
     if (existingAccount) {
-      throw new BadRequestException('User already has a Stripe Connect account');
+      throw new BadRequestException(
+        'User already has a Stripe Connect account',
+      );
     }
 
     let stripeAccount: Stripe.Account | null = null;
 
-      try {
-        const app = this.configService.get('app');
+    try {
+      const app = this.configService.get('app');
 
       const type = createDto.type ?? 'express';
       const country = createDto.country ?? 'US';
@@ -76,7 +81,9 @@ export class StripeConnectService extends CrudService<StripeConnectAccount> {
 
       await this.create(connectAccount);
 
-      this.logger.log(`Created Stripe Connect account ${stripeAccount.id} for user ${authUser.id}`);
+      this.logger.log(
+        `Created Stripe Connect account ${stripeAccount.id} for user ${authUser.id}`,
+      );
 
       return {
         success: true,
@@ -91,35 +98,43 @@ export class StripeConnectService extends CrudService<StripeConnectAccount> {
       if (stripeAccount) {
         try {
           await stripe.accounts.del(stripeAccount.id);
-          this.logger.log(`Deleted Stripe account ${stripeAccount.id} due to error during creation process.`);
+          this.logger.log(
+            `Deleted Stripe account ${stripeAccount.id} due to error during creation process.`,
+          );
         } catch (delError) {
-          this.logger.error(`Failed to delete Stripe account ${stripeAccount.id}:`, delError);
+          this.logger.error(
+            `Failed to delete Stripe account ${stripeAccount.id}:`,
+            delError,
+          );
         }
       }
 
       this.logger.error('Error creating Stripe Connect account:', error);
-      throw new BadRequestException(`Failed to create Stripe Connect account: ${error.message}`);
+      throw new BadRequestException(
+        `Failed to create Stripe Connect account: ${error.message}`,
+      );
     }
   }
 
-
   async findByUser(user: User): Promise<StripeConnectStatusDto> {
     const connectAccount = await this.getSingle({
-      userId: user.id
+      userId: user.id,
     });
 
     if (!connectAccount) {
       return {
         isComplete: false,
         account: null,
-        stripeAccountId: null
+        stripeAccountId: null,
       };
     }
 
     // Sync with Stripe to get latest status
     try {
       const stripe = await this.baseStripeService.getStripe();
-      const stripeAccount = await stripe.accounts.retrieve(connectAccount.stripeAccountId);
+      const stripeAccount = await stripe.accounts.retrieve(
+        connectAccount.stripeAccountId,
+      );
 
       // Update local record
       connectAccount.chargesEnabled = stripeAccount.charges_enabled;
@@ -135,21 +150,24 @@ export class StripeConnectService extends CrudService<StripeConnectAccount> {
           country: connectAccount.country,
           email: connectAccount.email,
           charges_enabled: connectAccount.chargesEnabled,
-          details_submitted: connectAccount.detailsSubmitted
+          details_submitted: connectAccount.detailsSubmitted,
         },
-        stripeAccountId: connectAccount.stripeAccountId
+        stripeAccountId: connectAccount.stripeAccountId,
       };
     } catch (error) {
       this.logger.error('Error syncing with Stripe:', error.message);
 
       // Return local data if Stripe sync fails
-      throw new BadRequestException('Error syncing with Stripe:', error.message);
+      throw new BadRequestException(
+        'Error syncing with Stripe:',
+        error.message,
+      );
     }
   }
 
   async disconnectStripeAccount(user: User) {
     const connectAccount = await this.getSingle({
-      userId: user.id
+      userId: user.id,
     });
 
     try {
@@ -161,12 +179,17 @@ export class StripeConnectService extends CrudService<StripeConnectAccount> {
       // Delete from database
       await this.delete(connectAccount.id);
 
-      this.logger.log(`Deleted Stripe Connect account ${connectAccount.stripeAccountId} for user ${user.id}`);
-
-
+      this.logger.log(
+        `Deleted Stripe Connect account ${connectAccount.stripeAccountId} for user ${user.id}`,
+      );
     } catch (error) {
-      this.logger.error(`Error deleting Stripe Connect account:`, error.message);
-      throw new BadRequestException(`Failed to delete Stripe Connect account: ${error.message}`);
+      this.logger.error(
+        `Error deleting Stripe Connect account:`,
+        error.message,
+      );
+      throw new BadRequestException(
+        `Failed to delete Stripe Connect account: ${error.message}`,
+      );
     }
   }
 }

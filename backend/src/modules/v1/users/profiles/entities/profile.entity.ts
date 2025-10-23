@@ -10,7 +10,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { User } from '@/modules/v1/users/entities/user.entity';
 import { FileUpload } from '@/common/file-upload/entities/file-upload.entity';
 import { GeneralBaseEntity } from '@/common/entities';
-import { EUserGender, EUserSkill } from 'shared/enums/user.enum';
+import { EUserGender, EUserSkill } from '@shared/enums/user.enum';
 
 @Entity('profiles')
 export class Profile extends GeneralBaseEntity {

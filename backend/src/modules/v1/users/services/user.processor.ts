@@ -3,7 +3,7 @@ import { Job } from 'bull';
 import { Injectable, Logger } from '@nestjs/common';
 import { UserEmailService } from '@/modules/v1/users/services/user-email.service';
 import { UsersService } from '../users.service';
-import { EUserLevels, EUserRole } from 'shared/enums/user.enum';
+import { EUserLevels, EUserRole } from '@shared/enums/user.enum';
 
 @Processor('user')
 @Injectable()

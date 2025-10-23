@@ -4,11 +4,11 @@ import * as path from 'path';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository, DataSource } from 'typeorm';
 import { FileUpload } from './entities/file-upload.entity';
-import { FileListDto, CreateFileUploadDto, UpdateFileUploadDto } from 'shared/dtos/file-upload-dtos/file-upload.dto';
-import { IPaginatedResponse } from 'shared/interfaces';
+import { FileListDto, CreateFileUploadDto, UpdateFileUploadDto } from '@shared/dtos/file-upload-dtos/file-upload.dto';
+import { IPaginatedResponse } from '@shared/interfaces';
 import { ConfigService } from '@nestjs/config';
 import { detectFileType } from '@/lib/utils/detect-file-type.util';
-import { OmitType } from 'shared/lib/type-utils';
+import { OmitType } from '@shared/lib/type-utils';
 import { CrudService } from '@/common/crud/crud.service';
 import { EventService } from '../helper/services/event.service';
 

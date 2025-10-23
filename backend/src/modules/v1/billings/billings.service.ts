@@ -7,8 +7,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 
 import { Billing } from './entities/billing.entity';
-import { CreateBillingDto, UpdateBillingDto, BillingListDto } from 'shared/dtos';
-import { IMessageResponse } from 'shared/interfaces';
+import { CreateBillingDto, UpdateBillingDto, BillingListDto } from '@shared/dtos';
+import { IMessageResponse } from '@shared/interfaces';
 import { LoggerService } from '@/common/logger/logger.service';
 import { CrudService } from '@/common/crud/crud.service';
 import { EventService } from '@/common/helper/services/event.service';
@@ -17,7 +17,7 @@ import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { StripeService } from '../stripe/stripe.service';
 import { StripeBillingService } from '../stripe/services/stripe-billing.service';
-import { EBillingStatus } from 'shared/enums/billing.enum';
+import { EBillingStatus } from '@shared/enums/billing.enum';
 
 @Injectable()
 export class BillingsService extends CrudService<Billing> {

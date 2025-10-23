@@ -5,7 +5,7 @@ import {
 } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { GeneralBaseEntity } from '@/common/entities';
-import { ESettingType } from 'shared/enums/setting.enum';
+import { ESettingType } from '@shared/enums/setting.enum';
 
 @Entity('settings')
 @Index(['userId', 'key'], { unique: true })

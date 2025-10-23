@@ -27,7 +27,7 @@ export default function LoginPage() {
   // React 19: Essential IDs and transitions
   const componentId = useId();
   const [, startTransition] = useTransition();
-  
+
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -36,7 +36,7 @@ export default function LoginPage() {
     password: "",
   };
 
-  return (
+  return (<>
     <FormHandler<TLoginData, ILoginResponse>
       mutationFn={login}
       FormComponent={LoginForm}
@@ -58,5 +58,6 @@ export default function LoginPage() {
       onError={(error) => toast.error('Login failed: ' + error?.message)}
       storeKey="login"
     />
+  </>
   );
 }

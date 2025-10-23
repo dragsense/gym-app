@@ -1,21 +1,16 @@
-import {
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 
-import { IMessageResponse } from 'shared/interfaces';
+import { IMessageResponse } from '@shared/interfaces';
 import { CrudService } from '@/common/crud/crud.service';
-
 
 import { Profile } from './entities/profile.entity';
 
-
-import { UpdateProfileDto } from 'shared/dtos/user-dtos/profile.dto';
+import { UpdateProfileDto } from '@shared/dtos/user-dtos/profile.dto';
 import { FileUploadService } from '@/common/file-upload/file-upload.service';
 import { FileUpload } from '@/common/file-upload/entities/file-upload.entity';
-import { EFileType } from 'shared';
+import { EFileType } from '@shared/enums';
 import { EventService } from '@/common/helper/services/event.service';
 import { CrudOptions } from '@/common/crud/interfaces/crud.interface';
 
@@ -28,7 +23,6 @@ export class ProfilesService extends CrudService<Profile> {
     dataSource: DataSource,
     crudEventService: EventService,
   ) {
-
     const crudOptions: CrudOptions = {
       searchableFields: ['firstName', 'lastName'],
       pagination: { defaultLimit: 10, maxLimit: 100 },
@@ -36,23 +30,15 @@ export class ProfilesService extends CrudService<Profile> {
     };
 
     super(profileRepo, dataSource, crudEventService, crudOptions);
-
   }
 
   async updateProfile(
     id: number,
     updateProfileDto: UpdateProfileDto,
     profileImage?: Express.Multer.File,
-    documents?: Express.Multer.File[]
+    documents?: Express.Multer.File[],
   ): Promise<IMessageResponse> {
-
-
-    const {
-      image,
-      documents: _,
-      ...profileData
-    } = updateProfileDto;
-
+    const { image, documents: _, ...profileData } = updateProfileDto;
 
     // Use callbacks to handle file uploads during update
     await this.update(id, profileData, {
@@ -62,7 +48,10 @@ export class ProfilesService extends CrudService<Profile> {
         let oldImage: FileUpload | null = null;
 
         let oldDocuments: FileUpload[] = [];
-        const uploadedDocuments: { fileUpload: FileUpload, file: Express.Multer.File }[] = [];
+        const uploadedDocuments: {
+          fileUpload: FileUpload;
+          file: Express.Multer.File;
+        }[] = [];
 
         if (profileImage) {
           if (entity.image) {
@@ -75,7 +64,8 @@ export class ProfilesService extends CrudService<Profile> {
               },
               profileImage,
               false,
-              manager);
+              manager,
+            );
           } else {
             uploaded = await this.fileUploadService.createFile(
               {
@@ -84,7 +74,8 @@ export class ProfilesService extends CrudService<Profile> {
               },
               profileImage,
               true,
-              manager);
+              manager,
+            );
           }
           entity.image = uploaded;
         }
@@ -98,7 +89,6 @@ export class ProfilesService extends CrudService<Profile> {
           // Limit to 10 documents
           const filesToUpload = documents.slice(0, 10);
 
-
           for (const doc of filesToUpload) {
             const uploaded = await this.fileUploadService.createFile(
               {
@@ -107,16 +97,19 @@ export class ProfilesService extends CrudService<Profile> {
               },
               doc,
               false,
-              manager
+              manager,
             );
             uploadedDocuments.push({ fileUpload: uploaded, file: doc });
           }
 
           // Append new documents to existing ones (if any)
           if (entity.documents) {
-            entity.documents = [...entity.documents, ...uploadedDocuments.map(doc => doc.fileUpload)];
+            entity.documents = [
+              ...entity.documents,
+              ...uploadedDocuments.map((doc) => doc.fileUpload),
+            ];
           } else {
-            entity.documents = uploadedDocuments.map(doc => doc.fileUpload);
+            entity.documents = uploadedDocuments.map((doc) => doc.fileUpload);
           }
 
           // Ensure we don't exceed 10 documents total
@@ -134,21 +127,27 @@ export class ProfilesService extends CrudService<Profile> {
         }
 
         if (uploaded && profileImage) {
-          await this.fileUploadService.saveFiles([{ file: profileImage, fileUpload: uploaded }]);
+          await this.fileUploadService.saveFiles([
+            { file: profileImage, fileUpload: uploaded },
+          ]);
           if (oldImage) {
             await this.fileUploadService.deleteFiles([oldImage]);
           }
         }
         if (uploadedDocuments.length > 0) {
-          await this.fileUploadService.saveFiles(uploadedDocuments.map(doc => ({ file: doc.file, fileUpload: doc.fileUpload })));
-        /*   if (entity.documents) {
+          await this.fileUploadService.saveFiles(
+            uploadedDocuments.map((doc) => ({
+              file: doc.file,
+              fileUpload: doc.fileUpload,
+            })),
+          );
+          /*   if (entity.documents) {
             await this.fileUploadService.deleteFiles(entity.documents);
           } */
         }
-      }
+      },
     });
 
     return { message: 'Profile updated successfully' };
   }
-
 }

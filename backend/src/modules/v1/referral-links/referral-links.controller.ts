@@ -13,7 +13,7 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@/guards/jwt-auth.gaurd';
 import { ReferralLinksService } from './referral-links.service';
-import { CreateReferralLinkDto, UpdateReferralLinkDto, ReferralLinkListDto, ReferralLinkDto } from 'shared/dtos/referral-link-dtos';
+import { CreateReferralLinkDto, UpdateReferralLinkDto, ReferralLinkListDto, ReferralLinkDto } from '@shared/dtos/referral-link-dtos';
 import { AuthUser } from '@/decorators/user.decorator';
 
 @ApiTags('Referral Links')

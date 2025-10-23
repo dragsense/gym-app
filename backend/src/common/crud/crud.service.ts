@@ -1,10 +1,10 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { Repository, FindOptionsWhere, FindManyOptions, DataSource, QueryRunner, ObjectLiteral, EntityManager, Between as TypeOrmBetween } from 'typeorm';
-import { IPaginatedResponse } from 'shared/interfaces';
+import { IPaginatedResponse } from '@shared/interfaces';
 import { CrudOptions, ICrudService } from './interfaces/crud.interface';
 import { EventPayload, EventService } from '../helper/services/event.service';
 import { LoggerService } from '../logger/logger.service';
-import { getQueryFilters, getRelationFilters, QueryFilterOptions, RelationFilterOptions } from 'shared/decorators/crud.dto.decorators';
+import { getQueryFilters, getRelationFilters, QueryFilterOptions, RelationFilterOptions } from '@shared/decorators/crud.dto.decorators';
 
 @Injectable()
 export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {

@@ -7,7 +7,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
-import { EFileType } from 'shared/enums';
+import { EFileType } from '@shared/enums';
 import { GeneralBaseEntity } from '@/common/entities';
 
 @Entity('uploaded_files')

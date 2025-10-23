@@ -2,7 +2,7 @@ import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request } f
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@/guards/jwt-auth.gaurd';
 import { SettingsService } from './settings.service';
-import { ESettingType } from 'shared/enums/setting.enum';
+import { ESettingType } from '@shared/enums/setting.enum';
 
 @ApiTags('Settings')
 @Controller('settings')

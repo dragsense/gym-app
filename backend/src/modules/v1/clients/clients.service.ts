@@ -7,13 +7,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 
 import { Client } from './entities/client.entity';
-import { CreateClientDto, UpdateClientDto } from 'shared/dtos';
+import { CreateClientDto, UpdateClientDto } from '@shared/dtos';
 import { CrudService } from '@/common/crud/crud.service';
 import { EventService } from '@/common/helper/services/event.service';
 import { CrudOptions } from '@/common/crud/interfaces/crud.interface';
 import { User } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
-import { EUserLevels, EUserRole } from 'shared/enums';
+import { EUserLevels, EUserRole } from '@shared/enums';
 
 @Injectable()
 export class ClientsService extends CrudService<Client> {

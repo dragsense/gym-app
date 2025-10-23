@@ -10,11 +10,11 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { StripeConnectService } from './stripe-connect.service';
 import { AuthUser } from '@/decorators/user.decorator';
-import { CreateStripeConnectDto } from 'shared/dtos';
+import { CreateStripeConnectDto } from '@shared/dtos';
 import {
   StripeConnectStatusDto,
   StripeConnectCreateResponseDto,
-} from 'shared/dtos';
+} from '@shared/dtos';
 import { User } from '../../users/entities/user.entity';
 import { JwtAuthGuard } from '@/guards/jwt-auth.gaurd';
 

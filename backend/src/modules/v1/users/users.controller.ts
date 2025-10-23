@@ -29,19 +29,24 @@ import { AuthUser } from '@/decorators/user.decorator';
 
 import { UsersService } from './users.service';
 
-
 import { JwtAuthGuard } from '@/guards/jwt-auth.gaurd';
-import { CreateUserDto, ResetPasswordDto, SingleQueryDto, UpdateUserDto, UserListDto, UserPaginatedDto, UserWithProfileSafeDto } from 'shared';
+import {
+  CreateUserDto,
+  ResetPasswordDto,
+  SingleQueryDto,
+  UpdateUserDto,
+  UserListDto,
+  UserPaginatedDto,
+  UserWithProfileSafeDto,
+} from '@shared/dtos';
 import { User } from './entities/user.entity';
-
 
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('access-token')
 @ApiTags('Users')
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService
-  ) { }
+  constructor(private readonly usersService: UsersService) { }
 
   @ApiOperation({ summary: 'Get all users with pagination and filtering' })
   @ApiQuery({ type: UserListDto })
@@ -51,11 +56,8 @@ export class UsersController {
     type: UserPaginatedDto,
   })
   @Get()
-  findAll(
-    @Query() query: UserListDto,
-    @AuthUser() user: any
-  ) {
-    return this.usersService.get(query,UserListDto);
+  findAll(@Query() query: UserListDto, @AuthUser() user: any) {
+    return this.usersService.get(query, UserListDto);
   }
 
   @ApiOperation({ summary: 'Get authenticated user' })
@@ -82,15 +84,15 @@ export class UsersController {
   @Get(':id')
   findOne(
     @Param('id', ParseIntPipe) id: number,
-    @Query() query: SingleQueryDto<User>
+    @Query() query: SingleQueryDto<User>,
   ) {
     return this.usersService.getSingle(id, query);
   }
 
-
-  
-
-  @ApiOperation({ summary: 'Add a new user (Admin: add Customer/client, Customer: add client)' })
+  @ApiOperation({
+    summary:
+      'Add a new user (Admin: add Customer/client, Customer: add client)',
+  })
   @ApiBody({
     type: CreateUserDto,
     description: 'Create a new user with profile information',
@@ -114,7 +116,7 @@ export class UsersController {
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
-    @AuthUser() currentUser: any
+    @AuthUser() currentUser: any,
   ) {
     return this.usersService.updateUser(id, updateUserDto);
   }
@@ -126,7 +128,7 @@ export class UsersController {
   @Delete(':id')
   async remove(
     @Param('id', ParseIntPipe) id: number,
-    @AuthUser() currentUser: any
+    @AuthUser() currentUser: any,
   ) {
     await this.usersService.delete(id);
   }
@@ -141,14 +143,12 @@ export class UsersController {
   @Put('me/reset-password')
   async resetPassword(
     @AuthUser() user: any,
-    @Body() resetPasswordDto: ResetPasswordDto
+    @Body() resetPasswordDto: ResetPasswordDto,
   ) {
     const id = user.id;
 
     await this.usersService.resetPassword(id, resetPasswordDto);
 
-
     return { message: 'Password reset successfully' };
   }
-
 }

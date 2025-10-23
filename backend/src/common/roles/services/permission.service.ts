@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { EPermissionAction } from 'shared/enums';
+import { EPermissionAction } from '@shared/enums';
 import { InjectEntity } from '@/decorators/inject-entity.decorator';
 
 export interface ResourcePermissionContext {

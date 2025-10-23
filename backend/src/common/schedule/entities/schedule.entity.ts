@@ -1,6 +1,6 @@
 import { Entity, Column } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
-import { EScheduleStatus, EScheduleFrequency, EDayOfWeek, EIntervalUnit } from 'shared/enums/schedule.enum';
+import { EScheduleStatus, EScheduleFrequency, EDayOfWeek, EIntervalUnit } from '@shared/enums/schedule.enum';
 import { GeneralBaseEntity } from '@/common/entities';
 
 @Entity('schedules')

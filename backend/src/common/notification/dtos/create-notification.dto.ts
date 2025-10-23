@@ -1,6 +1,6 @@
 import { IsString, IsOptional, IsEnum, IsNumber, IsObject, IsBoolean } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ENotificationType, ENotificationPriority } from 'shared/enums/notification.enum';
+import { ENotificationType, ENotificationPriority } from '@shared/enums/notification.enum';
 
 export class CreateNotificationDto {
   @ApiProperty({ example: 'Welcome to our platform!', description: 'Notification title' })

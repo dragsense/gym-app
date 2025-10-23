@@ -57,7 +57,7 @@ FROM base AS dev
 WORKDIR /app/frontend
 
 EXPOSE 5173
-CMD ["sleep", "infinity"]
+CMD ["tail", "-f", "/dev/null"]
 
 # Production build stage
 FROM base AS build

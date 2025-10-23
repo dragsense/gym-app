@@ -5,8 +5,8 @@ import { ConfigService } from '@nestjs/config';
 import { Notification } from './entities/notification.entity';
 import {
   NotificationListDto,
-} from 'shared/dtos/notification-dtos';
-import { IPaginatedResponse } from 'shared/interfaces';
+} from '@shared/dtos/notification-dtos';
+import { IPaginatedResponse } from '@shared/interfaces';
 import { CreateNotificationDto } from './dtos/create-notification.dto';
 import { CrudService } from '@/common/crud/crud.service';
 import { EventService } from '../helper/services/event.service';

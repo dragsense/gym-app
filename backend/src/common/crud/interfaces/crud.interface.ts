@@ -1,5 +1,5 @@
 import { Repository, FindOptionsWhere, ObjectLiteral, EntityManager } from 'typeorm';
-import { IPaginatedResponse } from 'shared/interfaces';
+import { IPaginatedResponse } from '@shared/interfaces';
 
 
 export interface CrudOptions {

@@ -1,10 +1,10 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { Worker } from 'worker_threads';
 import { LoggerService } from '../logger/logger.service';
-import { WorkerListDto, WorkerListPaginatedDto } from 'shared/dtos';
-import { EWorkerStatus } from 'shared/enums';
+import { WorkerListDto, WorkerListPaginatedDto } from '@shared/dtos';
+import { EWorkerStatus } from '@shared/enums';
 import * as path from 'path';
-import { IWorker } from 'shared/interfaces';
+import { IWorker } from '@shared/interfaces';
 
 export interface WorkerTask {
   id: string;

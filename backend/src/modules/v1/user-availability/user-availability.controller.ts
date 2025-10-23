@@ -19,7 +19,7 @@ import { JwtAuthGuard } from '@/guards/jwt-auth.gaurd';
 import {
   CreateUserAvailabilityDto,
   UserAvailabilityDto,
-} from 'shared/dtos/user-availability-dtos';
+} from '@shared/dtos/user-availability-dtos';
 import { UserAvailability } from './entities/user-availability.entity';
 import { AuthUser } from '@/decorators/user.decorator';
 

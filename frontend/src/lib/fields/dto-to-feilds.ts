@@ -1,20 +1,32 @@
-import { FIELD_UI_TYPE, FIELD_OPTIONS, FIELD_DTO_TYPE, FIELD_REQUIRED } from "@shared/decorators/field.decorator";
+import {
+  FIELD_UI_TYPE,
+  FIELD_OPTIONS,
+  FIELD_DTO_TYPE,
+  FIELD_REQUIRED,
+} from "@shared/decorators/field.decorator";
 import { type TFieldType } from "@shared/types/form/field.type";
-import { type TFieldConfig, type TFieldConfigObject } from "@/@types/form/field-config.type";
+import {
+  type TFieldConfig,
+  type TFieldConfigObject,
+} from "@/@types/form/field-config.type";
 
 // --------------------
 // Build a single field
 // --------------------
 function buildField<T>(
   prototype: any,
-  key: keyof T & string,
+  key: keyof T & string
 ): TFieldConfig<T> | null {
   // Get decorator metadata
-  const decoratorType: TFieldType | undefined = Reflect.getMetadata(FIELD_UI_TYPE, prototype, key);
-  const decoratorOptions: { label: string; value: string }[] | undefined = Reflect.getMetadata(FIELD_OPTIONS, prototype, key);
+  const decoratorType: TFieldType | undefined = Reflect.getMetadata(
+    FIELD_UI_TYPE,
+    prototype,
+    key
+  );
+  const decoratorOptions: { label: string; value: string }[] | undefined =
+    Reflect.getMetadata(FIELD_OPTIONS, prototype, key);
   const isRequired = Reflect.getMetadata(FIELD_REQUIRED, prototype, key);
   const isOptional = isRequired === false;
-
 
   // Skip fields with no decorator type
   if (!decoratorType) return null;
@@ -34,7 +46,9 @@ function buildField<T>(
     const nestedType = Reflect.getMetadata(FIELD_DTO_TYPE, prototype, key);
 
     if (!nestedType) {
-      console.warn(`No DTO class found for nested field "${key}". Make sure to use @FieldType("nested", YourDtoClass) decorator.`);
+      console.warn(
+        `No DTO class found for nested field "${key}". Make sure to use @FieldType("nested", YourDtoClass) decorator.`
+      );
       return null;
     }
 
@@ -45,8 +59,8 @@ function buildField<T>(
         minItems: 1,
         maxItems: 10,
       }),
-      subFields: dtoToFields(nestedType)
-    }
+      subFields: dtoToFields(nestedType),
+    };
 
     return field as TFieldConfig<T>;
   }
@@ -57,9 +71,7 @@ function buildField<T>(
 // --------------------
 // Main Function
 // --------------------
-export function dtoToFields<T>(
-  dto: new () => T,
-): TFieldConfigObject<T> {
+export function dtoToFields<T>(dto: new () => T): TFieldConfigObject<T> {
   const instance = new dto();
   const prototype = Object.getPrototypeOf(instance);
 
@@ -69,8 +81,8 @@ export function dtoToFields<T>(
 
   // Create a properly typed result object
   const result = {} as TFieldConfigObject<T>;
-  
-  fields.forEach(field => {
+
+  fields.forEach((field) => {
     // This is type-safe because we know the structure matches
     result[field.name as keyof T] = field as TFieldConfigObject<T>[keyof T];
   });
@@ -78,8 +90,10 @@ export function dtoToFields<T>(
   return result;
 }
 
-
-export function addRenderItem<T>(fields: TFieldConfigObject<T>, renderers: Record<string, (item: any) => ReactNode>): TFieldConfigObject<T> {
+export function addRenderItem<T>(
+  fields: TFieldConfigObject<T>,
+  renderers: Record<string, (item: any) => ReactNode>
+): TFieldConfigObject<T> {
   const result: any = {};
 
   for (const key in fields) {
@@ -93,7 +107,7 @@ export function addRenderItem<T>(fields: TFieldConfigObject<T>, renderers: Recor
     }
 
     // Recursively apply to subFields
-    if (typeof field === 'object' && 'subFields' in field && field.subFields) {
+    if (typeof field === "object" && "subFields" in field && field.subFields) {
       result[key].subFields = addRenderItem(field.subFields, renderers);
     }
   }

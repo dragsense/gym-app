@@ -12,7 +12,8 @@
     "outDir": "./dist",
     "baseUrl": "./",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@shared/*": ["../shared/*"]
     },
     "incremental": true,
     "skipLibCheck": true,
@@ -21,8 +22,8 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
-    "types": ["node","multer"]
+    "types": ["node", "multer"]
   },
-  "include": ["src/**/*.ts", "shared/**/*.ts"],
+  "include": ["src/**/*.ts", "../shared/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }

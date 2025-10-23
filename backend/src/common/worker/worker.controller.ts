@@ -1,6 +1,6 @@
 import { Controller, Post, Get, Param, Query } from '@nestjs/common';
 import { WorkerService } from './worker.service';
-import { WorkerListDto, WorkerListPaginatedDto } from 'shared/dtos';
+import { WorkerListDto, WorkerListPaginatedDto } from '@shared/dtos';
 
 @Controller('worker')
 export class WorkerController {

@@ -6,7 +6,7 @@ import {
   NotificationListDto,
   NotificationDto,
   NotificationPaginatedDto,
-} from 'shared/dtos/notification-dtos';
+} from '@shared/dtos/notification-dtos';
 
 @ApiTags('Notifications')
 @ApiBearerAuth()

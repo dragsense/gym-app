@@ -37,7 +37,7 @@ import {
   ResourceDto,
   ResourcePaginatedDto,
   UpdateResourceDto
-} from 'shared/dtos/role-dtos';
+} from '@shared/dtos/role-dtos';
 
 
 @ApiTags('Roles & Permissions')

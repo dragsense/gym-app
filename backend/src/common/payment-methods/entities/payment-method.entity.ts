@@ -2,7 +2,7 @@ import {
   Entity,  Column,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
-import { EPaymentMethodType } from 'shared/enums/payment-methods.enum';
+import { EPaymentMethodType } from '@shared/enums/payment-methods.enum';
 import { GeneralBaseEntity } from '@/common/entities';
 
 @Entity('payment_methods')

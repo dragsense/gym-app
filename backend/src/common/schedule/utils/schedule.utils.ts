@@ -1,6 +1,6 @@
 import { CronExpressionParser } from 'cron-parser';
 import { DateTime } from 'luxon';
-import { EScheduleFrequency, EDayOfWeek, EIntervalUnit } from 'shared/enums/schedule.enum';
+import { EScheduleFrequency, EDayOfWeek, EIntervalUnit } from '@shared/enums/schedule.enum';
 
 export interface FrequencyConfig {
   frequency: EScheduleFrequency;

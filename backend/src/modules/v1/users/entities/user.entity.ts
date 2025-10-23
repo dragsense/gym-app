@@ -12,7 +12,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
 import { GeneralBaseEntity } from '@/common/entities';
 import { Profile } from '../profiles/entities/profile.entity';
-import { EUserLevels, EUserRole } from 'shared/enums/user.enum';
+import { EUserLevels, EUserRole } from '@shared/enums/user.enum';
 import { RefreshToken } from '@/modules/v1/auth/entities/tokens.entity';
 import * as bcrypt from 'bcrypt';
 import { StripeConnectAccount } from '@/modules/v1/stripe/entities/stripe-connect-account.entity';

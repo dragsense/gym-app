@@ -8,7 +8,7 @@ import {
 import { Schedule } from '../entities/schedule.entity';
 import { ScheduleExecutorService } from '../services/schedule-executor.service';
 import { Injectable, Logger } from '@nestjs/common';
-import { EScheduleStatus } from 'shared/enums/schedule.enum';
+import { EScheduleStatus } from '@shared/enums/schedule.enum';
 
 @Injectable()
 @EventSubscriber()

@@ -7,7 +7,7 @@ import {
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { GeneralBaseEntity } from '@/common/entities';
 import { User } from '@/modules/v1/users/entities/user.entity';
-import { ECurrency, EDateFormat, ETimeFormat, ETimezone } from 'shared/enums/user-settings.enum';
+import { ECurrency, EDateFormat, ETimeFormat, ETimezone } from '@shared/enums/user-settings.enum';
 
 @Entity('user_settings')
 export class UserSettings extends GeneralBaseEntity {

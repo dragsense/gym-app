@@ -63,23 +63,24 @@ RUN pnpm install
 
 WORKDIR /app
 
-# Copy shared code
-COPY shared/ ./shared/
-
-# Copy backend code
-COPY backend/ ./backend/
-
-# Copy frontend code
-COPY frontend/ ./frontend/
-
 # Development stage
 FROM base AS dev
 WORKDIR /app
+
+# Copy shared code (needed for dependencies)
+COPY shared/ ./shared/
+
+# Copy backend code (needed for dependencies)
+COPY backend/ ./backend/
+
+# Copy frontend code (needed for dependencies)
+COPY frontend/ ./frontend/
+
 # Expose ports for both services
 EXPOSE 3000 5173
 
-# Default command - just keep container running
-CMD ["sleep", "infinity"]
+# Default command - keep container running
+CMD ["tail", "-f", "/dev/null"]
 
 # Production build stage
 FROM base AS build

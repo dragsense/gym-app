@@ -1,4 +1,4 @@
-import { EUserLevels } from 'shared/enums/user.enum';
+import { EUserLevels } from '@shared/enums/user.enum';
 
 
 const LevelToUserRole = Object.entries(EUserLevels).reduce(

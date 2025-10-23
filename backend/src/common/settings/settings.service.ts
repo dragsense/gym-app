@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { CrudService } from '@/common/crud/crud.service';
 import { Setting } from './entities/setting.entity';
-import { ESettingType } from 'shared/enums/setting.enum';
+import { ESettingType } from '@shared/enums/setting.enum';
 import { EventService } from '@/common/helper/services/event.service';
 
 @Injectable()

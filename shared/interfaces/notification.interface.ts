@@ -1,3 +1,3 @@
-import { NotificationDto } from "shared/dtos";
+import { NotificationDto } from "@shared/dtos";
 
 export interface INotification extends NotificationDto { }
