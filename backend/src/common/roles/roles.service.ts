@@ -21,5 +21,4 @@ export class RolesService extends CrudService<Role> {
   ) {
     super(roleRepository, dataSource, eventService);
   }
-
 }

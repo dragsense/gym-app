@@ -1,24 +1,28 @@
 // External Libraries
-import React, { useMemo, useId, useTransition } from "react";
+import React, { useMemo, useId, useTransition, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 // Custom Hooks
 import { type FormInputs, useInput } from "@/hooks/use-input";
 
 // Types
 import type { TFormHandlerStore } from "@/stores";
-import type { TRoleFormData } from "@/page-components/roles/role-form";
 
 // Components
 import { Button } from "@/components/ui/button";
 import { ModalForm } from "@/components/form-ui/modal-form";
 import type { THandlerComponentProps } from "@/@types/handler-types";
+import type { TRoleData } from "@shared/types";
+import type { TCustomInputWrapper, TFieldConfigObject } from "@/@types/form/field-config.type";
+import type { PermissionDto } from "@shared/dtos/role-dtos/permission.dto";
+import { SearchableInputWrapper } from "@/components/shared-ui/searchable-input-wrapper";
+import { useSearchablePermissions } from "@/hooks/use-searchable";
 
 export interface IRoleFormModalExtraProps {
   open: boolean;
   onClose: () => void;
 }
 
-interface IRoleFormModalProps extends THandlerComponentProps<TFormHandlerStore<TRoleFormData, any, IRoleFormModalExtraProps>> {}
+interface IRoleFormModalProps extends THandlerComponentProps<TFormHandlerStore<TRoleFormData, any, IRoleFormModalExtraProps>> { }
 
 export const RoleFormModal = React.memo(function RoleFormModal({
   storeKey,
@@ -36,13 +40,42 @@ export const RoleFormModal = React.memo(function RoleFormModal({
   const open = store((state) => state.extra.open);
   const onClose = store((state) => state.extra.onClose);
 
-  // React 19: Memoized fields for better performance
-  const fields = useMemo(() => store((state) => state.fields), [store]);
+  const storeFields = store((state) => state.fields)
 
-  const inputs = useInput<TRoleFormData>({
+
+  // React 19: Memoized fields for better performance
+  const PermissionsSelect = React.memo(
+    (props: TCustomInputWrapper) => (
+      <SearchableInputWrapper<PermissionDto>
+        {...props}
+        modal={true}
+        useSearchable={() => useSearchablePermissions({})}
+        getLabel={(item) => {
+          console.log('item', item);
+          return `${item.displayName}`
+        }}
+        getKey={(item) => item.id.toString()}
+        getValue={(item) => { return { id: item.id, displayName: item.displayName } }}
+        shouldFilter={false}
+        multiple={true}
+      />
+    )
+  );
+
+  // React 19: Memoized fields for better performance
+  const fields = useMemo(() => ({
+    ...storeFields,
+    permissions: {
+      ...storeFields.permissions,
+      type: 'custom' as const,
+      Component: PermissionsSelect
+    },
+  } as TFieldConfigObject<TRoleData>), [storeFields]);
+
+  const inputs = useInput<TRoleData>({
     fields,
     showRequiredAsterisk: true,
-  }) as FormInputs<TRoleFormData>;
+  }) as FormInputs<TRoleData>;
 
   // React 19: Smooth modal state changes
   const onOpenChange = (state: boolean) => {
@@ -76,6 +109,7 @@ export const RoleFormModal = React.memo(function RoleFormModal({
     </div>
   ), [componentId, isEditing, onClose]);
 
+
   return (
     <>
       <ModalForm<TRoleFormData, any, IRoleFormModalExtraProps>
@@ -87,26 +121,26 @@ export const RoleFormModal = React.memo(function RoleFormModal({
         footerContent={formButtons}
         width="2xl"
       >
-      <div className="space-y-6">
-        {/* Basic Info */}
-        <div>
-          <h3 className="text-sm font-semibold mb-3">Basic Info</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-            {inputs.name}
-            {inputs.code}
+        <div className="space-y-6">
+          {/* Basic Info */}
+          <div>
+            <h3 className="text-sm font-semibold mb-3">Basic Info</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+              {inputs.name}
+              {inputs.code}
+            </div>
           </div>
-        </div>
 
-        {/* Additional Details */}
-        <div>
-          <h3 className="text-sm font-semibold mb-3">Additional Details</h3>
-          <div className="grid grid-cols-1 gap-6 items-start">
-            {inputs.description}
-            {inputs.status}
-            {inputs.isSystem}
+          {/* Additional Details */}
+          <div>
+            <h3 className="text-sm font-semibold mb-3">Additional Details</h3>
+            <div className="grid grid-cols-1 gap-6 items-start">
+              {inputs.description}
+              {inputs.status}
+              {inputs.permissions}
+            </div>
           </div>
         </div>
-      </div>
       </ModalForm>
     </>
   );

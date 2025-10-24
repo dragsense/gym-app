@@ -6,58 +6,101 @@ import {
   IsNumber,
   IsArray,
   Min,
-} from 'class-validator';
-import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { PaginationMetaDto } from '../common/pagination.dto';
-import { ListQueryDto } from '../common/list-query.dto';
-import { FieldOptions, FieldType } from '../../decorators/field.decorator';
-import { EPermissionAction, EPermissionStatus } from '../../enums/role/permission.enum';
+  ValidateNested,
+  IsBoolean,
+} from "class-validator";
+import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
+import { Type } from "class-transformer";
+import { PaginationMetaDto } from "../common/pagination.dto";
+import { ListQueryDto } from "../common/list-query.dto";
+import { FieldOptions, FieldType } from "../../decorators/field.decorator";
+import {
+  EPermissionAction,
+  EPermissionStatus,
+} from "../../enums/role/permission.enum";
+import { ResourceDto } from "./resource.dto";
 
 export class PermissionDto {
-  @ApiProperty({ example: 1, description: 'Permission ID' })
+  @ApiProperty({ example: 1, description: "Permission ID" })
+  @IsNumber()
+  @IsNotEmpty()
+  @Min(1)
   id: number;
 
-  @ApiProperty({ example: 'user:create', description: 'Permission name/code' })
-  name: string;
+  @ApiProperty({ example: "user:create", description: "Permission name/code" })
+  @IsString()
+  @IsOptional()
+  name?: string;
 
-  @ApiProperty({ example: 'Create User', description: 'Permission display name' })
-  displayName: string;
+  @ApiProperty({
+    example: "Create User",
+    description: "Permission display name",
+  })
+  @IsString()
+  @IsOptional()
+  displayName?: string;
 
-  @ApiProperty({ example: 'Allow creating new users', description: 'Permission description' })
-  description: string;
+  @ApiProperty({
+    example: "Allow creating new users",
+    description: "Permission description",
+  })
+  @IsString()
+  @IsOptional()
+  description?: string;
 
   @ApiProperty({
     enum: EPermissionAction,
     example: EPermissionAction.CREATE,
-    description: 'Permission action'
+    description: "Permission action",
   })
-  action: EPermissionAction;
-
-  @ApiProperty({ example: 1, description: 'Resource ID' })
-  resourceId: number;
+  @IsEnum(EPermissionAction)
+  @IsOptional()
+  action?: EPermissionAction;
 
   @ApiProperty({
     enum: EPermissionStatus,
     example: EPermissionStatus.ACTIVE,
-    description: 'Permission status'
+    description: "Permission status",
   })
-  status: EPermissionStatus;
+  @IsEnum(EPermissionStatus)
+  @IsOptional()
+  status?: EPermissionStatus;
 
-  @ApiProperty({ example: true, description: 'Whether permission is system defined' })
-  isSystem: boolean;
+  @ApiProperty({
+    example: true,
+    description: "Whether permission is system defined",
+  })
+  @IsBoolean()
+  @IsOptional()
+  isSystem?: boolean;
 
-  @ApiPropertyOptional({ example: ['email', 'name'], description: 'Included columns' })
+  @ApiPropertyOptional({
+    example: ["email", "name"],
+    description: "Included columns",
+  })
+  @IsOptional()
   includedColumns?: string[];
 
-  @ApiPropertyOptional({ example: ['password', 'ssn'], description: 'Excluded columns' })
+  @ApiPropertyOptional({
+    example: ["password", "ssn"],
+    description: "Excluded columns",
+  })
+  @IsOptional()
   excludedColumns?: string[];
 
-  @ApiProperty({ example: '2024-01-01T00:00:00.000Z', description: 'Creation timestamp' })
-  createdAt: Date;
+  @ApiProperty({
+    example: "2024-01-01T00:00:00.000Z",
+    description: "Creation timestamp",
+  })
+  @IsOptional()
+  createdAt?: Date;
 
-  @ApiProperty({ example: '2024-01-01T00:00:00.000Z', description: 'Last update timestamp' })
-  updatedAt: Date;
+  @ApiProperty({
+    example: "2024-01-01T00:00:00.000Z",
+    description: "Last update timestamp",
+  })
+  @IsOptional()
+  updatedAt?: Date;
 }
 
 export class PermissionPaginatedDto extends PaginationMetaDto {
@@ -69,26 +112,30 @@ export class PermissionListDto extends ListQueryDto {
   @ApiPropertyOptional({
     enum: EPermissionAction,
     example: EPermissionAction.CREATE,
-    description: 'Filter by permission action'
+    description: "Filter by permission action",
   })
   @IsOptional()
   @IsEnum(EPermissionAction)
-  @FieldType('select', false)
-  @FieldOptions(Object.values(EPermissionAction).map(v => ({ value: v, label: v })))
+  @FieldType("select", false)
+  @FieldOptions(
+    Object.values(EPermissionAction).map((v) => ({ value: v, label: v }))
+  )
   action?: EPermissionAction;
 
   @ApiPropertyOptional({
     enum: EPermissionStatus,
     example: EPermissionStatus.ACTIVE,
-    description: 'Filter by permission status'
+    description: "Filter by permission status",
   })
   @IsOptional()
   @IsEnum(EPermissionStatus)
-  @FieldType('select', false)
-  @FieldOptions(Object.values(EPermissionStatus).map(v => ({ value: v, label: v })))
+  @FieldType("select", false)
+  @FieldOptions(
+    Object.values(EPermissionStatus).map((v) => ({ value: v, label: v }))
+  )
   status?: EPermissionStatus;
 
-  @ApiPropertyOptional({ example: 1, description: 'Filter by resource ID' })
+  @ApiPropertyOptional({ example: 1, description: "Filter by resource ID" })
   @IsOptional()
   @IsNumber()
   @Type(() => Number)
@@ -97,54 +144,79 @@ export class PermissionListDto extends ListQueryDto {
 }
 
 export class CreatePermissionDto {
-  @ApiProperty({ example: 'user:create', description: 'Permission name/code' })
+  @ApiProperty({ example: "user:create", description: "Permission name/code" })
   @IsString()
   @IsNotEmpty()
+  @FieldType("text", false)
   name: string;
 
-  @ApiProperty({ example: 'Create User', description: 'Permission display name' })
+  @ApiProperty({
+    example: "Create User",
+    description: "Permission display name",
+  })
   @IsString()
   @IsNotEmpty()
+  @FieldType("text", false)
   displayName: string;
 
-  @ApiProperty({ example: 'Allow creating new users', description: 'Permission description' })
+  @ApiProperty({
+    example: "Allow creating new users",
+    description: "Permission description",
+  })
   @IsString()
   @IsNotEmpty()
+  @FieldType("text", false)
   description: string;
 
   @ApiProperty({
     enum: EPermissionAction,
     example: EPermissionAction.CREATE,
-    description: 'Permission action'
+    description: "Permission action",
   })
   @IsEnum(EPermissionAction)
+  @FieldType("select", false)
+  @FieldOptions(
+    Object.values(EPermissionAction).map((v) => ({ value: v, label: v }))
+  )
   action: EPermissionAction;
 
-  @ApiProperty({ example: 1, description: 'Resource ID' })
-  @IsNumber()
-  @Type(() => Number)
-  @Min(1)
-  resourceId: number;
+  @ApiProperty({ type: ResourceDto })
+  @ValidateNested()
+  @Type(() => ResourceDto)
+  @FieldType("custom", true, ResourceDto)
+  resource: ResourceDto;
 
   @ApiPropertyOptional({
     enum: EPermissionStatus,
     example: EPermissionStatus.ACTIVE,
-    description: 'Permission status'
+    description: "Permission status",
   })
   @IsOptional()
   @IsEnum(EPermissionStatus)
+  @FieldType("select", false)
+  @FieldOptions(
+    Object.values(EPermissionStatus).map((v) => ({ value: v, label: v }))
+  )
   status?: EPermissionStatus;
 
-  @ApiPropertyOptional({ example: ['email', 'name'], description: 'Included columns' })
+  @ApiPropertyOptional({
+    example: ["email", "name"],
+    description: "Included columns",
+  })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
+  @FieldType("multiSelect", false)
   includedColumns?: string[];
 
-  @ApiPropertyOptional({ example: ['password', 'ssn'], description: 'Excluded columns' })
+  @ApiPropertyOptional({
+    example: ["password", "ssn"],
+    description: "Excluded columns",
+  })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
+  @FieldType("multiSelect", false)
   excludedColumns?: string[];
 }
 

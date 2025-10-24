@@ -4,6 +4,7 @@ import { useId } from "react";
 
 // UI Components
 import { Toaster } from "@/components/ui/sonner";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 
 interface MainLayoutProps { }

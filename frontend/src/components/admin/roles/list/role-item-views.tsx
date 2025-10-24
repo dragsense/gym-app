@@ -2,11 +2,11 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { 
-  MoreHorizontal, 
-  Edit, 
-  Trash2, 
-  Eye, 
+import {
+  MoreHorizontal,
+  Edit,
+  Trash2,
+  Eye,
   Shield,
   CheckCircle,
   XCircle,
@@ -28,7 +28,7 @@ export const itemViews = ({
   editRole,
   deleteRole,
   viewPermissions,
-}: {  
+}: {
   editRole: (roleId: number) => void;
   deleteRole: (roleId: number) => void;
   viewPermissions: (roleId: number) => void;
@@ -79,7 +79,7 @@ export const itemViews = ({
       header: "Status",
       cell: ({ row }) => {
         const status = row.getValue<string>("status") || 'active';
-        
+
         const statusConfig = {
           active: { variant: "default" as const, icon: CheckCircle, color: "text-green-600" },
           inactive: { variant: "secondary" as const, icon: XCircle, color: "text-red-600" },
@@ -110,15 +110,15 @@ export const itemViews = ({
       },
     },
     {
-      accessorKey: "permissions",
+      accessorKey: "permissionsCount",
       header: "Permissions",
       cell: ({ row }) => {
-        const permissions = row.getValue<any[]>("permissions") || [];
+        const permissionsCount = row.getValue<number>("permissionsCount");
         return (
           <div className="flex items-center gap-1">
             <Shield className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm text-muted-foreground">
-              {permissions.length} permission{permissions.length !== 1 ? 's' : ''}
+              {permissionsCount} permission{permissionsCount !== 1 ? 's' : ''}
             </span>
           </div>
         );
@@ -141,7 +141,7 @@ export const itemViews = ({
       header: "Actions",
       cell: ({ row }) => {
         const role = row.original;
-        
+
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -160,7 +160,7 @@ export const itemViews = ({
                 Edit Role
               </DropdownMenuItem>
               {!role.isSystem && (
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={() => deleteRole(role.id)}
                   className="text-destructive"
                 >

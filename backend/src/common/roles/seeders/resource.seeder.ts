@@ -1,16 +1,20 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { DataSource } from 'typeorm';
 import { Resource } from '../entities/resource.entity';
 
 @Injectable()
-export class ResourceSeeder {
+export class ResourceSeeder implements OnModuleInit {
   constructor(
     @InjectRepository(Resource)
     private readonly resourceRepository: Repository<Resource>,
     private readonly dataSource: DataSource,
   ) {}
+
+  async onModuleInit() {
+    await this.seed();
+  }
 
   /**
    * Seed all entities as resources
@@ -42,7 +46,7 @@ export class ResourceSeeder {
     for (const resource of resources) {
       await this.resourceRepository.upsert(
         resource,
-        ['name'] // Conflict resolution on name
+        ['name'], // Conflict resolution on name
       );
     }
 
@@ -55,7 +59,7 @@ export class ResourceSeeder {
   private shouldSkipEntity(entityName: string): boolean {
     const skipList = [
       'Resource',
-      'Role', 
+      'Role',
       'Permission',
       'ActivityLog', // Skip activity logs as they're system-generated
     ];
@@ -67,8 +71,7 @@ export class ResourceSeeder {
    * Get display name for entity
    */
   private getDisplayName(entityName: string): string {
-    const displayNames: Record<string, string> = {
-   };
+    const displayNames: Record<string, string> = {};
 
     return displayNames[entityName] || entityName;
   }
@@ -77,8 +80,7 @@ export class ResourceSeeder {
    * Get description for entity
    */
   private getDescription(entityName: string): string {
-    const descriptions: Record<string, string> = {
-    };
+    const descriptions: Record<string, string> = {};
 
     return descriptions[entityName] || `${entityName} entity management`;
   }

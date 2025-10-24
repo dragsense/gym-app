@@ -57,12 +57,12 @@ export function AppComboBox<T>({
   // React 19: Essential IDs and transitions
   const componentId = useId();
   const [, startTransition] = useTransition();
-  
+
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
   const [popoverWidth, setPopoverWidth] = useState<number | undefined>(undefined);
-  
+
   // React 19: Smooth popover transitions
   const handleOpenChange = (nextOpen: boolean) => {
     startTransition(() => {
@@ -74,8 +74,8 @@ export function AppComboBox<T>({
   };
 
   // React 19: Memoized selected values for better performance
-  const selectedValues: T[] = useMemo(() => 
-    multiple ? (Array.isArray(value) ? value : []) : [], 
+  const selectedValues: T[] = useMemo(() =>
+    multiple ? (Array.isArray(value) ? value : []) : [],
     [multiple, value]
   );
 
@@ -106,6 +106,7 @@ export function AppComboBox<T>({
           onChange([...selectedValues, itemValue] as T[]);
         }
       } else {
+        console.log(getValue(item));
         onChange(getValue(item));
         setOpen(false);
       }

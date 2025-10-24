@@ -1,8 +1,4 @@
-import {
-  Entity,
-  Column,
-  OneToMany,
-} from 'typeorm';
+import { Entity, Column, OneToMany } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { GeneralBaseEntity } from '@/common/entities';
 import { Permission } from './permission.entity';
@@ -17,11 +13,17 @@ export class Resource extends GeneralBaseEntity {
   @Column({ type: 'varchar', length: 100 })
   entityName: string;
 
-  @ApiProperty({ example: 'User Management', description: 'Resource display name' })
+  @ApiProperty({
+    example: 'User Management',
+    description: 'Resource display name',
+  })
   @Column({ type: 'varchar', length: 100 })
   displayName: string;
 
-  @ApiProperty({ example: 'User entity for authentication and authorization', description: 'Resource description' })
+  @ApiProperty({
+    example: 'User entity for authentication and authorization',
+    description: 'Resource description',
+  })
   @Column({ type: 'text', nullable: true })
   description?: string;
 
@@ -29,6 +31,6 @@ export class Resource extends GeneralBaseEntity {
   @Column({ type: 'boolean', default: true })
   isActive: boolean;
 
-  @OneToMany(() => Permission, permission => permission.resource)
+  @OneToMany(() => Permission, (permission) => permission.resource)
   permissions: Permission[];
 }

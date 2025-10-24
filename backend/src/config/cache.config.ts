@@ -6,7 +6,7 @@ export default registerAs('cache', () => ({
   host: process.env.CACHE_HOST || 'localhost',
   port: parseInt(process.env.CACHE_PORT || '6379', 10),
   password: process.env.CACHE_PASSWORD || undefined,
-  db: parseInt(process.env.CACHE_DB || '1', 10),
+  db: parseInt(process.env.CACHE_DB || '0', 10),
   defaultTtl: parseInt(process.env.CACHE_DEFAULT_TTL || '300', 10), // seconds
   maxItems: parseInt(process.env.CACHE_MAX_ITEMS || '1000', 10),
   prefix: process.env.CACHE_PREFIX || 'app',
@@ -27,7 +27,7 @@ export const getCacheConfig = async (configService: ConfigService) => {
     port: cacheConfig.port,
     password: cacheConfig.password,
     db: cacheConfig.db,
-    ttl: cacheConfig.defaultTtl * 1000, // Convert to milliseconds
+    ttl: cacheConfig.defaultTtl,
     keyPrefix: `${cacheConfig.prefix}:`,
     maxRetriesPerRequest: 5,
     connectTimeout: 5000,

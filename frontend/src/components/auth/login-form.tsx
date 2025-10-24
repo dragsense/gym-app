@@ -32,6 +32,7 @@ const LoginForm = React.memo(function LoginForm({
   // React 19: Essential IDs and transitions
   const componentId = useId();
   const [, startTransition] = useTransition();
+  const { t } = useI18n();
 
   if (!store) {
     return `Form store "${storeKey}" not found. Did you forget to register it?`;
@@ -41,7 +42,7 @@ const LoginForm = React.memo(function LoginForm({
   const [showPassword, setShowPassword] = useState(false);
 
   const originalFields = store(state => state.fields);
-  
+
   // React 19: Memoized fields for better performance
   const fields = useMemo(() => ({
     ...originalFields,
@@ -82,7 +83,7 @@ const LoginForm = React.memo(function LoginForm({
       <AppCard
         header={
           <>
-            <h2 className="text-md font-semibold">Login</h2>
+            <h2 className="text-md font-semibold">{t('appName')}</h2>
             <p className="text-sm text-muted-foreground">Enter your email and password to login to your account</p>
           </>
         }

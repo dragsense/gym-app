@@ -2,10 +2,10 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { 
-  MoreHorizontal, 
-  Edit, 
-  Trash2, 
+import {
+  MoreHorizontal,
+  Edit,
+  Trash2,
   Shield,
   CheckCircle,
   XCircle,
@@ -26,7 +26,7 @@ import type { IPermission } from '@shared/interfaces';
 export const itemViews = ({
   editPermission,
   deletePermission,
-}: {  
+}: {
   editPermission: (permissionId: number) => void;
   deletePermission: (permissionId: number) => void;
 }) => {
@@ -79,7 +79,7 @@ export const itemViews = ({
       cell: ({ row }) => {
         const resource = row.getValue<any>("resource");
         return (
-          <span className="text-sm">{resource?.name || 'N/A'}</span>
+          <span className="text-sm">{resource?.displayName || resource?.name || 'N/A'}</span>
         );
       },
     },
@@ -88,7 +88,7 @@ export const itemViews = ({
       header: "Status",
       cell: ({ row }) => {
         const status = row.getValue<string>("status") || 'active';
-        
+
         const statusConfig = {
           active: { variant: "default" as const, icon: CheckCircle, color: "text-green-600" },
           inactive: { variant: "secondary" as const, icon: XCircle, color: "text-red-600" },
@@ -138,7 +138,7 @@ export const itemViews = ({
       header: "Actions",
       cell: ({ row }) => {
         const permission = row.original;
-        
+
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -152,7 +152,7 @@ export const itemViews = ({
                 <Edit className="mr-2 h-4 w-4" />
                 Edit Permission
               </DropdownMenuItem>
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => deletePermission(permission.id)}
                 className="text-destructive"
               >

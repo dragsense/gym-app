@@ -7,7 +7,19 @@ import { APP_GUARD } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { BullModule } from '@nestjs/bull';
 
-import { configOptions, appConfig, cacheConfig, databaseConfig, jwtConfig, mailerConfig, getMailerConfig, superAdminConfig, clusterConfig, activityLogsConfig, stripeConfig } from './config';
+import {
+  configOptions,
+  appConfig,
+  cacheConfig,
+  databaseConfig,
+  jwtConfig,
+  mailerConfig,
+  getMailerConfig,
+  superAdminConfig,
+  clusterConfig,
+  activityLogsConfig,
+  stripeConfig,
+} from './config';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -23,6 +35,7 @@ import { WorkerModule } from './common/worker/worker.module';
 // Common modules
 import { LoggerModule } from './common/logger/logger.module';
 import { DatabaseModule } from './common/database/database.module';
+import { ServerGatewayModule } from './gateways/server-gateway.module';
 
 import { ServerGateway } from './gateways/server.gateway';
 import { join } from 'path';
@@ -47,23 +60,22 @@ import { getBullQueueConfig } from './config/bull-queue.config';
 import { CacheModule } from './common/cache/cache.module';
 import { RolesModule } from './common/roles/roles.module';
 
-
-
 @Module({
   imports: [
     // Configuration
     ConfigModule.forRoot({
       ...configOptions,
-      load: [appConfig,
-         databaseConfig,
-          jwtConfig, 
-          mailerConfig, 
-          clusterConfig, 
-          superAdminConfig,
-          activityLogsConfig,
-          stripeConfig,
-          cacheConfig
-        ],
+      load: [
+        appConfig,
+        databaseConfig,
+        jwtConfig,
+        mailerConfig,
+        clusterConfig,
+        superAdminConfig,
+        activityLogsConfig,
+        stripeConfig,
+        cacheConfig,
+      ],
       isGlobal: true,
     }),
 
@@ -88,10 +100,12 @@ import { RolesModule } from './common/roles/roles.module';
     }),
 
     // Rate limiting
-    ThrottlerModule.forRoot([{
-      ttl: 60000, // 1 minute
-      limit: 60,  // 60 requests per minute
-    }]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000, // 1 minute
+        limit: 60, // 60 requests per minute
+      },
+    ]),
 
     // Events
     EventEmitterModule.forRoot(),
@@ -102,27 +116,15 @@ import { RolesModule } from './common/roles/roles.module';
       useFactory: getBullQueueConfig,
       inject: [ConfigService],
     }),
-    // Register specific queues
-    BullModule.registerQueue(
-      { name: 'schedule' },
-      { name: 'email' },
-      { name: 'notification' },
-      { name: 'file-processing' },
-      { name: 'user-activity' },
-      { name: 'billing' },
-      { name: 'analytics' },
-      { name: 'user' },
-      { name: 'session' }
-    ),
 
     // Common modules
     LoggerModule,
+    ServerGatewayModule,
     FileUploadModule,
     ActivityLogsModule,
     CacheModule,
     WorkerModule,
     RolesModule,
-
 
     // Feature modules
     TrainersModule,
@@ -145,7 +147,6 @@ import { RolesModule } from './common/roles/roles.module';
   controllers: [AppController],
   providers: [
     AppService,
-    ServerGateway,
     EncryptionService,
     ResponseEncryptionInterceptor,
     {
@@ -154,4 +155,4 @@ import { RolesModule } from './common/roles/roles.module';
     },
   ],
 })
-export class AppModule { }
+export class AppModule {}

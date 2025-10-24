@@ -11,9 +11,9 @@ services:
       NODE_ENV: development
     env_file:
       - ../backend/.env
-      - ../backend/.env.development
     volumes:
-      - ..:/app:cached
+      - ../backend:/app/backend
+      - ../shared:/app/shared
       - /app/backend/node_modules
       - /app/shared/node_modules
     depends_on:
@@ -53,5 +53,28 @@ services:
     restart: unless-stopped
     ports:
       - "6380:6379"
+
+  # PostgreSQL 17 Database
+  postgres:
+    image: postgres:17
+    container_name: app-postgres
+    restart: unless-stopped
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: web_template_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
 
 #docker-compose up -d

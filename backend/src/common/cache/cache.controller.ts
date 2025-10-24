@@ -11,17 +11,20 @@ export class CacheController {
 
   @Get('monitor-url')
   @ApiOperation({ summary: 'Get Dragonfly cache monitor URL' })
-  @ApiResponse({ status: 200, description: 'Cache monitor URL retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Cache monitor URL retrieved successfully',
+  })
   getCacheMonitorUrl() {
     const cacheConfig = this.configService.get('cache');
-    const host = cacheConfig?.host || 'localhost';
-    const port = cacheConfig?.port || 6380;
+    const host = 'localhost';
+    const port = 6380;
     const dragonflyUrl = `http://${host}:${port}/`;
-    
+
     return {
       url: dragonflyUrl,
       name: 'Dragonfly Cache Monitor',
-      description: 'Monitor Dragonfly cache in real-time'
+      description: 'Monitor Dragonfly cache in real-time',
     };
   }
 }

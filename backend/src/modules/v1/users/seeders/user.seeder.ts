@@ -9,7 +9,7 @@ export class UserSeeder implements OnModuleInit {
   constructor(
     private readonly usersService: UsersService,
     private readonly configService: ConfigService,
-  ) { }
+  ) {}
 
   async onModuleInit() {
     // Only run seeders in development

@@ -3,13 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere, DataSource } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Notification } from './entities/notification.entity';
-import {
-  NotificationListDto,
-} from '@shared/dtos/notification-dtos';
-import { IPaginatedResponse } from '@shared/interfaces';
 import { CreateNotificationDto } from './dtos/create-notification.dto';
 import { CrudService } from '@/common/crud/crud.service';
 import { EventService } from '../helper/services/event.service';
+import { ServerGateway } from '../../gateways/server.gateway';
 
 export interface NotificationConfig {
   enabled: boolean;
@@ -20,7 +17,6 @@ export interface NotificationConfig {
 
 @Injectable()
 export class NotificationService extends CrudService<Notification> {
-
   constructor(
     @InjectRepository(Notification)
     private readonly notificationRepository: Repository<Notification>,
@@ -34,20 +30,18 @@ export class NotificationService extends CrudService<Notification> {
   /**
    * Check if notification should be logged based on configuration
    */
-  shouldLogNotification(
-    notificationType?: string
-  ): boolean {
+  shouldLogNotification(notificationType?: string): boolean {
+    const config = this.configService.get(
+      'notifications',
+    ) as NotificationConfig;
 
-
-    const config = this.configService.get('notifications');
-
-    if (!config.enabled) {
+    if (!config?.enabled) {
       return false;
     }
 
-
-    if (config.logNotificationTypes.length > 0) {
-      const shouldLogType = config.logNotificationTypes.includes(notificationType);
+    if (config.logNotificationTypes?.length > 0 && notificationType) {
+      const shouldLogType =
+        config.logNotificationTypes.includes(notificationType);
       if (!shouldLogType) {
         return false;
       }
@@ -61,7 +55,7 @@ export class NotificationService extends CrudService<Notification> {
     options?: {
       select?: (keyof Notification)[];
       relations?: string[];
-    }
+    },
   ): Promise<Notification> {
     const { select, relations = ['user'] } = options || {};
 
@@ -78,38 +72,75 @@ export class NotificationService extends CrudService<Notification> {
     return notification;
   }
 
-  async createNotification(createNotificationDto: CreateNotificationDto): Promise<Notification | null> {
+  async createNotification(
+    createNotificationDto: CreateNotificationDto,
+  ): Promise<Notification | null> {
     // Check if notification should be logged based on configuration
-    const shouldLog = this.shouldLogNotification(
-      createNotificationDto.type
-    );
+    const shouldLog = this.shouldLogNotification(createNotificationDto.type);
 
     if (!shouldLog) {
       return null;
     }
 
-    return await this.create(createNotificationDto);
+    // Create the notification in database
+    const notification = await this.create(createNotificationDto);
+
+    // Emit real-time notification via WebSocket
+    if (notification) {
+      this.emitRealTimeNotification(notification);
+    }
+
+    return notification;
   }
 
+  /**
+   * Emit real-time notification via WebSocket
+   */
+  private emitRealTimeNotification(notification: Notification): void {
+    // Simple notification event - client will fetch full data
+    const notificationEvent = {
+      id: notification.id,
+      entityId: notification.entityId,
+      type: notification.type,
+      priority: notification.priority,
+    };
 
+    // If notification has a specific entityId (user), send to that user
+    if (notification.entityId) {
+      ServerGateway.getInstance()?.emitToUser(
+        notification.entityId,
+        'new_notification',
+        notificationEvent,
+      );
+    } else {
+      // If no specific user, broadcast to all connected clients
+      ServerGateway.getInstance()?.emitToAll(
+        'new_notification',
+        notificationEvent,
+      );
+    }
+  }
 
   /**
    * Mark a notification as read
    */
   async markAsRead(id: number): Promise<Notification> {
-    return await this.update(id, { isRead: true });
+    const notification = await this.update(id, { isRead: true });
+
+    return notification;
   }
 
   /**
    * Mark all notifications as read for a user
    */
   async markAllAsRead(entityId: number) {
-    return await this.update({ entityId, isRead: false }, { isRead: true });
+    const result = await this.update(
+      { entityId, isRead: false },
+      { isRead: true },
+    );
+
+    return result;
   }
-
-
-
-
 
   /**
    * Get unread count for a user
@@ -119,5 +150,4 @@ export class NotificationService extends CrudService<Notification> {
       where: { entityId, isRead: false },
     });
   }
-
 }

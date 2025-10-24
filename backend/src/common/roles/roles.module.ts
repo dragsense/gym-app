@@ -11,12 +11,14 @@ import { ResourcesService } from './services/resources.service';
 import { CrudModule } from '../crud/crud.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Resource, Role, Permission]),
-    CrudModule,
-  ],
+  imports: [TypeOrmModule.forFeature([Resource, Role, Permission]), CrudModule],
   controllers: [RolesController],
-  providers: [RolesService, PermissionsService, ResourcesService, ResourceSeeder],
+  providers: [
+    RolesService,
+    PermissionsService,
+    ResourcesService,
+    ResourceSeeder,
+  ],
   exports: [RolesService, PermissionsService, ResourcesService, ResourceSeeder],
 })
 export class RolesModule {}

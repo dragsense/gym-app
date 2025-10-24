@@ -8,9 +8,9 @@ import { useId } from "react";
 export default function AuthLayout() {
   // React 19: Essential IDs
   const componentId = useId();
-  
+
   return (
-    <div 
+    <div
       className="min-h-screen max-w-7xl mx-auto grid md:grid-cols-2 md:gap-10 gap-4 p-4 py-15"
       data-component-id={componentId}
     >

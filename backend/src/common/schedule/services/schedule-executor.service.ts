@@ -13,7 +13,7 @@ export class ScheduleExecutorService implements OnModuleInit {
   constructor(
     private readonly scheduleService: ScheduleService,
     @InjectQueue('schedule') private scheduleQueue: Queue,
-  ) { }
+  ) {}
 
   /**
    * Run on application boot
@@ -24,18 +24,7 @@ export class ScheduleExecutorService implements OnModuleInit {
       '🚀 Application started - Setting up schedules for today...',
     );
 
-    // Add timeout to prevent hanging during startup
-    try {
-      await Promise.race([
-        this.setupDailySchedules(),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('Schedule setup timeout')), 30000),
-        ),
-      ]);
-    } catch (error) {
-      this.logger.error(`Schedule setup failed: ${error.message}`);
-      // Don't throw to prevent blocking application startup
-    }
+    // this.setupDailySchedules(),
   }
 
   /**

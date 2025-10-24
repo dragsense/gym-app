@@ -34,8 +34,8 @@ export default function RolesPage() {
 
     return (
         <PageInnerLayout Header={<Header />}>
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="grid grid-cols-3">
                     <TabsTrigger value="roles">Roles</TabsTrigger>
                     <TabsTrigger value="permissions">Permissions</TabsTrigger>
                     <TabsTrigger value="resources">Resources</TabsTrigger>
@@ -47,19 +47,25 @@ export default function RolesPage() {
                         deleteFn={deleteRole}
                         storeKey={ROLES_STORE_KEY}
                         onDeleteSuccess={() => queryClient.invalidateQueries({ queryKey: [ROLES_STORE_KEY + "-list"] })}
-                        SingleComponent={() => <div>Role View Component</div>}
+                        SingleComponent={() => null}
                         actionComponents={[
                             {
                                 action: 'createOrUpdate',
                                 comp: RoleForm
                             },
-                            { action: 'viewPermissions', 
-                                comp: ViewRolePermissions },
+                            {
+                                action: 'viewPermissions',
+                                comp: ViewRolePermissions
+                            },
                         ]}
                     />
 
                     <ListHandler<IRole, any>
                         queryFn={fetchRoles}
+                        initialParams={{
+                            _relations: 'permissions',
+                            _countable: 'permissions'
+                        }}
                         ListComponent={RoleList}
                         storeKey={ROLES_STORE_KEY}
 
@@ -72,7 +78,7 @@ export default function RolesPage() {
                         deleteFn={deletePermission}
                         storeKey={PERMISSIONS_STORE_KEY}
                         onDeleteSuccess={() => queryClient.invalidateQueries({ queryKey: [PERMISSIONS_STORE_KEY + "-list"] })}
-                        SingleComponent={() => <div>Permission View Component</div>}
+                        SingleComponent={() => null}
                         actionComponents={[
                             {
                                 action: 'createOrUpdate',
@@ -83,6 +89,10 @@ export default function RolesPage() {
 
                     <ListHandler<IPermission, any>
                         queryFn={fetchPermissions}
+                        initialParams={{
+                            _relations: 'resource',
+                            _select: 'resource.displayName, resource.name'
+                        }}
                         ListComponent={PermissionList}
                         storeKey={PERMISSIONS_STORE_KEY}
 
@@ -93,7 +103,7 @@ export default function RolesPage() {
                     <SingleHandler<IResource, any>
                         queryFn={fetchResource}
                         storeKey={RESOURCES_STORE_KEY}
-                        SingleComponent={() => <div>Resource View Component</div>}
+                        SingleComponent={() => null}
                         actionComponents={[
                             {
                                 action: 'udpate',
@@ -109,7 +119,7 @@ export default function RolesPage() {
                     />
                 </TabsContent>
             </Tabs>
-        </PageInnerLayout>
+        </PageInnerLayout >
     );
 }
 

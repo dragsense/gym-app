@@ -9,15 +9,13 @@ services:
     ports:
       - "3000:3000" # Backend port
       - "5173:5173" # Frontend port
-    environment:
-      NODE_ENV: development
-      VITE_HOST: 0.0.0.0
-      VITE_PORT: 5173
+    env_file:
+      - ../backend/.env
+      - ../frontend/.env.dev
     volumes:
       - ../frontend:/app/frontend
       - ../backend:/app/backend
       - ../shared:/app/shared
-      - ../.git:/app/.git
       - /app/frontend/node_modules
       - /app/backend/node_modules
       - /app/shared/node_modules
@@ -86,5 +84,4 @@ services:
 
 volumes:
   postgres_data:
-
 #docker-compose up -d

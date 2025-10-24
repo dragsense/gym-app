@@ -12,9 +12,7 @@ export interface ResourcePermissionContext {
 
 @Injectable()
 export class PermissionService {
-  constructor(
-    private readonly dataSource: DataSource,
-  ) {}
+  constructor(private readonly dataSource: DataSource) {}
 
   /**
    * Set the entity for this service instance
@@ -28,7 +26,9 @@ export class PermissionService {
   /**
    * Get entity's complete permission context
    */
-  async getEntityPermissionContext(entityId: number): Promise<ResourcePermissionContext> {
+  async getEntityPermissionContext(
+    entityId: number,
+  ): Promise<ResourcePermissionContext> {
     if (!this.entity) {
       throw new Error('Entity not set. Call setEntity() first.');
     }
@@ -39,7 +39,7 @@ export class PermissionService {
     // Get the actual entity from database with its relationships
     const entity = await entityRepository.findOne({
       where: { id: entityId },
-      relations: ['roles', 'permissions']
+      relations: ['roles', 'permissions'],
     });
 
     if (!entity) {
@@ -49,7 +49,8 @@ export class PermissionService {
     // Get roles and permissions from entity's database relationships
     const roles = await this.getEntityRolesFromDatabase(entity);
     const permissions = await this.getEntityPermissionsFromDatabase(entity);
-    const columnPermissions = await this.getEntityColumnPermissionsFromDatabase(entity);
+    const columnPermissions =
+      await this.getEntityColumnPermissionsFromDatabase(entity);
 
     return {
       resourceId: entityId,
@@ -64,7 +65,7 @@ export class PermissionService {
    */
   private async getEntityRolesFromDatabase(entity: any): Promise<string[]> {
     const roles: string[] = [];
-    
+
     // Get roles directly from entity
     if (entity.roles) {
       for (const role of entity.roles) {
@@ -80,9 +81,11 @@ export class PermissionService {
   /**
    * Get permissions from entity's database relationships
    */
-  private async getEntityPermissionsFromDatabase(entity: any): Promise<string[]> {
+  private async getEntityPermissionsFromDatabase(
+    entity: any,
+  ): Promise<string[]> {
     const permissions: string[] = [];
-    
+
     // Get direct permissions from entity
     if (entity.permissions) {
       for (const permission of entity.permissions) {
@@ -99,9 +102,11 @@ export class PermissionService {
   /**
    * Get column permissions from entity's database relationships
    */
-  private async getEntityColumnPermissionsFromDatabase(entity: any): Promise<Record<string, any>> {
+  private async getEntityColumnPermissionsFromDatabase(
+    entity: any,
+  ): Promise<Record<string, any>> {
     const columnPermissions: Record<string, any> = {};
-    
+
     if (entity.permissions) {
       for (const permission of entity.permissions) {
         if (permission.includedColumns || permission.excludedColumns) {
@@ -122,7 +127,7 @@ export class PermissionService {
   async hasPermission(
     entityId: number,
     resourceName: string,
-    action: EPermissionAction
+    action: EPermissionAction,
   ): Promise<boolean> {
     const context = await this.getEntityPermissionContext(entityId);
     const permissionString = `${resourceName}:${action}`;
@@ -133,9 +138,11 @@ export class PermissionService {
     }
 
     // Check wildcard permissions
-    if (context.permissions.includes(`${resourceName}:*`) || 
-        context.permissions.includes(`*:${action}`) ||
-        context.permissions.includes('*:*')) {
+    if (
+      context.permissions.includes(`${resourceName}:*`) ||
+      context.permissions.includes(`*:${action}`) ||
+      context.permissions.includes('*:*')
+    ) {
       return true;
     }
 
@@ -149,14 +156,19 @@ export class PermissionService {
     entityId: number,
     resourceName: string,
     columns: string[],
-    action: 'read' | 'write' = 'read'
-  ): Promise<{ allowed: string[], denied: string[] }> {
+    action: 'read' | 'write' = 'read',
+  ): Promise<{ allowed: string[]; denied: string[] }> {
     const context = await this.getEntityPermissionContext(entityId);
     const allowed: string[] = [];
     const denied: string[] = [];
 
     for (const column of columns) {
-      const canAccess = await this.canAccessColumn(entityId, resourceName, column, action);
+      const canAccess = await this.canAccessColumn(
+        entityId,
+        resourceName,
+        column,
+        action,
+      );
       if (canAccess) {
         allowed.push(column);
       } else {
@@ -174,10 +186,10 @@ export class PermissionService {
     entityId: number,
     resourceName: string,
     columnName: string,
-    action: 'read' | 'write' = 'read'
+    action: 'read' | 'write' = 'read',
   ): Promise<boolean> {
     const context = await this.getEntityPermissionContext(entityId);
-    
+
     // Get column permissions for this resource
     const resourcePermissions = context.columnPermissions[resourceName] || {};
     const columnPermission = resourcePermissions[columnName];
@@ -210,12 +222,17 @@ export class PermissionService {
     entityId: number,
     resourceName: string,
     data: T,
-    action: 'read' | 'write' = 'read'
+    action: 'read' | 'write' = 'read',
   ): Promise<Partial<T>> {
     const filteredData: Partial<T> = {};
 
     for (const [key, value] of Object.entries(data)) {
-      const canAccess = await this.canAccessColumn(entityId, resourceName, key, action);
+      const canAccess = await this.canAccessColumn(
+        entityId,
+        resourceName,
+        key,
+        action,
+      );
       if (canAccess) {
         filteredData[key as keyof T] = value;
       }
@@ -245,20 +262,22 @@ export class PermissionService {
    */
   async hasAnyPermission(
     entityId: number,
-    permissions: string[]
+    permissions: string[],
   ): Promise<boolean> {
     const resourcePermissions = await this.getResourcePermissions(entityId);
-    
-    return permissions.some(permission => {
+
+    return permissions.some((permission) => {
       if (resourcePermissions.includes(permission)) {
         return true;
       }
 
       // Check wildcard permissions
       const [resource, action] = permission.split(':');
-      if (resourcePermissions.includes(`${resource}:*`) || 
-          resourcePermissions.includes(`*:${action}`) ||
-          resourcePermissions.includes('*:*')) {
+      if (
+        resourcePermissions.includes(`${resource}:*`) ||
+        resourcePermissions.includes(`*:${action}`) ||
+        resourcePermissions.includes('*:*')
+      ) {
         return true;
       }
 
@@ -271,20 +290,22 @@ export class PermissionService {
    */
   async hasAllPermissions(
     entityId: number,
-    permissions: string[]
+    permissions: string[],
   ): Promise<boolean> {
     const resourcePermissions = await this.getResourcePermissions(entityId);
-    
-    return permissions.every(permission => {
+
+    return permissions.every((permission) => {
       if (resourcePermissions.includes(permission)) {
         return true;
       }
 
       // Check wildcard permissions
       const [resource, action] = permission.split(':');
-      if (resourcePermissions.includes(`${resource}:*`) || 
-          resourcePermissions.includes(`*:${action}`) ||
-          resourcePermissions.includes('*:*')) {
+      if (
+        resourcePermissions.includes(`${resource}:*`) ||
+        resourcePermissions.includes(`*:${action}`) ||
+        resourcePermissions.includes('*:*')
+      ) {
         return true;
       }
 

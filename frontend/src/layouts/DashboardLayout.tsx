@@ -9,6 +9,9 @@ import { Outlet } from "react-router-dom";
 // Config
 import { ROUTE_TITLES } from "@/config/routes.config";
 
+// Hooks
+import { useI18n } from "@/hooks/use-i18n";
+
 
 // Layout Components
 import { AppSidebar } from "@/components/layout-ui/app-sidebar";
@@ -31,7 +34,8 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   // React 19: Essential IDs
   const componentId = useId();
-  
+  const { t } = useI18n();
+
   const location = useLocation();
 
   // React 19: Memoized route title calculation for better performance
@@ -72,7 +76,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
 
         <footer className="text-center py-2 text-sm text-muted-foreground">
-          © {new Date().getFullYear()} WEB TEMPLATE
+          © {new Date().getFullYear()} {t('appName')}
         </footer>
       </SidebarInset>
     </SidebarProvider>

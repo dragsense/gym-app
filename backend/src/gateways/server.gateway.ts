@@ -1,55 +1,121 @@
 import {
-    WebSocketGateway,
-    SubscribeMessage,
-    MessageBody,
-    WebSocketServer,
-    ConnectedSocket,
-    OnGatewayInit,
+  WebSocketGateway,
+  WebSocketServer,
+  OnGatewayInit,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { LoggerService } from '@/common/logger/logger.service';
 
 @WebSocketGateway({ cors: { origin: '*' } })
 export class ServerGateway implements OnGatewayInit {
-    @WebSocketServer()
-    server: Server;
+  @WebSocketServer()
+  server: Server;
 
-    private readonly logger = new LoggerService(ServerGateway.name);
-    private static instance: ServerGateway;
+  private readonly logger = new LoggerService(ServerGateway.name);
+  private static instance: ServerGateway;
 
-    afterInit(server: Server) { 
-        this.logger.log('🚀 Server Gateway initialized');
-        ServerGateway.instance = this;
+  constructor() {}
+
+  afterInit() {
+    this.logger.log('🚀 Server Gateway initialized');
+    ServerGateway.instance = this;
+  }
+
+  /**
+   * Get the global ServerGateway instance
+   */
+  static getInstance(): ServerGateway {
+    return ServerGateway.instance;
+  }
+
+  /**
+   * Emit a message to all connected clients
+   */
+  emitToAll(event: string, data: unknown): void {
+    if (!this.server) {
+      this.logger.warn(
+        'WebSocket server not initialized. Cannot emit message.',
+      );
+      return;
     }
 
-    handleConnection(client: Socket) {
-        this.logger.log(`🔌 Client connected: ${client.id}`);
+    this.server.emit(event, data);
+    this.logger.log(`📡 Emitted '${event}' to all clients`);
+  }
+
+  /**
+   * Emit a message to a specific client by socket ID
+   */
+  emitToClient(clientId: string, event: string, data: unknown): void {
+    if (!this.server) {
+      this.logger.warn(
+        'WebSocket server not initialized. Cannot emit message.',
+      );
+      return;
     }
 
-    handleDisconnect(client: Socket) {
-        this.logger.log(`🔌 Client disconnected: ${client.id}`);
+    this.server.to(clientId).emit(event, data);
+    this.logger.log(`📡 Emitted '${event}' to client ${clientId}`);
+  }
+
+  /**
+   * Emit a message to multiple clients by socket IDs
+   */
+  emitToClients(clientIds: string[], event: string, data: unknown): void {
+    if (!this.server) {
+      this.logger.warn(
+        'WebSocket server not initialized. Cannot emit message.',
+      );
+      return;
     }
 
-    @SubscribeMessage('joinUserRoom')
-    handleJoinUserRoom(
-        @MessageBody('userId') userId: number,
-        @ConnectedSocket() client: Socket
-    ) {
-        const userRoom = `user_${userId}`;
-        client.join(userRoom);
-        this.logger.log(`👤 User ${userId} joined room: ${userRoom}`);
-        return { success: true, message: `Joined user room ${userId}` };
+    clientIds.forEach((clientId) => {
+      this.server.to(clientId).emit(event, data);
+    });
+
+    this.logger.log(`📡 Emitted '${event}' to ${clientIds.length} clients`);
+  }
+
+  /**
+   * Emit a message to a specific room
+   */
+  emitToRoom(roomName: string, event: string, data: unknown): void {
+    if (!this.server) {
+      this.logger.warn(
+        'WebSocket server not initialized. Cannot emit message.',
+      );
+      return;
     }
 
-    @SubscribeMessage('leaveUserRoom')
-    handleLeaveUserRoom(
-        @MessageBody('userId') userId: number,
-        @ConnectedSocket() client: Socket
-    ) {
-        const userRoom = `user_${userId}`;
-        client.leave(userRoom);
-        this.logger.log(`👤 User ${userId} left room: ${userRoom}`);
-        return { success: true, message: `Left user room ${userId}` };
-    }
+    this.server.to(roomName).emit(event, data);
+    this.logger.log(`📡 Emitted '${event}' to room ${roomName}`);
+  }
 
-} 
+  handleConnection(client: Socket) {
+    this.logger.log(`🔌 Client connected: ${client.id}`);
+  }
+
+  handleDisconnect(client: Socket) {
+    this.logger.log(`🔌 Client disconnected: ${client.id}`);
+  }
+
+  /**
+   * Get all connected client IDs
+   */
+  getConnectedClientIds(): string[] {
+    if (!this.server) {
+      return [];
+    }
+    return Array.from(this.server.sockets.sockets.keys());
+  }
+
+  /**
+   * Get connected clients count
+   */
+  getConnectedClientsCount(): number {
+    if (!this.server) {
+      return 0;
+    }
+    return this.server.sockets.sockets.size;
+  }
+}

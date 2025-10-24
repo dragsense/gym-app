@@ -22,21 +22,14 @@ import { RoleFormModal, type IRoleFormModalExtraProps } from "@/components/admin
 import { createRole, updateRole } from "@/services/roles.api";
 import { strictDeepMerge } from "@/utils";
 import { CreateRoleDto, UpdateRoleDto } from "@shared/dtos/role-dtos";
-
-// Types
-export type TRoleFormData = {
-  name: string;
-  code: string;
-  description?: string;
-  status: string;
-  isSystem: boolean;
-};
+import type { TRoleData } from '@shared/types';
+import { ERoleStatus } from '@shared/enums/role/role.enum';
 
 export type TRoleExtraProps = {
   // Add any extra props needed
 }
 
-interface IRoleFormProps extends THandlerComponentProps<TSingleHandlerStore<IRole, TRoleExtraProps>> {}
+interface IRoleFormProps extends THandlerComponentProps<TSingleHandlerStore<IRole, TRoleExtraProps>> { }
 
 export default function RoleForm({
   storeKey,
@@ -45,7 +38,7 @@ export default function RoleForm({
   // React 19: Essential IDs and transitions
   const componentId = useId();
   const [, startTransition] = useTransition();
-  
+
   const queryClient = useQueryClient();
 
   if (!store) {
@@ -62,16 +55,16 @@ export default function RoleForm({
 
   // React 19: Memoized initial values with deferred processing
   const initialValues = useMemo(() => {
-    const INITIAL_VALUES: TRoleFormData = {
+    const INITIAL_VALUES: TRoleData = {
       name: "",
       code: "",
       description: "",
-      status: "active",
-      isSystem: false,
+      status: ERoleStatus.ACTIVE,
+      permissions: [],
     };
-    return strictDeepMerge<TRoleFormData>(INITIAL_VALUES, response ?? {});
+    return strictDeepMerge<TRoleData>(INITIAL_VALUES, response ?? {});
   }, [response]);
-  
+
   // React 19: Deferred values for performance
   const deferredInitialValues = useDeferredValue(initialValues);
 

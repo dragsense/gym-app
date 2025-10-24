@@ -21,23 +21,16 @@ import { PermissionFormModal, type IPermissionFormModalExtraProps } from "@/comp
 // Services
 import { createPermission, updatePermission } from "@/services/roles.api";
 import { strictDeepMerge } from "@/utils";
-import { CreatePermissionDto, UpdatePermissionDto } from "@shared/dtos/role-dtos";
+import { CreatePermissionDto, ResourceDto, UpdatePermissionDto } from "@shared/dtos/role-dtos";
+import type { TPermissionData } from '@shared/types';
+import { EPermissionAction, EPermissionStatus } from '@shared/enums';
 
-// Types
-export type TPermissionFormData = {
-  name: string;
-  displayName: string;
-  description?: string;
-  action: string;
-  status: string;
-  resourceId: number;
-};
 
 export type TPermissionExtraProps = {
   // Add any extra props needed
 }
 
-interface IPermissionFormProps extends THandlerComponentProps<TSingleHandlerStore<IPermission, TPermissionExtraProps>> {}
+interface IPermissionFormProps extends THandlerComponentProps<TSingleHandlerStore<IPermission, TPermissionExtraProps>> { }
 
 export default function PermissionForm({
   storeKey,
@@ -46,7 +39,7 @@ export default function PermissionForm({
   // React 19: Essential IDs and transitions
   const componentId = useId();
   const [, startTransition] = useTransition();
-  
+
   const queryClient = useQueryClient();
 
   if (!store) {
@@ -63,17 +56,17 @@ export default function PermissionForm({
 
   // React 19: Memoized initial values with deferred processing
   const initialValues = useMemo(() => {
-    const INITIAL_VALUES: TPermissionFormData = {
+    const INITIAL_VALUES: TPermissionData = {
       name: "",
       displayName: "",
       description: "",
-      action: "read",
-      status: "active",
-      resourceId: 1,
+      action: EPermissionAction.READ,
+      status: EPermissionStatus.ACTIVE,
+      resource: {} as ResourceDto,
     };
-    return strictDeepMerge<TPermissionFormData>(INITIAL_VALUES, response ?? {});
+    return strictDeepMerge<TPermissionData>(INITIAL_VALUES, response ?? {});
   }, [response]);
-  
+
   // React 19: Deferred values for performance
   const deferredInitialValues = useDeferredValue(initialValues);
 
@@ -100,7 +93,7 @@ export default function PermissionForm({
 
   return (
     <div data-component-id={componentId}>
-      <FormHandler<TPermissionFormData, any, IPermissionFormModalExtraProps>
+      <FormHandler<TPermissionData, any, IPermissionFormModalExtraProps>
         mutationFn={mutationFn}
         FormComponent={PermissionFormModal}
         storeKey={storeKey}

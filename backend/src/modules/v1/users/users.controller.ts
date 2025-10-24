@@ -40,13 +40,17 @@ import {
   UserWithProfileSafeDto,
 } from '@shared/dtos';
 import { User } from './entities/user.entity';
+import { CacheService } from '@/common/cache/cache.service';
 
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('access-token')
 @ApiTags('Users')
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) { }
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly cacheService: CacheService,
+  ) {}
 
   @ApiOperation({ summary: 'Get all users with pagination and filtering' })
   @ApiQuery({ type: UserListDto })
@@ -57,7 +61,10 @@ export class UsersController {
   })
   @Get()
   findAll(@Query() query: UserListDto, @AuthUser() user: any) {
-    return this.usersService.get(query, UserListDto);
+    return this.cacheService.getOrSet(
+      'users',
+      async () => await this.usersService.get(query, UserListDto),
+    );
   }
 
   @ApiOperation({ summary: 'Get authenticated user' })

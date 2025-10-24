@@ -1,39 +1,57 @@
 import {
-    IsOptional,
+  IsOptional,
   IsBoolean,
   IsString,
   IsNotEmpty,
-} from 'class-validator';
-import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
-import { PaginationMetaDto } from '../common/pagination.dto';
-import { ListQueryDto } from '../common/list-query.dto';
-import {  FieldType } from '../../decorators';
-import { OmitType } from '../../lib/dto-type-adapter';
+  IsNumber,
+} from "class-validator";
+import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
+import { PaginationMetaDto } from "../common/pagination.dto";
+import { ListQueryDto } from "../common/list-query.dto";
+import { FieldType } from "../../decorators";
+import { OmitType } from "../../lib/dto-type-adapter";
 
 export class ResourceDto {
-  @ApiProperty({ example: 1, description: 'Resource ID' })
+  @ApiProperty({ example: 1, description: "Resource ID" })
+  @IsNumber()
   id: number;
 
-  @ApiProperty({ example: 'users', description: 'Resource name (table name)' })
-  name: string;
+  @ApiProperty({ example: "users", description: "Resource name (table name)" })
+  @IsOptional()
+  @IsString()
+  name?: string;
 
-  @ApiProperty({ example: 'User', description: 'Entity class name' })
-  entityName: string;
+  @ApiProperty({ example: "User", description: "Entity class name" })
+  @IsOptional()
+  @IsString()
+  entityName?: string;
 
-  @ApiProperty({ example: 'User Management', description: 'Resource display name' })
-  displayName: string;
+  @ApiProperty({
+    example: "User Management",
+    description: "Resource display name",
+  })
+  @IsOptional()
+  @IsString()
+  displayName?: string;
 
-  @ApiProperty({ example: 'User entity for authentication and authorization', description: 'Resource description' })
+  @ApiProperty({
+    example: "User entity for authentication and authorization",
+    description: "Resource description",
+  })
+  @IsOptional()
+  @IsString()
   description?: string;
 
-  @ApiProperty({ example: true, description: 'Whether resource is active' })
-  isActive: boolean;
+  @ApiProperty({ example: true, description: "Whether resource is active" })
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
 
-  @ApiProperty({ example: '2024-01-01T00:00:00.000Z', description: 'Creation timestamp' })
-  createdAt: Date;
+  @IsOptional()
+  createdAt?: Date;
 
-  @ApiProperty({ example: '2024-01-01T00:00:00.000Z', description: 'Last update timestamp' })
-  updatedAt: Date;
+  @IsOptional()
+  updatedAt?: Date;
 }
 
 export class ResourcePaginatedDto extends PaginationMetaDto {
@@ -42,40 +60,52 @@ export class ResourcePaginatedDto extends PaginationMetaDto {
 }
 
 export class ResourceListDto extends ListQueryDto {
-  @ApiPropertyOptional({ example: true, description: 'Filter by active resources' })
+  @ApiPropertyOptional({
+    example: true,
+    description: "Filter by active resources",
+  })
   @IsOptional()
   @IsBoolean()
-  @FieldType('checkbox', false)
+  @FieldType("checkbox", false)
   isActive?: boolean;
 }
 
-
-
 export class CreateResourceDto {
-  @ApiProperty({ example: 'users', description: 'Resource name (table name)' })
+  @ApiProperty({ example: "users", description: "Resource name (table name)" })
   @IsString()
   @IsNotEmpty()
   name: string;
 
-  @ApiProperty({ example: 'User', description: 'Entity class name' })
+  @ApiProperty({ example: "User", description: "Entity class name" })
   @IsString()
   @IsNotEmpty()
   entityName: string;
 
-  @ApiProperty({ example: 'User Management', description: 'Resource display name' })
+  @ApiProperty({
+    example: "User Management",
+    description: "Resource display name",
+  })
   @IsString()
   @IsNotEmpty()
   displayName: string;
 
-  @ApiPropertyOptional({ example: 'User entity for authentication and authorization', description: 'Resource description' })
+  @ApiPropertyOptional({
+    example: "User entity for authentication and authorization",
+    description: "Resource description",
+  })
   @IsOptional()
   @IsString()
   description?: string;
 
-  @ApiPropertyOptional({ example: true, description: 'Whether resource is active' })
+  @ApiPropertyOptional({
+    example: true,
+    description: "Whether resource is active",
+  })
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
-} 
+}
 
-export class UpdateResourceDto extends PartialType(OmitType(CreateResourceDto, ['entityName'])) {}
+export class UpdateResourceDto extends PartialType(
+  OmitType(CreateResourceDto, ["entityName"])
+) {}

@@ -14,6 +14,7 @@ import {
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/shared-ui/theme-toggle";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 // Hooks
 import { useAuthUser } from "@/hooks/use-auth-user";
@@ -31,14 +32,14 @@ export function AppHeader({ title }: AppHeaderProps) {
   // React 19: Essential IDs and transitions
   const componentId = useId();
   const [, startTransition] = useTransition();
-  
+
   // Title is available for future use if needed
   const [isDesktopSettingsOpen, setIsDesktopSettingsOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
-  
+
   const { user } = useAuthUser();
   const { logout, isLoading } = useLogout();
-  
+
   // React 19: Deferred user data for better performance
   const deferredUser = useDeferredValue(user);
 
@@ -75,7 +76,7 @@ export function AppHeader({ title }: AppHeaderProps) {
   };
 
   return (
-    <header 
+    <header
       className="group-has-data-[collapsible=icon]/sidebar-wrapper:h-20 flex h-30 shrink-0 items-center gap-2 transition-[width,height] ease-linear"
       data-component-id={componentId}
     >
@@ -85,16 +86,18 @@ export function AppHeader({ title }: AppHeaderProps) {
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Language Switcher */}
+          <LanguageSwitcher />
           {/* Theme Toggle */}
           <ThemeToggle />
         </div>
 
-        <div className="flex items-center gap-5 p-4 text-left text-sm bg-header rounded-full border-1 p-4 shadow-sm">          
+        <div className="flex items-center gap-5 p-4 text-left text-sm bg-header rounded-full border-1 p-4 shadow-sm">
           {/* Profile Dropdown Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 className="flex items-center gap-3 p-2 hover:bg-muted/50 transition-all duration-200 rounded-lg"
               >
                 <Avatar className="h-8 w-8 rounded-lg">
@@ -117,8 +120,8 @@ export function AppHeader({ title }: AppHeaderProps) {
                 <ChevronDown className="h-3 w-3 opacity-60" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent 
-              align="end" 
+            <DropdownMenuContent
+              align="end"
               className="w-64 animate-in slide-in-from-top-2 fade-in duration-200 shadow-lg border border-border/50"
               sideOffset={8}
             >
@@ -142,10 +145,10 @@ export function AppHeader({ title }: AppHeaderProps) {
 
               {/* Desktop Profile Actions */}
               <div className="hidden md:block p-2">
-               
+
               </div>
 
-        
+
               <DropdownMenuSeparator />
 
               {/* Logout Button */}

@@ -12,13 +12,16 @@ import type { TPermissionFormData } from "@/page-components/permissions/permissi
 import { Button } from "@/components/ui/button";
 import { ModalForm } from "@/components/form-ui/modal-form";
 import type { THandlerComponentProps } from "@/@types/handler-types";
+import type { TCustomInputWrapper, TFieldConfigObject } from "@/@types/form/field-config.type";
+import { SearchableInputWrapper } from "@/components/shared-ui/searchable-input-wrapper";
+import { useSearchableResources } from "@/hooks/use-searchable";
 
 export interface IPermissionFormModalExtraProps {
   open: boolean;
   onClose: () => void;
 }
 
-interface IPermissionFormModalProps extends THandlerComponentProps<TFormHandlerStore<TPermissionFormData, any, IPermissionFormModalExtraProps>> {}
+interface IPermissionFormModalProps extends THandlerComponentProps<TFormHandlerStore<TPermissionFormData, any, IPermissionFormModalExtraProps>> { }
 
 export const PermissionFormModal = React.memo(function PermissionFormModal({
   storeKey,
@@ -37,7 +40,36 @@ export const PermissionFormModal = React.memo(function PermissionFormModal({
   const onClose = store((state) => state.extra.onClose);
 
   // React 19: Memoized fields for better performance
-  const fields = useMemo(() => store((state) => state.fields), [store]);
+  const storeFields = store((state) => state.fields)
+
+  const ResourceSelect = React.memo(
+    (props: TCustomInputWrapper) => {
+      return <SearchableInputWrapper<TPermissionFormData>
+        {...props}
+        modal={true}
+        useSearchable={() => useSearchableResources({})}
+        getLabel={(item) => {
+          return `${item.displayName}`
+        }}
+        getKey={(item) => item.id.toString()}
+        getValue={(item) => { return { id: item.id, displayName: item.displayName } }}
+        shouldFilter={false}
+      />
+    }
+  );
+
+
+  // React 19: Memoized fields for better performance
+  const fields = useMemo(() => ({
+    ...storeFields,
+    resource: {
+      ...storeFields.resource,
+      type: 'custom' as const,
+      Component: ResourceSelect
+    },
+
+
+  } as TFieldConfigObject<TPermissionFormData>), [storeFields]);
 
   const inputs = useInput<TPermissionFormData>({
     fields,
@@ -87,34 +119,47 @@ export const PermissionFormModal = React.memo(function PermissionFormModal({
         footerContent={formButtons}
         width="2xl"
       >
-      <div className="space-y-6">
-        {/* Basic Info */}
-        <div>
-          <h3 className="text-sm font-semibold mb-3">Basic Info</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-            {inputs.name}
-            {inputs.displayName}
+        <div className="space-y-6">
+          {/* Basic Info */}
+          <div>
+            <h3 className="text-sm font-semibold mb-3">Basic Info</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+              {inputs.name}
+              {inputs.displayName}
+            </div>
           </div>
-        </div>
 
-        {/* Permission Details */}
-        <div>
-          <h3 className="text-sm font-semibold mb-3">Permission Details</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-            {inputs.action}
-            {inputs.resourceId}
+          {/* Permission Details */}
+          <div>
+            <h3 className="text-sm font-semibold mb-3">Permission Details</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+              {inputs.action}
+              {inputs.resource}
+            </div>
           </div>
-        </div>
 
-        {/* Additional Details */}
-        <div>
-          <h3 className="text-sm font-semibold mb-3">Additional Details</h3>
-          <div className="grid grid-cols-1 gap-6 items-start">
-            {inputs.description}
-            {inputs.status}
+          <div>
+            <h3 className="text-sm font-semibold mb-3">Included Columns</h3>
+            <div className="grid grid-cols-1 gap-6 items-start">
+              {inputs.includedColumns}
+            </div>
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold mb-3">Excluded Columns</h3>
+            <div className="grid grid-cols-1 gap-6 items-start">
+              {inputs.excludedColumns}
+            </div>
+          </div>
+
+          {/* Additional Details */}
+          <div>
+            <h3 className="text-sm font-semibold mb-3">Additional Details</h3>
+            <div className="grid grid-cols-1 gap-6 items-start">
+              {inputs.description}
+              {inputs.status}
+            </div>
           </div>
         </div>
-      </div>
       </ModalForm>
     </>
   );

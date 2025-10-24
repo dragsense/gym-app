@@ -14,7 +14,8 @@ services:
     env_file:
       - ../frontend/.env.dev
     volumes:
-      - ..:/app:cached
+      - ../frontend:/app/frontend
+      - ../shared:/app/shared
       - /app/frontend/node_modules
       - /app/shared/node_modules
     working_dir: /app/frontend

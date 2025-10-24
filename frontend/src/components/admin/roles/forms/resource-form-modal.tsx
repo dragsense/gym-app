@@ -18,7 +18,7 @@ export interface IResourceFormModalExtraProps {
   onClose: () => void;
 }
 
-interface IResourceFormModalProps extends THandlerComponentProps<TFormHandlerStore<TResourceData, any, IResourceFormModalExtraProps>> {}
+interface IResourceFormModalProps extends THandlerComponentProps<TFormHandlerStore<TResourceData, any, IResourceFormModalExtraProps>> { }
 
 export const ResourceFormModal = React.memo(function ResourceFormModal({
   storeKey,
@@ -38,6 +38,8 @@ export const ResourceFormModal = React.memo(function ResourceFormModal({
 
   // React 19: Memoized fields for better performance
   const fields = useMemo(() => store((state) => state.fields), [store]);
+
+
 
   const inputs = useInput<TResourceData>({
     fields,

@@ -8,7 +8,7 @@ import {
   Query,
   Param,
   UseGuards,
-  ParseIntPipe
+  ParseIntPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -16,7 +16,7 @@ import {
   ApiResponse,
   ApiBearerAuth,
   ApiQuery,
-  ApiParam
+  ApiParam,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@/guards/jwt-auth.gaurd';
 import { RolesService } from './roles.service';
@@ -36,9 +36,8 @@ import {
   ResourceListDto,
   ResourceDto,
   ResourcePaginatedDto,
-  UpdateResourceDto
+  UpdateResourceDto,
 } from '@shared/dtos/role-dtos';
-
 
 @ApiTags('Roles & Permissions')
 @ApiBearerAuth()
@@ -49,7 +48,7 @@ export class RolesController {
     private readonly rolesService: RolesService,
     private readonly permissionService: PermissionsService,
     private readonly resourceService: ResourcesService,
-  ) { }
+  ) {}
 
   // Role endpoints
   @Get()
@@ -70,7 +69,7 @@ export class RolesController {
   @ApiResponse({
     status: 200,
     description: 'Role retrieved successfully',
-    type: RoleDto
+    type: RoleDto,
   })
   @ApiResponse({ status: 404, description: 'Role not found' })
   async findRole(@Param('id', ParseIntPipe) id: number) {
@@ -82,7 +81,7 @@ export class RolesController {
   @ApiResponse({
     status: 201,
     description: 'Role created successfully',
-    type: RoleDto
+    type: RoleDto,
   })
   async createRole(@Body() createRoleDto: CreateRoleDto) {
     return await this.rolesService.create(createRoleDto);
@@ -94,12 +93,12 @@ export class RolesController {
   @ApiResponse({
     status: 200,
     description: 'Role updated successfully',
-    type: RoleDto
+    type: RoleDto,
   })
   @ApiResponse({ status: 404, description: 'Role not found' })
   async updateRole(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updateRoleDto: UpdateRoleDto
+    @Body() updateRoleDto: UpdateRoleDto,
   ) {
     return await this.rolesService.update(id, updateRoleDto);
   }
@@ -115,8 +114,10 @@ export class RolesController {
   }
 
   // Permission endpoints
-  @Get('permissions')
-  @ApiOperation({ summary: 'Get all permissions with pagination and filtering' })
+  @Get('system/permissions')
+  @ApiOperation({
+    summary: 'Get all permissions with pagination and filtering',
+  })
   @ApiQuery({ type: PermissionListDto })
   @ApiResponse({
     status: 200,
@@ -127,20 +128,20 @@ export class RolesController {
     return await this.permissionService.get(queryDto);
   }
 
-  @Get('permissions/:id')
+  @Get('system/permissions/:id')
   @ApiOperation({ summary: 'Get permission by ID' })
   @ApiParam({ name: 'id', description: 'Permission ID' })
   @ApiResponse({
     status: 200,
     description: 'Permission retrieved successfully',
-    type: PermissionDto
+    type: PermissionDto,
   })
   @ApiResponse({ status: 404, description: 'Permission not found' })
   async findPermission(@Param('id', ParseIntPipe) id: number) {
     return await this.permissionService.getSingle(id);
   }
 
-  @Get(':id/permissions')
+  @Get('system/:id/permissions')
   @ApiOperation({ summary: 'Get permissions by role ID' })
   @ApiParam({ name: 'id', description: 'Role ID' })
   @ApiQuery({ type: PermissionListDto })
@@ -151,21 +152,24 @@ export class RolesController {
   })
   async findPermissionsByRole(
     @Param('id', ParseIntPipe) roleId: number,
-    @Query() queryDto: PermissionListDto
+    @Query() queryDto: PermissionListDto,
   ) {
-    return await this.permissionService.get({
-      ...queryDto,
-      roleId,
-      _relations: [...(queryDto._relations || []), 'role']
-    }, PermissionListDto);
+    return await this.permissionService.get(
+      {
+        ...queryDto,
+        roleId,
+        _relations: [...(queryDto._relations || []), 'role'],
+      },
+      PermissionListDto,
+    );
   }
 
-  @Post('permissions')
+  @Post('system/permissions')
   @ApiOperation({ summary: 'Create a new permission' })
   @ApiResponse({
     status: 201,
     description: 'Permission created successfully',
-    type: PermissionDto
+    type: PermissionDto,
   })
   async createPermission(@Body() createPermissionDto: CreatePermissionDto) {
     return await this.permissionService.create(createPermissionDto);
@@ -177,12 +181,12 @@ export class RolesController {
   @ApiResponse({
     status: 200,
     description: 'Permission updated successfully',
-    type: PermissionDto
+    type: PermissionDto,
   })
   @ApiResponse({ status: 404, description: 'Permission not found' })
   async updatePermission(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updatePermissionDto: UpdatePermissionDto
+    @Body() updatePermissionDto: UpdatePermissionDto,
   ) {
     return await this.permissionService.update(id, updatePermissionDto);
   }
@@ -198,7 +202,7 @@ export class RolesController {
   }
 
   // Resource endpoints
-  @Get('resources')
+  @Get('system/resources')
   @ApiOperation({ summary: 'Get all resources with pagination and filtering' })
   @ApiQuery({ type: ResourceListDto })
   @ApiResponse({
@@ -210,31 +214,31 @@ export class RolesController {
     return await this.resourceService.get(queryDto);
   }
 
-  @Get('resources/:id')
+  @Get('system/resources/:id')
   @ApiOperation({ summary: 'Get resource by ID' })
   @ApiParam({ name: 'id', description: 'Resource ID' })
   @ApiResponse({
     status: 200,
     description: 'Resource retrieved successfully',
-    type: ResourceDto
+    type: ResourceDto,
   })
   @ApiResponse({ status: 404, description: 'Resource not found' })
   async findResource(@Param('id', ParseIntPipe) id: number) {
     return await this.resourceService.getSingle(id);
   }
 
-  @Put('resources/:id')
+  @Put('system/resources/:id')
   @ApiOperation({ summary: 'Update resource by ID' })
   @ApiParam({ name: 'id', description: 'Resource ID' })
   @ApiResponse({
     status: 200,
     description: 'Resource updated successfully',
-    type: ResourceDto
+    type: ResourceDto,
   })
   @ApiResponse({ status: 404, description: 'Resource not found' })
   async updateResource(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updateResourceDto: UpdateResourceDto
+    @Body() updateResourceDto: UpdateResourceDto,
   ) {
     return await this.resourceService.update(id, updateResourceDto);
   }
