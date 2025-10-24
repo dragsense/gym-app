@@ -1,6 +1,6 @@
 import { registerAs } from '@nestjs/config';
 import { ConfigService } from '@nestjs/config';
-import * as redisStore from 'cache-manager-ioredis';
+import { create } from 'cache-manager-ioredis';
 
 export default registerAs('cache', () => ({
   host: process.env.CACHE_HOST || 'localhost',
@@ -22,7 +22,7 @@ export const getCacheConfig = async (configService: ConfigService) => {
   }
 
   // ✅ When using Dragonfly (Redis-compatible)
-  const store = await redisStore({
+  const store = await create({
     host: cacheConfig.host,
     port: cacheConfig.port,
     password: cacheConfig.password,

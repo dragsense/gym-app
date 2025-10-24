@@ -7,13 +7,13 @@ import * as os from 'os';
 import * as process from 'process';
 import { app } from './app';
 
-export function startCluster() {
+export async function startCluster() {
   const clusterEnabled = process.env.CLUSTER_ENABLED === 'true';
   const numWorkers = os.cpus().length;
 
   if (!clusterEnabled) {
     console.log('Cluster mode disabled - running in single process');
-    app();
+    await app();
     return;
   }
 
@@ -25,23 +25,27 @@ export function startCluster() {
       const worker = cluster.fork();
 
       worker.on('message', (message) => {
-        console.log(`Message from worker ${worker.process.pid}: ${JSON.stringify(message)}`);
+        console.log(
+          `Message from worker ${worker.process.pid}: ${JSON.stringify(message)}`,
+        );
       });
 
       worker.on('exit', (code, signal) => {
-        console.log(`Worker ${worker.process.pid} died with code ${code} signal ${signal}`);
+        console.log(
+          `Worker ${worker.process.pid} died with code ${code} signal ${signal}`,
+        );
         cluster.fork(); // restart worker
       });
     }
 
     const shutdown = () => {
       console.log('Master shutting down, killing all workers...');
-    
+
       const workerIds = cluster.workers ? Object.keys(cluster.workers) : [];
       let remaining = workerIds.length;
-    
+
       if (remaining === 0) process.exit(0);
-    
+
       workerIds.forEach((id) => {
         const worker = cluster.workers![id];
         if (!worker) return;
@@ -52,14 +56,12 @@ export function startCluster() {
         worker.kill('SIGTERM');
       });
     };
-    
 
     process.on('SIGINT', shutdown);
     process.on('SIGTERM', shutdown);
   } else {
     console.log(`Worker ${process.pid} started`);
     app(); // each worker starts the NestJS app
-
   }
 }
 

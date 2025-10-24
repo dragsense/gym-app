@@ -1,9 +1,16 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { CrudService } from '@/common/crud/crud.service';
 import { PaymentMethod } from './entities/payment-method.entity';
-import { CreatePaymentMethodDto, UpdatePaymentMethodDto, PaymentMethodListDto } from '@shared/dtos/payment-methods-dtos';
+import {
+  CreatePaymentMethodDto,
+  UpdatePaymentMethodDto,
+} from '@shared/dtos/payment-methods-dtos';
 import { EventService } from '@/common/helper/services/event.service';
 import { CrudOptions } from '@/common/crud/interfaces/crud.interface';
 import { EPaymentMethodType } from '@shared/enums';
@@ -33,10 +40,13 @@ export class PaymentMethodsService extends CrudService<PaymentMethod> {
       throw new ConflictException('Payment method type already exists');
     }
 
-   return this.create(createPaymentMethodDto);
+    return this.create(createPaymentMethodDto);
   }
 
-  async updatePaymentMethod(id: number, updatePaymentMethodDto: UpdatePaymentMethodDto) {
+  async updatePaymentMethod(
+    id: number,
+    updatePaymentMethodDto: UpdatePaymentMethodDto,
+  ) {
     const paymentMethod = await this.paymentMethodRepository.findOne({
       where: { id },
     });
@@ -46,7 +56,10 @@ export class PaymentMethodsService extends CrudService<PaymentMethod> {
     }
 
     // If changing type, check if new type already exists
-    if (updatePaymentMethodDto.type && updatePaymentMethodDto.type !== paymentMethod.type) {
+    if (
+      updatePaymentMethodDto.type &&
+      updatePaymentMethodDto.type !== paymentMethod.type
+    ) {
       const existingPaymentMethod = await this.paymentMethodRepository.findOne({
         where: { type: updatePaymentMethodDto.type },
       });
@@ -62,12 +75,13 @@ export class PaymentMethodsService extends CrudService<PaymentMethod> {
   /**
    * Check if a payment method is enabled by key/type
    */
-  async isPaymentMethodEnabled(paymentMethodKey: EPaymentMethodType): Promise<boolean> {
+  async isPaymentMethodEnabled(
+    paymentMethodKey: EPaymentMethodType,
+  ): Promise<boolean> {
     const paymentMethod = await this.getSingle({
       type: paymentMethodKey,
-    }); 
+    });
 
     return paymentMethod?.enabled || false;
   }
-
 }

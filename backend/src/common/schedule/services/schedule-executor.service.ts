@@ -1,7 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectQueue } from '@nestjs/bull';
-import { Queue, Job } from 'bull';
+import { Queue } from 'bull';
 import { ScheduleService } from '../schedule.service';
 import { Schedule } from '../entities/schedule.entity';
 import { LoggerService } from '../../logger/logger.service';
@@ -20,8 +20,22 @@ export class ScheduleExecutorService implements OnModuleInit {
    * Get all schedules for today and set up Bull Queue jobs
    */
   async onModuleInit() {
-    this.logger.log('🚀 Application started - Setting up schedules for today...');
-    await this.setupDailySchedules();
+    this.logger.log(
+      '🚀 Application started - Setting up schedules for today...',
+    );
+
+    // Add timeout to prevent hanging during startup
+    try {
+      await Promise.race([
+        this.setupDailySchedules(),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Schedule setup timeout')), 30000),
+        ),
+      ]);
+    } catch (error) {
+      this.logger.error(`Schedule setup failed: ${error.message}`);
+      // Don't throw to prevent blocking application startup
+    }
   }
 
   /**
@@ -52,32 +66,63 @@ export class ScheduleExecutorService implements OnModuleInit {
   }
 
   /**
-  * Clean up previous day's schedules from Bull queue
-  */
+   * Clean up previous day's schedules from Bull queue
+   */
   private async cleanupPreviousSchedules(): Promise<void> {
     try {
-      this.logger.log('Cleaning up previous day\'s schedules...');
+      this.logger.log("Cleaning up previous day's schedules...");
 
-      // Get all jobs from the schedule queue
-      const allJobs = await this.scheduleQueue.getJobs(['waiting', 'active', 'completed', 'failed', 'delayed']);
+      // Get all jobs from the schedule queue with timeout
+      const allJobs = await Promise.race([
+        this.scheduleQueue.getJobs([
+          'waiting',
+          'active',
+          'completed',
+          'failed',
+          'delayed',
+        ]),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Timeout getting jobs')), 10000),
+        ),
+      ]);
 
-      // Remove all jobs from the schedule queue
-      for (const job of allJobs) {
+      this.logger.log(`Found ${allJobs.length} jobs to clean up`);
+
+      // Remove all jobs from the schedule queue with timeout protection
+      const removePromises = allJobs.map(async (job) => {
         try {
-          await job.remove();
+          await Promise.race([
+            job.remove(),
+            new Promise<never>((_, reject) =>
+              setTimeout(() => reject(new Error('Timeout removing job')), 5000),
+            ),
+          ]);
           this.logger.log(`Removed job: ${job.id} from schedule queue`);
         } catch (error) {
           this.logger.error(`Failed to remove job ${job.id}: ${error.message}`);
         }
-      }
+      });
 
-      // Clean the queue completely
-      await this.scheduleQueue.clean(0, 'completed');
-      await this.scheduleQueue.clean(0, 'failed');
+      // Wait for all removals to complete
+      await Promise.allSettled(removePromises);
 
-      this.logger.log('Previous day\'s schedules cleaned up successfully');
+      // Clean the queue completely with timeout protection
+      await Promise.race([
+        Promise.all([
+          this.scheduleQueue.clean(0, 'completed'),
+          this.scheduleQueue.clean(0, 'failed'),
+        ]),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Timeout cleaning queue')), 10000),
+        ),
+      ]);
+
+      this.logger.log("Previous day's schedules cleaned up successfully");
     } catch (error) {
-      this.logger.error(`Failed to cleanup previous schedules: ${error.message}`);
+      this.logger.error(
+        `Failed to cleanup previous schedules: ${error.message}`,
+      );
+      // Don't throw the error to prevent blocking the application startup
     }
   }
 
@@ -96,10 +141,11 @@ export class ScheduleExecutorService implements OnModuleInit {
         await this.scheduleJob(schedule);
       }
     } catch (error) {
-      this.logger.error(`Failed to setup schedule ${schedule.title}: ${error.message}`);
+      this.logger.error(
+        `Failed to setup schedule ${schedule.title}: ${error.message}`,
+      );
     }
   }
-
 
   /**
    * Unified job scheduling using Bull Queue repeat functionality
@@ -112,11 +158,10 @@ export class ScheduleExecutorService implements OnModuleInit {
     const startTime = new Date();
     startTime.setHours(startHour, startMinute, 0, 0);
 
-
     const jobOptions: any = {
       delay: startTime.getTime() - Date.now(),
       removeOnFail: schedule.retryOnFailure ? 50 : 0,
-      attempts:  schedule.retryOnFailure ? schedule.maxRetries : 1,
+      attempts: schedule.retryOnFailure ? schedule.maxRetries : 1,
     };
 
     // If interval is specified, use Bull Queue repeat functionality
@@ -140,16 +185,19 @@ export class ScheduleExecutorService implements OnModuleInit {
       };
     }
 
-    const job = await this.scheduleQueue.add(schedule.action, {
-      ...schedule.data,
-      scheduleId: schedule.id,
-      isRepeating: !!schedule.interval,
-      entityId: schedule.entityId,
-    }, jobOptions);
+    const job = await this.scheduleQueue.add(
+      schedule.action,
+      {
+        ...schedule.data,
+        scheduleId: schedule.id,
+        isRepeating: !!schedule.interval,
+        entityId: schedule.entityId,
+      },
+      jobOptions,
+    );
 
-    this.logger.log(`Scheduled job: ${schedule.title} at ${startHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')} (Job ID: ${job.id})`);
+    this.logger.log(
+      `Scheduled job: ${schedule.title} at ${startHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')} (Job ID: ${job.id})`,
+    );
   }
-
-
 }
-

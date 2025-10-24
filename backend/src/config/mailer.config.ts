@@ -12,15 +12,14 @@ export default registerAs('mailer', () => ({
   user: process.env.MAIL_USER,
   pass: process.env.MAIL_PASS,
   dkimSelector: process.env.MAIL_DKIM_SELECTOR || 'default',
-  dkimPrivateKeyPath: process.env.MAIL_DKIM_PRIVATE_KEY_PATH || '/root/private.key',
+  dkimPrivateKeyPath:
+    process.env.MAIL_DKIM_PRIVATE_KEY_PATH || '/root/private.key',
 }));
 
 export const getMailerConfig = async (
   configService: ConfigService,
 ): Promise<MailerOptions> => {
-
-    const isDev = process.env.NODE_ENV === 'development';
-
+  const isDev = process.env.NODE_ENV === 'development';
 
   const transport: any = {
     host: configService.get<string>('mailer.host'),
@@ -28,11 +27,10 @@ export const getMailerConfig = async (
     secure: !isDev && configService.get<number>('mailer.port') === 465,
     auth: !isDev
       ? {
-          user: configService.get<string>('mailer.user'),
-          pass: configService.get<string>('mailer.pass'),
-        }
+        user: configService.get<string>('mailer.user'),
+        pass: configService.get<string>('mailer.pass'),
+      }
       : undefined,
-  
   };
 
   if (isDev) {
@@ -43,9 +41,13 @@ export const getMailerConfig = async (
   if (!isDev) {
     transport.dkim = {
       domainName: 'paybackbilling.com',
-      keySelector: configService.get<string>('mailer.dkimSelector') || 'default',
+      keySelector:
+        configService.get<string>('mailer.dkimSelector') || 'default',
       privateKey: fs.readFileSync(
-        path.resolve(configService.get<string>('mailer.dkimPrivateKeyPath') || '/root/private.key'),
+        path.resolve(
+          configService.get<string>('mailer.dkimPrivateKeyPath') ||
+          '/root/private.key',
+        ),
         'utf8',
       ),
     };

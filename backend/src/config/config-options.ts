@@ -14,24 +14,18 @@ export function validate(config: Record<string, unknown>) {
   const errors = validateSync(validatedConfig, {
     skipMissingProperties: false,
   });
- 
+
   if (errors.length > 0) {
     throw new Error(errors.toString());
   }
   return validatedConfig;
-} 
-
-export function getEnvPath(): string {
- 
-  return `.env.${process.env.NODE_ENV || 'development'}`;
 }
- 
+
 const configOptions: ConfigModuleOptions = {
-  envFilePath: ['.env', getEnvPath()],
+  envFilePath: ['.env'],
   isGlobal: true,
-  validate, 
+  validate,
   cache: true,
 };
-
 
 export default configOptions;

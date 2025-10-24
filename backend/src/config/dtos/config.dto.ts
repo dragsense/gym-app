@@ -141,7 +141,6 @@ export class EnvironmentVariables {
   @IsOptional()
   REFRESH_TOKEN_CLEANUP_DAYS: number;
 
-
   // Mailer
   @IsString()
   MAIL_HOST: string;
@@ -160,18 +159,15 @@ export class EnvironmentVariables {
   @IsString()
   MAIL_FROM: string;
 
-
   // Encryption
   @IsString()
   @IsOptional()
   ENCRYPTION_KEY: string;
 
-  
   // OTP
   @IsString()
   @IsOptional()
   OTP_SECRET: string;
-
 
   // Cookie
   @IsString()
@@ -289,17 +285,16 @@ export class EnvironmentVariables {
   @IsOptional()
   SUPER_ADMIN_LAST_NAME: string;
 
+  // Stripe Configuration
+  @IsOptional()
+  @IsString()
+  STRIPE_SECRET_KEY?: string;
 
-    // Stripe Configuration
-    @IsOptional()
-    @IsString()
-    STRIPE_SECRET_KEY?: string;
-  
-    @IsOptional()
-    @IsString()
-    STRIPE_PUBLISHABLE_KEY?: string;
-  
-    @IsOptional()
-    @IsString()
-    STRIPE_WEBHOOK_SECRET?: string;
+  @IsOptional()
+  @IsString()
+  STRIPE_PUBLISHABLE_KEY?: string;
+
+  @IsOptional()
+  @IsString()
+  STRIPE_WEBHOOK_SECRET?: string;
 }

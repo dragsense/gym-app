@@ -77,21 +77,28 @@ export default registerAs('database', (): DatabaseConfig => {
     username: process.env.DB_USER || 'postgres',
     password: process.env.DB_PASS || 'postgres',
     database: process.env.DB_NAME || 'Customer_app',
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+    ssl:
+      process.env.NODE_ENV === 'production'
+        ? { rejectUnauthorized: false }
+        : false,
     pool: {
       max: parseInt(process.env.DB_POOL_MAX || '20', 10),
       min: parseInt(process.env.DB_POOL_MIN || '5', 10),
       idle: parseInt(process.env.DB_POOL_IDLE || '30000', 10),
       connTimeout: parseInt(process.env.DB_POOL_CONN_TIMEOUT || '5000', 10),
     },
-    synchronize: Boolean(process.env.TYPEORM_SYNCHRONIZE),
-    logging: Boolean(process.env.TYPEORM_LOGGING),
+    synchronize: process.env.TYPEORM_SYNCHRONIZE === 'true',
+    logging: process.env.TYPEORM_LOGGING === 'true',
   };
 
   // Validate required fields
-  if (!baseConnection.host || !baseConnection.username || !baseConnection.password) {
+  if (
+    !baseConnection.host ||
+    !baseConnection.username ||
+    !baseConnection.password
+  ) {
     throw new Error(
-      'Database configuration incomplete. Check DB_HOST, DB_USER, DB_PASS.'
+      'Database configuration incomplete. Check DB_HOST, DB_USER, DB_PASS.',
     );
   }
 
@@ -101,8 +108,8 @@ export default registerAs('database', (): DatabaseConfig => {
     connections: {
       [defaultConnectionName]: baseConnection,
     },
-    autoReplica: Boolean(process.env.DB_AUTO_REPLICA),
-    autoArchive: Boolean(process.env.DB_AUTO_ARCHIVE),
+    autoReplica: process.env.DB_AUTO_REPLICA === 'true',
+    autoArchive: process.env.DB_AUTO_ARCHIVE === 'true',
     healthCheck: {
       interval: parseInt(process.env.DB_HEALTH_CHECK_INTERVAL || '30000', 10),
       timeout: parseInt(process.env.DB_HEALTH_CHECK_TIMEOUT || '5000', 10),
@@ -111,28 +118,28 @@ export default registerAs('database', (): DatabaseConfig => {
     retry: {
       maxAttempts: parseInt(process.env.DB_RETRY_MAX_ATTEMPTS || '3', 10),
       delay: parseInt(process.env.DB_RETRY_DELAY || '1000', 10),
-      backoffMultiplier: parseFloat(process.env.DB_RETRY_BACKOFF_MULTIPLIER || '2'),
+      backoffMultiplier: parseFloat(
+        process.env.DB_RETRY_BACKOFF_MULTIPLIER || '2',
+      ),
     },
   };
 });
 
-
-
-export const getTypeOrmConfig = (configService: ConfigService): TypeOrmModuleOptions => {
+export const getTypeOrmConfig = (
+  configService: ConfigService,
+): TypeOrmModuleOptions => {
   const dbConfig = configService.get<DatabaseConfig>('database');
 
   if (!dbConfig) throw new Error('Database config not found.');
 
   const defaultConnection = dbConfig.connections[dbConfig.defaultConnection];
 
-  if (!defaultConnection)
-    throw new Error(`Database config not found.`);
+  if (!defaultConnection) throw new Error(`Database config not found.`);
 
   return {
     ...defaultConnection,
     entities: [join(__dirname, '../**/*.entity{.ts,.js}')],
     migrations: [join(__dirname, '../migrations/*{.ts,.js}')],
     autoLoadEntities: true,
-
   };
 };

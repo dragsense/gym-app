@@ -5,16 +5,15 @@
     "workspaceFolder": "/app",
     "remoteUser": "root",
     "shutdownAction": "stopCompose",
-    "forwardPorts": [3000, 5173, 6379, 6380, 8025],
-    "runArgs": [
-        "--user", "root",
-        "--env", "SSH_AUTH_SOCK=/ssh-agent"
+    "forwardPorts": [
+        3000,
+        5173,
+        6379,
+        6380,
+        8025
     ],
-   "mounts": [
-    "source=${localEnv:SSH_AUTH_SOCK},target=/ssh-agent,type=bind"
-  ],
-  "postCreateCommand": "echo 'Host github.com\n  HostName github.com\n  User git\n  ForwardAgent yes' > /root/.ssh/config && chmod 600 /root/.ssh/config",
-"customizations": {
+    "postCreateCommand": "mkdir -p /root/.ssh && cat > /root/.ssh/config <<'EOF'\nHost github.com\n  HostName github.com\n  User git\n  ForwardAgent yes\nEOF\nchmod 600 /root/.ssh/config",
+    "customizations": {
         "vscode": {
             "settings": {
                 "terminal.integrated.defaultProfile.linux": "bash",

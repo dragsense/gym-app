@@ -19,5 +19,4 @@ services:
       - /app/shared/node_modules
     working_dir: /app/frontend
     restart: unless-stopped
-
 #docker-compose up -d

@@ -9,56 +9,80 @@ import {
   Min,
   Max,
   IsUrl,
-} from 'class-validator';
-import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
-import { Type, Transform } from 'class-transformer';
-import { PaginationMetaDto } from '../common/pagination.dto';
-import { ListQueryDto, SingleQueryDto } from '../common/list-query.dto';
-import { FieldType, FieldOptions } from '../../decorators/field.decorator';
-import { OmitType } from '../../lib/dto-type-adapter';
-import { ECurrency, EDateFormat, ETimeFormat, ETimezone, ENotificationChannel, ENotificationFrequency, ENotificationType } from '../../enums/user-settings.enum';
-import { IUserSettings } from '../../interfaces/user-settings.interface';
+} from "class-validator";
+import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
+import { Type, Transform } from "class-transformer";
+import { PaginationMetaDto } from "../common/pagination.dto";
+import { ListQueryDto, SingleQueryDto } from "../common/list-query.dto";
+import { FieldType, FieldOptions } from "../../decorators/field.decorator";
+import { OmitType } from "../../lib/dto-type-adapter";
+import {
+  ECurrency,
+  EDateFormat,
+  ETimeFormat,
+  ETimezone,
+  ENotificationChannel,
+  ENotificationFrequency,
+  ENotificationType,
+} from "../../enums/user-settings.enum";
+import { IUserSettings } from "../../interfaces/user-settings.interface";
 
 // Currency Settings
 export class CurrencySettingsDto {
-  @ApiProperty({ example: 'USD', description: 'Default currency', enum: ECurrency })
+  @ApiProperty({
+    example: "USD",
+    description: "Default currency",
+    enum: ECurrency,
+  })
   @IsEnum(ECurrency)
   @IsNotEmpty()
   @FieldType("select", true)
-  @FieldOptions(Object.values(ECurrency).map(v => ({ value: v, label: v })))
+  @FieldOptions(Object.values(ECurrency).map((v) => ({ value: v, label: v })))
   defaultCurrency: ECurrency;
 
-  @ApiProperty({ example: '$', description: 'Currency symbol' })
+  @ApiProperty({ example: "$", description: "Currency symbol" })
   @IsString()
   @IsNotEmpty()
   @FieldType("text", true)
   currencySymbol: string;
 
-  @ApiProperty({ example: 'MM/DD/YYYY', description: 'Date format', enum: EDateFormat })
+  @ApiProperty({
+    example: "MM/DD/YYYY",
+    description: "Date format",
+    enum: EDateFormat,
+  })
   @IsEnum(EDateFormat)
   @IsNotEmpty()
   @FieldType("select", true)
-  @FieldOptions(Object.values(EDateFormat).map(v => ({ value: v, label: v })))
+  @FieldOptions(Object.values(EDateFormat).map((v) => ({ value: v, label: v })))
   dateFormat: EDateFormat;
 
-  @ApiProperty({ example: '12h', description: 'Time format', enum: ETimeFormat })
+  @ApiProperty({
+    example: "12h",
+    description: "Time format",
+    enum: ETimeFormat,
+  })
   @IsEnum(ETimeFormat)
   @IsNotEmpty()
   @FieldType("select", true)
-  @FieldOptions(Object.values(ETimeFormat).map(v => ({ value: v, label: v })))
+  @FieldOptions(Object.values(ETimeFormat).map((v) => ({ value: v, label: v })))
   timeFormat: ETimeFormat;
 
-  @ApiProperty({ example: 'America/New_York', description: 'Timezone', enum: ETimezone })
+  @ApiProperty({
+    example: "America/New_York",
+    description: "Timezone",
+    enum: ETimezone,
+  })
   @IsEnum(ETimezone)
   @IsNotEmpty()
   @FieldType("select", true)
-  @FieldOptions(Object.values(ETimezone).map(v => ({ value: v, label: v })))
+  @FieldOptions(Object.values(ETimezone).map((v) => ({ value: v, label: v })))
   timezone: ETimezone;
 }
 
 // Limits Settings
 export class LimitSettingsDto {
-  @ApiProperty({ example: 10, description: 'Maximum sessions per day' })
+  @ApiProperty({ example: 10, description: "Maximum sessions per day" })
   @IsNumber()
   @Min(1)
   @Max(50)
@@ -66,7 +90,7 @@ export class LimitSettingsDto {
   @Type(() => Number)
   maxSessionsPerDay: number;
 
-  @ApiProperty({ example: 20, description: 'Maximum clients per trainer' })
+  @ApiProperty({ example: 20, description: "Maximum clients per trainer" })
   @IsNumber()
   @Min(1)
   @Max(100)
@@ -74,7 +98,10 @@ export class LimitSettingsDto {
   @Type(() => Number)
   maxClientsPerTrainer: number;
 
-  @ApiProperty({ example: 60, description: 'Default session duration in minutes' })
+  @ApiProperty({
+    example: 60,
+    description: "Default session duration in minutes",
+  })
   @IsNumber()
   @Min(15)
   @Max(480)
@@ -85,31 +112,40 @@ export class LimitSettingsDto {
 
 // Business Settings
 export class BusinessSettingsDto {
-  @ApiProperty({ example: 'FitLife Gym', description: 'Business name' })
+  @ApiProperty({ example: "FitLife Gym", description: "Business name" })
   @IsString()
   @IsNotEmpty()
   @FieldType("text", true)
   businessName: string;
 
-  @ApiProperty({ example: 'contact@fitlifegym.com', description: 'Business email' })
+  @ApiProperty({
+    example: "contact@fitlifegym.com",
+    description: "Business email",
+  })
   @IsEmail()
   @IsNotEmpty()
   @FieldType("email", true)
   businessEmail: string;
 
-  @ApiProperty({ example: '+1-555-123-4567', description: 'Business phone' })
+  @ApiProperty({ example: "+1-555-123-4567", description: "Business phone" })
   @IsString()
   @IsOptional()
   @FieldType("text", false)
   businessPhone?: string;
 
-  @ApiProperty({ example: '123 Main St, City, State 12345', description: 'Business address' })
+  @ApiProperty({
+    example: "123 Main St, City, State 12345",
+    description: "Business address",
+  })
   @IsString()
   @IsOptional()
   @FieldType("textarea", false)
   businessAddress?: string;
 
-  @ApiProperty({ example: 'https://example.com/logo.png', description: 'Business logo URL' })
+  @ApiProperty({
+    example: "https://example.com/logo.png",
+    description: "Business logo URL",
+  })
   @IsUrl()
   @IsOptional()
   @FieldType("text", false)
@@ -118,7 +154,7 @@ export class BusinessSettingsDto {
 
 // Billing Settings
 export class BillingSettingsDto {
-  @ApiProperty({ example: 15, description: 'Default commission rate (%)' })
+  @ApiProperty({ example: 15, description: "Default commission rate (%)" })
   @IsNumber()
   @Min(0)
   @Max(100)
@@ -126,7 +162,7 @@ export class BillingSettingsDto {
   @Type(() => Number)
   defaultCommissionRate: number;
 
-  @ApiProperty({ example: 8.5, description: 'Tax rate (%)' })
+  @ApiProperty({ example: 8.5, description: "Tax rate (%)" })
   @IsNumber()
   @Min(0)
   @Max(50)
@@ -134,7 +170,7 @@ export class BillingSettingsDto {
   @Type(() => Number)
   taxRate: number;
 
-  @ApiProperty({ example: 'INV-', description: 'Invoice prefix' })
+  @ApiProperty({ example: "INV-", description: "Invoice prefix" })
   @IsString()
   @IsNotEmpty()
   @FieldType("text", true)
@@ -143,51 +179,75 @@ export class BillingSettingsDto {
 
 // Notification Settings
 export class NotificationSettingsDto {
-  @ApiProperty({ example: true, description: 'Enable email notifications' })
+  @ApiProperty({ example: true, description: "Enable email notifications" })
   @IsBoolean()
   @FieldType("checkbox", true)
   emailEnabled: boolean;
 
-  @ApiProperty({ example: true, description: 'Enable SMS notifications' })
+  @ApiProperty({ example: true, description: "Enable SMS notifications" })
   @IsBoolean()
   @FieldType("checkbox", true)
   smsEnabled: boolean;
 
-  @ApiProperty({ example: true, description: 'Enable push notifications' })
+  @ApiProperty({ example: true, description: "Enable push notifications" })
   @IsBoolean()
   @FieldType("checkbox", true)
   pushEnabled: boolean;
 
-  @ApiProperty({ example: true, description: 'Enable in-app notifications' })
+  @ApiProperty({ example: true, description: "Enable in-app notifications" })
   @IsBoolean()
   @FieldType("checkbox", true)
   inAppEnabled: boolean;
 
-  @ApiProperty({ example: 'immediate', description: 'Session reminder frequency', enum: ENotificationFrequency })
+  @ApiProperty({
+    example: "immediate",
+    description: "Session reminder frequency",
+    enum: ENotificationFrequency,
+  })
   @IsEnum(ENotificationFrequency)
   @IsNotEmpty()
   @FieldType("select", true)
-  @FieldOptions(Object.values(ENotificationFrequency).map(v => ({ value: v, label: v.charAt(0).toUpperCase() + v.slice(1) })))
+  @FieldOptions(
+    Object.values(ENotificationFrequency).map((v) => ({
+      value: v,
+      label: v.charAt(0).toUpperCase() + v.slice(1),
+    }))
+  )
   sessionReminderFrequency: ENotificationFrequency;
 
-  @ApiProperty({ example: 'daily', description: 'Billing notification frequency', enum: ENotificationFrequency })
+  @ApiProperty({
+    example: "daily",
+    description: "Billing notification frequency",
+    enum: ENotificationFrequency,
+  })
   @IsEnum(ENotificationFrequency)
   @IsNotEmpty()
   @FieldType("select", true)
-  @FieldOptions(Object.values(ENotificationFrequency).map(v => ({ value: v, label: v.charAt(0).toUpperCase() + v.slice(1) })))
+  @FieldOptions(
+    Object.values(ENotificationFrequency).map((v) => ({
+      value: v,
+      label: v.charAt(0).toUpperCase() + v.slice(1),
+    }))
+  )
   billingNotificationFrequency: ENotificationFrequency;
 
-  @ApiProperty({ example: true, description: 'Enable marketing notifications' })
+  @ApiProperty({ example: true, description: "Enable marketing notifications" })
   @IsBoolean()
   @FieldType("checkbox", true)
   marketingEnabled: boolean;
 
-  @ApiProperty({ example: true, description: 'Enable system update notifications' })
+  @ApiProperty({
+    example: true,
+    description: "Enable system update notifications",
+  })
   @IsBoolean()
   @FieldType("checkbox", true)
   systemUpdateEnabled: boolean;
 
-  @ApiProperty({ example: true, description: 'Enable security alert notifications' })
+  @ApiProperty({
+    example: true,
+    description: "Enable security alert notifications",
+  })
   @IsBoolean()
   @FieldType("checkbox", true)
   securityAlertEnabled: boolean;
@@ -221,14 +281,14 @@ export class CreateUserSettingsDto {
   notifications: NotificationSettingsDto;
 }
 
-export class UpdateUserSettingsDto extends PartialType(OmitType(CreateUserSettingsDto, [])) { }
+export class UpdateUserSettingsDto extends PartialType(CreateUserSettingsDto) {}
 
 export class UserSettingsListDto extends ListQueryDto<IUserSettings> {
   // Add any filtering options if needed
 }
 
 export class UserSettingsDto {
-  @ApiProperty({ example: 1, description: 'User Settings ID' })
+  @ApiProperty({ example: 1, description: "User Settings ID" })
   @IsNotEmpty()
   @IsNumber()
   @Type(() => Number)
@@ -236,7 +296,7 @@ export class UserSettingsDto {
   @Min(1)
   id: number;
 
-  @ApiProperty({ example: 1, description: 'User ID' })
+  @ApiProperty({ example: 1, description: "User ID" })
   @IsNotEmpty()
   @IsNumber()
   @Type(() => Number)

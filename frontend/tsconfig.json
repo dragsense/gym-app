@@ -1,16 +1,25 @@
 {
   "files": [],
   "references": [
-    { "path": "./tsconfig.app.json" },
-    { "path": "./tsconfig.node.json" }
+    {
+      "path": "./tsconfig.app.json"
+    },
+    {
+      "path": "./tsconfig.node.json"
+    }
   ],
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "@shared/*": ["../shared/*"],
-      "@nestjs/swagger": ["./src/utils/swagger-stub.ts"],
-      "typeorm": ["./src/utils/typeorm-stub.ts"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@shared/*": [
+        "../shared/*"
+      ],
+      "@nestjs/swagger": [
+        "./src/utils/swagger-stub.ts"
+      ],
     }
   }
 }

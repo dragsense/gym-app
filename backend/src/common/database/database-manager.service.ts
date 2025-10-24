@@ -1,7 +1,11 @@
 import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DataSource, DataSourceOptions, Repository } from 'typeorm';
-import { DatabaseConfig, DatabaseMode, DatabaseConnection } from '@/config/database.config';
+import {
+  DatabaseConfig,
+  DatabaseMode,
+  DatabaseConnection,
+} from '@/config/database.config';
 import { join } from 'path';
 
 export interface TenantContext {
@@ -13,20 +17,22 @@ export interface TenantContext {
 export class DatabaseManager implements OnModuleInit {
   private readonly logger = new Logger(DatabaseManager.name);
   private connections: Map<string, DataSource> = new Map();
-  private readonly dbConfig: DatabaseConfig;
+  private dbConfig: DatabaseConfig;
 
-  constructor(
-    private readonly configService: ConfigService,
-  ) {
-    this.dbConfig = this.configService.get<DatabaseConfig>('database')!;
-  }
+  constructor(private readonly configService: ConfigService) {}
 
   async onModuleInit() {
+    this.dbConfig = this.configService.get<DatabaseConfig>('database')!;
     await this.initializeSystem();
   }
 
   private async initializeSystem() {
-    this.logger.log(`Initializing database system in ${this.dbConfig.mode} mode`);
+    this.logger.log(
+      `Initializing database system in ${this.dbConfig.mode} mode`,
+    );
+
+    this.logger.log(`Auto-replica setting: ${this.dbConfig.autoReplica}`);
+    this.logger.log(`Auto-archive setting: ${this.dbConfig.autoArchive}`);
 
     // Initialize main connection
     await this.initializeMainConnection();
@@ -43,44 +49,55 @@ export class DatabaseManager implements OnModuleInit {
   }
 
   private async initializeMainConnection() {
-    const mainConnection = this.dbConfig.connections[this.dbConfig.defaultConnection];
+    const mainConnection =
+      this.dbConfig.connections[this.dbConfig.defaultConnection];
     const dataSource = await this.createConnection('main', mainConnection);
     this.connections.set('main', dataSource);
     this.logger.log('Main database connection initialized');
   }
 
   private async initializeReplica() {
-    const mainConnection = this.dbConfig.connections[this.dbConfig.defaultConnection];
+    const mainConnection =
+      this.dbConfig.connections[this.dbConfig.defaultConnection];
     const replicaConnection: DatabaseConnection = {
       ...mainConnection,
       name: 'replica',
       database: `${mainConnection.database}_replica`,
     };
 
-    const dataSource = await this.createConnection('replica', replicaConnection);
+    const dataSource = await this.createConnection(
+      'replica',
+      replicaConnection,
+    );
     this.connections.set('replica', dataSource);
     this.logger.log('Replica database connection initialized');
   }
 
   private async initializeArchive() {
-    const mainConnection = this.dbConfig.connections[this.dbConfig.defaultConnection];
+    const mainConnection =
+      this.dbConfig.connections[this.dbConfig.defaultConnection];
     const archiveConnection: DatabaseConnection = {
       ...mainConnection,
       name: 'archive',
       database: `${mainConnection.database}_archive`,
     };
 
-    const dataSource = await this.createConnection('archive', archiveConnection);
+    const dataSource = await this.createConnection(
+      'archive',
+      archiveConnection,
+    );
     this.connections.set('archive', dataSource);
     this.logger.log('Archive database connection initialized');
   }
 
-  private async createConnection(name: string, config: DatabaseConnection): Promise<DataSource> {
+  private async createConnection(
+    name: string,
+    config: DatabaseConnection,
+  ): Promise<DataSource> {
     const options: DataSourceOptions = {
       ...config,
       entities: [join(__dirname, '../../**/*.entity{.ts,.js}')],
       migrations: [join(__dirname, '../../migrations/*{.ts,.js}')],
-
     };
 
     const dataSource = new DataSource(options);
@@ -130,14 +147,18 @@ export class DatabaseManager implements OnModuleInit {
     await mainConnection.query(`CREATE SCHEMA IF NOT EXISTS "${schemaName}"`);
 
     // Create connection for this schema
-    const mainConfig = this.dbConfig.connections[this.dbConfig.defaultConnection];
+    const mainConfig =
+      this.dbConfig.connections[this.dbConfig.defaultConnection];
     const schemaConnection: DatabaseConnection = {
       ...mainConfig,
       name: `schema_${tenantId}`,
       schema: schemaName,
     };
 
-    const dataSource = await this.createConnection(`schema_${tenantId}`, schemaConnection);
+    const dataSource = await this.createConnection(
+      `schema_${tenantId}`,
+      schemaConnection,
+    );
     this.connections.set(`schema_${tenantId}`, dataSource);
 
     this.logger.log(`Created schema and connection for tenant: ${tenantId}`);
@@ -154,14 +175,18 @@ export class DatabaseManager implements OnModuleInit {
     await mainConnection.query(`CREATE DATABASE "${databaseName}"`);
 
     // Create connection for this database
-    const mainConfig = this.dbConfig.connections[this.dbConfig.defaultConnection];
+    const mainConfig =
+      this.dbConfig.connections[this.dbConfig.defaultConnection];
     const tenantConnection: DatabaseConnection = {
       ...mainConfig,
       name: `tenant_${tenantId}`,
       database: databaseName,
     };
 
-    const dataSource = await this.createConnection(`tenant_${tenantId}`, tenantConnection);
+    const dataSource = await this.createConnection(
+      `tenant_${tenantId}`,
+      tenantConnection,
+    );
     this.connections.set(`tenant_${tenantId}`, dataSource);
 
     this.logger.log(`Created database and connection for tenant: ${tenantId}`);
@@ -169,7 +194,8 @@ export class DatabaseManager implements OnModuleInit {
 
   private async createTenantReplica(tenantId: string) {
     const replicaName = `replica_tenant_${tenantId}`;
-    const mainConfig = this.dbConfig.connections[this.dbConfig.defaultConnection];
+    const mainConfig =
+      this.dbConfig.connections[this.dbConfig.defaultConnection];
 
     let replicaConnection: DatabaseConnection;
 
@@ -188,7 +214,10 @@ export class DatabaseManager implements OnModuleInit {
       };
     }
 
-    const dataSource = await this.createConnection(replicaName, replicaConnection);
+    const dataSource = await this.createConnection(
+      replicaName,
+      replicaConnection,
+    );
     this.connections.set(replicaName, dataSource);
 
     this.logger.log(`Created replica for tenant: ${tenantId}`);
@@ -196,7 +225,8 @@ export class DatabaseManager implements OnModuleInit {
 
   private async createTenantArchive(tenantId: string) {
     const archiveName = `archive_tenant_${tenantId}`;
-    const mainConfig = this.dbConfig.connections[this.dbConfig.defaultConnection];
+    const mainConfig =
+      this.dbConfig.connections[this.dbConfig.defaultConnection];
 
     let archiveConnection: DatabaseConnection;
 
@@ -215,7 +245,10 @@ export class DatabaseManager implements OnModuleInit {
       };
     }
 
-    const dataSource = await this.createConnection(archiveName, archiveConnection);
+    const dataSource = await this.createConnection(
+      archiveName,
+      archiveConnection,
+    );
     this.connections.set(archiveName, dataSource);
 
     this.logger.log(`Created archive for tenant: ${tenantId}`);
@@ -224,7 +257,10 @@ export class DatabaseManager implements OnModuleInit {
   /**
    * Get repository for entity with automatic tenant routing
    */
-  getRepository<T extends Record<string, any>>(entity: any, context?: TenantContext): Repository<T> {
+  getRepository<T extends Record<string, any>>(
+    entity: any,
+    context?: TenantContext,
+  ): Repository<T> {
     let connectionName = 'main';
 
     if (context?.tenantId) {
@@ -249,7 +285,10 @@ export class DatabaseManager implements OnModuleInit {
   /**
    * Get read-only repository (replica)
    */
-  getReadOnlyRepository<T extends Record<string, any>>(entity: any, context?: TenantContext): Repository<T> {
+  getReadOnlyRepository<T extends Record<string, any>>(
+    entity: any,
+    context?: TenantContext,
+  ): Repository<T> {
     let connectionName = 'replica';
 
     if (context?.tenantId) {
@@ -268,7 +307,10 @@ export class DatabaseManager implements OnModuleInit {
   /**
    * Get archive repository
    */
-  getArchiveRepository<T extends Record<string, any>>(entity: any, context?: TenantContext): Repository<T> {
+  getArchiveRepository<T extends Record<string, any>>(
+    entity: any,
+    context?: TenantContext,
+  ): Repository<T> {
     let connectionName = 'archive';
 
     if (context?.tenantId) {
@@ -277,7 +319,9 @@ export class DatabaseManager implements OnModuleInit {
 
     const connection = this.connections.get(connectionName);
     if (!connection) {
-      throw new Error(`Archive connection not found for tenant: ${context?.tenantId}`);
+      throw new Error(
+        `Archive connection not found for tenant: ${context?.tenantId}`,
+      );
     }
 
     return connection.getRepository(entity);
@@ -286,7 +330,11 @@ export class DatabaseManager implements OnModuleInit {
   /**
    * Execute query with automatic routing
    */
-  async executeQuery(query: string, parameters: any[] = [], context?: TenantContext) {
+  async executeQuery(
+    query: string,
+    parameters: any[] = [],
+    context?: TenantContext,
+  ): Promise<any> {
     let connectionName = 'main';
 
     if (context?.tenantId) {
@@ -326,11 +374,11 @@ export class DatabaseManager implements OnModuleInit {
    * Check if tenant resources exist
    */
   async tenantExists(tenantId: string): Promise<boolean> {
-    const connectionName = this.dbConfig.mode === DatabaseMode.MULTI_SCHEMA
-      ? `schema_${tenantId}`
-      : `tenant_${tenantId}`;
+    const connectionName =
+      this.dbConfig.mode === DatabaseMode.MULTI_SCHEMA
+        ? `schema_${tenantId}`
+        : `tenant_${tenantId}`;
 
     return this.connections.has(connectionName);
   }
 }
- 

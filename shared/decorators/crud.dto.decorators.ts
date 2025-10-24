@@ -1,20 +1,20 @@
-import 'reflect-metadata';
+import "reflect-metadata";
 
-import { 
-  registerDecorator, 
-  ValidationOptions, 
-  ValidatorConstraint, 
+import {
+  registerDecorator,
+  ValidationOptions,
+  ValidatorConstraint,
   ValidatorConstraintInterface,
-  ValidationArguments
-} from 'class-validator';
-import { Transform, TransformOptions } from 'class-transformer';
+  ValidationArguments,
+} from "class-validator";
+import { Transform, TransformOptions } from "class-transformer";
 
 // Number comparison decorators
-@ValidatorConstraint({ name: 'isGreaterThan', async: false })
+@ValidatorConstraint({ name: "isGreaterThan", async: false })
 export class IsGreaterThanConstraint implements ValidatorConstraintInterface {
   validate(value: any, args: ValidationArguments) {
     const [min] = args.constraints;
-    return typeof value === 'number' && value > min;
+    return typeof value === "number" && value > min;
   }
 
   defaultMessage(args: ValidationArguments) {
@@ -23,11 +23,11 @@ export class IsGreaterThanConstraint implements ValidatorConstraintInterface {
   }
 }
 
-@ValidatorConstraint({ name: 'isLessThan', async: false })
+@ValidatorConstraint({ name: "isLessThan", async: false })
 export class IsLessThanConstraint implements ValidatorConstraintInterface {
   validate(value: any, args: ValidationArguments) {
     const [max] = args.constraints;
-    return typeof value === 'number' && value < max;
+    return typeof value === "number" && value < max;
   }
 
   defaultMessage(args: ValidationArguments) {
@@ -36,11 +36,13 @@ export class IsLessThanConstraint implements ValidatorConstraintInterface {
   }
 }
 
-@ValidatorConstraint({ name: 'isGreaterThanOrEqual', async: false })
-export class IsGreaterThanOrEqualConstraint implements ValidatorConstraintInterface {
+@ValidatorConstraint({ name: "isGreaterThanOrEqual", async: false })
+export class IsGreaterThanOrEqualConstraint
+  implements ValidatorConstraintInterface
+{
   validate(value: any, args: ValidationArguments) {
     const [min] = args.constraints;
-    return typeof value === 'number' && value >= min;
+    return typeof value === "number" && value >= min;
   }
 
   defaultMessage(args: ValidationArguments) {
@@ -49,11 +51,13 @@ export class IsGreaterThanOrEqualConstraint implements ValidatorConstraintInterf
   }
 }
 
-@ValidatorConstraint({ name: 'isLessThanOrEqual', async: false })
-export class IsLessThanOrEqualConstraint implements ValidatorConstraintInterface {
+@ValidatorConstraint({ name: "isLessThanOrEqual", async: false })
+export class IsLessThanOrEqualConstraint
+  implements ValidatorConstraintInterface
+{
   validate(value: any, args: ValidationArguments) {
     const [max] = args.constraints;
-    return typeof value === 'number' && value <= max;
+    return typeof value === "number" && value <= max;
   }
 
   defaultMessage(args: ValidationArguments) {
@@ -62,11 +66,11 @@ export class IsLessThanOrEqualConstraint implements ValidatorConstraintInterface
   }
 }
 
-@ValidatorConstraint({ name: 'isBetween', async: false })
+@ValidatorConstraint({ name: "isBetween", async: false })
 export class IsBetweenConstraint implements ValidatorConstraintInterface {
   validate(value: any, args: ValidationArguments) {
     const [min, max] = args.constraints;
-    return typeof value === 'number' && value >= min && value <= max;
+    return typeof value === "number" && value >= min && value <= max;
   }
 
   defaultMessage(args: ValidationArguments) {
@@ -76,7 +80,10 @@ export class IsBetweenConstraint implements ValidatorConstraintInterface {
 }
 
 // Decorator functions
-export function IsGreaterThan(min: number, validationOptions?: ValidationOptions) {
+export function IsGreaterThan(
+  min: number,
+  validationOptions?: ValidationOptions
+) {
   return function (object: Object, propertyName: string) {
     registerDecorator({
       target: object.constructor,
@@ -100,7 +107,10 @@ export function IsLessThan(max: number, validationOptions?: ValidationOptions) {
   };
 }
 
-export function IsGreaterThanOrEqual(min: number, validationOptions?: ValidationOptions) {
+export function IsGreaterThanOrEqual(
+  min: number,
+  validationOptions?: ValidationOptions
+) {
   return function (object: Object, propertyName: string) {
     registerDecorator({
       target: object.constructor,
@@ -112,7 +122,10 @@ export function IsGreaterThanOrEqual(min: number, validationOptions?: Validation
   };
 }
 
-export function IsLessThanOrEqual(max: number, validationOptions?: ValidationOptions) {
+export function IsLessThanOrEqual(
+  max: number,
+  validationOptions?: ValidationOptions
+) {
   return function (object: Object, propertyName: string) {
     registerDecorator({
       target: object.constructor,
@@ -124,7 +137,11 @@ export function IsLessThanOrEqual(max: number, validationOptions?: ValidationOpt
   };
 }
 
-export function IsBetween(min: number, max: number, validationOptions?: ValidationOptions) {
+export function IsBetween(
+  min: number,
+  max: number,
+  validationOptions?: ValidationOptions
+) {
   return function (object: Object, propertyName: string) {
     registerDecorator({
       target: object.constructor,
@@ -139,7 +156,7 @@ export function IsBetween(min: number, max: number, validationOptions?: Validati
 // Transform decorators
 export function TransformToNumber(options?: TransformOptions) {
   return Transform(({ value }) => {
-    if (value === null || value === undefined || value === '') {
+    if (value === null || value === undefined || value === "") {
       return value;
     }
     const num = Number(value);
@@ -149,9 +166,9 @@ export function TransformToNumber(options?: TransformOptions) {
 
 export function TransformToBoolean(options?: TransformOptions) {
   return Transform(({ value }) => {
-    if (typeof value === 'boolean') return value;
-    if (typeof value === 'string') {
-      return value.toLowerCase() === 'true';
+    if (typeof value === "boolean") return value;
+    if (typeof value === "string") {
+      return value.toLowerCase() === "true";
     }
     return Boolean(value);
   }, options);
@@ -160,8 +177,8 @@ export function TransformToBoolean(options?: TransformOptions) {
 export function TransformToArray(options?: TransformOptions) {
   return Transform(({ value }) => {
     if (Array.isArray(value)) return value;
-    if (typeof value === 'string') {
-      return value.split(',').map(item => item.trim());
+    if (typeof value === "string") {
+      return value.split(",").map((item) => item.trim());
     }
     return [value];
   }, options);
@@ -170,7 +187,7 @@ export function TransformToArray(options?: TransformOptions) {
 export function TransformToDate(options?: TransformOptions) {
   return Transform(({ value }) => {
     if (value instanceof Date) return value;
-    if (typeof value === 'string' || typeof value === 'number') {
+    if (typeof value === "string" || typeof value === "number") {
       const date = new Date(value);
       return isNaN(date.getTime()) ? value : date;
     }
@@ -179,13 +196,13 @@ export function TransformToDate(options?: TransformOptions) {
 }
 
 // Custom validator for date arrays (for date ranges)
-@ValidatorConstraint({ name: 'isDateArray', async: false })
+@ValidatorConstraint({ name: "isDateArray", async: false })
 export class IsDateArrayConstraint implements ValidatorConstraintInterface {
   validate(value: any) {
     if (!Array.isArray(value)) return false;
-    
-    return value.every(item => {
-      if (typeof item === 'string') {
+
+    return value.every((item) => {
+      if (typeof item === "string") {
         const date = new Date(item);
         return !isNaN(date.getTime());
       }
@@ -194,7 +211,7 @@ export class IsDateArrayConstraint implements ValidatorConstraintInterface {
   }
 
   defaultMessage() {
-    return 'Each item in the array must be a valid date string or Date object';
+    return "Each item in the array must be a valid date string or Date object";
   }
 }
 
@@ -211,11 +228,23 @@ export function IsDateArray(validationOptions?: ValidationOptions) {
 }
 
 // Query Filtering Decorators
-export const QUERY_FILTER_METADATA = Symbol('query_filter_metadata');
-export const RELATION_FILTER_METADATA = Symbol('relation_filter_metadata');
+export const QUERY_FILTER_METADATA = Symbol("query_filter_metadata");
+export const RELATION_FILTER_METADATA = Symbol("relation_filter_metadata");
 
 export interface BaseFilterOptions {
-  type?: 'between' | 'lessThan' | 'greaterThan' | 'lessThanOrEqual' | 'greaterThanOrEqual' | 'like' | 'in' | 'notIn' | 'isNull' | 'isNotNull' | 'equals' | 'notEquals';
+  type?:
+    | "between"
+    | "lessThan"
+    | "greaterThan"
+    | "lessThanOrEqual"
+    | "greaterThanOrEqual"
+    | "like"
+    | "in"
+    | "notIn"
+    | "isNull"
+    | "isNotNull"
+    | "equals"
+    | "notEquals";
   field?: string; // For nested fields like 'profile.firstName'
   operator?: string; // Custom operator for complex queries
   transform?: (value: any) => any; // Transform function for the value
@@ -235,9 +264,10 @@ export interface RelationFilterOptions extends BaseFilterOptions {
  */
 export function QueryFilter(options: QueryFilterOptions) {
   return (target: any, propertyKey: string) => {
-    const existingFilters = Reflect.getMetadata(QUERY_FILTER_METADATA, target) || {};
+    const existingFilters =
+      Reflect.getMetadata(QUERY_FILTER_METADATA, target) || {};
     existingFilters[propertyKey] = {
-      type: 'equals', // Default type
+      type: "equals", // Default type
       field: propertyKey,
       ...options,
     };
@@ -252,7 +282,8 @@ export function QueryFilter(options: QueryFilterOptions) {
  */
 export function RelationFilter(relationPath: string) {
   return (target: any, propertyKey: string) => {
-    const existingFilters = Reflect.getMetadata(RELATION_FILTER_METADATA, target) || {};
+    const existingFilters =
+      Reflect.getMetadata(RELATION_FILTER_METADATA, target) || {};
     existingFilters[propertyKey] = relationPath;
     Reflect.defineMetadata(RELATION_FILTER_METADATA, existingFilters, target);
   };
@@ -263,7 +294,7 @@ export function RelationFilter(relationPath: string) {
  * @param field Optional field name (defaults to property name)
  */
 export function Between(field?: string) {
-  return QueryFilter({ type: 'between', field });
+  return QueryFilter({ type: "between", field });
 }
 
 /**
@@ -271,7 +302,7 @@ export function Between(field?: string) {
  * @param field Optional field name (defaults to property name)
  */
 export function LessThan(field?: string) {
-  return QueryFilter({ type: 'lessThan', field });
+  return QueryFilter({ type: "lessThan", field });
 }
 
 /**
@@ -279,7 +310,7 @@ export function LessThan(field?: string) {
  * @param field Optional field name (defaults to property name)
  */
 export function GreaterThan(field?: string) {
-  return QueryFilter({ type: 'greaterThan', field });
+  return QueryFilter({ type: "greaterThan", field });
 }
 
 /**
@@ -287,7 +318,7 @@ export function GreaterThan(field?: string) {
  * @param field Optional field name (defaults to property name)
  */
 export function LessThanOrEqual(field?: string) {
-  return QueryFilter({ type: 'lessThanOrEqual', field });
+  return QueryFilter({ type: "lessThanOrEqual", field });
 }
 
 /**
@@ -295,7 +326,7 @@ export function LessThanOrEqual(field?: string) {
  * @param field Optional field name (defaults to property name)
  */
 export function GreaterThanOrEqual(field?: string) {
-  return QueryFilter({ type: 'greaterThanOrEqual', field });
+  return QueryFilter({ type: "greaterThanOrEqual", field });
 }
 
 /**
@@ -303,7 +334,7 @@ export function GreaterThanOrEqual(field?: string) {
  * @param field Optional field name (defaults to property name)
  */
 export function Like(field?: string) {
-  return QueryFilter({ type: 'like', field });
+  return QueryFilter({ type: "like", field });
 }
 
 /**
@@ -311,7 +342,7 @@ export function Like(field?: string) {
  * @param field Optional field name (defaults to property name)
  */
 export function In(field?: string) {
-  return QueryFilter({ type: 'in', field });
+  return QueryFilter({ type: "in", field });
 }
 
 /**
@@ -319,7 +350,7 @@ export function In(field?: string) {
  * @param field Optional field name (defaults to property name)
  */
 export function NotIn(field?: string) {
-  return QueryFilter({ type: 'notIn', field });
+  return QueryFilter({ type: "notIn", field });
 }
 
 /**
@@ -327,7 +358,7 @@ export function NotIn(field?: string) {
  * @param field Optional field name (defaults to property name)
  */
 export function IsNull(field?: string) {
-  return QueryFilter({ type: 'isNull', field });
+  return QueryFilter({ type: "isNull", field });
 }
 
 /**
@@ -335,7 +366,7 @@ export function IsNull(field?: string) {
  * @param field Optional field name (defaults to property name)
  */
 export function IsNotNull(field?: string) {
-  return QueryFilter({ type: 'isNotNull', field });
+  return QueryFilter({ type: "isNotNull", field });
 }
 
 /**
@@ -343,7 +374,7 @@ export function IsNotNull(field?: string) {
  * @param field Optional field name (defaults to property name)
  */
 export function Equals(field?: string) {
-  return QueryFilter({ type: 'equals', field });
+  return QueryFilter({ type: "equals", field });
 }
 
 /**
@@ -351,7 +382,7 @@ export function Equals(field?: string) {
  * @param field Optional field name (defaults to property name)
  */
 export function NotEquals(field?: string) {
-  return QueryFilter({ type: 'notEquals', field });
+  return QueryFilter({ type: "notEquals", field });
 }
 
 /**
@@ -359,10 +390,13 @@ export function NotEquals(field?: string) {
  * @param field Optional field name (defaults to property name)
  */
 export function DateRange(field?: string) {
-  return QueryFilter({ 
-    type: 'between', 
+  return QueryFilter({
+    type: "between",
     field,
-    transform: (value: { start: string; end: string }) => [value.start, value.end]
+    transform: (value: { start: string; end: string }) => [
+      value.start,
+      value.end,
+    ],
   });
 }
 
@@ -371,7 +405,9 @@ export function DateRange(field?: string) {
  * @param target Class or instance
  * @returns Query filters metadata
  */
-export function getQueryFilters(target: any): Record<string, QueryFilterOptions> {
+export function getQueryFilters(
+  target: any
+): Record<string, QueryFilterOptions> {
   return Reflect.getMetadata(QUERY_FILTER_METADATA, target) || {};
 }
 
@@ -388,18 +424,18 @@ export function getRelationFilters(target: any): Record<string, string> {
 export function PaginationDto(validationOptions?: ValidationOptions) {
   return function (target: any) {
     // Add pagination properties to the DTO class
-    Object.defineProperty(target.prototype, 'page', {
+    Object.defineProperty(target.prototype, "page", {
       value: 1,
       writable: true,
       enumerable: true,
-      configurable: true
+      configurable: true,
     });
-    
-    Object.defineProperty(target.prototype, 'limit', {
+
+    Object.defineProperty(target.prototype, "limit", {
       value: 10,
       writable: true,
       enumerable: true,
-      configurable: true
+      configurable: true,
     });
   };
 }

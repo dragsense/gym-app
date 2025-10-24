@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y \
     openssh-client \
     curl \
     ca-certificates \
+    rsync \
     && rm -rf /var/lib/apt/lists/*
 
 # 2️⃣ Fix DNS (Google DNS)
@@ -40,17 +41,24 @@ RUN pnpm config set registry https://registry.npmmirror.com \
 
 # Copy frontend package files
 COPY frontend/package.json ./frontend/
-COPY frontend/pnpm-lock.yaml ./frontend/
+COPY shared/package.json ./shared/
+
+# Install shared dependencies first
+WORKDIR /app/shared
+RUN pnpm install
 
 # Install frontend dependencies
 WORKDIR /app/frontend
 RUN pnpm install
 
-# Copy shared code (no node_modules sync needed)
+WORKDIR /app
+
+# Copy shared code (needed for dependencies)
 COPY shared/ ./shared/
 
-# Copy frontend code
-COPY frontend/ .
+# Copy frontend code (needed for dependencies)
+COPY frontend/ ./frontend/
+
 
 # Development stage
 FROM base AS dev

@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y \
     openssh-client \
     curl \
     ca-certificates \
+    rsync \
     && rm -rf /var/lib/apt/lists/*
 
 # 2️⃣ Fix DNS (Google DNS)
@@ -46,7 +47,7 @@ COPY backend/package.json ./backend/
 COPY frontend/package.json ./frontend/
 COPY shared/package.json ./shared/
 
-# Install shared dependencies first
+# Install shared dependencies
 WORKDIR /app/shared
 RUN pnpm install
 
@@ -60,10 +61,6 @@ RUN pnpm install
 
 WORKDIR /app
 
-# Development stage
-FROM base AS dev
-WORKDIR /app
-
 # Copy shared code (needed for dependencies)
 COPY shared/ ./shared/
 
@@ -73,6 +70,9 @@ COPY backend/ ./backend/
 # Copy frontend code (needed for dependencies)
 COPY frontend/ ./frontend/
 
+
+# Development stage
+FROM base AS dev
 # Expose ports for both services
 EXPOSE 3000 5173
 
@@ -108,3 +108,4 @@ COPY --from=build /app/frontend/dist ./frontend/dist
 
 EXPOSE 3000
 CMD ["npm", "run", "start"]
+

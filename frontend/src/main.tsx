@@ -1,13 +1,12 @@
 
 // Import reflect-metadata first, before any other imports
 import 'reflect-metadata'
-import 'reflect-metadata/Reflect'
 
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
-  
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />

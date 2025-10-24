@@ -1,3 +1,3 @@
-import { ActivityLogDto } from "@shared/dtos";
+import { ActivityLogDto } from "../dtos/activity-log-dtos";
 
-export interface IActivityLog extends ActivityLogDto { }
+export interface IActivityLog extends ActivityLogDto {}
