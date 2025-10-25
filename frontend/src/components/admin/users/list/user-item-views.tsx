@@ -1,7 +1,7 @@
 // External Libraries
 import { type JSX, useId, useMemo, useTransition } from "react";
 import { type ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Mail, Phone } from "lucide-react";
+import { MoreHorizontal, Mail, Phone, User } from "lucide-react";
 
 // UI Components
 import { Button } from "@/components/ui/button";
@@ -176,7 +176,7 @@ export const userItemViews = ({
         const roleName = getUserRoleFromLevel(level);
         const roleColors = {
           [EUserRole.ADMIN]: "bg-red-100 text-red-800 border-red-200",
-          [EUserRole.TRAINER]: "bg-blue-100 text-blue-800 border-blue-200", 
+          [EUserRole.TRAINER]: "bg-blue-100 text-blue-800 border-blue-200",
           [EUserRole.CLIENT]: "bg-green-100 text-green-800 border-green-200",
           [EUserRole.USER]: "bg-gray-100 text-gray-800 border-gray-200"
         };
@@ -206,7 +206,7 @@ export const userItemViews = ({
 
         return (
           <UserActions
-          user={user}
+            user={user}
             handleEdit={handleEdit}
             handleDelete={handleDelete}
             handleView={handleView}
@@ -220,7 +220,7 @@ export const userItemViews = ({
   const listItem = (item: IUser) => {
     // React 19: Essential IDs
     const componentId = useId();
-    
+
     const profile = item.profile;
     const name = profile ? `${profile.firstName} ${profile.lastName}` : 'Unknown User';
     const imagePath = profile?.image?.url;
@@ -228,9 +228,9 @@ export const userItemViews = ({
     const roleName = getUserRoleFromLevel(item.level || 3); // Default to USER level
 
     // React 19: Memoized badge classes for better performance
-    const statusBadgeClass = useMemo(() => 
-      item.isActive 
-        ? 'bg-green-100 text-green-800 border-green-200 border text-xs' 
+    const statusBadgeClass = useMemo(() =>
+      item.isActive
+        ? 'bg-green-100 text-green-800 border-green-200 border text-xs'
         : 'bg-gray-100 text-gray-800 border-gray-200 border text-xs',
       [item.isActive]
     );
@@ -238,7 +238,7 @@ export const userItemViews = ({
     const roleBadgeClass = useMemo(() => {
       const roleColors = {
         [EUserRole.ADMIN]: 'bg-red-100 text-red-800 border-red-200',
-        [EUserRole.TRAINER]: 'bg-blue-100 text-blue-800 border-blue-200', 
+        [EUserRole.TRAINER]: 'bg-blue-100 text-blue-800 border-blue-200',
         [EUserRole.CLIENT]: 'bg-green-100 text-green-800 border-green-200',
         [EUserRole.USER]: 'bg-gray-100 text-gray-800 border-gray-200'
       };
@@ -247,24 +247,19 @@ export const userItemViews = ({
 
     return (
       <AppCard data-component-id={componentId}>
-        <div className="flex flex-col sm:flex-row items-start gap-3">
-          <div className="flex-1 w-full space-y-3">
+        <div className="flex gap-3 justify-between w-full">
+          <div className="flex-1 space-y-3">
             {/* Header with Name and Status */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-base group-hover:text-primary transition-colors truncate">
-                  {name}
-                </h3>
-              </div>
-              <div className="flex items-center gap-1 flex-wrap">
-                <Badge className={roleBadgeClass}>
-                  {roleName}
-                </Badge>
-                <Badge className={statusBadgeClass}>
-                  {item.isActive ? "Active" : "Inactive"}
-                </Badge>
-              </div>
+
+            <div className="flex items-center gap-1 flex-wrap">
+              <Badge className={roleBadgeClass}>
+                {roleName}
+              </Badge>
+              <Badge className={statusBadgeClass}>
+                {item.isActive ? "Active" : "Inactive"}
+              </Badge>
             </div>
+
 
             {/* Profile Image and Contact Info */}
             <div className="flex items-center gap-2 p-2 rounded bg-primary/5 border border-primary/20">
@@ -283,9 +278,14 @@ export const userItemViews = ({
               <div className="flex-1 min-w-0">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <User className="h-3 w-3 flex-shrink-0" />
+                    <span className="truncate">{name}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Mail className="h-3 w-3 flex-shrink-0" />
                     <span className="truncate">{item.email}</span>
                   </div>
+
                   {phoneNumber !== '-' && (
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Phone className="h-3 w-3 flex-shrink-0" />
@@ -298,7 +298,7 @@ export const userItemViews = ({
           </div>
 
           {/* Actions */}
-          <div className="flex-shrink-0 self-start">
+          <div className="flex-1 flex justify-end">
             <UserActions
               user={item}
               handleEdit={handleEdit}

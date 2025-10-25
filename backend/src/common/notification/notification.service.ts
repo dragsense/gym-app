@@ -6,7 +6,6 @@ import { Notification } from './entities/notification.entity';
 import { CreateNotificationDto } from './dtos/create-notification.dto';
 import { CrudService } from '@/common/crud/crud.service';
 import { EventService } from '../helper/services/event.service';
-import { ServerGateway } from '../../gateways/server.gateway';
 
 export interface NotificationConfig {
   enabled: boolean;
@@ -84,41 +83,7 @@ export class NotificationService extends CrudService<Notification> {
 
     // Create the notification in database
     const notification = await this.create(createNotificationDto);
-
-    // Emit real-time notification via WebSocket
-    if (notification) {
-      this.emitRealTimeNotification(notification);
-    }
-
     return notification;
-  }
-
-  /**
-   * Emit real-time notification via WebSocket
-   */
-  private emitRealTimeNotification(notification: Notification): void {
-    // Simple notification event - client will fetch full data
-    const notificationEvent = {
-      id: notification.id,
-      entityId: notification.entityId,
-      type: notification.type,
-      priority: notification.priority,
-    };
-
-    // If notification has a specific entityId (user), send to that user
-    if (notification.entityId) {
-      ServerGateway.getInstance()?.emitToUser(
-        notification.entityId,
-        'new_notification',
-        notificationEvent,
-      );
-    } else {
-      // If no specific user, broadcast to all connected clients
-      ServerGateway.getInstance()?.emitToAll(
-        'new_notification',
-        notificationEvent,
-      );
-    }
   }
 
   /**

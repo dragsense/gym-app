@@ -2,7 +2,6 @@ import { type ClassConstructor, plainToInstance } from "class-transformer";
 import { validate } from "class-validator";
 import { type Resolver } from "react-hook-form";
 
-
 export function classValidatorResolver<T extends object>(
   dtoClass: ClassConstructor<T>
 ): Resolver<T> {
@@ -10,20 +9,24 @@ export function classValidatorResolver<T extends object>(
     // Separate File objects and arrays of Files from regular values before transformation
     const regularValues: any = {};
     const fileValues: any = {};
-    
-    Object.keys(values).forEach(key => {
+
+    Object.keys(values).forEach((key) => {
       const value = (values as any)[key];
-      
+
       // Check if it's a single File
-      if (typeof File !== 'undefined' && value instanceof File) {
+      if (typeof File !== "undefined" && value instanceof File) {
         fileValues[key] = value;
-      } 
+      }
       // Check if it's an array of Files
-      else if (Array.isArray(value) && value.length > 0 && value.every(item => item instanceof File)) {
+      else if (
+        Array.isArray(value) &&
+        value.length > 0 &&
+        value.every((item) => item instanceof File)
+      ) {
         fileValues[key] = value;
       }
       // Check if it's a Blob
-      else if (typeof Blob !== 'undefined' && value instanceof Blob) {
+      else if (typeof Blob !== "undefined" && value instanceof Blob) {
         fileValues[key] = value;
       }
       // Otherwise it's a regular value
@@ -39,7 +42,7 @@ export function classValidatorResolver<T extends object>(
     });
 
     // Add File/Blob objects back to DTO without transformation
-    Object.keys(fileValues).forEach(key => {
+    Object.keys(fileValues).forEach((key) => {
       (dto as any)[key] = fileValues[key];
     });
 
@@ -69,15 +72,17 @@ function flattenValidationErrors(
   parentPath: string = ""
 ): Record<string, any> {
   return errors.reduce((acc, err) => {
-    const fieldPath = parentPath ? `${parentPath}.${err.property}` : err.property;
+    const fieldPath = parentPath
+      ? `${parentPath}.${err.property}`
+      : err.property;
     if (err.constraints) {
       acc[fieldPath] = {
         type: "validation",
         message: Object.values(err.constraints)[0],
       };
 
-      if(parentPath) {
-      acc[parentPath] = {
+      if (parentPath) {
+        acc[parentPath] = {
           type: "validation",
           message: Object.values(err.constraints)[0],
         };

@@ -1,5 +1,5 @@
 // React
-import {type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { useId, useMemo, useTransition, useDeferredValue } from "react";
 
 // External Libraries
@@ -81,7 +81,7 @@ export function Table<TData, TListData = any, TExtra extends Record<string, unkn
       setPagination({ page });
     });
   };
-  
+
   const onLimitChange = (limit: number) => {
     startTransition(() => {
       setPagination({ limit });
@@ -106,7 +106,7 @@ export function Table<TData, TListData = any, TExtra extends Record<string, unkn
   ), []);
 
   return (
-    <div className={cn("px-4", MainClassName)} data-component-id={componentId}>
+    <div className={cn(MainClassName)} data-component-id={componentId}>
       {loading && memoizedLoadingState}
 
       <AppTable

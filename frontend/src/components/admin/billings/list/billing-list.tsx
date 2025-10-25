@@ -128,14 +128,12 @@ export default function BillingList({
       </div>
 
       <TabsContent value="table">
-        <AppCard className="px-0">
-          <TTable<IBilling>
-            listStore={store}
-            columns={columns}
-            emptyMessage="No billings found."
-            showPagination={true}
-          />
-        </AppCard>
+        <TTable<IBilling>
+          listStore={store}
+          columns={columns}
+          emptyMessage="No billings found."
+          showPagination={true}
+        />
       </TabsContent>
 
       <TabsContent value="list">

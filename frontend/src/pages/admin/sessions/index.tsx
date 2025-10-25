@@ -38,10 +38,10 @@ export default function SessionsPage() {
         <PageInnerLayout Header={<Header />}>
             <SingleHandler<ISession, any>
                 queryFn={fetchSession}
-                initialParams={{ 
+                initialParams={{
                     _relations: 'clientsUsers.profile, trainerUser.profile',
                     _select: 'trainerUser.email, trainerUser.profile.firstName, trainerUser.profile.lastName,  clientsUsers.email, clientsUsers.profile.firstName, clientsUsers.profile.lastName',
-                   
+
                 }}
                 deleteFn={deleteSession}
                 storeKey={SESSIONS_STORE_KEY}
@@ -75,7 +75,7 @@ export default function SessionsPage() {
                             _select: 'trainerUser.email, trainerUser.profile.firstName, trainerUser.profile.lastName',
                             _countable: 'clientsUsers',
                         }}
-                        ListComponent={SessionList} 
+                        ListComponent={SessionList}
                         dto={SessionListDto}
                         storeKey={SESSIONS_STORE_KEY}
                         listProps={{}}

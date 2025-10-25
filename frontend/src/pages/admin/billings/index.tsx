@@ -36,7 +36,7 @@ export default function BillingsPage() {
         <PageInnerLayout Header={<Header />}>
             <SingleHandler<IBilling, any>
                 queryFn={fetchBilling}
-                initialParams={{ 
+                initialParams={{
                     _relations: 'recipientUser, recipientUser.profile',
                     _select: 'recipientUser.email, recipientUser.profile.firstName, recipientUser.profile.lastName',
                 }}
@@ -58,7 +58,7 @@ export default function BillingsPage() {
                     _relations: 'recipientUser, recipientUser.profile',
                     _select: 'recipientUser.email, recipientUser.profile.firstName, recipientUser.profile.lastName',
                 }}
-                ListComponent={BillingList} 
+                ListComponent={BillingList}
                 dto={BillingListDto}
                 storeKey={BILLINGS_STORE_KEY}
                 listProps={{}}

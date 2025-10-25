@@ -149,13 +149,12 @@ export default function UserList({
 
 
       <TabsContent value="table">
-        <AppCard className="px-0">
-          <TTable<IUser>
-            listStore={store}
-            columns={columns}
-            emptyMessage="No users found."
-            showPagination={true}
-          /></AppCard>
+        <TTable<IUser>
+          listStore={store}
+          columns={columns}
+          emptyMessage="No users found."
+          showPagination={true}
+        />
       </TabsContent>
 
 

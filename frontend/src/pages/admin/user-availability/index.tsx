@@ -1,4 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
+import { useId, useTransition } from "react";
 
 // Types
 import { type IUserAvailability } from "@shared/interfaces/user-availability.interface";
@@ -8,6 +9,8 @@ import { SingleHandler } from "@/handlers";
 
 // Custom UI Components
 import { UserAvailabilityView } from "@/components/admin";
+
+// Page Components
 import { UserAvailabilityForm, type TUserAvailabilityExtraProps } from "@/page-components";
 
 // API
@@ -15,36 +18,40 @@ import { deleteUserAvailability, fetchUserAvailability } from "@/services/user-a
 
 // Layouts
 import { PageInnerLayout } from "@/layouts";
-import type { TUserAvailabilityViewExtraProps } from "@/components/admin/user-availability/view/user-availability-view";
 
 export default function UserAvailabilityPage() {
+  // React 19: Essential IDs and transitions
+  const componentId = useId();
+  const [, startTransition] = useTransition();
 
   const queryClient = useQueryClient();
 
-  const STORE_KEY = 'user-availability';
+  const STORE_KEY = "user-availability";
 
   return (
     <PageInnerLayout Header={<Header />}>
-      <SingleHandler<IUserAvailability, TUserAvailabilityViewExtraProps>
-        queryFn={fetchUserAvailability}
-        initialParams={{
-          _relations: 'user',
-        }}
-        deleteFn={deleteUserAvailability}
-        storeKey={STORE_KEY}
-        onDeleteSuccess={() => queryClient.invalidateQueries({ queryKey: [STORE_KEY + "-list"] })}
-        SingleComponent={UserAvailabilityView}
-        actionComponents={[
-          {
-            action: 'createOrUpdate',
-            comp: UserAvailabilityForm
-          }
-        ]}
-        singleProps={{}}
-      />
-
+      <div data-component-id={componentId}>
+        <SingleHandler<IUserAvailability, TUserAvailabilityExtraProps>
+          queryFn={fetchUserAvailability}
+          deleteFn={deleteUserAvailability}
+          storeKey={STORE_KEY}
+          enabled={true}
+          onDeleteSuccess={() => {
+            startTransition(() => {
+              queryClient.invalidateQueries({ queryKey: [STORE_KEY] });
+            });
+          }}
+          SingleComponent={UserAvailabilityView}
+          actionComponents={[
+            {
+              action: "createOrUpdate",
+              comp: UserAvailabilityForm,
+            },
+          ]}
+        />
+      </div>
     </PageInnerLayout>
   );
 }
 
-const Header = () => null
+const Header = () => null;

@@ -127,11 +127,12 @@ export function TrainerForm({
                     startTransition(() => {
                         queryClient.invalidateQueries({ queryKey: [storeKey + "-list"] });
 
-                        if (response && 'trainer' in response && response.trainer) {
+                        if (response && 'trainer' in response && response.trainer && 'user' in response.trainer) {
+                            const user = response.trainer.user;
                             setCredentialModalContent({
                                 open: true,
-                                email: response.trainer.email,
-                                password: response.trainer.password || ""
+                                email: user.email,
+                                password: user.password || ""
                             })
                         }
                     });

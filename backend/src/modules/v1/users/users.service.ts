@@ -5,7 +5,14 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, EntityManager, Repository, FindOptionsWhere, DeepPartial, In } from 'typeorm';
+import {
+  DataSource,
+  EntityManager,
+  Repository,
+  FindOptionsWhere,
+  DeepPartial,
+  In,
+} from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 
@@ -38,7 +45,7 @@ export class UsersService extends CrudService<User> {
     eventService: EventService,
   ) {
     const crudOptions: CrudOptions = {
-      restrictedFields: ['password'],
+      restrictedFields: ['password', 'passwordHistory'],
       searchableFields: ['email', 'profile.firstName', 'profile.lastName'],
     };
     super(userRepo, dataSource, eventService, crudOptions);
@@ -51,8 +58,6 @@ export class UsersService extends CrudService<User> {
       relations: ['profile'],
     });
   }
-
-
 
   private generateStrongPassword(length: number): string {
     const chars = {
@@ -86,7 +91,9 @@ export class UsersService extends CrudService<User> {
       .join('');
   }
 
-  async createUser(createUserDto: CreateUserDto): Promise<IMessageResponse & { user: User }> {
+  async createUser(
+    createUserDto: CreateUserDto,
+  ): Promise<IMessageResponse & { user: User }> {
     const { profile, ...userData } = createUserDto;
 
     // Check if email exists
@@ -113,14 +120,19 @@ export class UsersService extends CrudService<User> {
         lastName: profile.lastName,
         phoneNumber: profile.phoneNumber,
       },
-      tempPassword
+      tempPassword,
     });
 
+    user.password = tempPassword as string;
+    user.passwordHistory = [];
 
     return { message: 'User created successfully.', user };
   }
 
-  async updateUser(id: number, updateUserDto: UpdateUserDto): Promise<IMessageResponse> {
+  async updateUser(
+    id: number,
+    updateUserDto: UpdateUserDto,
+  ): Promise<IMessageResponse> {
     const { profile, ...userData } = updateUserDto;
 
     // Update user data with callbacks
@@ -140,31 +152,30 @@ export class UsersService extends CrudService<User> {
       },
       afterUpdate: async (updatedEntity: User, manager: EntityManager) => {
         try {
-          const existingUser = await this.getSingle({ id: updatedEntity.id }, { __relations: 'profile' });
+          const existingUser = await this.getSingle(
+            { id: updatedEntity.id },
+            { __relations: 'profile' },
+          );
 
           if (profile && existingUser.profile)
             await manager.update(Profile, existingUser.profile.id, profile);
         } catch (error) {
           throw new Error('Failed to update user', error);
         }
-      }
+      },
     });
-
 
     return {
       message: 'User updated successfully',
     };
   }
 
-
-
   async resetPassword(
     id: number,
     resetPasswordDto: ResetPasswordDto,
-    force: boolean = false
+    force: boolean = false,
   ): Promise<IMessageResponse & { success: true }> {
     const { currentPassword, password } = resetPasswordDto;
-
 
     const user = await this.userRepo.findOne({
       where: { id },
@@ -178,13 +189,15 @@ export class UsersService extends CrudService<User> {
 
     await this.passwordService.validatePasswordChange(user, password);
 
-
     if (!force) {
       if (!currentPassword) {
         throw new ConflictException('Current password is required');
       }
 
-      const isOldPasswordValid = await bcrypt.compare(currentPassword, user.password);
+      const isOldPasswordValid = await bcrypt.compare(
+        currentPassword,
+        user.password,
+      );
       if (!isOldPasswordValid) {
         throw new ConflictException('Old password is incorrect');
       }
@@ -193,7 +206,9 @@ export class UsersService extends CrudService<User> {
     if (user.password) {
       const isSameAsOld = await bcrypt.compare(password, user.password);
       if (isSameAsOld) {
-        throw new ConflictException('New password must be different from the old password');
+        throw new ConflictException(
+          'New password must be different from the old password',
+        );
       }
     }
 
@@ -212,14 +227,13 @@ export class UsersService extends CrudService<User> {
       tableName: 'users',
       timestamp: new Date(),
       data: {
-        type: 'confirmation'
-      }
+        type: 'confirmation',
+      },
     });
 
     return {
       message: 'Password reset successfully',
-      success: true
+      success: true,
     };
   }
-
 }

@@ -7,7 +7,12 @@ import {
   UseGuards,
   HttpCode,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { StripeConnectService } from './stripe-connect.service';
 import { AuthUser } from '@/decorators/user.decorator';
 import { CreateStripeConnectDto } from '@shared/dtos';
@@ -16,23 +21,24 @@ import {
   StripeConnectCreateResponseDto,
 } from '@shared/dtos';
 import { User } from '../../users/entities/user.entity';
-import { JwtAuthGuard } from '@/guards/jwt-auth.gaurd';
 
 @ApiTags('Settings - Stripe Connect')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
 @Controller('stripe-connect')
 export class StripeConnectController {
-  constructor(private readonly stripeConnectService: StripeConnectService) { }
+  constructor(private readonly stripeConnectService: StripeConnectService) {}
 
   @Post()
   @ApiOperation({ summary: 'Create Stripe Connect account' })
   @ApiResponse({
     status: 201,
     description: 'Stripe Connect account created successfully',
-    type: StripeConnectCreateResponseDto
+    type: StripeConnectCreateResponseDto,
   })
-  @ApiResponse({ status: 400, description: 'Bad request - Account already exists or invalid data' })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request - Account already exists or invalid data',
+  })
   async create(
     @AuthUser() user: User,
     @Body() createDto: CreateStripeConnectDto,
@@ -45,7 +51,7 @@ export class StripeConnectController {
   @ApiResponse({
     status: 200,
     description: 'Account status retrieved successfully',
-    type: StripeConnectStatusDto
+    type: StripeConnectStatusDto,
   })
   async getStatus(@AuthUser() authUser: User): Promise<StripeConnectStatusDto> {
     return this.stripeConnectService.findByUser(authUser);

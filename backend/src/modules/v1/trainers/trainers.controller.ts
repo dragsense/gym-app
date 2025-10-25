@@ -21,7 +21,6 @@ import {
 } from '@nestjs/swagger';
 
 import { TrainersService } from './trainers.service';
-import { JwtAuthGuard } from '@/guards/jwt-auth.gaurd';
 import {
   CreateTrainerDto,
   UpdateTrainerDto,
@@ -33,7 +32,6 @@ import {
 import { Trainer } from './entities/trainer.entity';
 import { AuthUser } from '@/decorators/user.decorator';
 
-@UseGuards(JwtAuthGuard)
 @ApiBearerAuth('access-token')
 @ApiTags('Trainers')
 @Controller('trainers')

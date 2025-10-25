@@ -79,7 +79,7 @@ export default function ReferralList({
   }
 
   const handleView = (id: number) => {
-    
+
   }
 
   const { columns, listItem } = itemViews({
@@ -125,14 +125,12 @@ export default function ReferralList({
       </div>
 
       <TabsContent value="table">
-        <AppCard className="px-0">
-          <TTable<IReferralLink>
-            listStore={store}
-            columns={columns}
-            emptyMessage="No referral links found."
-            showPagination={true}
-          />
-        </AppCard>
+        <TTable<IReferralLink>
+          listStore={store}
+          columns={columns}
+          emptyMessage="No referral links found."
+          showPagination={true}
+        />
       </TabsContent>
 
       <TabsContent value="list">

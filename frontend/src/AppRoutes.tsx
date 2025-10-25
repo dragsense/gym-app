@@ -17,9 +17,9 @@ const PublicRoute = lazy(() => import("@/routes/PublicRoute"));
 // React 19: Enhanced loading component with transitions
 const RouteLoadingFallback = () => {
   const componentId = useId();
-  
+
   return (
-    <div 
+    <div
       className="flex flex-col items-center justify-center min-h-screen bg-background"
       data-component-id={componentId}
     >
@@ -27,7 +27,7 @@ const RouteLoadingFallback = () => {
         <h3 className="text-lg font-semibold text-foreground">Application</h3>
         <p className="text-sm text-muted-foreground">Initializing application components...</p>
       </div>
-      <AppLoader/> 
+      <AppLoader />
     </div>
   );
 };
@@ -69,7 +69,7 @@ const appRouter = createBrowserRouter([
         children: [
           {
             index: true,
-            element: <Navigate to={ADMIN_ROUTES.USERS} replace />,
+            element: <Navigate to={ADMIN_ROUTES.DASHBOARD} replace />,
           },
           {
             element: (

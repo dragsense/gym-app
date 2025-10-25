@@ -29,7 +29,6 @@ import {
   CreateFileUploadDto,
   UpdateFileUploadDto,
 } from '@shared/dtos/file-upload-dtos/file-upload.dto';
-import { JwtAuthGuard } from '@/guards/jwt-auth.gaurd';
 import { AuthUser } from '@/decorators/user.decorator';
 import { join } from 'path';
 import { createReadStream, existsSync } from 'fs';
@@ -41,10 +40,9 @@ import { SingleQueryDto } from '@shared/dtos/common/list-query.dto';
 import { FileUpload } from './entities/file-upload.entity';
 
 @ApiTags('File Upload')
-@UseGuards(JwtAuthGuard)
 @Controller('files')
 export class FileUploadController {
-  constructor(private readonly fileUploadService: FileUploadService) { }
+  constructor(private readonly fileUploadService: FileUploadService) {}
 
   @Get()
   @ApiOperation({ summary: 'Get paginated list of File' })

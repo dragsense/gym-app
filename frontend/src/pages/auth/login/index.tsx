@@ -25,7 +25,6 @@ import { PUBLIC_ROUTES } from "@/config/routes.config";
 
 export default function LoginPage() {
   // React 19: Essential IDs and transitions
-  const componentId = useId();
   const [, startTransition] = useTransition();
 
   const navigate = useNavigate();

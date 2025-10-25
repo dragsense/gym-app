@@ -3,14 +3,21 @@ import { apiFileRequest, apiRequest, downloadFile } from "@/utils/fetcher";
 import { generateQueryParams } from "@/utils";
 
 // Types
-import type { IMessageResponse, IPaginatedResponse } from "@shared/interfaces/api/response.interface";
+import type {
+  IMessageResponse,
+  IPaginatedResponse,
+} from "@shared/interfaces/api/response.interface";
 import type { IListQueryParams } from "@shared/interfaces/api/param.interface";
 
 /**
  * Generic base service class for common CRUD operations
  * Can be extended by specific services to reduce code duplication
  */
-export class BaseService<TEntity, TCreateData extends Record<string, any>, TUpdateData extends Record<string, any>> {
+export class BaseService<
+  TEntity,
+  TCreateData extends Record<string, any>,
+  TUpdateData extends Record<string, any>
+> {
   protected apiPath: string;
 
   constructor(apiPath: string) {
@@ -34,7 +41,10 @@ export class BaseService<TEntity, TCreateData extends Record<string, any>, TUpda
   /**
    * Get all entities (without pagination) with optional custom path
    */
-  getAll<TResponse = TEntity>(params?: Record<string, any>, customPath?: string) {
+  getAll<TResponse = TEntity>(
+    params?: Record<string, any>,
+    customPath?: string
+  ) {
     const queryParams = new URLSearchParams();
 
     if (params) {
@@ -52,7 +62,11 @@ export class BaseService<TEntity, TCreateData extends Record<string, any>, TUpda
   /**
    * Get single entity by ID with optional query params and custom path
    */
-  getSingle<TResponse = TEntity>(id: any, queryParams?: Record<string, any>, customPath?: string) {
+  getSingle<TResponse = TEntity>(
+    id?: any,
+    queryParams?: Record<string, any>,
+    customPath?: string
+  ) {
     let url = customPath ? `${this.apiPath}${customPath}` : `${this.apiPath}`;
 
     // Only append ID if it's not empty and no custom path is provided
@@ -72,7 +86,11 @@ export class BaseService<TEntity, TCreateData extends Record<string, any>, TUpda
   /**
    * Create new entity with optional query params and custom path
    */
-  post<TResponse = IMessageResponse>(data: TCreateData, queryParams?: Record<string, any>, customPath?: string) {
+  post<TResponse = IMessageResponse>(
+    data: TCreateData,
+    queryParams?: Record<string, any>,
+    customPath?: string
+  ) {
     let url = customPath ? `${this.apiPath}${customPath}` : `${this.apiPath}`;
 
     if (queryParams) {
@@ -88,7 +106,11 @@ export class BaseService<TEntity, TCreateData extends Record<string, any>, TUpda
    * Update entity by ID with optional query params and custom path
    */
   put<TResponse = IMessageResponse>(id: any) {
-    return (data: TUpdateData, queryParams?: Record<string, any>, customPath?: string) => {
+    return (
+      data: TUpdateData,
+      queryParams?: Record<string, any>,
+      customPath?: string
+    ) => {
       let url = customPath ? `${this.apiPath}${customPath}` : `${this.apiPath}`;
 
       if (id) {
@@ -109,7 +131,11 @@ export class BaseService<TEntity, TCreateData extends Record<string, any>, TUpda
    * Patch entity by ID with optional query params and custom path
    */
   patch<TResponse = IMessageResponse>(id: any) {
-    return (data: TUpdateData, queryParams?: Record<string, any>, customPath?: string) => {
+    return (
+      data: TUpdateData,
+      queryParams?: Record<string, any>,
+      customPath?: string
+    ) => {
       let url = customPath ? `${this.apiPath}${customPath}` : `${this.apiPath}`;
 
       if (id) {
@@ -129,7 +155,11 @@ export class BaseService<TEntity, TCreateData extends Record<string, any>, TUpda
   /**
    * Delete entity by ID with optional query params and custom path
    */
-  delete<TResponse = void>(id: any, queryParams?: Record<string, any>, customPath?: string) {
+  delete<TResponse = void>(
+    id: any,
+    queryParams?: Record<string, any>,
+    customPath?: string
+  ) {
     let url = customPath ? `${this.apiPath}${customPath}` : `${this.apiPath}`;
 
     if (id) {
@@ -148,7 +178,11 @@ export class BaseService<TEntity, TCreateData extends Record<string, any>, TUpda
   /**
    * Post with FormData (for file uploads) with optional query params and custom path
    */
-  postFormData<TResponse = IMessageResponse>(data: TCreateData, queryParams?: Record<string, any>, customPath?: string) {
+  postFormData<TResponse = IMessageResponse>(
+    data: TCreateData,
+    queryParams?: Record<string, any>,
+    customPath?: string
+  ) {
     const formData = new FormData();
 
     Object.entries(data).forEach(([key, value]) => {
@@ -183,7 +217,11 @@ export class BaseService<TEntity, TCreateData extends Record<string, any>, TUpda
    * Patch with FormData (for file uploads) with optional query params and custom path
    */
   patchFormData<TResponse = IMessageResponse>(id: any) {
-    return (data: TUpdateData, queryParams?: Record<string, any>, customPath?: string) => {
+    return (
+      data: TUpdateData,
+      queryParams?: Record<string, any>,
+      customPath?: string
+    ) => {
       const formData = new FormData();
 
       Object.entries(data).forEach(([key, value]) => {
@@ -223,7 +261,11 @@ export class BaseService<TEntity, TCreateData extends Record<string, any>, TUpda
   /**
    * Download file from endpoint
    */
-  downloadFile(endpoint: string, fileName?: string, queryParams?: Record<string, any>) {
+  downloadFile(
+    endpoint: string,
+    fileName?: string,
+    queryParams?: Record<string, any>
+  ) {
     let url = `${this.apiPath}${endpoint}`;
     if (queryParams) {
       const params = new URLSearchParams();
@@ -232,15 +274,15 @@ export class BaseService<TEntity, TCreateData extends Record<string, any>, TUpda
     }
     return downloadFile(url, fileName);
   }
-
 }
-
 
 /**
  * Factory function to create service instances
  */
-export function createService<TEntity, TCreateData extends Record<string, any>, TUpdateData extends Record<string, any>>(
-  apiPath: string
-): BaseService<TEntity, TCreateData, TUpdateData> {
+export function createService<
+  TEntity,
+  TCreateData extends Record<string, any>,
+  TUpdateData extends Record<string, any>
+>(apiPath: string): BaseService<TEntity, TCreateData, TUpdateData> {
   return new BaseService<TEntity, TCreateData, TUpdateData>(apiPath);
 }

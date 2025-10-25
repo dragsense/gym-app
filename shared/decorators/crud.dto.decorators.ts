@@ -408,7 +408,14 @@ export function DateRange(field?: string) {
 export function getQueryFilters(
   target: any
 ): Record<string, QueryFilterOptions> {
-  return Reflect.getMetadata(QUERY_FILTER_METADATA, target) || {};
+  // Check both the class and its prototype for metadata
+  const classMetadata =
+    Reflect.getMetadata(QUERY_FILTER_METADATA, target) || {};
+  const prototypeMetadata =
+    Reflect.getMetadata(QUERY_FILTER_METADATA, target.prototype) || {};
+
+  // Merge both metadata sources
+  return { ...classMetadata, ...prototypeMetadata };
 }
 
 /**
@@ -417,7 +424,14 @@ export function getQueryFilters(
  * @returns Relation filters metadata
  */
 export function getRelationFilters(target: any): Record<string, string> {
-  return Reflect.getMetadata(RELATION_FILTER_METADATA, target) || {};
+  // Check both the class and its prototype for metadata
+  const classMetadata =
+    Reflect.getMetadata(RELATION_FILTER_METADATA, target) || {};
+  const prototypeMetadata =
+    Reflect.getMetadata(RELATION_FILTER_METADATA, target.prototype) || {};
+
+  // Merge both metadata sources
+  return { ...classMetadata, ...prototypeMetadata };
 }
 
 // Pagination decorators

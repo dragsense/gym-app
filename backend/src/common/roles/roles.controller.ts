@@ -18,7 +18,6 @@ import {
   ApiQuery,
   ApiParam,
 } from '@nestjs/swagger';
-import { JwtAuthGuard } from '@/guards/jwt-auth.gaurd';
 import { RolesService } from './roles.service';
 import { PermissionsService } from './services/permissions.service';
 import { ResourcesService } from './services/resources.service';
@@ -40,8 +39,6 @@ import {
 } from '@shared/dtos/role-dtos';
 
 @ApiTags('Roles & Permissions')
-@ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
 @Controller('roles')
 export class RolesController {
   constructor(

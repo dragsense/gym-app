@@ -98,29 +98,7 @@ export class UpdateReferralLinkDto extends PartialType(CreateReferralLinkDto) {
   // Explicit type annotation to resolve TypeScript inference issue
 }
 
-export class ReferralLinkListDto extends ListQueryDto<IReferralLink> {
-  @Like()
-  @FieldType("text", false)
-  title?: string;
-
-  @Equals()
-  @FieldType("select", false)
-  @FieldOptions(
-    Object.values(EReferralLinkStatus).map((v) => ({ value: v, label: v }))
-  )
-  status?: EReferralLinkStatus;
-
-  @Equals()
-  @FieldType("select", false)
-  @FieldOptions(
-    Object.values(EReferralLinkType).map((v) => ({ value: v, label: v }))
-  )
-  type?: EReferralLinkType;
-
-  @DateRange()
-  @FieldType("date", false)
-  expiresAt?: string;
-}
+export class ReferralLinkListDto extends ListQueryDto<IReferralLink> {}
 
 export class ReferralLinkDto {
   @ApiProperty({ example: 1, description: "Referral link ID" })

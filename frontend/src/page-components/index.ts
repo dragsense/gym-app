@@ -9,3 +9,4 @@ export * from "./schedule";
 export * from "./worker";
 export * from "./referral-link";
 export * from "./user-availability";
+export * from "./settings";

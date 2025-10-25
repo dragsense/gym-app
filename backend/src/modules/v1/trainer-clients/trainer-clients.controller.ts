@@ -23,13 +23,11 @@ import {
   UpdateTrainerClientDto,
   TrainerClientListDto,
 } from '@shared/dtos/trainer-client-dtos';
-import { JwtAuthGuard } from '@/guards/jwt-auth.gaurd';
 import { SingleQueryDto } from '@shared/dtos';
 import { TrainerClient } from './entities/trainer-client.entity';
 
 @ApiTags('Trainer-Clients')
-@ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@ApiBearerAuth('access-token')
 @Controller('trainer-clients')
 export class TrainerClientsController {
   constructor(private readonly trainerClientsService: TrainerClientsService) {}

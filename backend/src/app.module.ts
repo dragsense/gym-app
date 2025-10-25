@@ -19,6 +19,7 @@ import {
   clusterConfig,
   activityLogsConfig,
   stripeConfig,
+  getJwtConfig,
 } from './config';
 
 import { AppController } from './app.controller';
@@ -37,7 +38,6 @@ import { LoggerModule } from './common/logger/logger.module';
 import { DatabaseModule } from './common/database/database.module';
 import { ServerGatewayModule } from './gateways/server-gateway.module';
 
-import { ServerGateway } from './gateways/server.gateway';
 import { join } from 'path';
 import { ResponseEncryptionInterceptor } from './interceptors/response-encryption-interceptor';
 
@@ -59,6 +59,10 @@ import { ActionModule } from './common/helper/action.module';
 import { getBullQueueConfig } from './config/bull-queue.config';
 import { CacheModule } from './common/cache/cache.module';
 import { RolesModule } from './common/roles/roles.module';
+import { JwtModule } from '@nestjs/jwt';
+import { JwtStrategy } from './modules/v1/auth/strategies/jwt.strategy';
+import { JwtAuthGuard } from './guards/auth.gaurd';
+import { HealthModule } from './common/health/health.module';
 
 @Module({
   imports: [
@@ -107,6 +111,12 @@ import { RolesModule } from './common/roles/roles.module';
       },
     ]),
 
+    JwtModule.registerAsync({
+      useFactory: getJwtConfig,
+      inject: [ConfigService],
+      global: true,
+    }),
+
     // Events
     EventEmitterModule.forRoot(),
 
@@ -124,6 +134,7 @@ import { RolesModule } from './common/roles/roles.module';
     ActivityLogsModule,
     CacheModule,
     WorkerModule,
+    HealthModule,
     RolesModule,
 
     // Feature modules
@@ -149,9 +160,14 @@ import { RolesModule } from './common/roles/roles.module';
     AppService,
     EncryptionService,
     ResponseEncryptionInterceptor,
+    JwtStrategy,
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
     },
   ],
 })

@@ -64,7 +64,7 @@ export default function BillingForm({
         amount: 0,
         issueDate: new Date().toISOString(),
         dueDate: new Date(new Date().setDate(new Date().getDate() + 1)).toISOString(),
-        recipientUser: {} as UserDto,
+        recipientUser: null,
         type: EBillingType.SESSION,
         recurrence: EScheduleFrequency.ONCE,
         notes: "",

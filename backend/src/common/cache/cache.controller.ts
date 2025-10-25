@@ -1,11 +1,9 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
-import { JwtAuthGuard } from '@/guards/jwt-auth.gaurd';
 
 @ApiTags('Cache')
 @Controller('cache')
-@UseGuards(JwtAuthGuard)
 export class CacheController {
   constructor(private readonly configService: ConfigService) {}
 

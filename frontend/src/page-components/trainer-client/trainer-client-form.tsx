@@ -26,7 +26,7 @@ import { CreateTrainerClientDto, UpdateTrainerClientDto } from "@shared/dtos";
 import { ETrainerClientStatus } from "@shared/enums/trainer-client.enum";
 
 export type TTrainerClientExtraProps = {
-  level: number;
+    level: number;
 }
 
 interface ITrainerClientFormProps extends THandlerComponentProps<TSingleHandlerStore<ITrainerClient, TTrainerClientExtraProps>> {
@@ -39,7 +39,7 @@ export default function TrainerClientForm({
     // React 19: Essential IDs and transitions
     const componentId = useId();
     const [, startTransition] = useTransition();
-    
+
     const queryClient = useQueryClient();
 
     if (!store) {
@@ -64,7 +64,7 @@ export default function TrainerClientForm({
     // React 19: Memoized initial values with deferred processing
     const initialValues = useMemo(() => {
         return strictDeepMerge<TTrainerClientData>(INITIAL_VALUES, response ?? {});
-    }, [INITIAL_VALUES, response?.id]); 
+    }, [INITIAL_VALUES, response?.id]);
 
     const handleClose = useCallback(() => {
         startTransition(() => {
@@ -78,7 +78,7 @@ export default function TrainerClientForm({
     const mutationFn = useMemo(() => {
         return isEditing ? updateTrainerClient(response.id) : createTrainerClient;
     }, [isEditing, response?.id]);
-    
+
     // React 19: Memoized DTO to prevent unnecessary re-renders
     const dto = useMemo(() => {
         return isEditing ? UpdateTrainerClientDto : CreateTrainerClientDto;
@@ -105,6 +105,8 @@ export default function TrainerClientForm({
                 onSuccess={() => {
                     startTransition(() => {
                         queryClient.invalidateQueries({ queryKey: [storeKey + "-list"] });
+                        setAction('none')
+
                     });
                 }}
                 formProps={{

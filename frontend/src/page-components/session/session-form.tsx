@@ -64,7 +64,7 @@ export default function SessionForm({
         description: "",
         startDateTime: new Date().toISOString(),
         duration: 60,
-        trainerUser: {} as UserDto,
+        trainerUser: null,
         clientsUsers: [] as UserDto[], // Will be validated to require at least one
         type: ESessionType.PERSONAL,
         location: "",
@@ -78,6 +78,8 @@ export default function SessionForm({
     const initialValues = useMemo(() => {
         return strictDeepMerge<TSessionData>(INITIAL_VALUES, response ?? {});
     }, [INITIAL_VALUES, response?.id]);
+
+
 
     const handleClose = useCallback(() => {
         startTransition(() => {

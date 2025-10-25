@@ -23,7 +23,7 @@ import { ReferralLinkListDto } from "@shared/dtos";
 
 // Create a simple view component interface
 interface TReferralLinkViewExtraProps {
-  // Add any extra props if needed
+    // Add any extra props if needed
 }
 
 export default function ReferralsPage() {
@@ -35,7 +35,7 @@ export default function ReferralsPage() {
         <PageInnerLayout Header={<Header />}>
             <SingleHandler<IReferralLink, TReferralLinkViewExtraProps>
                 queryFn={fetchReferralLink}
-                initialParams={{ 
+                initialParams={{
                     _relations: 'createdBy, createdBy.profile',
                     _select: 'createdBy.email, createdBy.profile.firstName, createdBy.profile.lastName',
                 }}
@@ -53,11 +53,8 @@ export default function ReferralsPage() {
 
             <ListHandler<IReferralLink, TReferralLinkListData, IReferralListExtraProps, IReferralLink, TReferralLinkViewExtraProps>
                 queryFn={fetchReferralLinks}
-                initialParams={{
-                    _relations: 'createdBy, createdBy.profile',
-                    _select: 'createdBy.email, createdBy.profile.firstName, createdBy.profile.lastName',
-                }}
-                ListComponent={ReferralLinkList} 
+
+                ListComponent={ReferralLinkList}
                 dto={ReferralLinkListDto}
                 storeKey={REFERRALS_STORE_KEY}
                 listProps={{}}

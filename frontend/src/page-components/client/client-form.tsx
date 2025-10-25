@@ -126,11 +126,12 @@ export function ClientForm({
                     startTransition(() => {
                         queryClient.invalidateQueries({ queryKey: [storeKey + "-list"] });
 
-                        if (response && 'client' in response && response.client) {
+                        if (response && 'client' in response && response.client && 'user' in response.client) {
+                            const user = response.client.user;
                             setCredentialModalContent({
                                 open: true,
-                                email: response.client.email,
-                                password: response.client.password || ""
+                                email: user.email,
+                                password: user.password || ""
                             })
                         }
                     });

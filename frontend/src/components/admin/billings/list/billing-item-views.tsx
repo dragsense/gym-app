@@ -11,6 +11,7 @@ import { AppCard } from "@/components/layout-ui/app-card";
 import { type IBilling } from "@shared/interfaces/billing.interface";
 import { EBillingStatus, EBillingType } from "@shared/enums/billing.enum";
 import type { ColumnDef } from "@tanstack/react-table";
+import { EScheduleFrequency } from "@shared/enums/schedule.enum";
 
 interface IBillingItemViewsProps {
   handleEdit: (id: number) => void;
@@ -28,7 +29,6 @@ export function billingItemViews({ handleEdit, handleDelete, handleView }: IBill
       header: 'Title',
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <DollarSign className="h-4 w-4 text-muted-foreground" />
           <span className="font-medium">{row.original.title}</span>
         </div>
       ),
@@ -39,7 +39,7 @@ export function billingItemViews({ handleEdit, handleDelete, handleView }: IBill
       cell: ({ row }) => (
         <div className="flex items-center gap-1">
           <DollarSign className="h-4 w-4 text-green-600" />
-          <span className="font-medium">${row.original.amount}</span>
+          <span className="font-medium">{row.original.amount}</span>
         </div>
       ),
     },
@@ -64,7 +64,7 @@ export function billingItemViews({ handleEdit, handleDelete, handleView }: IBill
           [EBillingStatus.CANCELLED]: 'bg-gray-100 text-gray-800',
           [EBillingStatus.REFUNDED]: 'bg-blue-100 text-blue-800',
         };
-        
+
         return (
           <Badge className={statusColors[billing.status] || 'bg-gray-100 text-gray-800'}>
             {billing.status.replace('_', ' ')}
@@ -77,7 +77,7 @@ export function billingItemViews({ handleEdit, handleDelete, handleView }: IBill
       header: 'Issue Date',
       cell: ({ row }) => {
         const billing = row.original;
-        
+
         return (
           <div className="flex items-center gap-1">
             <Calendar className="h-4 w-4" />
@@ -92,7 +92,7 @@ export function billingItemViews({ handleEdit, handleDelete, handleView }: IBill
       cell: ({ row }) => {
         const billing = row.original;
         const isOverdue = new Date(billing.dueDate) < new Date() && billing.status === EBillingStatus.PENDING;
-        
+
         return (
           <div className={`flex items-center gap-1 ${isOverdue ? "text-red-600" : ""}`}>
             <Calendar className="h-4 w-4" />
@@ -103,25 +103,16 @@ export function billingItemViews({ handleEdit, handleDelete, handleView }: IBill
       },
     },
     {
-      accessorKey: 'trainer',
-      header: 'Trainer',
+      accessorKey: 'recipientUser',
+      header: 'Recipient',
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <User className="h-4 w-4 text-muted-foreground" />
-          <span>{row.original.trainer?.user?.profile?.firstName} {row.original.trainer?.user?.profile?.lastName}</span>
+          <span>{row.original.recipientUser?.profile?.firstName} {row.original.recipientUser?.profile?.lastName}</span>
         </div>
       ),
     },
-    {
-      id: 'clientsCount',
-      header: 'Clients',
-      cell: ({ row }) => (
-        <div className="flex items-center gap-1">
-          <Users className="h-4 w-4 text-muted-foreground" />
-          <span>{row.original.clientsCount || 0}</span>
-        </div>
-      ),
-    },
+
     {
       id: 'actions',
       header: 'Actions',
@@ -170,15 +161,16 @@ export function billingItemViews({ handleEdit, handleDelete, handleView }: IBill
     return (
       <AppCard className="p-4 hover:shadow-md transition-shadow" data-component-id={componentId}>
         <div className="space-y-4">
+          <h3 className="font-semibold text-lg">{billing.title}</h3>
+
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
-              <h3 className="font-semibold text-lg">{billing.title}</h3>
               <Badge variant="outline" className="capitalize">{billing.type.toLowerCase()}</Badge>
               <Badge className={statusColors[billing.status] || 'bg-gray-100 text-gray-800'}>
                 {billing.status.replace('_', ' ')}
               </Badge>
             </div>
-            
+
             <div className="space-y-2 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <DollarSign className="h-4 w-4" />
@@ -186,12 +178,9 @@ export function billingItemViews({ handleEdit, handleDelete, handleView }: IBill
               </div>
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4" />
-                <span><strong>Trainer:</strong> {billing.trainer?.user?.profile?.firstName} {billing.trainer?.user?.profile?.lastName}</span>
+                <span><strong>Recipient:</strong> {billing.recipientUser?.profile?.firstName} {billing.recipientUser?.profile?.lastName}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                <span><strong>Clients:</strong> {billing.clientsCount || 0} client(s)</span>
-              </div>
+
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
                 <span><strong>Issue Date:</strong> {format(new Date(billing.issueDate), 'MMM dd, yyyy')}</span>
@@ -201,21 +190,20 @@ export function billingItemViews({ handleEdit, handleDelete, handleView }: IBill
                 <span><strong>Due Date:</strong> {format(new Date(billing.dueDate), 'MMM dd, yyyy')}</span>
                 {isOverdue && <AlertCircle className="h-4 w-4" />}
               </div>
-              {billing.recurrence && billing.recurrence !== 'NONE' && (
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  <span><strong>Recurrence:</strong> {billing.recurrence.toLowerCase()}</span>
-                </div>
-              )}
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                <span><strong>Recurrence:</strong> {billing.recurrence}</span>
+              </div>
+
             </div>
-            
+
             {billing.description && (
               <p className="mt-2 text-sm text-muted-foreground line-clamp-2">
                 {billing.description}
               </p>
             )}
           </div>
-          
+
           <div className="flex items-center gap-2 ml-4">
             <Button
               variant="ghost"

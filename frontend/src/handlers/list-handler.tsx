@@ -92,14 +92,14 @@ export function ListHandler<
       acc[key] = '';
       return acc;
     }, {} as any);
-    
-    return { ...defaults, ...initialParams.filters || {} };
+
+    return { ...defaults, ...(initialParams.filters || {}) };
   }, [deferredFields, initialParams.filters]);
 
 
   let store = useRegisteredStore<TListHandlerStore<TData, TUserListData, TExtraProps>>(listStoreKey);
   if (!store) {
-    store = useListHandlerStore<TData, TUserListData, TExtraProps>(initialParams, listProps, filteredFields as TFieldConfigObject<TUserListData>);
+    store = useListHandlerStore<TData, TUserListData, TExtraProps>((initialParams.filters || {}), listProps, filteredFields as TFieldConfigObject<TUserListData>);
     registerStore<TListHandlerStore<TData, TUserListData, TExtraProps>>(listStoreKey, store);
   }
 
@@ -248,10 +248,10 @@ export function ListHandler<
       if (state.filters !== prevState.filters) {
         const currentValues = form.getValues();
         const hasChanges = JSON.stringify(currentValues) !== JSON.stringify(state.filters);
-        
+
         if (hasChanges) {
           isUpdatingFromStoreRef.current = true;
-          
+
           // Clear form if filters are empty
           if (Object.keys(state.filters).length === 0) {
             form.reset();
@@ -263,7 +263,7 @@ export function ListHandler<
             });
             setFilters(state.filters);
           }
-          
+
           // Reset flag after a tick to allow form to update
           setTimeout(() => {
             isUpdatingFromStoreRef.current = false;

@@ -22,7 +22,6 @@ import {
 } from '@nestjs/swagger';
 
 import { ClientsService } from './clients.service';
-import { JwtAuthGuard } from '@/guards/jwt-auth.gaurd';
 import {
   CreateClientDto,
   UpdateClientDto,
@@ -34,8 +33,6 @@ import {
 import { Client } from './entities/client.entity';
 import { AuthUser } from '@/decorators/user.decorator';
 
-@UseGuards(JwtAuthGuard)
-@ApiBearerAuth('access-token')
 @ApiTags('Clients')
 @Controller('clients')
 export class ClientsController {

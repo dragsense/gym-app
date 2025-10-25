@@ -50,7 +50,7 @@ export default function UsersPage() {
           },
           {
             action: 'updateProfile',
-            comp: ProfileForm  as any
+            comp: ProfileForm
           }
         ]}
         singleProps={{
@@ -64,7 +64,7 @@ export default function UsersPage() {
         dto={UserListDto}
         initialParams={{
           _relations: 'profile',
-          _select: 'email, level, profile.firstName,profile.lastName,profile.phoneNumber, createdAt, password',
+          _select: 'email, level, profile.firstName,profile.lastName,profile.phoneNumber, createdAt',
           sortBy: 'createdAt',
           sortOrder: 'ASC',
         }}

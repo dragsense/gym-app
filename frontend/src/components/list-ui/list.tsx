@@ -1,5 +1,5 @@
 // React
-import {  type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { useId, useMemo, useTransition, useDeferredValue } from "react";
 
 // External Libraries
@@ -102,16 +102,16 @@ export function List<TData, TListData = any, TExtra extends Record<string, unkno
 
 
       <div className={cn("space-y-3", colClassName)}>
-      <div  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {memoizedDisplayData.length > 0 ? (
-          memoizedDisplayData.map((item, index) => (
-              <div key={index}>
+        <div className="flex gap-3 flex-wrap">
+          {memoizedDisplayData.length > 0 ? (
+            memoizedDisplayData.map((item, index) => (
+              <div key={index} className="flex-1">
                 {renderItem(item, index)}
-            </div>
-          ))
-        ) : (<div className="text-sm text-muted-foreground text-center py-8">
-          {emptyMessage}
-        </div>)}
+              </div>
+            ))
+          ) : (<div className="text-sm text-muted-foreground text-center py-8">
+            {emptyMessage}
+          </div>)}
         </div>
       </div>
 

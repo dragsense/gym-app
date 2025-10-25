@@ -13,7 +13,7 @@ import type { IReferralLinkResponse } from "@shared/interfaces/referral-link.int
 import { Button } from "@/components/ui/button";
 import { ModalForm } from "@/components/form-ui/modal-form";
 import type { THandlerComponentProps } from "@/@types/handler-types";
-import type {  TFieldConfigObject } from "@/@types/form/field-config.type";
+import type { TFieldConfigObject } from "@/@types/form/field-config.type";
 
 export interface IReferralLinkFormModalExtraProps {
   open: boolean;
@@ -87,27 +87,24 @@ const ReferralLinkFormModal = React.memo(function ReferralLinkFormModal({
   ), [componentId, isEditing, onClose]);
 
   return <>
-    <ModalForm<TReferralLinkData, IReferralLinkResponse, IReferralFormModalExtraProps>
+    <ModalForm<TReferralLinkData, IReferralLinkResponse, IReferralLinkFormModalExtraProps>
       title={`${isEditing ? "Edit" : "Add"} Referral Link`}
       description={`${isEditing ? "Update" : "Create"} a new referral link`}
       open={open}
       onOpenChange={onOpenChange}
-      storeKey={storeKey}
-      store={store}
-      buttons={formButtons}
+      formStore={store}
       data-component-id={componentId}
+      footerContent={formButtons}
     >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {inputs.title}
-        {inputs.linkUrl}
-        {inputs.referralCode}
-        {inputs.status}
         {inputs.type}
-        {inputs.description}
+        <div className="col-span-2">
+          {inputs.description}
+        </div>
         {inputs.commissionPercentage}
         {inputs.expiresAt}
         {inputs.maxUses}
-        {inputs.notes}
       </div>
     </ModalForm>
   </>;

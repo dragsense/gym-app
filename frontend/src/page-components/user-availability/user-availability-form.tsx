@@ -22,10 +22,9 @@ import { createUserAvailability, updateUserAvailability } from "@/services/user-
 import { strictDeepMerge } from "@/utils";
 import { CreateUserAvailabilityDto, UpdateUserAvailabilityDto } from "@shared/dtos/user-availability-dtos";
 import type { TUserAvailabilityData } from '@shared/types';
-import {UserAvailabilityFormModal} from '@/components/admin';
+import { UserAvailabilityFormModal } from '@/components/admin';
 
 export type TUserAvailabilityExtraProps = {
-  // Add any extra props if needed
 }
 
 interface IUserAvailabilityFormProps extends THandlerComponentProps<TSingleHandlerStore<IUserAvailability, TUserAvailabilityExtraProps>> {

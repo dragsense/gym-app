@@ -129,13 +129,12 @@ export default function SessionList({
       </div>
 
       <TabsContent value="table">
-        <AppCard className="px-0">
-          <TTable<ISession>
-            listStore={store}
-            columns={columns}
-            emptyMessage="No sessions found."
-            showPagination={true}
-          /></AppCard>
+        <TTable<ISession>
+          listStore={store}
+          columns={columns}
+          emptyMessage="No sessions found."
+          showPagination={true}
+        />
       </TabsContent>
 
       <TabsContent value="list">

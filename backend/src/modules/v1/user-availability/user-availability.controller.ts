@@ -1,10 +1,4 @@
-import {
-  Controller,
-  Get,
-  UseGuards,
-  Body,
-  Post,
-} from '@nestjs/common';
+import { Controller, Get, UseGuards, Body, Post } from '@nestjs/common';
 
 import {
   ApiOperation,
@@ -15,7 +9,6 @@ import {
 } from '@nestjs/swagger';
 
 import { UserAvailabilityService } from './user-availability.service';
-import { JwtAuthGuard } from '@/guards/jwt-auth.gaurd';
 import {
   CreateUserAvailabilityDto,
   UserAvailabilityDto,
@@ -23,13 +16,13 @@ import {
 import { UserAvailability } from './entities/user-availability.entity';
 import { AuthUser } from '@/decorators/user.decorator';
 
-@UseGuards(JwtAuthGuard)
 @ApiBearerAuth('access-token')
 @ApiTags('User Availability')
 @Controller('user-availability')
 export class UserAvailabilityController {
-  constructor(private readonly userAvailabilityService: UserAvailabilityService) { }
-
+  constructor(
+    private readonly userAvailabilityService: UserAvailabilityService,
+  ) {}
 
   @ApiOperation({ summary: 'Get current user availability' })
   @ApiResponse({
@@ -38,7 +31,7 @@ export class UserAvailabilityController {
     type: UserAvailabilityDto,
   })
   @ApiResponse({ status: 404, description: 'User availability not found' })
-  @Get('my-availability')
+  @Get()
   getMyAvailability(@AuthUser() user: any): Promise<UserAvailability> {
     return this.userAvailabilityService.getSingle({
       userId: user.id,
@@ -50,9 +43,18 @@ export class UserAvailabilityController {
     type: CreateUserAvailabilityDto,
     description: 'Create or update user availability',
   })
-  @ApiResponse({ status: 200, description: 'User availability created or updated successfully' })
-  @Post('my-availability')
-  createOrUpdate(@Body() createUserAvailabilityDto: CreateUserAvailabilityDto, @AuthUser() user: any): Promise<UserAvailability> {
-    return this.userAvailabilityService.createOrUpdateUserAvailability(createUserAvailabilityDto, user.id);
+  @ApiResponse({
+    status: 200,
+    description: 'User availability created or updated successfully',
+  })
+  @Post()
+  createOrUpdate(
+    @Body() createUserAvailabilityDto: CreateUserAvailabilityDto,
+    @AuthUser() user: any,
+  ): Promise<UserAvailability> {
+    return this.userAvailabilityService.createOrUpdateUserAvailability(
+      createUserAvailabilityDto,
+      user.id,
+    );
   }
 }

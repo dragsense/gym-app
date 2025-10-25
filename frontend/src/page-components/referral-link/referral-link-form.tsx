@@ -26,7 +26,7 @@ import { CreateReferralLinkDto, UpdateReferralLinkDto } from "@shared/dtos/refer
 import { EReferralLinkType } from "@shared/enums/referral-link.enum";
 
 export type TReferralLinkExtraProps = {
-  // Add any extra props if needed
+    // Add any extra props if needed
 }
 
 interface IReferralLinkFormProps extends THandlerComponentProps<TSingleHandlerStore<IReferralLink, TReferralLinkExtraProps>> {
@@ -39,7 +39,7 @@ export default function ReferralLinkForm({
     // React 19: Essential IDs and transitions
     const componentId = useId();
     const [, startTransition] = useTransition();
-    
+
     const queryClient = useQueryClient();
 
     if (!store) {

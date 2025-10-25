@@ -23,6 +23,7 @@ import { EUserRole } from "@shared/enums";
 import type { TClientListData } from "@shared/types";
 import type { TClientViewExtraProps } from "@/components/admin/clients/view/client-view";
 import type { IClientListExtraProps } from "@/components/admin/clients/list/client-list";
+import { ClientListDto } from "@shared/dtos";
 
 export default function ClientsPage() {
     const queryClient = useQueryClient();
@@ -61,6 +62,7 @@ export default function ClientsPage() {
                     sortOrder: 'DESC',
                 }}
                 ListComponent={ClientList}
+                dto={ClientListDto}
                 storeKey={CLIENTS_STORE_KEY}
                 listProps={{
                     level: EUserLevels[EUserRole.CLIENT]

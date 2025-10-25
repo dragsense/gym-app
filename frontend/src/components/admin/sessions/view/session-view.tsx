@@ -19,7 +19,7 @@ import { type TSingleHandlerStore } from "@/stores";
 import { type THandlerComponentProps } from "@/@types/handler-types";
 
 export type TSessionViewExtraProps = {
-  // Add any extra props if needed
+    // Add any extra props if needed
 }
 
 interface ISessionViewProps extends THandlerComponentProps<TSingleHandlerStore<ISession, TSessionViewExtraProps>> {
@@ -45,11 +45,11 @@ export default function SessionView({ storeKey, store }: ISessionViewProps) {
     }
 
 
-        const handleCloseView = () => {
+    const handleCloseView = () => {
         startTransition(() => reset());
     };
 
-   
+
 
 
     return (
@@ -73,36 +73,33 @@ interface ISessionDetailContentProps {
 function SessionDetailContent({ session }: ISessionDetailContentProps) {
     // React 19: Essential IDs
     const componentId = useId();
-    
-    const trainer = session.trainer;
-    const clients = session.clients;
+
+    const trainer = session.trainerUser;
+    const clients = session.clientsUsers;
 
     // React 19: Memoized session dates for better performance
-    const sessionStartDate = useMemo(() => 
-        session.startDateTime ? format(new Date(session.startDateTime), 'EEEE, MMMM dd, yyyy') : '', 
+    const sessionStartDate = useMemo(() =>
+        session.startDateTime ? format(new Date(session.startDateTime), 'EEEE, MMMM dd, yyyy') : '',
         [session.startDateTime]
     );
 
-    const sessionStartTime = useMemo(() => 
-        session.startDateTime ? format(new Date(session.startDateTime), 'HH:mm') : '', 
+    const sessionStartTime = useMemo(() =>
+        session.startDateTime ? format(new Date(session.startDateTime), 'HH:mm') : '',
         [session.startDateTime]
     );
 
-    const sessionEndTime = useMemo(() => 
-        session.endDateTime ? format(new Date(session.endDateTime), 'HH:mm') : '', 
+
+    const sessionEndStartDate = useMemo(() =>
+        session.endDateTime ? format(new Date(session.endDateTime), 'EEEE, MMMM dd, yyyy') : '',
         [session.endDateTime]
     );
 
-    const sessionDuration = useMemo(() => {
-        if (session.startDateTime && session.endDateTime) {
-            const start = new Date(session.startDateTime);
-            const end = new Date(session.endDateTime);
-            const diffMs = end.getTime() - start.getTime();
-            const diffHours = Math.round(diffMs / (1000 * 60 * 60) * 10) / 10;
-            return `${diffHours} hours`;
-        }
-        return 'Unknown';
-    }, [session.startDateTime, session.endDateTime]);
+
+    const sessionEndTime = useMemo(() =>
+        session.endDateTime ? format(new Date(session.endDateTime), 'HH:mm') : '',
+        [session.endDateTime]
+    );
+
 
     const statusColors = {
         [ESessionStatus.SCHEDULED]: 'bg-blue-100 text-blue-800 border-blue-200',
@@ -162,14 +159,14 @@ function SessionDetailContent({ session }: ISessionDetailContentProps) {
                             <div className="text-muted-foreground"><Clock className="w-4 h-4" /></div>
                             <div className="flex-1">
                                 <span className="text-sm text-muted-foreground">End Time:</span>
-                                <p className="font-medium">{sessionEndTime}</p>
+                                <p className="font-medium">{sessionEndStartDate} at {sessionEndTime}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
                             <div className="text-muted-foreground"><Clock className="w-4 h-4" /></div>
                             <div className="flex-1">
                                 <span className="text-sm text-muted-foreground">Duration:</span>
-                                <p className="font-medium">{sessionDuration}</p>
+                                <p className="font-medium">{session.duration} minutes</p>
                             </div>
                         </div>
                         {session.location && (
@@ -220,7 +217,7 @@ function SessionDetailContent({ session }: ISessionDetailContentProps) {
                             <div className="flex-1">
                                 <span className="text-sm text-muted-foreground">Name:</span>
                                 <p className="font-medium">
-                                    {trainer?.user?.profile?.firstName} {trainer?.user?.profile?.lastName}
+                                    {trainer?.profile?.firstName} {trainer?.profile?.lastName}
                                 </p>
                             </div>
                         </div>
@@ -228,14 +225,14 @@ function SessionDetailContent({ session }: ISessionDetailContentProps) {
                             <div className="text-muted-foreground"><User className="w-4 h-4" /></div>
                             <div className="flex-1">
                                 <span className="text-sm text-muted-foreground">Email:</span>
-                                <p className="font-medium">{trainer?.user?.email}</p>
+                                <p className="font-medium">{trainer?.email}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
                             <div className="text-muted-foreground"><Target className="w-4 h-4" /></div>
                             <div className="flex-1">
                                 <span className="text-sm text-muted-foreground">Specialization:</span>
-                                <p className="font-medium">{trainer?.specialization || 'Not specified'}</p>
+                                <p className="font-medium">{trainer?.profile?.specialization || 'Not specified'}</p>
                             </div>
                         </div>
                     </div>
@@ -259,23 +256,23 @@ function SessionDetailContent({ session }: ISessionDetailContentProps) {
                                 <div className="space-y-2">
                                     <AppCard className="p-0">
                                         <div className="flex gap-3 items-center">
-                                    <div className="flex items-center gap-3">
-                                        <div className="text-muted-foreground"><User className="w-4 h-4" /></div>
-                                        <div className="flex-1">
-                                            <p className="font-medium">
-                                                {client.user?.profile?.firstName} {client.user?.profile?.lastName}
-                                            </p>
+                                            <div className="flex items-center gap-3">
+                                                <div className="text-muted-foreground"><User className="w-4 h-4" /></div>
+                                                <div className="flex-1">
+                                                    <p className="font-medium">
+                                                        {client.profile?.firstName} {client.profile?.lastName}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                <div className="text-muted-foreground"><Mail className="w-4 h-4" /></div>
+                                                <div className="flex-1">
+                                                    <p className="font-medium">{client.email}</p>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <div className="text-muted-foreground"><Mail className="w-4 h-4" /></div>
-                                        <div className="flex-1">
-                                            <p className="font-medium">{client.user?.email}</p>
-                                        </div>
-                                    </div>
-                                    </div>
                                     </AppCard>
-                                 
+
                                 </div>
                             </div>
                         ))}

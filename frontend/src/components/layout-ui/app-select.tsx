@@ -32,6 +32,7 @@ type BaseProps = {
     disabled?: boolean;
     emptyText?: string;
     modal?: boolean;
+    clearable?: boolean;
 };
 
 type MultiProps = BaseProps & {
@@ -62,11 +63,12 @@ export function AppSelect({
     disabled = false,
     emptyText = "No options found.",
     modal = true,
+    clearable = true,
 }: AppSelectProps) {
     // React 19: Essential IDs and transitions
     const componentId = useId();
     const [, startTransition] = useTransition();
-    
+
     const [open, setOpen] = React.useState(false);
 
     // Map value -> label (keys must be strings)
@@ -119,7 +121,7 @@ export function AppSelect({
         : value !== undefined && value !== null && value !== "";
 
     return (
-            <Popover data-component-id={componentId} open={open} onOpenChange={setOpen} modal={modal}>
+        <Popover data-component-id={componentId} open={open} onOpenChange={setOpen} modal={modal}>
             <PopoverTrigger asChild>
                 <Button
                     disabled={disabled}
@@ -161,11 +163,11 @@ export function AppSelect({
                     </div>
 
                     <div className="flex items-center gap-0 ml-auto">
-                        {hasSelection && (
-                            <div  onClick={clearAll}>
-                            <X
-                                className="h-4 w-4 shrink-0 opacity-60 hover:opacity-100"
-                            />
+                        {hasSelection && clearable && (
+                            <div onClick={clearAll}>
+                                <X
+                                    className="h-4 w-4 shrink-0 opacity-60 hover:opacity-100"
+                                />
                             </div>
                         )}
                         <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />

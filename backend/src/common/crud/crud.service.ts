@@ -1,10 +1,28 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { Repository, FindOptionsWhere, FindManyOptions, DataSource, QueryRunner, ObjectLiteral, EntityManager, Between as TypeOrmBetween } from 'typeorm';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
+import {
+  Repository,
+  FindOptionsWhere,
+  FindManyOptions,
+  DataSource,
+  QueryRunner,
+  ObjectLiteral,
+  EntityManager,
+  Between as TypeOrmBetween,
+} from 'typeorm';
 import { IPaginatedResponse } from '@shared/interfaces';
 import { CrudOptions, ICrudService } from './interfaces/crud.interface';
 import { EventPayload, EventService } from '../helper/services/event.service';
 import { LoggerService } from '../logger/logger.service';
-import { getQueryFilters, getRelationFilters, QueryFilterOptions, RelationFilterOptions } from '@shared/decorators/crud.dto.decorators';
+import {
+  getQueryFilters,
+  getRelationFilters,
+  QueryFilterOptions,
+  RelationFilterOptions,
+} from '@shared/decorators/crud.dto.decorators';
 
 @Injectable()
 export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
@@ -31,14 +49,16 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
     };
   }
 
-
   /**
    * Create a new entity with relation management and event emission
    */
-  async create<TCreateDto>(createDto: TCreateDto, callbacks?: {
-    beforeCreate?: (manager: EntityManager) => any | Promise<any>;
-    afterCreate?: (result: any, manager: EntityManager) => any | Promise<any>;
-  }): Promise<T> {
+  async create<TCreateDto>(
+    createDto: TCreateDto,
+    callbacks?: {
+      beforeCreate?: (manager: EntityManager) => any | Promise<any>;
+      afterCreate?: (result: any, manager: EntityManager) => any | Promise<any>;
+    },
+  ): Promise<T> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -53,26 +73,31 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
       // Emit before create event
       const entity = this.repository.create(processedData as any);
       const savedEntity = await queryRunner.manager.save(entity);
-      const finalEntity = Array.isArray(savedEntity) ? savedEntity[0] : savedEntity;
+      const finalEntity = Array.isArray(savedEntity)
+        ? savedEntity[0]
+        : savedEntity;
 
       // Execute afterCreate callback if provided
       if (callbacks?.afterCreate) {
-
-
         await callbacks.afterCreate(finalEntity, queryRunner.manager);
       }
 
-
       // Commit transaction after all callbacks
-      await queryRunner.commitTransaction();      // Emit after create event
-      await this.emitEvent('crud.create', finalEntity, undefined, processedData);
+      await queryRunner.commitTransaction(); // Emit after create event
+      await this.emitEvent(
+        'crud.create',
+        finalEntity,
+        undefined,
+        processedData,
+      );
 
       return finalEntity;
-
     } catch (error) {
       await queryRunner.rollbackTransaction();
       this.logger.error(`Error creating entity: ${error.message}`, error.stack);
-      throw new BadRequestException(`Failed to create entity: ${error.message}`);
+      throw new BadRequestException(
+        `Failed to create entity: ${error.message}`,
+      );
     } finally {
       await queryRunner.release();
     }
@@ -81,26 +106,38 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
   /**
    * Update an existing entity with relation management and event emission
    */
-  async update<TUpdateDto>(key: string | number | Record<string, any>,
-    updateDto: TUpdateDto, callbacks?: {
+  async update<TUpdateDto>(
+    key: string | number | Record<string, any>,
+    updateDto: TUpdateDto,
+    callbacks?: {
       beforeUpdate?: (entity: T, manager: EntityManager) => any | Promise<any>;
-      afterUpdate?: (updatedEntity: T, manager: EntityManager) => any | Promise<any>;
-    }): Promise<T> {
+      afterUpdate?: (
+        updatedEntity: T,
+        manager: EntityManager,
+      ) => any | Promise<any>;
+    },
+  ): Promise<T> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-
       const existingEntity = await this.getSingle(key);
 
       let processedData = updateDto;
 
       // Execute beforeUpdate callback if provided
       if (callbacks?.beforeUpdate) {
-        processedData = await callbacks.beforeUpdate(existingEntity, queryRunner.manager);
+        processedData = await callbacks.beforeUpdate(
+          existingEntity,
+          queryRunner.manager,
+        );
       }
 
-      await queryRunner.manager.update(this.repository.target, existingEntity.id, processedData as any);
+      await queryRunner.manager.update(
+        this.repository.target,
+        existingEntity.id,
+        processedData as any,
+      );
 
       // Get updated entity with relations for return
       const updatedEntity = await this.getSingle(existingEntity.id);
@@ -114,50 +151,53 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
       await queryRunner.commitTransaction();
 
       // Emit after update event
-      await this.emitEvent('crud.update', updatedEntity, existingEntity, processedData);
+      await this.emitEvent(
+        'crud.update',
+        updatedEntity,
+        existingEntity,
+        processedData,
+      );
 
       return updatedEntity;
-
     } catch (error) {
       await queryRunner.rollbackTransaction();
       this.logger.error(`Error updating entity: ${error.message}`, error.stack);
       if (error instanceof NotFoundException) throw error;
-      throw new BadRequestException(`Failed to update entity: ${error.message}`);
+      throw new BadRequestException(
+        `Failed to update entity: ${error.message}`,
+      );
     } finally {
       await queryRunner.release();
     }
   }
 
-
-
   /**
    * Get all entities without pagination
    */
-  async getAll<TQueryDto>(queryDto: TQueryDto, dtoClass: any, callbacks?: {
-    beforeQuery?: (query: any) => any | Promise<any>;
-    afterQuery?: (query: any, result: any) => any | Promise<any>;
-  }): Promise<T[]> {
+  async getAll<TQueryDto>(
+    queryDto: TQueryDto,
+    dtoClass: any,
+    callbacks?: {
+      beforeQuery?: (query: any) => any | Promise<any>;
+      afterQuery?: (query: any, result: any) => any | Promise<any>;
+    },
+  ): Promise<T[]> {
     try {
-      const {
-        search,
-        sortFields,
-        sortOrder,
-        sortBy,
-        ...filters
-      } = queryDto as any;
+      const { search, sortFields, sortOrder, sortBy, ...filters } =
+        queryDto as any;
 
       const query = this.repository.createQueryBuilder('entity');
 
-
-      const mergedSortFields = [...(sortFields || []), ...(sortBy ? [`${sortBy}:${sortOrder}`] : [])];
+      const mergedSortFields = [
+        ...(sortFields || []),
+        ...(sortBy ? [`${sortBy}:${sortOrder}`] : []),
+      ];
 
       // Apply simplified relations and select system
       this.applyRelationsAndSelect(query, queryDto, mergedSortFields);
 
       // Apply search functionality
       this.applySearch(query, filters, search);
-
-
 
       // Apply query decorator filters
       this.applyQueryFilters(query, filters, dtoClass);
@@ -178,20 +218,28 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
       }
 
       return result;
-
     } catch (error) {
-      this.logger.error(`Error getting all entities without pagination: ${error.message}`, error.stack);
-      throw new BadRequestException(`Failed to retrieve entities: ${error.message}`);
+      this.logger.error(
+        `Error getting all entities without pagination: ${error.message}`,
+        error.stack,
+      );
+      throw new BadRequestException(
+        `Failed to retrieve entities: ${error.message}`,
+      );
     }
   }
 
   /**
    * Get entities with pagination (internal method)
    */
-  async get<TQueryDto>(queryDto: TQueryDto, dtoClass?: any, callbacks?: {
-    beforeQuery?: (query: any) => any | Promise<any>;
-    afterQuery?: (query: any, result: any) => any | Promise<any>;
-  }): Promise<IPaginatedResponse<T>> {
+  async get<TQueryDto>(
+    queryDto: TQueryDto,
+    dtoClass?: any,
+    callbacks?: {
+      beforeQuery?: (query: any) => any | Promise<any>;
+      afterQuery?: (query: any, result: any) => any | Promise<any>;
+    },
+  ): Promise<IPaginatedResponse<T>> {
     try {
       const {
         page = 1,
@@ -210,9 +258,10 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
 
       const query = this.repository.createQueryBuilder('entity');
 
-
-
-      const mergedSortFields = [...(sortFields || []), ...(sortBy ? [`${sortBy}:${sortOrder}`] : [])];
+      const mergedSortFields = [
+        ...(sortFields || []),
+        ...(sortBy ? [`${sortBy}:${sortOrder}`] : []),
+      ];
 
       // Apply simplified relations and select system
       this.applyRelationsAndSelect(query, queryDto, mergedSortFields);
@@ -220,20 +269,16 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
       // Apply search functionality
       this.applySearch(query, filters, search);
 
-
-
       // Apply query decorator filters
       this.applyQueryFilters(query, filters, dtoClass);
 
       // Apply relation filters
       this.applyRelationFilters(query, filters, dtoClass);
 
-
       // Execute beforeQuery callback if provided
       if (callbacks?.beforeQuery) {
         await callbacks.beforeQuery(query);
       }
-
 
       const [data, total] = await query
         .skip(skip)
@@ -256,18 +301,25 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
         hasNextPage: page < lastPage,
         hasPrevPage: page > 1,
       };
-
     } catch (error) {
-      this.logger.error(`Error getting all entities: ${error.message}`, error.stack);
-      throw new BadRequestException(`Failed to retrieve entities: ${error.message}`);
+      this.logger.error(
+        `Error getting all entities: ${error.message}`,
+        error.stack,
+      );
+      throw new BadRequestException(
+        `Failed to retrieve entities: ${error.message}`,
+      );
     }
   }
 
   /**
    * Get a single entity by any key with nested support (NO pagination)
    */
-  async getSingle<TQueryDto>(key: string | number | Record<string, any>,
-    queryDto?: TQueryDto, dtoClass?: any): Promise<T> {
+  async getSingle<TQueryDto>(
+    key: string | number | Record<string, any>,
+    queryDto?: TQueryDto,
+    dtoClass?: any,
+  ): Promise<T> {
     try {
       const query = this.repository.createQueryBuilder('entity');
 
@@ -287,10 +339,15 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
               const relationPath = field.split('.')[0]; // e.g., 'profile' from 'profile.firstName'
               const fullRelationPath = this.getRelationPath(field, relations); // e.g., 'profile.documents' from 'profile.documents.name'
 
-              if (relations.includes(relationPath) || relations.includes(fullRelationPath)) {
+              if (
+                relations.includes(relationPath) ||
+                relations.includes(fullRelationPath)
+              ) {
                 // Create safe parameter name to avoid conflicts
                 const paramName = this.createSafeParameterName(field);
-                query.andWhere(`${field} = :${paramName}`, { [paramName]: value });
+                query.andWhere(`${field} = :${paramName}`, {
+                  [paramName]: value,
+                });
               }
               // If relation not defined, ignore the nested condition
             } else {
@@ -311,32 +368,44 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
       const entity = await query.getOne();
 
       if (!entity) {
-        const keyDescription = typeof key === 'object' ? JSON.stringify(key) : key;
-        throw new NotFoundException(`Entity with key ${keyDescription} not found`);
+        const keyDescription =
+          typeof key === 'object' ? JSON.stringify(key) : key;
+        throw new NotFoundException(
+          `Entity with key ${keyDescription} not found`,
+        );
       }
 
       return entity;
-
     } catch (error) {
-      this.logger.error(`Error getting single entity: ${error.message}`, error.stack);
+      this.logger.error(
+        `Error getting single entity: ${error.message}`,
+        error.stack,
+      );
       if (error instanceof NotFoundException) throw error;
-      throw new BadRequestException(`Failed to retrieve entity: ${error.message}`);
+      throw new BadRequestException(
+        `Failed to retrieve entity: ${error.message}`,
+      );
     }
   }
 
   /**
    * Delete an entity by ID and return the deleted entity
    */
-  async delete(key: string | number | Record<string, any>, callbacks?: {
-    beforeDelete?: (entity: any, manager: EntityManager) => any | Promise<any>;
-    afterDelete?: (entity: any, manager: EntityManager) => any | Promise<any>;
-  }): Promise<T> {
+  async delete(
+    key: string | number | Record<string, any>,
+    callbacks?: {
+      beforeDelete?: (
+        entity: any,
+        manager: EntityManager,
+      ) => any | Promise<any>;
+      afterDelete?: (entity: any, manager: EntityManager) => any | Promise<any>;
+    },
+  ): Promise<T> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
-
       const existingEntity = await this.getSingle(key);
 
       // Execute beforeDelete callback if provided
@@ -344,7 +413,10 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
         await callbacks.beforeDelete(existingEntity, queryRunner.manager);
       }
 
-      await queryRunner.manager.delete(this.repository.target, existingEntity.id);
+      await queryRunner.manager.delete(
+        this.repository.target,
+        existingEntity.id,
+      );
 
       // Execute afterDelete callback if provided
       if (callbacks?.afterDelete) {
@@ -358,12 +430,13 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
       await this.emitEvent('crud.delete', existingEntity);
 
       return existingEntity;
-
     } catch (error) {
       await queryRunner.rollbackTransaction();
       this.logger.error(`Error deleting entity: ${error.message}`, error.stack);
       if (error instanceof NotFoundException) throw error;
-      throw new BadRequestException(`Failed to delete entity: ${error.message}`);
+      throw new BadRequestException(
+        `Failed to delete entity: ${error.message}`,
+      );
     } finally {
       await queryRunner.release();
     }
@@ -379,9 +452,13 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
   /**
    * Emit CRUD events using NestJS EventEmitter
    */
-  private emitEvent(operation: string, entity: T | null, oldEntity?: T, data?: any): void {
+  private emitEvent(
+    operation: string,
+    entity: T | null,
+    oldEntity?: T,
+    data?: any,
+  ): void {
     try {
-
       const source = this.repository.metadata.name.toLowerCase();
 
       const payload: EventPayload = {
@@ -395,17 +472,19 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
         data,
       };
 
-      this.eventService.emit(source+"."+operation, payload);
+      this.eventService.emit(source + '.' + operation, payload);
     } catch (error) {
-      this.logger.error(`Error emitting ${operation} event: ${error.message}`, error.stack);
+      this.logger.error(
+        `Error emitting ${operation} event: ${error.message}`,
+        error.stack,
+      );
       // Don't throw error for event emission failures
     }
   }
 
-
   /**
    * Apply relations and select system - SIMPLE VERSION
-   * 
+   *
    * Simple approach:
    * 1. Add relations with centralized aliases
    * 2. Check if LEFT JOIN already exists before adding
@@ -413,16 +492,24 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
    * 4. Handle sorting simply
    * 5. Apply default sort when no sort fields are provided
    */
-  private applyRelationsAndSelect(query: any, queryDto: any, mergedSortFields: string[]) {
-    const _relations = (queryDto as any)._relations || [];
-    const _select = (queryDto as any)._select || [];
-    const _countable = (queryDto as any)._countable || [];
+  private applyRelationsAndSelect(
+    query: any,
+    queryDto: any,
+    mergedSortFields: string[],
+  ) {
+    const _relations = queryDto._relations || [];
+    const _select = queryDto._select || [];
+    const _countable = queryDto._countable || [];
     const allRestrictedFields = this.options.restrictedFields || [];
 
     // Helper functions
     const isFieldRestricted = (field: string): boolean => {
-      return allRestrictedFields.includes(field) ||
-        allRestrictedFields.some(restricted => field.startsWith(restricted + '.'));
+      return (
+        allRestrictedFields.includes(field) ||
+        allRestrictedFields.some((restricted) =>
+          field.startsWith(restricted + '.'),
+        )
+      );
     };
 
     const isMainEntityField = (field: string): boolean => !field.includes('.');
@@ -450,11 +537,8 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
           }
           currentAlias = newAlias;
         });
-
-
       });
     }
-
 
     // Step 2: Add SELECT fields - check if already added
     const fieldsToSelect = new Set<string>();
@@ -479,13 +563,13 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
     }
 
     // Don't add sorting fields to SELECT - only use them for ORDER BY
-    // This prevents ambiguous column references 
+    // This prevents ambiguous column references
 
     // Apply selections - use select() instead of addSelect() to avoid duplicates
     const mainEntityFields: string[] = [];
     const relationFields: { [alias: string]: string[] } = {};
 
-    fieldsToSelect.forEach(field => {
+    fieldsToSelect.forEach((field) => {
       if (isMainEntityField(field)) {
         mainEntityFields.push(field);
       } else {
@@ -494,7 +578,8 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
         if (parts.length >= 2) {
           const relationName = parts[0];
           const fieldName = parts[parts.length - 1];
-          const alias = parts.length === 2 ? relationName : parts.slice(0, -1).join('_');
+          const alias =
+            parts.length === 2 ? relationName : parts.slice(0, -1).join('_');
 
           if (!relationFields[alias]) {
             relationFields[alias] = [];
@@ -512,24 +597,28 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
         ? mainEntityFields
         : ['id', ...mainEntityFields];
 
-      query.select(fieldsToSelect.map(field => `entity.${field}`));
+      query.select(fieldsToSelect.map((field) => `entity.${field}`));
     }
 
-
     addedJoins.forEach((value, joinKey) => {
-
-
-      const relationPath = joinKey.replace(/^entity\./, '').split('_').join('.');
-      const isCountable = _countable.some(c => c === relationPath);
+      const relationPath = joinKey
+        .replace(/^entity\./, '')
+        .split('_')
+        .join('.');
+      const isCountable = _countable.some((c) => c === relationPath);
 
       if (isCountable) {
-        query.loadRelationCountAndMap(`entity.${value}Count`, `entity.${relationPath}`);
-
+        query.loadRelationCountAndMap(
+          `entity.${value}Count`,
+          `entity.${relationPath}`,
+        );
       } else {
         const fields = relationFields[value];
         if (fields?.length > 0) {
           query.addSelect(`${value}.id`);
-          fields.forEach(field => field !== 'id' && query.addSelect(`${value}.${field}`));
+          fields.forEach(
+            (field) => field !== 'id' && query.addSelect(`${value}.${field}`),
+          );
         } else {
           query.addSelect(value);
         }
@@ -543,7 +632,7 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
       mergedSortFields.push(`${field}:${order}`);
     }
 
-    mergedSortFields.forEach(sortField => {
+    mergedSortFields.forEach((sortField) => {
       const [fieldName, order = 'ASC'] = sortField.split(':');
       if (!fieldName?.trim()) return;
 
@@ -558,13 +647,13 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
         if (parts.length >= 2) {
           const relationName = parts[0];
           const fieldName = parts.slice(1).join('.');
-          const alias = parts.length === 2 ? relationName : parts.slice(0, -1).join('_');
+          const alias =
+            parts.length === 2 ? relationName : parts.slice(0, -1).join('_');
 
           query.addOrderBy(`${alias}.${fieldName}`, sortOrder);
         }
       }
     });
-
   }
 
   /**
@@ -575,265 +664,337 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
 
     const queryFilters = getQueryFilters(dtoClass);
 
-    Object.entries(queryFilters).forEach(([propertyKey, filterOptions]: [string, QueryFilterOptions]) => {
-      const value = queryDto[propertyKey];
+    Object.entries(queryFilters).forEach(
+      ([propertyKey, filterOptions]: [string, QueryFilterOptions]) => {
+        const value = queryDto[propertyKey];
 
-      if (value === undefined || value === null || value === '') {
-        return;
-      }
-
-      const field = filterOptions.field || propertyKey;
-      let processedValue = value;
-
-      // Apply transform if provided
-      if (filterOptions.transform) {
-        try {
-          processedValue = filterOptions.transform(value);
-        } catch (error) {
-          this.logger.warn(`Transform failed for field ${field}: ${error.message}`);
+        if (value === undefined || value === null || value === '') {
           return;
         }
-      }
 
-      // Build proper field reference with entity prefix
-      const fieldReference = this.buildFieldReference(field);
+        const field = filterOptions.field || propertyKey;
+        let processedValue = value;
 
-      // Create safe parameter name to avoid conflicts
-      const paramName = this.createSafeParameterName(propertyKey);
+        // Apply transform if provided
+        if (filterOptions.transform) {
+          try {
+            processedValue = filterOptions.transform(value);
+          } catch (error) {
+            this.logger.warn(
+              `Transform failed for field ${field}: ${error.message}`,
+            );
+            return;
+          }
+        }
 
-      try {
-        // Handle different filter types
-        switch (filterOptions.type) {
-          case 'between':
-            if (Array.isArray(processedValue) && processedValue.length === 2) {
-              const [startValue, endValue] = processedValue;
+        // Build proper field reference with entity prefix
+        const fieldReference = this.buildFieldReference(field);
 
-              // Handle partial ranges intelligently
-              if (startValue && endValue) {
-                // Both values provided - use BETWEEN
-                query.andWhere(`${fieldReference} BETWEEN :${paramName}_start AND :${paramName}_end`, {
-                  [`${paramName}_start`]: startValue,
-                  [`${paramName}_end`]: endValue
-                });
-              } else if (startValue && !endValue) {
-                // Only start value provided - use greaterThan
-                query.andWhere(`${fieldReference} >= :${paramName}_start`, {
-                  [`${paramName}_start`]: startValue
-                });
-              } else if (!startValue && endValue) {
-                // Only end value provided - use lessThan
-                query.andWhere(`${fieldReference} <= :${paramName}_end`, {
-                  [`${paramName}_end`]: endValue
+        // Create safe parameter name to avoid conflicts
+        const paramName = this.createSafeParameterName(propertyKey);
+
+        try {
+          // Handle different filter types
+          switch (filterOptions.type) {
+            case 'between':
+              if (
+                Array.isArray(processedValue) &&
+                processedValue.length === 2
+              ) {
+                const [startValue, endValue] = processedValue;
+
+                // Handle partial ranges intelligently
+                if (startValue && endValue) {
+                  // Both values provided - use BETWEEN
+                  query.andWhere(
+                    `${fieldReference} BETWEEN :${paramName}_start AND :${paramName}_end`,
+                    {
+                      [`${paramName}_start`]: startValue,
+                      [`${paramName}_end`]: endValue,
+                    },
+                  );
+                } else if (startValue && !endValue) {
+                  // Only start value provided - use greaterThan
+                  query.andWhere(`${fieldReference} >= :${paramName}_start`, {
+                    [`${paramName}_start`]: startValue,
+                  });
+                } else if (!startValue && endValue) {
+                  // Only end value provided - use lessThan
+                  query.andWhere(`${fieldReference} <= :${paramName}_end`, {
+                    [`${paramName}_end`]: endValue,
+                  });
+                }
+                // If both are null/undefined, no filter is applied
+              }
+              break;
+
+            case 'lessThan':
+              query.andWhere(`${fieldReference} < :${paramName}`, {
+                [paramName]: processedValue,
+              });
+              break;
+
+            case 'greaterThan':
+              query.andWhere(`${fieldReference} > :${paramName}`, {
+                [paramName]: processedValue,
+              });
+              break;
+
+            case 'lessThanOrEqual':
+              query.andWhere(`${fieldReference} <= :${paramName}`, {
+                [paramName]: processedValue,
+              });
+              break;
+
+            case 'greaterThanOrEqual':
+              query.andWhere(`${fieldReference} >= :${paramName}`, {
+                [paramName]: processedValue,
+              });
+              break;
+
+            case 'like':
+              query.andWhere(`${fieldReference} ILIKE :${paramName}`, {
+                [paramName]: `%${processedValue}%`,
+              });
+              break;
+
+            case 'in':
+              if (Array.isArray(processedValue)) {
+                query.andWhere(`${fieldReference} IN (:...${paramName})`, {
+                  [paramName]: processedValue,
                 });
               }
-              // If both are null/undefined, no filter is applied
-            }
-            break;
+              break;
 
-          case 'lessThan':
-            query.andWhere(`${fieldReference} < :${paramName}`, { [paramName]: processedValue });
-            break;
+            case 'notIn':
+              if (Array.isArray(processedValue)) {
+                query.andWhere(`${fieldReference} NOT IN (:...${paramName})`, {
+                  [paramName]: processedValue,
+                });
+              }
+              break;
 
-          case 'greaterThan':
-            query.andWhere(`${fieldReference} > :${paramName}`, { [paramName]: processedValue });
-            break;
+            case 'isNull':
+              if (processedValue === true) {
+                query.andWhere(`${fieldReference} IS NULL`);
+              } else if (processedValue === false) {
+                query.andWhere(`${fieldReference} IS NOT NULL`);
+              }
+              break;
 
-          case 'lessThanOrEqual':
-            query.andWhere(`${fieldReference} <= :${paramName}`, { [paramName]: processedValue });
-            break;
+            case 'isNotNull':
+              if (processedValue === true) {
+                query.andWhere(`${fieldReference} IS NOT NULL`);
+              } else if (processedValue === false) {
+                query.andWhere(`${fieldReference} IS NULL`);
+              }
+              break;
 
-          case 'greaterThanOrEqual':
-            query.andWhere(`${fieldReference} >= :${paramName}`, { [paramName]: processedValue });
-            break;
+            case 'equals':
+              query.andWhere(`${fieldReference} = :${paramName}`, {
+                [paramName]: processedValue,
+              });
+              break;
 
-          case 'like':
-            query.andWhere(`${fieldReference} ILIKE :${paramName}`, { [paramName]: `%${processedValue}%` });
-            break;
+            case 'notEquals':
+              query.andWhere(`${fieldReference} != :${paramName}`, {
+                [paramName]: processedValue,
+              });
+              break;
 
-          case 'in':
-            if (Array.isArray(processedValue)) {
-              query.andWhere(`${fieldReference} IN (:...${paramName})`, { [paramName]: processedValue });
-            }
-            break;
-
-          case 'notIn':
-            if (Array.isArray(processedValue)) {
-              query.andWhere(`${fieldReference} NOT IN (:...${paramName})`, { [paramName]: processedValue });
-            }
-            break;
-
-          case 'isNull':
-            if (processedValue === true) {
-              query.andWhere(`${fieldReference} IS NULL`);
-            } else if (processedValue === false) {
-              query.andWhere(`${fieldReference} IS NOT NULL`);
-            }
-            break;
-
-          case 'isNotNull':
-            if (processedValue === true) {
-              query.andWhere(`${fieldReference} IS NOT NULL`);
-            } else if (processedValue === false) {
-              query.andWhere(`${fieldReference} IS NULL`);
-            }
-            break;
-
-          case 'equals':
-            query.andWhere(`${fieldReference} = :${paramName}`, { [paramName]: processedValue });
-            break;
-
-          case 'notEquals':
-            query.andWhere(`${fieldReference} != :${paramName}`, { [paramName]: processedValue });
-            break;
-
-          default:
-            // Fallback to simple equality
-            query.andWhere(`${fieldReference} = :${paramName}`, { [paramName]: processedValue });
-            break;
+            default:
+              // Fallback to simple equality
+              query.andWhere(`${fieldReference} = :${paramName}`, {
+                [paramName]: processedValue,
+              });
+              break;
+          }
+        } catch (error) {
+          this.logger.error(
+            `Error applying query filter for field ${field}: ${error.message}`,
+            error.stack,
+          );
+          // Continue with other filters instead of breaking the entire query
         }
-      } catch (error) {
-        this.logger.error(`Error applying query filter for field ${field}: ${error.message}`, error.stack);
-        // Continue with other filters instead of breaking the entire query
-      }
-    });
+      },
+    );
   }
 
   /**
    * Apply relation filters based on decorator metadata
    */
-  private applyRelationFilters(query: any, queryDto: any, dtoClass?: any): void {
+  private applyRelationFilters(
+    query: any,
+    queryDto: any,
+    dtoClass?: any,
+  ): void {
     if (!dtoClass) {
       return;
     }
 
     const relationFilters = getRelationFilters(dtoClass);
 
-    Object.entries(relationFilters).forEach(([propertyKey, relationPath]: [string, string]) => {
-      const value = queryDto[propertyKey];
+    Object.entries(relationFilters).forEach(
+      ([propertyKey, relationPath]: [string, string]) => {
+        const value = queryDto[propertyKey];
 
-      if (value === undefined || value === null || value === '') {
-        return;
-      }
-
-      // Get the filter type from other decorators (like @Equals, @Like, etc.)
-      const queryFilters = getQueryFilters(dtoClass);
-      const filterOptions = queryFilters[propertyKey];
-      const type = filterOptions?.type || 'equals';
-      const transform = filterOptions?.transform;
-
-      let processedValue = value;
-
-      // Apply transform if provided
-      if (transform) {
-        try {
-          processedValue = transform(value);
-        } catch (error) {
-          this.logger.warn(`Transform failed for relation field ${relationPath}: ${error.message}`);
+        if (value === undefined || value === null || value === '') {
           return;
         }
-      }
 
-      // The relationPath is the complete field reference (e.g., 'profile.firstName')
-      const fieldReference = relationPath;
+        // Get the filter type from other decorators (like @Equals, @Like, etc.)
+        const queryFilters = getQueryFilters(dtoClass);
+        const filterOptions = queryFilters[propertyKey];
+        const type = filterOptions?.type || 'equals';
+        const transform = filterOptions?.transform;
 
-      // Create safe parameter name to avoid conflicts
-      const paramName = this.createSafeParameterName(`${relationPath.replace(/\./g, '_')}_${propertyKey}`);
+        let processedValue = value;
 
-      try {
-        // Handle different filter types for relations
-        switch (type) {
-          case 'between':
-            if (Array.isArray(processedValue) && processedValue.length === 2) {
-              const [startValue, endValue] = processedValue;
+        // Apply transform if provided
+        if (transform) {
+          try {
+            processedValue = transform(value);
+          } catch (error) {
+            this.logger.warn(
+              `Transform failed for relation field ${relationPath}: ${error.message}`,
+            );
+            return;
+          }
+        }
 
-              // Handle partial ranges intelligently
-              if (startValue && endValue) {
-                // Both values provided - use BETWEEN
-                query.andWhere(`${fieldReference} BETWEEN :${paramName}_start AND :${paramName}_end`, {
-                  [`${paramName}_start`]: startValue,
-                  [`${paramName}_end`]: endValue
-                });
-              } else if (startValue && !endValue) {
-                // Only start value provided - use greaterThan
-                query.andWhere(`${fieldReference} >= :${paramName}_start`, {
-                  [`${paramName}_start`]: startValue
-                });
-              } else if (!startValue && endValue) {
-                // Only end value provided - use lessThan
-                query.andWhere(`${fieldReference} <= :${paramName}_end`, {
-                  [`${paramName}_end`]: endValue
+        // The relationPath is the complete field reference (e.g., 'profile.firstName')
+        const fieldReference = relationPath;
+
+        // Create safe parameter name to avoid conflicts
+        const paramName = this.createSafeParameterName(
+          `${relationPath.replace(/\./g, '_')}_${propertyKey}`,
+        );
+
+        try {
+          // Handle different filter types for relations
+          switch (type) {
+            case 'between':
+              if (
+                Array.isArray(processedValue) &&
+                processedValue.length === 2
+              ) {
+                const [startValue, endValue] = processedValue;
+
+                // Handle partial ranges intelligently
+                if (startValue && endValue) {
+                  // Both values provided - use BETWEEN
+                  query.andWhere(
+                    `${fieldReference} BETWEEN :${paramName}_start AND :${paramName}_end`,
+                    {
+                      [`${paramName}_start`]: startValue,
+                      [`${paramName}_end`]: endValue,
+                    },
+                  );
+                } else if (startValue && !endValue) {
+                  // Only start value provided - use greaterThan
+                  query.andWhere(`${fieldReference} >= :${paramName}_start`, {
+                    [`${paramName}_start`]: startValue,
+                  });
+                } else if (!startValue && endValue) {
+                  // Only end value provided - use lessThan
+                  query.andWhere(`${fieldReference} <= :${paramName}_end`, {
+                    [`${paramName}_end`]: endValue,
+                  });
+                }
+                // If both are null/undefined, no filter is applied
+              }
+              break;
+
+            case 'lessThan':
+              query.andWhere(`${fieldReference} < :${paramName}`, {
+                [paramName]: processedValue,
+              });
+              break;
+
+            case 'greaterThan':
+              query.andWhere(`${fieldReference} > :${paramName}`, {
+                [paramName]: processedValue,
+              });
+              break;
+
+            case 'lessThanOrEqual':
+              query.andWhere(`${fieldReference} <= :${paramName}`, {
+                [paramName]: processedValue,
+              });
+              break;
+
+            case 'greaterThanOrEqual':
+              query.andWhere(`${fieldReference} >= :${paramName}`, {
+                [paramName]: processedValue,
+              });
+              break;
+
+            case 'like':
+              query.andWhere(`${fieldReference} ILIKE :${paramName}`, {
+                [paramName]: `%${processedValue}%`,
+              });
+              break;
+
+            case 'in':
+              if (Array.isArray(processedValue)) {
+                query.andWhere(`${fieldReference} IN (:...${paramName})`, {
+                  [paramName]: processedValue,
                 });
               }
-              // If both are null/undefined, no filter is applied
-            }
-            break;
+              break;
 
-          case 'lessThan':
-            query.andWhere(`${fieldReference} < :${paramName}`, { [paramName]: processedValue });
-            break;
+            case 'notIn':
+              if (Array.isArray(processedValue)) {
+                query.andWhere(`${fieldReference} NOT IN (:...${paramName})`, {
+                  [paramName]: processedValue,
+                });
+              }
+              break;
 
-          case 'greaterThan':
-            query.andWhere(`${fieldReference} > :${paramName}`, { [paramName]: processedValue });
-            break;
+            case 'isNull':
+              if (processedValue === true) {
+                query.andWhere(`${fieldReference} IS NULL`);
+              } else if (processedValue === false) {
+                query.andWhere(`${fieldReference} IS NOT NULL`);
+              }
+              break;
 
-          case 'lessThanOrEqual':
-            query.andWhere(`${fieldReference} <= :${paramName}`, { [paramName]: processedValue });
-            break;
+            case 'isNotNull':
+              if (processedValue === true) {
+                query.andWhere(`${fieldReference} IS NOT NULL`);
+              } else if (processedValue === false) {
+                query.andWhere(`${fieldReference} IS NULL`);
+              }
+              break;
 
-          case 'greaterThanOrEqual':
-            query.andWhere(`${fieldReference} >= :${paramName}`, { [paramName]: processedValue });
-            break;
+            case 'equals':
+              query.andWhere(`${fieldReference} = :${paramName}`, {
+                [paramName]: processedValue,
+              });
+              break;
 
-          case 'like':
-            query.andWhere(`${fieldReference} ILIKE :${paramName}`, { [paramName]: `%${processedValue}%` });
-            break;
+            case 'notEquals':
+              query.andWhere(`${fieldReference} != :${paramName}`, {
+                [paramName]: processedValue,
+              });
+              break;
 
-          case 'in':
-            if (Array.isArray(processedValue)) {
-              query.andWhere(`${fieldReference} IN (:...${paramName})`, { [paramName]: processedValue });
-            }
-            break;
-
-          case 'notIn':
-            if (Array.isArray(processedValue)) {
-              query.andWhere(`${fieldReference} NOT IN (:...${paramName})`, { [paramName]: processedValue });
-            }
-            break;
-
-          case 'isNull':
-            if (processedValue === true) {
-              query.andWhere(`${fieldReference} IS NULL`);
-            } else if (processedValue === false) {
-              query.andWhere(`${fieldReference} IS NOT NULL`);
-            }
-            break;
-
-          case 'isNotNull':
-            if (processedValue === true) {
-              query.andWhere(`${fieldReference} IS NOT NULL`);
-            } else if (processedValue === false) {
-              query.andWhere(`${fieldReference} IS NULL`);
-            }
-            break;
-
-          case 'equals':
-            query.andWhere(`${fieldReference} = :${paramName}`, { [paramName]: processedValue });
-            break;
-
-          case 'notEquals':
-            query.andWhere(`${fieldReference} != :${paramName}`, { [paramName]: processedValue });
-            break;
-
-          default:
-            // Fallback to simple equality
-            query.andWhere(`${fieldReference} = :${paramName}`, { [paramName]: processedValue });
-            break;
+            default:
+              // Fallback to simple equality
+              query.andWhere(`${fieldReference} = :${paramName}`, {
+                [paramName]: processedValue,
+              });
+              break;
+          }
+        } catch (error) {
+          this.logger.error(
+            `Error applying relation filter for field ${fieldReference}: ${error.message}`,
+            error.stack,
+          );
+          // Continue with other filters instead of breaking the entire query
         }
-      } catch (error) {
-        this.logger.error(`Error applying relation filter for field ${fieldReference}: ${error.message}`, error.stack);
-        // Continue with other filters instead of breaking the entire query
-      }
-    });
+      },
+    );
   }
 
   /**
@@ -844,15 +1005,19 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
       return;
     }
 
-    const _searchable = (queryDto as any)._searchable;
+    const _searchable = queryDto._searchable;
 
     // Get restricted fields from backend configuration only (security)
     const allRestrictedFields = this.options.restrictedFields || [];
 
     // Helper function to check if field is restricted
     const isFieldRestricted = (field: string): boolean => {
-      return allRestrictedFields.includes(field) ||
-        allRestrictedFields.some(restricted => field.startsWith(restricted + '.'));
+      return (
+        allRestrictedFields.includes(field) ||
+        allRestrictedFields.some((restricted) =>
+          field.startsWith(restricted + '.'),
+        )
+      );
     };
 
     let searchableFields: string[] = [];
@@ -868,9 +1033,9 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
 
     if (searchableFields.length > 0) {
       const searchConditions = searchableFields
-        .filter(field => field && field.trim())
-        .filter(field => !isFieldRestricted(field.trim())) // Filter restricted fields from search
-        .map(field => {
+        .filter((field) => field && field.trim())
+        .filter((field) => !isFieldRestricted(field.trim())) // Filter restricted fields from search
+        .map((field) => {
           const cleanField = field.trim();
           if (cleanField.includes('.')) {
             // Nested field (e.g., profile.firstName)
@@ -929,11 +1094,17 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
   /**
    * Build nested where condition for complex queries
    */
-  private buildNestedWhereCondition(key: Record<string, any>): FindOptionsWhere<T> {
+  private buildNestedWhereCondition(
+    key: Record<string, any>,
+  ): FindOptionsWhere<T> {
     const whereCondition: any = {};
 
     for (const [field, value] of Object.entries(key)) {
-      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      if (
+        typeof value === 'object' &&
+        value !== null &&
+        !Array.isArray(value)
+      ) {
         // Handle nested objects (relations)
         whereCondition[field] = this.buildNestedWhereCondition(value);
       } else if (Array.isArray(value)) {

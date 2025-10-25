@@ -24,14 +24,12 @@ import {
   CreateScheduleDto,
   UpdateScheduleDto,
 } from '@shared/dtos/schedule-dtos/schedule.dto';
-import { JwtAuthGuard } from '@/guards/jwt-auth.gaurd';
 import { Timezone } from '@/decorators/timezone.decorator';
 import { SingleQueryDto } from '@shared/dtos';
 import { Schedule } from './entities/schedule.entity';
 
 @ApiTags('Schedule')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
 @Controller('schedules')
 export class ScheduleController {
   constructor(private readonly scheduleService: ScheduleService) {}

@@ -34,19 +34,19 @@ export function sessionItemViews({ handleEdit, handleDelete, handleView }: ISess
       ),
     },
     {
-      accessorKey: 'trainer',
+      accessorKey: 'trainerUser',
       header: 'Trainer',
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <User className="h-4 w-4 text-muted-foreground" />
-          <span>{row.original.trainer?.user?.profile?.firstName} {row.original.trainer?.user?.profile?.lastName}</span>
+          <span>{row.original.trainerUser?.profile?.firstName} {row.original.trainerUser?.profile?.lastName}</span>
         </div>
       ),
     },
     {
-      id: 'clientsCount',
+      id: 'clientsUsersCount',
       header: 'Clients',
-      cell: ({ row }) => <span>{row.original.clientsCount}</span>,
+      cell: ({ row }) => <span>{row.original.clientsUsersCount}</span>,
     },
     {
       id: 'startDateTime',
@@ -89,7 +89,7 @@ export function sessionItemViews({ handleEdit, handleDelete, handleView }: ISess
           [ESessionStatus.CANCELLED]: 'bg-red-100 text-red-800',
           [ESessionStatus.NO_SHOW]: 'bg-gray-100 text-gray-800',
         };
-        
+
         return (
           <Badge className={statusColors[session.status] || 'bg-gray-100 text-gray-800'}>
             {session.status.replace('_', ' ')}
@@ -145,29 +145,30 @@ export function sessionItemViews({ handleEdit, handleDelete, handleView }: ISess
   const listItem = (session: ISession) => (
     <AppCard className="p-4 hover:shadow-md transition-shadow" data-component-id={componentId}>
       <div className="space-y-4">
+        <h3 className="font-semibold text-lg">{session.title}</h3>
+
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
-            <h3 className="font-semibold text-lg">{session.title}</h3>
             <Badge variant="outline">{session.type}</Badge>
             <Badge className={
               session.status === ESessionStatus.SCHEDULED ? 'bg-blue-100 text-blue-800' :
-              session.status === ESessionStatus.IN_PROGRESS ? 'bg-yellow-100 text-yellow-800' :
-              session.status === ESessionStatus.COMPLETED ? 'bg-green-100 text-green-800' :
-              session.status === ESessionStatus.CANCELLED ? 'bg-red-100 text-red-800' :
-              'bg-gray-100 text-gray-800'
+                session.status === ESessionStatus.IN_PROGRESS ? 'bg-yellow-100 text-yellow-800' :
+                  session.status === ESessionStatus.COMPLETED ? 'bg-green-100 text-green-800' :
+                    session.status === ESessionStatus.CANCELLED ? 'bg-red-100 text-red-800' :
+                      'bg-gray-100 text-gray-800'
             }>
               {session.status.replace('_', ' ')}
             </Badge>
           </div>
-          
+
           <div className="space-y-2 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <User className="h-4 w-4" />
-              <span><strong>Trainer:</strong> {session.trainer?.user?.profile?.firstName} {session.trainer?.user?.profile?.lastName}</span>
+              <span><strong>Trainer:</strong> {session.trainerUser?.profile?.firstName} {session.trainerUser?.profile?.lastName}</span>
             </div>
             <div className="flex items-center gap-2">
               <User className="h-4 w-4" />
-              <span><strong>Clients:</strong> {session.clientsCount} client(s)</span>
+              <span><strong>Clients:</strong> {session.clientsUsersCount} client(s)</span>
             </div>
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4" />
@@ -194,14 +195,13 @@ export function sessionItemViews({ handleEdit, handleDelete, handleView }: ISess
               </div>
             )}
           </div>
-          
           {session.description && (
             <p className="mt-2 text-sm text-muted-foreground line-clamp-2">
               {session.description}
             </p>
           )}
         </div>
-        
+
         <div className="flex items-center gap-2 ml-4">
           <Button
             variant="ghost"

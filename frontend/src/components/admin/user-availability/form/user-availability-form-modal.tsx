@@ -11,6 +11,8 @@ import type { IUserAvailability } from "@shared/interfaces/user-availability.int
 import { Button } from "@/components/ui/button";
 import { ModalForm } from "@/components/form-ui/modal-form";
 import type { THandlerComponentProps } from "@/@types/handler-types";
+import type { FormInputs } from "@/hooks/use-input";
+import { useInput } from "@/hooks/use-input";
 
 export interface IUserAvailabilityFormModalExtraProps {
   open: boolean;
@@ -37,7 +39,13 @@ const UserAvailabilityFormModal = React.memo(function UserAvailabilityFormModal(
   const onClose = store((state) => state.extra.onClose)
 
   // React 19: Memoized fields for better performance
-  // const fields = useMemo(() => store((state) => state.fields), [store]);
+  const fields = store((state) => state.fields);
+
+
+  const inputs = useInput<TUserAvailabilityData>({
+    fields,
+    showRequiredAsterisk: true,
+  }) as FormInputs<TUserAvailabilityData>;
 
   // React 19: Smooth modal state changes
   const onOpenChange = (state: boolean) => {
@@ -87,7 +95,7 @@ const UserAvailabilityFormModal = React.memo(function UserAvailabilityFormModal(
           <h3 className="text-sm font-semibold mb-3">Weekly Schedule</h3>
           <div className="space-y-4">
             <div className="text-sm text-muted-foreground">
-              Weekly schedule configuration will be handled by the form handler.
+              {inputs.weeklySchedule as React.ReactNode}
             </div>
           </div>
         </div>
@@ -97,7 +105,7 @@ const UserAvailabilityFormModal = React.memo(function UserAvailabilityFormModal(
           <h3 className="text-sm font-semibold mb-3">Unavailable Periods</h3>
           <div className="space-y-4">
             <div className="text-sm text-muted-foreground">
-              Unavailable periods configuration will be handled by the form handler.
+              {inputs.unavailablePeriods as React.ReactNode}
             </div>
           </div>
         </div>

@@ -16,7 +16,10 @@ import { ResetPasswordWithTokenDto, SignupDto } from '@shared/dtos';
 import { UsersService } from '../users/users.service';
 import { LoggerService } from '@/common/logger/logger.service';
 import { ActivityLogsService } from '@/common/activity-logs/activity-logs.service';
-import { EActivityType, EActivityStatus } from '@shared/enums/activity-log.enum';
+import {
+  EActivityType,
+  EActivityStatus,
+} from '@shared/enums/activity-log.enum';
 import { EUserLevels, EUserRole } from '@shared/enums/user.enum';
 import { RewardsService } from '@/modules/v1/rewards/rewards.service';
 
@@ -33,27 +36,31 @@ export class AuthService {
     private readonly rewardsService: RewardsService,
   ) {}
 
-  async signup(
-    signupDto: SignupDto,
-  ): Promise<IMessageResponse> {
+  async signup(signupDto: SignupDto): Promise<IMessageResponse> {
     try {
-      const {firstName, lastName, referralCode, ...userData} = signupDto;
+      const { firstName, lastName, referralCode, ...userData } = signupDto;
 
-      const res = await this.userService.create({
-        ...userData,
-        level: EUserLevels[EUserRole.ADMIN],
-        isActive: true,
-        profile: {
-          firstName,
-          lastName,
-        }
-      }, {
-        afterCreate: async (savedEntity, manager) => {
-          if (referralCode) {
-            await this.rewardsService.processReferralSignup(savedEntity.id, referralCode);
-          }
+      const res = await this.userService.create(
+        {
+          ...userData,
+          level: EUserLevels[EUserRole.ADMIN],
+          isActive: true,
+          profile: {
+            firstName,
+            lastName,
+          },
         },
-      });
+        {
+          afterCreate: async (savedEntity, manager) => {
+            if (referralCode) {
+              await this.rewardsService.processReferralSignup(
+                savedEntity.id,
+                referralCode,
+              );
+            }
+          },
+        },
+      );
 
       // Log successful signup activity
       await this.activityLogsService.create({
@@ -95,11 +102,7 @@ export class AuthService {
     }
   }
 
-
-  async validateUser(
-    email: string,
-    clientPassword: string,
-  ): Promise<any> {
+  async validateUser(email: string, clientPassword: string): Promise<any> {
     try {
       const user = await this.userService.getUserByEmail(email);
       if (!user) {
@@ -175,7 +178,7 @@ export class AuthService {
         },
         {
           expiresIn: '1d',
-        }
+        },
       );
 
       const { password, ...userWithoutPassword } = user;
@@ -202,7 +205,7 @@ export class AuthService {
       if (error instanceof UnauthorizedException) {
         throw error;
       }
-      
+
       // Log unexpected error
       await this.activityLogsService.create({
         description: `Login error: ${email}`,
@@ -225,17 +228,18 @@ export class AuthService {
 
   async sendResetLink(email: string): Promise<{ message: string }> {
     try {
-      const user = await this.userService.getSingle({ email }, { _select: ['id', 'email'], _relations: ['profile'] });
+      const user = await this.userService.getSingle(
+        { email },
+        { _select: ['id', 'email'], _relations: ['profile'] },
+      );
 
       if (user) {
         const appConfig = this.configService.get('app');
 
-        const token = this.jwtService.sign(
-          {
-            id: user.id,
-            purpose: 'password_reset',
-          },
-        );
+        const token = this.jwtService.sign({
+          id: user.id,
+          purpose: 'password_reset',
+        });
 
         const appUrl = appConfig.appUrl;
         const appName = appConfig.name;
@@ -299,10 +303,9 @@ export class AuthService {
             },
             userId: user.id,
           });
-
         } catch (error) {
           this.logger.error('Error sending reset email', error.stack);
-          
+
           // Log failed password reset request
           await this.activityLogsService.create({
             description: `Failed to send password reset link: ${email}`,
@@ -343,7 +346,8 @@ export class AuthService {
       }
 
       return {
-        message: 'If an account with this email exists, a reset link has been sent',
+        message:
+          'If an account with this email exists, a reset link has been sent',
       };
     } catch (error) {
       // Log unexpected error
@@ -393,7 +397,11 @@ export class AuthService {
         throw new BadRequestException('Invalid or expired token');
       }
 
-      const result = await this.userService.resetPassword(payload.id, { password, confirmPassword }, true);
+      const result = await this.userService.resetPassword(
+        payload.id,
+        { password, confirmPassword },
+        true,
+      );
 
       // Log successful password reset
       await this.activityLogsService.create({
@@ -430,7 +438,4 @@ export class AuthService {
       throw error;
     }
   }
-
-
-
 }

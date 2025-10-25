@@ -17,23 +17,26 @@ export class SettingsService extends CrudService<Setting> {
     super(settingsRepository, dataSource, eventService);
   }
 
-  async getUserSettings(userId: number): Promise<Record<string, any>> {
+  async getEntitySettings(entityId: number): Promise<Record<string, any>> {
     const settings = await this.settingsRepository.find({
-      where: { userId },
+      where: { entityId },
     });
 
     const settingsObject: Record<string, any> = {};
-    
+
     for (const setting of settings) {
-      settingsObject[setting.key] = this.parseValue(setting.value, setting.type);
+      settingsObject[setting.key] = this.parseValue(
+        setting.value,
+        setting.type,
+      );
     }
 
     return settingsObject;
   }
 
-  async getSetting(userId: number, key: string): Promise<any> {
+  async getSetting(entityId: number, key: string): Promise<any> {
     const setting = await this.settingsRepository.findOne({
-      where: { userId, key },
+      where: { entityId, key },
     });
 
     if (!setting) {
@@ -43,24 +46,30 @@ export class SettingsService extends CrudService<Setting> {
     return this.parseValue(setting.value, setting.type);
   }
 
-  async setSetting(userId: number, key: string, value: any, type: ESettingType = ESettingType.STRING, description?: string): Promise<Setting> {
+  async setSetting(
+    entityId: number,
+    key: string,
+    value: any,
+    type: ESettingType = ESettingType.STRING,
+    description?: string,
+  ): Promise<Setting> {
     const stringValue = this.stringifyValue(value, type);
-    
+
     const existingSetting = await this.settingsRepository.findOne({
-      where: { userId, key },
+      where: { entityId, key },
     });
 
     if (existingSetting) {
-    const updated = await this.update(existingSetting.id, {
-      value: stringValue,
-      type,
-      description,
-    });
-    return updated;
+      const updated = await this.update(existingSetting.id, {
+        value: stringValue,
+        type,
+        description,
+      });
+      return updated;
     }
 
     return this.create({
-      userId,
+      entityId,
       key,
       value: stringValue,
       type,
@@ -70,16 +79,22 @@ export class SettingsService extends CrudService<Setting> {
     });
   }
 
-  async setMultipleSettings(userId: number, settings: Record<string, { value: any; type?: ESettingType; description?: string }>): Promise<Setting[]> {
+  async setMultipleSettings(
+    entityId: number,
+    settings: Record<
+      string,
+      { value: any; type?: ESettingType; description?: string }
+    >,
+  ): Promise<Setting[]> {
     const results: Setting[] = [];
 
     for (const [key, config] of Object.entries(settings)) {
       const setting = await this.setSetting(
-        userId,
+        entityId,
         key,
         config.value,
         config.type || ESettingType.STRING,
-        config.description
+        config.description,
       );
       results.push(setting);
     }
@@ -87,28 +102,128 @@ export class SettingsService extends CrudService<Setting> {
     return results;
   }
 
-  async deleteSetting(userId: number, key: string): Promise<void> {
+  async deleteSetting(entityId: number, key: string): Promise<void> {
     const setting = await this.getSingle({
-      userId,
+      entityId,
       key,
     });
 
     if (setting) await this.delete(setting.id, {});
   }
 
-  async getPublicSettings(userId: number): Promise<Record<string, any>> {
-    const settings = await this.getAll({
-      userId,
-      isPublic: true,
-    }, {});
+  /**
+   * Save any object structure as settings
+   * Automatically detects value types and creates appropriate settings
+   */
+  async saveSettings(
+    entityId: number,
+    data: Record<string, any>,
+    prefix: string = '',
+  ): Promise<Setting[]> {
+    const settingsToCreate: Record<
+      string,
+      { value: any; type: ESettingType; description?: string }
+    > = {};
 
-    const settingsObject: Record<string, any> = {};
-    
-    for (const setting of settings) {
-      settingsObject[setting.key] = this.parseValue(setting.value, setting.type);
+    // Recursively process the object
+    this.processObject(data, settingsToCreate, prefix);
+
+    return this.setMultipleSettings(entityId, settingsToCreate);
+  }
+
+  /**
+   * Recursively process an object to create settings
+   */
+  private processObject(
+    obj: Record<string, any>,
+    settingsToCreate: Record<
+      string,
+      { value: any; type: ESettingType; description?: string }
+    >,
+    prefix: string = '',
+    parentKey: string = '',
+  ): void {
+    for (const [key, value] of Object.entries(obj)) {
+      if (value === null || value === undefined) continue;
+
+      const fullKey = parentKey ? `${parentKey}.${key}` : key;
+      const settingKey = prefix ? `${prefix}.${fullKey}` : fullKey;
+
+      if (
+        typeof value === 'object' &&
+        !Array.isArray(value) &&
+        !(value instanceof Date)
+      ) {
+        // Recursively process nested objects
+        this.processObject(value, settingsToCreate, prefix, fullKey);
+      } else {
+        // Create setting for this value
+        const type = this.detectValueType(value);
+        settingsToCreate[settingKey] = {
+          value,
+          type,
+          description: `Setting: ${fullKey}`,
+        };
+      }
+    }
+  }
+
+  /**
+   * Automatically detect the appropriate setting type for a value
+   */
+  private detectValueType(value: any): ESettingType {
+    if (typeof value === 'boolean') return ESettingType.BOOLEAN;
+    if (typeof value === 'number') return ESettingType.NUMBER;
+    if (Array.isArray(value)) return ESettingType.ARRAY;
+    if (typeof value === 'object' && value !== null) return ESettingType.JSON;
+    return ESettingType.STRING;
+  }
+
+  /**
+   * Get settings as a structured object
+   * Reconstructs the original object structure from flat settings
+   */
+  async getSettings(
+    entityId: number,
+    prefix?: string,
+  ): Promise<Record<string, unknown>> {
+    const allSettings = await this.getEntitySettings(entityId);
+    const result: Record<string, unknown> = {};
+
+    for (const [key, value] of Object.entries(allSettings)) {
+      // Skip if prefix doesn't match
+      if (prefix && !key.startsWith(prefix + '.')) continue;
+
+      // Remove prefix from key
+      const cleanKey = prefix ? key.replace(prefix + '.', '') : key;
+
+      // Build nested object structure
+      this.setNestedValue(result, cleanKey, value);
     }
 
-    return settingsObject;
+    return result;
+  }
+
+  /**
+   * Helper method to set nested object values
+   */
+  private setNestedValue(
+    obj: Record<string, unknown>,
+    path: string,
+    value: unknown,
+  ): void {
+    const keys = path.split('.');
+    let current = obj;
+
+    for (let i = 0; i < keys.length - 1; i++) {
+      const key = keys[i];
+      if (!(key in current) || typeof current[key] !== 'object') {
+        current[key] = {};
+      }
+      current = current[key] as Record<string, unknown>;
+    }
+
+    current[keys[keys.length - 1]] = value;
   }
 
   private parseValue(value: string, type: ESettingType): any {

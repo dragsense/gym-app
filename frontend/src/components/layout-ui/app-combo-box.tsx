@@ -129,7 +129,7 @@ export function AppComboBox<T>({
             {multiple ? (
               <>
                 {selectedValues.length === 0 && (
-                  <span className="text-muted-foreground">{placeholder}</span>
+                  <span className="text-muted-foreground">{getLabel(value as T)}</span>
                 )}
                 {selectedValues.slice(0, maxTags).map((item) => (
                   <Badge
@@ -215,6 +215,7 @@ export function AppComboBox<T>({
                               if (typeof value === 'object' && typeof itemValue === 'object') {
                                 return JSON.stringify(value) === JSON.stringify(itemValue);
                               }
+
                               return value === itemValue;
                             })() ? "opacity-100" : "opacity-0"
                           )}

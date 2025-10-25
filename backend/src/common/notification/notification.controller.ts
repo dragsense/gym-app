@@ -1,6 +1,24 @@
-import { Controller, Get, Post, Put, Delete, Body, Query, Param, UseGuards, ParseIntPipe, Request } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery, ApiParam } from '@nestjs/swagger';
-import { JwtAuthGuard } from '@/guards/jwt-auth.gaurd';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Query,
+  Param,
+  UseGuards,
+  ParseIntPipe,
+  Request,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiQuery,
+  ApiParam,
+} from '@nestjs/swagger';
 import { NotificationService } from './notification.service';
 import {
   NotificationListDto,
@@ -10,13 +28,14 @@ import {
 
 @ApiTags('Notifications')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
 @Controller('notifications')
 export class NotificationController {
-  constructor(private readonly notificationService: NotificationService) { }
+  constructor(private readonly notificationService: NotificationService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get all notifications with pagination and filtering' })
+  @ApiOperation({
+    summary: 'Get all notifications with pagination and filtering',
+  })
   @ApiQuery({ type: NotificationListDto })
   @ApiResponse({
     status: 200,
@@ -36,10 +55,11 @@ export class NotificationController {
     description: 'Returns paginated list of user notifications',
     type: NotificationPaginatedDto,
   })
-  async findByUser(
-    @Param('userId', ParseIntPipe) userId: number,
-  ) {
-    return await this.notificationService.getSingle({ entityId: userId, entityType: 'user' });
+  async findByUser(@Param('userId', ParseIntPipe) userId: number) {
+    return await this.notificationService.getSingle({
+      entityId: userId,
+      entityType: 'user',
+    });
   }
 
   @Get(':id')
@@ -48,7 +68,7 @@ export class NotificationController {
   @ApiResponse({
     status: 200,
     description: 'Notification retrieved successfully',
-    type: NotificationDto
+    type: NotificationDto,
   })
   @ApiResponse({ status: 404, description: 'Notification not found' })
   async findOne(@Param('id', ParseIntPipe) id: number) {
@@ -61,13 +81,10 @@ export class NotificationController {
   @ApiResponse({
     status: 200,
     description: 'Notification marked as read successfully',
-    type: NotificationDto
+    type: NotificationDto,
   })
   @ApiResponse({ status: 404, description: 'Notification not found' })
-  async markAsRead(
-    @Param('id', ParseIntPipe) id: number,
-    @Request() req: any
-  ) {
+  async markAsRead(@Param('id', ParseIntPipe) id: number, @Request() req: any) {
     const userId = req.user?.id;
     return await this.notificationService.update(id, { isRead: true });
   }
@@ -80,13 +97,19 @@ export class NotificationController {
     schema: {
       type: 'object',
       properties: {
-        count: { type: 'number', description: 'Number of notifications marked as read' }
-      }
-    }
+        count: {
+          type: 'number',
+          description: 'Number of notifications marked as read',
+        },
+      },
+    },
   })
   async markAllAsRead(@Request() req: any) {
     const userId = req.user?.id;
-    return await this.notificationService.update({ entityId: userId, entityType: 'user' }, { isRead: true });
+    return await this.notificationService.update(
+      { entityId: userId, entityType: 'user' },
+      { isRead: true },
+    );
   }
 
   @Delete(':id')
@@ -94,13 +117,10 @@ export class NotificationController {
   @ApiParam({ name: 'id', description: 'Notification ID' })
   @ApiResponse({
     status: 200,
-    description: 'Notification deleted successfully'
+    description: 'Notification deleted successfully',
   })
   @ApiResponse({ status: 404, description: 'Notification not found' })
-  async delete(
-    @Param('id', ParseIntPipe) id: number,
-    @Request() req: any
-  ) {
+  async delete(@Param('id', ParseIntPipe) id: number, @Request() req: any) {
     await this.notificationService.delete(id);
     return { message: 'Notification deleted successfully' };
   }
@@ -113,12 +133,18 @@ export class NotificationController {
     schema: {
       type: 'object',
       properties: {
-        count: { type: 'number', description: 'Number of notifications deleted' }
-      }
-    }
+        count: {
+          type: 'number',
+          description: 'Number of notifications deleted',
+        },
+      },
+    },
   })
   async deleteAll(@Request() req: any) {
     const userId = req.user?.id;
-    return await this.notificationService.delete({ entityId: userId, entityType: 'user' });
+    return await this.notificationService.delete({
+      entityId: userId,
+      entityType: 'user',
+    });
   }
 }

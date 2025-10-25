@@ -53,12 +53,13 @@ const SessionFormModal = React.memo(function SessionFormModal({
       return <SearchableInputWrapper<UserDto>
         {...props}
         modal={true}
-        useSearchable={() => useSearchableUsers({level: EUserLevels[EUserRole.TRAINER]})}
+        useSearchable={() => useSearchableUsers({ level: EUserLevels[EUserRole.TRAINER] })}
         getLabel={(item) => {
-          return `${item.profile?.firstName} ${item.profile?.lastName}`
+          if (!item?.profile) return 'Select Trainer'
+          return `${item.id} - ${item.profile?.firstName} ${item.profile?.lastName}`
         }}
         getKey={(item) => item.id.toString()}
-        getValue={(item) => { return { id: item.id, user: item.profile } }}
+        getValue={(item) => { return { id: item.id, profile: item.profile } }}
         shouldFilter={false}
       />
     }
@@ -66,15 +67,17 @@ const SessionFormModal = React.memo(function SessionFormModal({
 
   const ClientsSelect = React.memo(
     (props: TCustomInputWrapper) => (
-        <SearchableInputWrapper<UserDto>
+      <SearchableInputWrapper<UserDto>
         {...props}
         modal={true}
-        useSearchable={() => useSearchableUsers({level: EUserLevels[EUserRole.CLIENT]})}
+        useSearchable={() => useSearchableUsers({ level: EUserLevels[EUserRole.CLIENT] })}
         getLabel={(item) => {
-          return `${item.profile?.firstName} ${item.profile?.lastName}`
+          if (!item?.profile) return 'Select Clients'
+
+          return `${item.id} - ${item.profile?.firstName} ${item.profile?.lastName}`
         }}
         getKey={(item) => item.id.toString()}
-        getValue={(item) => { return { id: item.id, user: item.profile } }}
+        getValue={(item) => { return { id: item.id, profile: item.profile } }}
         shouldFilter={false}
         multiple={true}
       />

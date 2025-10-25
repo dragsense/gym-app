@@ -1,3 +1,37 @@
 {
-    "appName": "My App"
+    "appName": "My App",
+    "health": {
+        "title": "System Health",
+        "loading": "Loading health data...",
+        "error": "Failed to fetch health data",
+        "tryAgain": "Try Again",
+        "refresh": "Refresh",
+        "uptime": "Uptime",
+        "version": "Version",
+        "environment": "Environment",
+        "database": {
+            "title": "Database",
+            "mode": "Mode",
+            "response": "Response",
+            "connections": "Connections",
+            "connectionsTitle": "Database Connections"
+        },
+        "memory": {
+            "title": "Memory",
+            "usage": "Usage",
+            "used": "Used",
+            "free": "Free"
+        },
+        "network": {
+            "title": "Network",
+            "latency": "Latency",
+            "throughput": "Throughput",
+            "connections": "Connections"
+        },
+        "status": {
+            "healthy": "Healthy",
+            "degraded": "Degraded",
+            "unhealthy": "Unhealthy"
+        }
+    }
 }

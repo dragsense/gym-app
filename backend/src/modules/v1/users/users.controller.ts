@@ -1,7 +1,6 @@
 import {
   Controller,
   Get,
-  UseGuards,
   Body,
   Post,
   Put,
@@ -11,8 +10,6 @@ import {
   ParseIntPipe,
   Version,
   Patch,
-  Headers,
-  UnauthorizedException,
 } from '@nestjs/common';
 
 import {
@@ -29,7 +26,6 @@ import { AuthUser } from '@/decorators/user.decorator';
 
 import { UsersService } from './users.service';
 
-import { JwtAuthGuard } from '@/guards/jwt-auth.gaurd';
 import {
   CreateUserDto,
   ResetPasswordDto,
@@ -42,7 +38,6 @@ import {
 import { User } from './entities/user.entity';
 import { CacheService } from '@/common/cache/cache.service';
 
-@UseGuards(JwtAuthGuard)
 @ApiBearerAuth('access-token')
 @ApiTags('Users')
 @Controller('users')
@@ -61,10 +56,7 @@ export class UsersController {
   })
   @Get()
   findAll(@Query() query: UserListDto, @AuthUser() user: any) {
-    return this.cacheService.getOrSet(
-      'users',
-      async () => await this.usersService.get(query, UserListDto),
-    );
+    return this.usersService.get(query, UserListDto);
   }
 
   @ApiOperation({ summary: 'Get authenticated user' })

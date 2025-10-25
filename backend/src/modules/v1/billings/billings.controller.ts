@@ -24,7 +24,6 @@ import {
 } from '@nestjs/swagger';
 
 import { BillingsService } from './billings.service';
-import { JwtAuthGuard } from '@/guards/jwt-auth.gaurd';
 import {
   CreateBillingDto,
   UpdateBillingDto,
@@ -40,8 +39,6 @@ import { StripeBillingService } from '../stripe/services/stripe-billing.service'
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 
-@UseGuards(JwtAuthGuard)
-@ApiBearerAuth('access-token')
 @ApiTags('Billings')
 @Controller('billings')
 export class BillingsController {
@@ -50,7 +47,7 @@ export class BillingsController {
     private readonly stripeBillingService: StripeBillingService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-  ) { }
+  ) {}
 
   @ApiOperation({ summary: 'Get all billings with pagination and filtering' })
   @ApiResponse({

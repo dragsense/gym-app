@@ -54,7 +54,7 @@ export function useSearchableUsers({ level, initialParams }: { level?: number, i
   return useSearchableResource<IUser>(
     memoizedKey,
     memoizedFetcher,
-    initialParams
+    { ...initialParams, _relations: 'profile' }
   );
 }
 

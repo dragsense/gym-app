@@ -1,9 +1,17 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { CrudService } from '@/common/crud/crud.service';
 import { ReferralLink } from './entities/referral-link.entity';
-import { CreateReferralLinkDto, UpdateReferralLinkDto, ReferralLinkListDto } from '@shared/dtos/referral-link-dtos';
+import {
+  CreateReferralLinkDto,
+  UpdateReferralLinkDto,
+  ReferralLinkListDto,
+} from '@shared/dtos/referral-link-dtos';
 import { User } from '@/modules/v1/users/entities/user.entity';
 import { EReferralLinkStatus } from '@shared/enums/referral-link.enum';
 import { EventService } from '@/common/helper/services/event.service';
@@ -21,10 +29,12 @@ export class ReferralLinksService extends CrudService<ReferralLink> {
     super(referralLinkRepository, dataSource, eventService);
   }
 
-  async createReferralLink(createReferralLinkDto: CreateReferralLinkDto, userId: number): Promise<ReferralLink> {
+  async createReferralLink(
+    createReferralLinkDto: CreateReferralLinkDto,
+    userId: number,
+  ): Promise<ReferralLink> {
     // Get user who created the link
     const createdBy = await this.usersService.getSingle(userId);
-
 
     if (!createdBy) {
       throw new Error('User not found');
@@ -57,21 +67,27 @@ export class ReferralLinksService extends CrudService<ReferralLink> {
       // Generate a random 8-character code
       referralCode = Math.random().toString(36).substring(2, 10).toUpperCase();
 
-      // Check if code already exists
-      const existingLink = await this.getSingle({
-        referralCode,
-      });
-
-      if (!existingLink) {
-        isUnique = true;
+      try {
+        // Check if code already exists
+        await this.getSingle({
+          referralCode,
+        });
+      } catch (error) {
+        if (error instanceof NotFoundException) {
+          isUnique = true;
+        } else {
+          throw error;
+        }
       }
     }
 
     return referralCode;
   }
 
-  async updateReferralLink(id: number, updateReferralLinkDto: UpdateReferralLinkDto): Promise<ReferralLink> {
+  async updateReferralLink(
+    id: number,
+    updateReferralLinkDto: UpdateReferralLinkDto,
+  ): Promise<ReferralLink> {
     return this.update(id, updateReferralLinkDto);
   }
-
 }

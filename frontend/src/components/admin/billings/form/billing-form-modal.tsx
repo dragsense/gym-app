@@ -53,12 +53,13 @@ const BillingFormModal = React.memo(function BillingFormModal({
       return <SearchableInputWrapper<UserDto>
         {...props}
         modal={true}
-        useSearchable={() => useSearchableUsers({level: EUserLevels[EUserRole.CLIENT]})}
+        useSearchable={() => useSearchableUsers({ level: EUserLevels[EUserRole.CLIENT] })}
         getLabel={(item) => {
-          return `${item.profile?.firstName} ${item.profile?.lastName}`
+          if (!item?.profile) return 'Select Recipient'
+          return `${item.id} - ${item.profile?.firstName} ${item.profile?.lastName}`
         }}
         getKey={(item) => item.id.toString()}
-        getValue={(item) => { return { id: item.id, user: item } }}
+        getValue={(item) => { return { id: item.id, profile: item.profile } }}
         shouldFilter={false}
       />
     }
@@ -75,7 +76,7 @@ const BillingFormModal = React.memo(function BillingFormModal({
     },
 
 
-    reminderConfig: { 
+    reminderConfig: {
       ...storeFields.reminderConfig,
       visible: (ctx: { values: Record<string, any> }) => ctx.values.enableReminder,
       renderItem: (items: ReminderDto) => {

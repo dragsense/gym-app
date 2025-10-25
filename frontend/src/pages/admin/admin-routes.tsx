@@ -20,12 +20,13 @@ const QueuesPage = lazy(() => import("./queues"));
 
 const SettingsPage = lazy(() => import("./settings"));
 const CachePage = lazy(() => import("./cache"));
+const UserAvailabilityPage = lazy(() => import("./user-availability"));
 // React 19: Enhanced loading component for admin routes
 const AdminRouteLoadingFallback = () => {
   const componentId = useId();
-  
+
   return (
-    <div 
+    <div
       className="flex flex-col items-center justify-center min-h-screen bg-background"
       data-component-id={componentId}
     >
@@ -40,6 +41,14 @@ const AdminRouteLoadingFallback = () => {
 
 // React 19: Enhanced admin routes with lazy loading and Suspense
 const adminRoutes = [
+  {
+    path: ADMIN_ROUTES.DASHBOARD,
+    element: (
+      <Suspense fallback={<AdminRouteLoadingFallback />}>
+        <DashboardPage />
+      </Suspense>
+    ),
+  },
   {
     path: ADMIN_ROUTES.USERS,
     element: (
@@ -129,14 +138,6 @@ const adminRoutes = [
     ),
   },
   {
-    path: ADMIN_ROUTES.DASHBOARD,
-    element: (
-      <Suspense fallback={<AdminRouteLoadingFallback />}>
-        <DashboardPage />
-      </Suspense>
-    ),
-  },
-  {
     path: ADMIN_ROUTES.WORKERS,
     element: (
       <Suspense fallback={<AdminRouteLoadingFallback />}>
@@ -165,6 +166,14 @@ const adminRoutes = [
     element: (
       <Suspense fallback={<AdminRouteLoadingFallback />}>
         <SettingsPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: ADMIN_ROUTES.USER_AVAILABILITY,
+    element: (
+      <Suspense fallback={<AdminRouteLoadingFallback />}>
+        <UserAvailabilityPage />
       </Suspense>
     ),
   },

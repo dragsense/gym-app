@@ -14,6 +14,7 @@ import type { TUserResponse } from "@shared/interfaces/user.interface";
 import { Button } from "@/components/ui/button";
 import { ModalForm } from "@/components/form-ui/modal-form";
 import type { THandlerComponentProps } from "@/@types/handler-types";
+import type { TFieldConfigObject } from "@/@types/form/field-config.type";
 
 
 
@@ -43,7 +44,28 @@ const UserFormModal = React.memo(function UserFormModal({
   const onClose = store((state) => state.extra.onClose)
 
   // React 19: Memoized fields for better performance
-  const fields = useMemo(() => store((state) => state.fields), [store]);
+  const storeFields = store((state) => state.fields)
+
+  // React 19: Memoized fields for better performance
+  const fields = useMemo(() => ({
+    ...storeFields,
+    profile: {
+      ...storeFields.profile,
+      renderItem: (item: TProfileData) => (
+        <div className="">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            {item.firstName}
+            {item.lastName}
+            {item.phoneNumber}
+            {item.gender}
+            {item.dateOfBirth}
+            {item.address}
+          </div>
+        </div>
+      )
+    },
+
+  } as TFieldConfigObject<TUserData>), [storeFields]);
 
   const inputs = useInput<TUserData | TUpdateUserData>({
     fields,
@@ -96,30 +118,15 @@ const UserFormModal = React.memo(function UserFormModal({
     >
       <div className="space-y-8">
         {/* Basic Info */}
-        <div>
-          <h3 className="text-sm font-semibold mb-3">Basic Info</h3>
+        <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
             {inputs.email}
             {inputs.isActive}
-            {(inputs.profile as FormInputs<TProfileData>)?.firstName}
-            {(inputs.profile as FormInputs<TProfileData>)?.lastName}
+          </div>
+          <div className="w-full">
+            {inputs.profile as React.ReactNode}
           </div>
         </div>
-
-        {/* Personal Details */}
-        <div>
-          <h3 className="text-sm font-semibold  mb-3">Personal Details</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-            {(inputs.profile as FormInputs<TProfileData>)?.phoneNumber}
-
-            {(inputs.profile as FormInputs<TProfileData>)?.gender}
-            {(inputs.profile as FormInputs<TProfileData>)?.dateOfBirth}
-            {(inputs.profile as FormInputs<TProfileData>)?.address}
-          </div>
-        </div>
-
-       
-
       </div>
     </ModalForm>
 

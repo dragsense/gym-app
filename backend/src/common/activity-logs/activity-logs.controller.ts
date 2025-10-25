@@ -16,7 +16,6 @@ import {
   ApiQuery,
   ApiParam,
 } from '@nestjs/swagger';
-import { JwtAuthGuard } from '@/guards/jwt-auth.gaurd';
 import { ActivityLogsService } from './activity-logs.service';
 import {
   ActivityLogListDto,
@@ -27,11 +26,10 @@ import { SingleQueryDto } from '@shared/dtos';
 import { ActivityLog } from './entities/activity-log.entity';
 
 @ApiTags('Activity Logs')
-@ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@ApiBearerAuth('access-token')
 @Controller('activity-logs')
 export class ActivityLogsController {
-  constructor(private readonly activityLogsService: ActivityLogsService) { }
+  constructor(private readonly activityLogsService: ActivityLogsService) {}
 
   @Get()
   @ApiOperation({

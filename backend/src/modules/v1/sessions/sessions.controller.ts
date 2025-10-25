@@ -22,7 +22,6 @@ import {
 } from '@nestjs/swagger';
 
 import { SessionsService } from './sessions.service';
-import { JwtAuthGuard } from '@/guards/jwt-auth.gaurd';
 import {
   CreateSessionDto,
   UpdateSessionDto,
@@ -33,7 +32,6 @@ import {
 } from '@shared/dtos';
 import { Session } from './entities/session.entity';
 
-@UseGuards(JwtAuthGuard)
 @ApiBearerAuth('access-token')
 @ApiTags('Sessions')
 @Controller('sessions')

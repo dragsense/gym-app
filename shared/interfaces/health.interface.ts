@@ -1,94 +1,45 @@
-export interface HealthStatus {
-  status: 'healthy' | 'unhealthy' | 'degraded';
+import { EHealthStatus } from "../enums/health.enum";
+
+export interface IHealthStatus {
+  status: EHealthStatus;
   timestamp: Date;
   uptime: number;
   version: string;
   environment: string;
   checks: {
-    database: DatabaseHealth;
-    memory: MemoryHealth;
-    disk: DiskHealth;
-    network: NetworkHealth;
-    services: ServiceHealth[];
+    database: IDatabaseHealth;
+    memory: IMemoryHealth;
+    network: INetworkHealth;
   };
 }
 
-export interface DatabaseHealth {
-  status: 'healthy' | 'unhealthy' | 'degraded';
-  connections: ConnectionHealth[];
+export interface IDatabaseHealth {
+  status: EHealthStatus;
+  connections: IConnectionHealth[];
   mode: string;
   responseTime: number;
   lastChecked: Date;
 }
 
-export interface ConnectionHealth {
+export interface IConnectionHealth {
   name: string;
-  status: 'connected' | 'disconnected' | 'error';
+  status: EHealthStatus;
   responseTime: number;
   lastChecked: Date;
   error?: string;
 }
 
-export interface MemoryHealth {
-  status: 'healthy' | 'unhealthy' | 'degraded';
+export interface IMemoryHealth {
+  status: EHealthStatus;
   used: number;
   total: number;
   percentage: number;
   free: number;
 }
 
-export interface DiskHealth {
-  status: 'healthy' | 'unhealthy' | 'degraded';
-  used: number;
-  total: number;
-  percentage: number;
-  free: number;
-}
-
-export interface NetworkHealth {
-  status: 'healthy' | 'unhealthy' | 'degraded';
+export interface INetworkHealth {
+  status: EHealthStatus;
   latency: number;
   throughput: number;
   connections: number;
-}
-
-export interface ServiceHealth {
-  name: string;
-  status: 'healthy' | 'unhealthy' | 'degraded';
-  responseTime: number;
-  lastChecked: Date;
-  error?: string;
-}
-
-export interface HealthSummary {
-  status: string;
-  uptime: string;
-  checks: number;
-  healthy: number;
-  degraded: number;
-  unhealthy: number;
-}
-
-export interface HealthDashboard {
-  overall: HealthStatus;
-  summary: HealthSummary;
-  trends: HealthTrend[];
-  alerts: HealthAlert[];
-}
-
-export interface HealthTrend {
-  timestamp: Date;
-  status: 'healthy' | 'unhealthy' | 'degraded';
-  responseTime: number;
-  memoryUsage: number;
-  cpuUsage: number;
-}
-
-export interface HealthAlert {
-  id: string;
-  type: 'critical' | 'warning' | 'info';
-  message: string;
-  timestamp: Date;
-  resolved: boolean;
-  service?: string;
 }

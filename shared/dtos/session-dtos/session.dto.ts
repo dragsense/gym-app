@@ -288,7 +288,7 @@ export class SessionDto {
   @Type(() => Number)
   @FieldType("number", true)
   @Min(0)
-  clientsCount?: number;
+  clientsUsersCount?: number;
 
   @ApiPropertyOptional({
     example: true,

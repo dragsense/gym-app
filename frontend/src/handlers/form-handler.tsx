@@ -101,6 +101,7 @@ export function FormHandler<TFormData, TResponse = any, TExtraProps extends Reco
             let processedData = formData;
 
 
+            console.log(initialValues);
 
             if (isEditing) {
               processedData = getDirtyData(formData, initialValues) as any;

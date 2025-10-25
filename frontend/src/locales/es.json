@@ -1,3 +1,37 @@
 {
-    "appName": "Mi Aplicación"
+    "appName": "Mi Aplicación",
+    "health": {
+        "title": "Salud del Sistema",
+        "loading": "Cargando datos de salud...",
+        "error": "Error al obtener datos de salud",
+        "tryAgain": "Intentar de Nuevo",
+        "refresh": "Actualizar",
+        "uptime": "Tiempo Activo",
+        "version": "Versión",
+        "environment": "Entorno",
+        "database": {
+            "title": "Base de Datos",
+            "mode": "Modo",
+            "response": "Respuesta",
+            "connections": "Conexiones",
+            "connectionsTitle": "Conexiones de Base de Datos"
+        },
+        "memory": {
+            "title": "Memoria",
+            "usage": "Uso",
+            "used": "Usado",
+            "free": "Libre"
+        },
+        "network": {
+            "title": "Red",
+            "latency": "Latencia",
+            "throughput": "Rendimiento",
+            "connections": "Conexiones"
+        },
+        "status": {
+            "healthy": "Saludable",
+            "degraded": "Degradado",
+            "unhealthy": "No Saludable"
+        }
+    }
 }

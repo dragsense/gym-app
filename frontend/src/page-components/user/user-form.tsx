@@ -3,7 +3,7 @@
 import { useShallow } from 'zustand/shallow';
 import { Loader2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState, useMemo, useCallback, useId, useTransition, useDeferredValue } from "react";
+import { useState, useMemo, useCallback, useId, useTransition } from "react";
 
 // Handlers
 import { FormHandler } from "@/handlers";
@@ -30,7 +30,7 @@ import { CreateUserDto, UpdateUserDto } from "@shared/dtos";
 
 
 export type TUserExtraProps = {
-  level: number;
+    level: number;
 }
 
 interface IUserFormProps extends THandlerComponentProps<TSingleHandlerStore<IUser, TUserExtraProps>> {
@@ -43,7 +43,7 @@ export default function UserForm({
     // React 19: Essential IDs and transitions
     const componentId = useId();
     const [, startTransition] = useTransition();
-    
+
     const queryClient = useQueryClient();
     const [credentialModalContent, setCredentialModalContent] = useState({
         open: false,
@@ -82,7 +82,7 @@ export default function UserForm({
     // React 19: Memoized initial values with deferred processing
     const initialValues = useMemo(() => {
         return strictDeepMerge<TUserData>(INITIAL_VALUES, response ?? {});
-    }, [INITIAL_VALUES, response?.id]); 
+    }, [INITIAL_VALUES, response?.id]);
 
 
     const handleClose = useCallback(() => {
@@ -98,7 +98,7 @@ export default function UserForm({
     const mutationFn = useMemo(() => {
         return isEditing ? updateUser(response.id) : createUser;
     }, [isEditing, response?.id]);
-    
+
     // React 19: Memoized DTO to prevent unnecessary re-renders
     const dto = useMemo(() => {
         return isEditing ? UpdateUserDto : CreateUserDto;

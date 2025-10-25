@@ -3,12 +3,11 @@ import { useShallow } from 'zustand/shallow';
 import { useId, useMemo, useTransition } from 'react';
 
 // Components
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AppCard } from "@/components/layout-ui/app-card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { AppDialog } from "@/components/layout-ui/app-dialog";
-import { User, MapPin, Calendar, Phone } from "lucide-react";
+import { User, MapPin, Phone } from "lucide-react";
 
 // Types
 import { type IUser } from "@shared/interfaces/user.interface";
@@ -19,7 +18,7 @@ import { type THandlerComponentProps } from "@/@types/handler-types";
 
 
 export type TUserViewExtraProps = {
-   level: number;
+    level: number;
 }
 
 interface IUserViewProps extends THandlerComponentProps<TSingleHandlerStore<IUser, TUserViewExtraProps>> {
@@ -69,12 +68,12 @@ interface IUserDetailContentProps {
 function UserDetailContent({ user }: IUserDetailContentProps) {
     // React 19: Essential IDs
     const componentId = useId();
-    
+
     const profile = user.profile;
 
     // React 19: Memoized user creation date for better performance
-    const userCreationDate = useMemo(() => 
-        new Date(user.createdAt).toLocaleDateString(), 
+    const userCreationDate = useMemo(() =>
+        new Date(user.createdAt).toLocaleDateString(),
         [user.createdAt]
     );
 
@@ -117,7 +116,7 @@ function UserDetailContent({ user }: IUserDetailContentProps) {
                     }
                 >
                     <div className="space-y-4">
-                    <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3">
                             <div className="text-muted-foreground"><Phone className="w-4 h-4" /></div>
                             <div className="flex-1">
                                 <span className="text-sm text-muted-foreground">Phone:</span>
@@ -141,8 +140,8 @@ function UserDetailContent({ user }: IUserDetailContentProps) {
                     </div>
                 </AppCard>
             </div>
-         
-    
+
+
         </div>
     );
 }

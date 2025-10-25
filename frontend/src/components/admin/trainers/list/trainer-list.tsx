@@ -136,13 +136,12 @@ export default function TrainerList({
       </div>
 
       <TabsContent value="table">
-        <AppCard className="px-0">
-          <TTable<ITrainer>
-            listStore={store}
-            columns={columns}
-            emptyMessage="No trainers found."
-            showPagination={true}
-          /></AppCard>
+        <TTable<ITrainer>
+          listStore={store}
+          columns={columns}
+          emptyMessage="No trainers found."
+          showPagination={true}
+        />
       </TabsContent>
 
       <TabsContent value="list">

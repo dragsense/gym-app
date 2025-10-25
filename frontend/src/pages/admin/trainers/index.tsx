@@ -23,6 +23,7 @@ import type { ITrainerListExtraProps } from "@/components/admin/trainers/list/tr
 import type { TTrainerListData } from "@shared/types";
 import type { TTrainerViewExtraProps } from "@/components/admin/trainers/view/trainer-view";
 import { ProfileForm } from "@/page-components";
+import { TrainerListDto } from "@shared/dtos";
 
 export default function TrainersPage() {
     const queryClient = useQueryClient();
@@ -33,7 +34,7 @@ export default function TrainersPage() {
         <PageInnerLayout Header={<Header />}>
             <SingleHandler<ITrainer, any>
                 queryFn={fetchTrainer}
-                initialParams={{ 
+                initialParams={{
                     _relations: 'user.profile',
                 }}
                 deleteFn={deleteTrainer}
@@ -47,8 +48,8 @@ export default function TrainersPage() {
                     },
                     {
                         action: 'updateProfile',
-                        comp: ProfileForm  as any
-                      }
+                        comp: ProfileForm as any
+                    }
                 ]}
             />
 
@@ -58,7 +59,8 @@ export default function TrainersPage() {
                     _relations: 'user.profile',
                     _select: 'user.email, user.profile.firstName, user.profile.lastName, user.profile.phoneNumber',
                 }}
-                ListComponent={TrainerList} 
+                ListComponent={TrainerList}
+                dto={TrainerListDto}
                 storeKey={TRAINERS_STORE_KEY}
                 listProps={{
                     level: EUserLevels[EUserRole.TRAINER]

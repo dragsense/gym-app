@@ -4,12 +4,14 @@ import { AppService } from './app.service';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import * as crypto from 'crypto';
 import { ConfigService } from '@nestjs/config';
+import { Public } from './decorators/access.decorator';
 
+@Public()
 @Controller()
 export class AppController {
   constructor(
     private readonly appService: AppService,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
   ) {}
 
   @Get()

@@ -2,7 +2,7 @@ import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { GeneralBaseEntity } from '@/common/entities';
 import { User } from '@/modules/v1/users/entities/user.entity';
-import { EReferralLinkStatus } from '@shared/enums';
+import { EReferralLinkStatus, EReferralLinkType } from '@shared/enums';
 
 @Entity('referral_links')
 export class ReferralLink extends GeneralBaseEntity {
@@ -26,6 +26,18 @@ export class ReferralLink extends GeneralBaseEntity {
   })
   @Column({ type: 'varchar', length: 50, unique: true })
   referralCode: string;
+
+  @ApiProperty({
+    example: 'CLIENT',
+    description: 'Referral link type',
+    enum: EReferralLinkType,
+  })
+  @Column({
+    type: 'enum',
+    enum: EReferralLinkType,
+    default: EReferralLinkType.ADMIN,
+  })
+  type: EReferralLinkType;
 
   @ApiProperty({
     example: 'ACTIVE',

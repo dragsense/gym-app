@@ -47,7 +47,7 @@ export function AppSidebar({
   // React 19: Essential IDs and transitions
   const componentId = useId();
   const [, startTransition] = useTransition();
-  
+
   const location = useLocation();
   const { logout, isLoading } = useLogout();
   const { setOpenMobile, isMobile } = useSidebar();

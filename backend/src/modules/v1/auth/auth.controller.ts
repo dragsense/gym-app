@@ -22,21 +22,30 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 
-import { LoginDto, LoginResponseDto, SignupDto, ForgotPasswordDto, ResetPasswordWithTokenDto,
+import {
+  LoginDto,
+  LoginResponseDto,
+  SignupDto,
+  ForgotPasswordDto,
+  ResetPasswordWithTokenDto,
   RefreshTokenResponseDto,
   VerifyOtpDto,
-  MessageResponseDto } from '@shared/dtos';
-
-
+  MessageResponseDto,
+} from '@shared/dtos';
 
 import { AuthService } from './auth.service';
-import { JwtAuthGuard, JwtRefreshAuthGuard } from '@/guards/jwt-auth.gaurd';
+import { JwtGuard, JwtRefreshGuard } from '@/guards/jwt.gaurd';
 import { TokenService } from './services/tokens.service';
 import { MfaService } from './services/mfa-device.service';
 import { UsersService } from '../users/users.service';
 import { ActivityLogsService } from '@/common/activity-logs/activity-logs.service';
-import { EActivityType, EActivityStatus } from '@shared/enums/activity-log.enum';
+import {
+  EActivityType,
+  EActivityStatus,
+} from '@shared/enums/activity-log.enum';
+import { Private, Public } from '@/decorators/access.decorator';
 
+@Public()
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
@@ -46,7 +55,7 @@ export class AuthController {
     private readonly mfaService: MfaService,
     private readonly userService: UsersService,
     private readonly activityLogsService: ActivityLogsService,
-  ) { }
+  ) {}
 
   @ApiOperation({
     summary: 'User login',
@@ -56,7 +65,7 @@ export class AuthController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Login successful',
-    type: LoginResponseDto
+    type: LoginResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.UNAUTHORIZED,
@@ -68,17 +77,18 @@ export class AuthController {
 
     const { user, token } = await this.authService.validateUser(
       email,
-      password
+      password,
     );
 
     const trusted = await this.mfaService.isDeviceTrusted(user.id, deviceId);
 
     if (trusted) {
-      const { accessToken, refreshToken } = await this.tokenService.generateTokens({
-        id: user.id,
-        tokenVersion: user.tokenVersion,
-        isActive: user.isActive
-      });
+      const { accessToken, refreshToken } =
+        await this.tokenService.generateTokens({
+          id: user.id,
+          tokenVersion: user.tokenVersion,
+          isActive: user.isActive,
+        });
 
       if (!accessToken || !refreshToken) {
         throw new UnauthorizedException('Invalid credentials');
@@ -93,7 +103,11 @@ export class AuthController {
 
       res.setHeader('Authorization', `Bearer ${accessToken.token}`);
 
-      return res.status(HttpStatus.OK).json({ accessToken, message: 'Logged in successfully', requiredOtp: false });
+      return res.status(HttpStatus.OK).json({
+        accessToken,
+        message: 'Logged in successfully',
+        requiredOtp: false,
+      });
     }
 
     await this.mfaService.generateEmailOtp(user.email, deviceId);
@@ -103,14 +117,12 @@ export class AuthController {
       requiredOtp: true,
       message: 'OTP sent successfully',
     });
-
-
   }
-
 
   @ApiOperation({
     summary: 'Refresh tokens',
-    description: 'Generates new access and refresh tokens using a valid refresh token',
+    description:
+      'Generates new access and refresh tokens using a valid refresh token',
   })
   @ApiBody({ type: RefreshTokenResponseDto })
   @ApiResponse({
@@ -121,17 +133,15 @@ export class AuthController {
     status: HttpStatus.UNAUTHORIZED,
     description: 'Invalid or expired refresh token',
   })
-  @UseGuards(JwtRefreshAuthGuard)
+  @UseGuards(JwtRefreshGuard)
   @Post('refresh')
-  async refreshTokens(
-    @Req() req: any,
-    @Res() res: Response,
-  ) {
+  async refreshTokens(@Req() req: any, @Res() res: Response) {
     const { refreshToken: oldRefreshToken } = req.user;
 
     if (!oldRefreshToken) throw new UnauthorizedException('Invalid token');
 
-    const { accessToken, refreshToken } = await this.tokenService.refreshTokens(oldRefreshToken);
+    const { accessToken, refreshToken } =
+      await this.tokenService.refreshTokens(oldRefreshToken);
 
     if (!accessToken || !refreshToken) {
       throw new UnauthorizedException('Invalid credentials');
@@ -146,7 +156,9 @@ export class AuthController {
 
     res.setHeader('Authorization', `Bearer ${accessToken.token}`);
 
-    return res.status(HttpStatus.OK).json({ accessToken, refreshToken, message: 'Logged in successfully' });
+    return res
+      .status(HttpStatus.OK)
+      .json({ accessToken, refreshToken, message: 'Logged in successfully' });
   }
 
   @ApiOperation({ summary: 'Register a new user' })
@@ -154,14 +166,13 @@ export class AuthController {
   @ApiResponse({
     status: 204,
     description: 'User registered successfully.',
-    type: MessageResponseDto
+    type: MessageResponseDto,
   })
   @ApiResponse({ status: 409, description: 'The email is already taken' })
   @Post('signup')
   signup(@Body() signupDto: SignupDto) {
     return this.authService.signup(signupDto);
   }
-
 
   @ApiOperation({
     summary: 'User logout',
@@ -170,9 +181,9 @@ export class AuthController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Logout successful',
-    type: MessageResponseDto
+    type: MessageResponseDto,
   })
-  @UseGuards(JwtAuthGuard)
+  @Private()
   @Post('logout')
   async logout(@Req() req: any, @Res() res: Response) {
     const token = req.user.token;
@@ -228,16 +239,14 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: 'Logout from all devices' })
-  @UseGuards(JwtAuthGuard)
+  @Private()
   @Post('logout-all')
   async logoutAll(@Req() req: any, @Res() res: Response) {
-
     const userId = req.user.id;
     try {
       await this.tokenService.invalidateAllTokens(userId);
       await this.mfaService.removeAllDevices(userId);
-    } catch (err) {
-    }
+    } catch (err) {}
 
     res.clearCookie('refresh_token', {
       httpOnly: true,
@@ -245,17 +254,19 @@ export class AuthController {
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     });
     res.setHeader('Authorization', '');
-    return res.status(HttpStatus.OK).json({ message: 'Logged out from all devices' });
+    return res
+      .status(HttpStatus.OK)
+      .json({ message: 'Logged out from all devices' });
   }
-
 
   @Post('send-reset-link')
   @ApiOperation({ summary: 'Request password reset link via email' })
   @ApiBody({ type: ForgotPasswordDto })
   @ApiResponse({
     status: 200,
-    description: 'If an account with this email exists, a reset link has been sent',
-    type: MessageResponseDto
+    description:
+      'If an account with this email exists, a reset link has been sent',
+    type: MessageResponseDto,
   })
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
     return this.authService.sendResetLink(dto.email);
@@ -265,29 +276,36 @@ export class AuthController {
   @ApiOperation({ summary: 'Reset password using reset token from email' })
   @ApiBody({ type: ResetPasswordWithTokenDto })
   @ApiResponse({
-    status: 200, description: 'Password reset successfully',
-    type: MessageResponseDto
+    status: 200,
+    description: 'Password reset successfully',
+    type: MessageResponseDto,
   })
   @ApiResponse({ status: 400, description: 'Invalid or expired token' })
   async setNewPassword(@Body() resetDto: ResetPasswordWithTokenDto) {
     return this.authService.resetPassword(resetDto);
   }
 
-
   @Post('verify-otp')
   @ApiOperation({ summary: 'Verify OTP code' })
   @ApiBody({ type: VerifyOtpDto })
-  @ApiResponse({ status: 200, description: 'OTP verified successfully', type: MessageResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'OTP verified successfully',
+    type: MessageResponseDto,
+  })
   @ApiResponse({ status: 401, description: 'Invalid OTP' })
   async verifyOtp(@Body() dto: VerifyOtpDto, @Res() res: Response) {
-
     const { token, code, deviceId, rememberDevice } = dto;
 
-    const { isValid, email } = await this.mfaService.verifyOtp(token, code, deviceId, rememberDevice,
+    const { isValid, email } = await this.mfaService.verifyOtp(
+      token,
+      code,
+      deviceId,
+      rememberDevice,
       {
         userAgent: (res.req as any)?.headers?.['user-agent'],
         ipAddress: (res.req as any)?.ip,
-      }
+      },
     );
 
     if (!isValid) {
@@ -296,10 +314,11 @@ export class AuthController {
 
     const user = await this.userService.getSingle({ email: email });
 
-    const { accessToken, refreshToken } = await this.tokenService.generateTokens({
-      id: user.id,
-      isActive: user.isActive
-    });
+    const { accessToken, refreshToken } =
+      await this.tokenService.generateTokens({
+        id: user.id,
+        isActive: user.isActive,
+      });
 
     if (!accessToken || !refreshToken) {
       throw new UnauthorizedException('Invalid credentials');
@@ -314,20 +333,24 @@ export class AuthController {
 
     res.setHeader('Authorization', `Bearer ${accessToken.token}`);
 
-    return res.status(HttpStatus.OK).json({ accessToken, message: 'Logged in successfully' });
+    return res
+      .status(HttpStatus.OK)
+      .json({ accessToken, message: 'Logged in successfully' });
   }
-
-
 
   @ApiOperation({
     summary: 'Resend OTP',
-    description: 'Resends an OTP code to the user email if still valid, otherwise generates a new one',
+    description:
+      'Resends an OTP code to the user email if still valid, otherwise generates a new one',
   })
   @ApiBody({
     schema: {
       type: 'object',
       properties: {
-        token: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' },
+        token: {
+          type: 'string',
+          example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+        },
       },
       required: ['token'],
     },
@@ -337,8 +360,7 @@ export class AuthController {
     description: 'OTP resent or newly generated',
   })
   @Post('resend-otp')
-  async resendOtp(@Body() dto: { token: string, deviceId?: string }) {
-
+  async resendOtp(@Body() dto: { token: string; deviceId?: string }) {
     const { token, deviceId } = dto;
 
     const email = this.mfaService.verifyOtpToken(token);
