@@ -7,12 +7,12 @@ import { IUserSettings } from '@shared/interfaces/settings.interface';
 export class UserSettingsService {
   constructor(private readonly settingsService: SettingsService) {}
 
-  async getUserSettings(userId: number): Promise<IUserSettings> {
+  async getUserSettings(userId: string): Promise<IUserSettings> {
     return this.settingsService.getSettings(userId);
   }
 
   async createOrUpdateUserSettings(
-    userId: number,
+    userId: string,
     createUserSettingsDto: CreateOrUpdateUserSettingsDto,
   ): Promise<void> {
     // Save settings - automatically detects types and creates appropriate settings

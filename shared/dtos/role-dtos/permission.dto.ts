@@ -21,11 +21,13 @@ import {
 import { ResourceDto } from "./resource.dto";
 
 export class PermissionDto {
-  @ApiProperty({ example: 1, description: "Permission ID" })
-  @IsNumber()
+  @ApiProperty({
+    example: "550e8400-e29b-41d4-a716-446655440000",
+    description: "Permission ID",
+  })
+  @IsString()
   @IsNotEmpty()
-  @Min(1)
-  id: number;
+  id: string;
 
   @ApiProperty({ example: "user:create", description: "Permission name/code" })
   @IsString()
@@ -135,12 +137,13 @@ export class PermissionListDto extends ListQueryDto {
   )
   status?: EPermissionStatus;
 
-  @ApiPropertyOptional({ example: 1, description: "Filter by resource ID" })
+  @ApiPropertyOptional({
+    example: "550e8400-e29b-41d4-a716-446655440000",
+    description: "Filter by resource ID",
+  })
   @IsOptional()
-  @IsNumber()
-  @Type(() => Number)
-  @Min(1)
-  resourceId?: number;
+  @IsString()
+  resourceId?: string;
 }
 
 export class CreatePermissionDto {

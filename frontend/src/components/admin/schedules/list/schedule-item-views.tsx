@@ -16,9 +16,9 @@ import { EScheduleStatus, EScheduleFrequency } from "@shared/enums";
 import { formatDate, formatTimeOfDay, formatInterval } from "@/utils/date-format";
 
 interface IItemViewArgs {
-  handleEdit: (id: number) => void;
-  handleDelete: (id: number) => void;
-  handleView: (id: number) => void;
+  handleEdit: (id: string) => void;
+  handleDelete: (id: string) => void;
+  handleView: (id: string) => void;
 }
 
 const getStatusColor = (status: EScheduleStatus) => {

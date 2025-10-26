@@ -81,8 +81,11 @@ export class PaymentMethodListDto extends ListQueryDto<IPaymentMethod> {
 }
 
 export class PaymentMethodDto {
-  @ApiProperty({ example: 1, description: "Payment method ID" })
-  id: number;
+  @ApiProperty({
+    example: "550e8400-e29b-41d4-a716-446655440000",
+    description: "Payment method ID",
+  })
+  id: string;
 
   @ApiProperty({
     example: "stripe",

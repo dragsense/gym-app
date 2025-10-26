@@ -238,7 +238,7 @@ export class SessionEventListenerService implements OnModuleInit {
   /**
    * Remove all reminders for a session
    */
-  private async removeSessionReminders(sessionId: number): Promise<void> {
+  private async removeSessionReminders(sessionId: string): Promise<void> {
     try {
       // Find and remove all schedules associated with this session
       const schedules = await this.scheduleService.getAll(

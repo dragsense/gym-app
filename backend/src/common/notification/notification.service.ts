@@ -89,7 +89,7 @@ export class NotificationService extends CrudService<Notification> {
   /**
    * Mark a notification as read
    */
-  async markAsRead(id: number): Promise<Notification> {
+  async markAsRead(id: string): Promise<Notification> {
     const notification = await this.update(id, { isRead: true });
 
     return notification;
@@ -98,7 +98,7 @@ export class NotificationService extends CrudService<Notification> {
   /**
    * Mark all notifications as read for a user
    */
-  async markAllAsRead(entityId: number) {
+  async markAllAsRead(entityId: string) {
     const result = await this.update(
       { entityId, isRead: false },
       { isRead: true },
@@ -110,7 +110,7 @@ export class NotificationService extends CrudService<Notification> {
   /**
    * Get unread count for a user
    */
-  async getUnreadCount(entityId: number): Promise<number> {
+  async getUnreadCount(entityId: string): Promise<number> {
     return await this.notificationRepository.count({
       where: { entityId, isRead: false },
     });

@@ -33,7 +33,7 @@ export class ClientsService extends CrudService<Client> {
 
   async createClient(
     createClientDto: CreateClientDto,
-    userId: number,
+    userId: string,
   ): Promise<IMessageResponse & { client: Client }> {
     const { user, ...clientData } = createClientDto;
     const savedClient = await this.create(
@@ -64,7 +64,7 @@ export class ClientsService extends CrudService<Client> {
   }
 
   async updateClient(
-    id: number,
+    id: string,
     updateClientDto: UpdateClientDto,
   ): Promise<Client> {
     const { user, ...clientData } = updateClientDto;

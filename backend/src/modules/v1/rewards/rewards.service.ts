@@ -20,7 +20,10 @@ export class RewardsService extends CrudService<RewardPoints> {
     super(rewardPointsRepository, dataSource, eventService);
   }
 
-  async processReferralSignup(referredUserId: number, referralCode: string): Promise<void> {
+  async processReferralSignup(
+    referredUserId: string,
+    referralCode: string,
+  ): Promise<void> {
     // Find the referral link
     const referralLink = await this.referralLinkRepository.findOne({
       where: { referralCode },
@@ -48,31 +51,30 @@ export class RewardsService extends CrudService<RewardPoints> {
 
     if (rewardPoints > 0) {
       // Create reward points record
-      await this.create({
-        points: rewardPoints,
-        type: ERewardType.REFERRAL_BONUS,
-        status: ERewardStatus.ACTIVE,
-        description: `Referral bonus for bringing ${referralCount} user${referralCount > 1 ? 's' : ''}`,
-        user: referrer,
-        referralLink,
-        referredUserId,
-        isRedeemable: true,
-      },
+      await this.create(
+        {
+          points: rewardPoints,
+          type: ERewardType.REFERRAL_BONUS,
+          status: ERewardStatus.ACTIVE,
+          description: `Referral bonus for bringing ${referralCount} user${referralCount > 1 ? 's' : ''}`,
+          user: referrer,
+          referralLink,
+          referredUserId,
+          isRedeemable: true,
+        },
         {
           afterCreate: async (savedEntity, manager) => {
             await manager.update(ReferralLink, referralLink.id, {
               referralCount: referralCount,
               currentUses: referralLink.currentUses + 1,
             });
-          }
-        }
+          },
+        },
       );
-
-
     }
   }
 
-  async getUserRewardPoints(userId: number): Promise<number> {
+  async getUserRewardPoints(userId: string): Promise<number> {
     const result = await this.rewardPointsRepository
       .createQueryBuilder('reward')
       .select('SUM(reward.points - reward.redeemedPoints)', 'total')
@@ -83,7 +85,7 @@ export class RewardsService extends CrudService<RewardPoints> {
     return parseInt(result.total) || 0;
   }
 
-  async getUserRewards(userId: number): Promise<RewardPoints[]> {
+  async getUserRewards(userId: string): Promise<RewardPoints[]> {
     return await this.rewardPointsRepository.find({
       where: { user: { id: userId } },
       relations: ['referralLink'],

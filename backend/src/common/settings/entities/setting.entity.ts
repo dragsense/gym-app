@@ -6,9 +6,12 @@ import { ESettingType } from '@shared/enums/setting.enum';
 @Entity('settings')
 @Index(['key'], { unique: true })
 export class Setting extends GeneralBaseEntity {
-  @ApiProperty({ example: 1, description: 'User ID' })
-  @Column({ type: 'int' })
-  entityId: number;
+  @ApiProperty({
+    example: '550e8400-e29b-41d4-a716-446655440000',
+    description: 'User ID',
+  })
+  @Column({ type: 'varchar' })
+  entityId: string;
 
   @ApiProperty({ example: 'theme', description: 'Setting key' })
   @Column({ type: 'varchar', length: 100 })

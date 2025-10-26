@@ -199,13 +199,14 @@ export class SessionListDto extends ListQueryDto<ISession> {
 }
 
 export class SessionDto {
-  @ApiProperty({ example: 1, description: "Session ID" })
+  @ApiProperty({
+    example: "550e8400-e29b-41d4-a716-446655440000",
+    description: "Session ID",
+  })
   @IsNotEmpty()
-  @IsNumber()
-  @Type(() => Number)
-  @FieldType("number", true)
-  @Min(1)
-  id: number;
+  @IsString()
+  @FieldType("text", true)
+  id: string;
 
   @ApiProperty({ example: "Morning Workout", description: "Session title" })
   @IsOptional()

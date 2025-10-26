@@ -66,19 +66,19 @@ export default function TrainerClientList({
     });
   };
 
-  const handleEdit = (id: number) => {
+  const handleEdit = (id: string) => {
     startTransition(() => {
       setAction('createOrUpdate', id);
     });
   }
 
-  const handleUpdateProfile = (id: number) => {
+  const handleUpdateProfile = (id: string) => {
     startTransition(() => {
       setAction('updateProfile', id);
     });
   }
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     startTransition(() => {
       setAction('delete', id);
     });

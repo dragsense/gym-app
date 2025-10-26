@@ -38,7 +38,7 @@ export class TrainersService extends CrudService<Trainer> {
 
   async createTrainer(
     createTrainerDto: CreateTrainerDto,
-    userId: number,
+    userId: string,
   ): Promise<IMessageResponse & { trainer: Trainer }> {
     const { user, ...trainerData } = createTrainerDto;
 
@@ -70,7 +70,7 @@ export class TrainersService extends CrudService<Trainer> {
   }
 
   async updateTrainer(
-    id: number,
+    id: string,
     updateTrainerDto: UpdateTrainerDto,
   ): Promise<Trainer> {
     const { user, ...trainerData } = updateTrainerDto;

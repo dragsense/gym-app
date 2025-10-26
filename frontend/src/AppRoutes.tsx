@@ -19,16 +19,15 @@ const RouteLoadingFallback = () => {
   const componentId = useId();
 
   return (
-    <div
-      className="flex flex-col items-center justify-center min-h-screen bg-background"
-      data-component-id={componentId}
-    >
-      <div className="text-center mb-4">
-        <h3 className="text-lg font-semibold text-foreground">Application</h3>
-        <p className="text-sm text-muted-foreground">Initializing application components...</p>
-      </div>
-      <AppLoader />
+    <div className="h-screen w-screen" data-component-id={componentId}>
+      <AppLoader>
+        <div className="text-center mb-4">
+          <h3 className="text-lg font-semibold text-foreground">Application</h3>
+          <p className="text-sm text-muted-foreground">Initializing application components...</p>
+        </div>
+      </AppLoader>
     </div>
+
   );
 };
 

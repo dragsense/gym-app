@@ -7,7 +7,6 @@ import {
   Delete,
   Param,
   Query,
-  ParseIntPipe,
   Version,
   Patch,
 } from '@nestjs/common';
@@ -81,10 +80,7 @@ export class UsersController {
   })
   @ApiResponse({ status: 404, description: 'User not found' })
   @Get(':id')
-  findOne(
-    @Param('id', ParseIntPipe) id: number,
-    @Query() query: SingleQueryDto<User>,
-  ) {
+  findOne(@Param('id') id: string, @Query() query: SingleQueryDto<User>) {
     return this.usersService.getSingle(id, query);
   }
 
@@ -113,7 +109,7 @@ export class UsersController {
   @ApiResponse({ status: 404, description: 'User not found' })
   @Patch(':id')
   update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
     @AuthUser() currentUser: any,
   ) {
@@ -125,10 +121,7 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'User deleted successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })
   @Delete(':id')
-  async remove(
-    @Param('id', ParseIntPipe) id: number,
-    @AuthUser() currentUser: any,
-  ) {
+  async remove(@Param('id') id: string, @AuthUser() currentUser: any) {
     await this.usersService.delete(id);
   }
 

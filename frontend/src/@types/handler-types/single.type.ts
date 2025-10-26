@@ -7,13 +7,14 @@ export interface ISingleHandlerBaseState<TResponse> {
   isLoading: boolean;
   error: Error | null;
   isSuccess: boolean;
-
 }
 
-export interface ISingleHandlerState<TResponse, TExtra extends Record<string, any> = {}> extends ISingleHandlerBaseState<TResponse> {
-
-  id: number;
-  name: string,
+export interface ISingleHandlerState<
+  TResponse,
+  TExtra extends Record<string, any> = {}
+> extends ISingleHandlerBaseState<TResponse> {
+  id: string;
+  name: string;
   params: TQueryParams;
   action: string;
   payload: any;
@@ -33,4 +34,7 @@ export interface ISingleHandlerState<TResponse, TExtra extends Record<string, an
   reset: () => void;
 }
 
-export type ISingleStoreApi<TResponse, TExtra extends Record<string, any>> = StoreApi<ISingleHandlerState<TResponse, TExtra>>;
+export type ISingleStoreApi<
+  TResponse,
+  TExtra extends Record<string, any>
+> = StoreApi<ISingleHandlerState<TResponse, TExtra>>;

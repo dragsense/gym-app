@@ -30,10 +30,10 @@ const TrainerClientActions = ({
   handleUpdateProfile,
 }: {
   trainerClient: ITrainerClient;
-  handleEdit?: (id: number) => void;
-  handleDelete?: (id: number) => void;
-  handleView?: (id: number) => void;
-  handleUpdateProfile?: (id: number) => void;
+  handleEdit?: (id: string) => void;
+  handleDelete?: (id: string) => void;
+  handleView?: (id: string) => void;
+  handleUpdateProfile?: (id: string) => void;
 }) => {
   // React 19: Essential IDs and transitions
   const componentId = useId();
@@ -109,10 +109,10 @@ export const trainerClientItemViews = ({
   handleView,
   handleUpdateProfile
 }: {
-  handleEdit?: (id: number) => void;
-  handleDelete?: (id: number) => void;
-  handleView?: (id: number) => void;
-  handleUpdateProfile?: (id: number) => void;
+  handleEdit?: (id: string) => void;
+  handleDelete?: (id: string) => void;
+  handleView?: (id: string) => void;
+  handleUpdateProfile?: (id: string) => void;
 }): {
   columns: ColumnDef<ITrainerClient>[];
   listItem: (item: ITrainerClient) => JSX.Element;

@@ -21,29 +21,25 @@ export class BillingEventListenerService implements OnModuleInit {
     private readonly actionRegistryService: ActionRegistryService,
     private readonly billingEmailService: BillingEmailService,
     private readonly userService: UsersService,
-  ) { }
+  ) {}
 
   onModuleInit() {
     // Register billing actions with action registry
-  
+
     this.actionRegistryService.registerAction('send-billing-reminder', {
       handler: this.handleSendBillingReminder.bind(this),
       description: 'Send billing reminder email',
       retryable: true,
       timeout: 10000,
     });
-
-   
   }
-
 
   /**
    * Handle billing created event - setup reminders if enabled
    */
   @OnEvent('billing.crud.create')
   async handleBillingCreated(payload: EventPayload): Promise<void> {
-    if (!payload.entity)
-      return;
+    if (!payload.entity) return;
 
     try {
       const billing = await this.billingsService.getSingle(payload.entityId, {
@@ -53,21 +49,26 @@ export class BillingEventListenerService implements OnModuleInit {
       this.logger.log(`Billing created: ${billing.title} (ID: ${billing.id})`);
 
       // Send confirmation to trainer
-      await this.billingQueue.add('send-billing-confirmation', {
-        billingId: billing.id,
-        recipientId: billing.recipientUser.id,
-      }, {
-        delay: 10000,
-      });
-
+      await this.billingQueue.add(
+        'send-billing-confirmation',
+        {
+          billingId: billing.id,
+          recipientId: billing.recipientUser.id,
+        },
+        {
+          delay: 10000,
+        },
+      );
 
       // Setup reminders if enabled
       if (billing.enableReminder) {
         await this.setupBillingReminders(billing);
       }
-
     } catch (error) {
-      this.logger.error(`Failed to handle billing creation for billing ${payload.entityId}:`, error);
+      this.logger.error(
+        `Failed to handle billing creation for billing ${payload.entityId}:`,
+        error,
+      );
     }
   }
 
@@ -76,8 +77,7 @@ export class BillingEventListenerService implements OnModuleInit {
    */
   @OnEvent('billing.crud.update')
   async handleBillingUpdated(payload: EventPayload): Promise<void> {
-    if (!payload.entity)
-      return;
+    if (!payload.entity) return;
 
     try {
       const billing = await this.billingsService.getSingle(payload.entityId, {
@@ -90,9 +90,11 @@ export class BillingEventListenerService implements OnModuleInit {
       if (billing.enableReminder) {
         await this.setupBillingReminders(billing);
       }
-
     } catch (error) {
-      this.logger.error(`Failed to handle billing update for billing ${payload.entityId}:`, error);
+      this.logger.error(
+        `Failed to handle billing update for billing ${payload.entityId}:`,
+        error,
+      );
     }
   }
 
@@ -101,8 +103,7 @@ export class BillingEventListenerService implements OnModuleInit {
    */
   @OnEvent('billing.status.paid')
   async handleBillingPaid(payload: EventPayload): Promise<void> {
-    if (!payload.entity)
-      return;
+    if (!payload.entity) return;
 
     try {
       const billing = await this.billingsService.getSingle(payload.entityId, {
@@ -111,17 +112,21 @@ export class BillingEventListenerService implements OnModuleInit {
       });
 
       // Send paid confirmation to trainer
-      await this.billingQueue.add('send-billing-paid', {
-        billingId: billing.id,
-        recipientId: billing.recipientUser.id,
-      }, {
-        delay: 10000,
-      });
-
-
-
+      await this.billingQueue.add(
+        'send-billing-paid',
+        {
+          billingId: billing.id,
+          recipientId: billing.recipientUser.id,
+        },
+        {
+          delay: 10000,
+        },
+      );
     } catch (error) {
-      this.logger.error(`Failed to handle billing paid for billing ${payload.entityId}:`, error);
+      this.logger.error(
+        `Failed to handle billing paid for billing ${payload.entityId}:`,
+        error,
+      );
     }
   }
 
@@ -130,7 +135,7 @@ export class BillingEventListenerService implements OnModuleInit {
    */
   private async handleSendBillingReminder(data: any): Promise<void> {
     const { billingId, recipientId } = data;
-    
+
     try {
       const billing = await this.billingsService.getSingle(billingId, {
         _relations: ['recipientUser'],
@@ -142,13 +147,13 @@ export class BillingEventListenerService implements OnModuleInit {
 
       await this.billingEmailService.sendBillingReminder({
         billing,
-        recipientName: `${recipient.profile?.firstName || ''} ${recipient.profile?.lastName || ''}`.trim(),
+        recipientName:
+          `${recipient.profile?.firstName || ''} ${recipient.profile?.lastName || ''}`.trim(),
         recipientEmail: recipient.email,
         reminderType: 'reminder' as any,
         dueDate: billing.dueDate,
         amount: billing.amount,
       });
-
     } catch (error) {
       this.logger.error(`Failed to send billing reminder:`, error);
       throw error;
@@ -173,24 +178,34 @@ export class BillingEventListenerService implements OnModuleInit {
       await this.createBillingReminderSchedule(billing, sendBeforeValue);
     }
 
-    this.logger.log(`Setup ${sendBefore.length} reminder(s) for billing: ${billing.title}`);
+    this.logger.log(
+      `Setup ${sendBefore.length} reminder(s) for billing: ${billing.title}`,
+    );
   }
 
   /**
    * Remove all reminders for a billing
    */
-  private async removeBillingReminders(billingId: number): Promise<void> {
+  private async removeBillingReminders(billingId: string): Promise<void> {
     try {
       // Find and remove all schedules associated with this billing
-      const schedules = await this.scheduleService.getAll({ entityId: billingId }, {});
+      const schedules = await this.scheduleService.getAll(
+        { entityId: billingId },
+        {},
+      );
 
       for (const schedule of schedules) {
         await this.scheduleService.delete(schedule.id);
       }
 
-      this.logger.log(`Removed ${schedules.length} reminder(s) for billing ID: ${billingId}`);
+      this.logger.log(
+        `Removed ${schedules.length} reminder(s) for billing ID: ${billingId}`,
+      );
     } catch (error) {
-      this.logger.error(`Failed to remove reminders for billing ${billingId}:`, error);
+      this.logger.error(
+        `Failed to remove reminders for billing ${billingId}:`,
+        error,
+      );
     }
   }
 
@@ -207,7 +222,9 @@ export class BillingEventListenerService implements OnModuleInit {
 
       // Skip if reminder time has already passed
       if (reminderDate <= new Date()) {
-        this.logger.warn(`Reminder time has passed for billing ${billing.title}, skipping`);
+        this.logger.warn(
+          `Reminder time has passed for billing ${billing.title}, skipping`,
+        );
         return;
       }
 
@@ -226,10 +243,14 @@ export class BillingEventListenerService implements OnModuleInit {
       };
       await this.scheduleService.createSchedule(scheduleData);
 
-      this.logger.log(`Created reminder for billing ${billing.title} at ${reminderDate.toISOString()}`);
+      this.logger.log(
+        `Created reminder for billing ${billing.title} at ${reminderDate.toISOString()}`,
+      );
     } catch (error) {
-      this.logger.error(`Failed to create reminder schedule for billing ${billing.id}:`, error);
+      this.logger.error(
+        `Failed to create reminder schedule for billing ${billing.id}:`,
+        error,
+      );
     }
   }
-
 }

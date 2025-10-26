@@ -8,7 +8,6 @@ import {
   Query,
   Param,
   UseGuards,
-  ParseIntPipe,
   Request,
 } from '@nestjs/common';
 import {
@@ -55,7 +54,7 @@ export class NotificationController {
     description: 'Returns paginated list of user notifications',
     type: NotificationPaginatedDto,
   })
-  async findByUser(@Param('userId', ParseIntPipe) userId: number) {
+  async findByUser(@Param('userId') userId: string) {
     return await this.notificationService.getSingle({
       entityId: userId,
       entityType: 'user',
@@ -71,7 +70,7 @@ export class NotificationController {
     type: NotificationDto,
   })
   @ApiResponse({ status: 404, description: 'Notification not found' })
-  async findOne(@Param('id', ParseIntPipe) id: number) {
+  async findOne(@Param('id') id: string) {
     return await this.notificationService.getSingle({ id });
   }
 
@@ -84,7 +83,7 @@ export class NotificationController {
     type: NotificationDto,
   })
   @ApiResponse({ status: 404, description: 'Notification not found' })
-  async markAsRead(@Param('id', ParseIntPipe) id: number, @Request() req: any) {
+  async markAsRead(@Param('id') id: string, @Request() req: any) {
     const userId = req.user?.id;
     return await this.notificationService.update(id, { isRead: true });
   }
@@ -98,7 +97,7 @@ export class NotificationController {
       type: 'object',
       properties: {
         count: {
-          type: 'number',
+          type: 'string',
           description: 'Number of notifications marked as read',
         },
       },
@@ -120,7 +119,7 @@ export class NotificationController {
     description: 'Notification deleted successfully',
   })
   @ApiResponse({ status: 404, description: 'Notification not found' })
-  async delete(@Param('id', ParseIntPipe) id: number, @Request() req: any) {
+  async delete(@Param('id') id: string, @Request() req: any) {
     await this.notificationService.delete(id);
     return { message: 'Notification deleted successfully' };
   }
@@ -134,7 +133,7 @@ export class NotificationController {
       type: 'object',
       properties: {
         count: {
-          type: 'number',
+          type: 'string',
           description: 'Number of notifications deleted',
         },
       },

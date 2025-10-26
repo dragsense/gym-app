@@ -139,13 +139,14 @@ export class UpdateBillingDto extends PartialType(CreateBillingDto) {}
 export class BillingListDto extends ListQueryDto<IBilling> {}
 
 export class BillingDto {
-  @ApiProperty({ example: 1, description: "Billing ID" })
+  @ApiProperty({
+    example: "550e8400-e29b-41d4-a716-446655440000",
+    description: "Billing ID",
+  })
   @IsNotEmpty()
-  @IsNumber()
-  @Type(() => Number)
-  @FieldType("number", true)
-  @Min(1)
-  id: number;
+  @IsString()
+  @FieldType("text", true)
+  id: string;
 
   @ApiProperty({
     example: "Session Payment - Morning Workout",

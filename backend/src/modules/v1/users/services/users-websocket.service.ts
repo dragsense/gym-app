@@ -18,7 +18,7 @@ export class UsersWebSocketService {
   /**
    * Send notification to a specific user
    */
-  sendNotificationToUser(userId: number, message: string) {
+  sendNotificationToUser(userId: string, message: string) {
     this.serverGateway.emitToClient(`user_${userId}`, 'notification', {
       message,
       timestamp: new Date().toISOString(),
@@ -30,7 +30,7 @@ export class UsersWebSocketService {
    */
   @SubscribeMessage('joinUserRoom')
   handleJoinUserRoom(
-    @MessageBody('userId') userId: number,
+    @MessageBody('userId') userId: string,
     @ConnectedSocket() client: Socket,
   ) {
     const userRoom = `user_${userId}`;
@@ -44,7 +44,7 @@ export class UsersWebSocketService {
    */
   @SubscribeMessage('leaveUserRoom')
   handleLeaveUserRoom(
-    @MessageBody('userId') userId: number,
+    @MessageBody('userId') userId: string,
     @ConnectedSocket() client: Socket,
   ) {
     const userRoom = `user_${userId}`;

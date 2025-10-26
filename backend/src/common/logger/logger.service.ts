@@ -83,17 +83,17 @@ export class LoggerService extends ConsoleLogger {
   }
 
   // Additional custom methods for activity logging
-  logActivity(action: string, module: string, userId?: number, metadata?: any) {
+  logActivity(action: string, module: string, userId?: string, metadata?: any) {
     const message = `${action} in ${module}${userId ? ` by user ${userId}` : ''}${metadata ? ` - ${JSON.stringify(metadata)}` : ''}`;
     this.log(message);
   }
 
-  logApiRequest(method: string, url: string, statusCode: number, responseTime: number, userId?: number) {
+  logApiRequest(method: string, url: string, statusCode: number, responseTime: number, userId?: string) {
     const message = `${method} ${url} - ${statusCode} (${responseTime}ms)${userId ? ` [User: ${userId}]` : ''}`;
     this.log(message);
   }
 
-  logApiError(method: string, url: string, error: Error, userId?: number) {
+  logApiError(method: string, url: string, error: Error, userId?: string) {
     const message = `${method} ${url} - ${error.message}${userId ? ` [User: ${userId}]` : ''}`;
     this.error(message, error.stack);
   }

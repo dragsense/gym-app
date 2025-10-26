@@ -37,10 +37,10 @@ const UserActions = ({
   handleUpdateProfile,
 }: {
   user: IUser;
-  handleEdit?: (id: number) => void;
-  handleDelete?: (id: number) => void;
-  handleView?: (id: number) => void;
-  handleUpdateProfile?: (id: number) => void;
+  handleEdit?: (id: string) => void;
+  handleDelete?: (id: string) => void;
+  handleView?: (id: string) => void;
+  handleUpdateProfile?: (id: string) => void;
 }) => {
   // React 19: Essential IDs and transitions
   const componentId = useId();
@@ -116,10 +116,10 @@ export const userItemViews = ({
   handleView,
   handleUpdateProfile
 }: {
-  handleEdit?: (id: number) => void;
-  handleDelete?: (id: number) => void;
-  handleView?: (id: number) => void;
-  handleUpdateProfile?: (id: number) => void;
+  handleEdit?: (id: string) => void;
+  handleDelete?: (id: string) => void;
+  handleView?: (id: string) => void;
+  handleUpdateProfile?: (id: string) => void;
 }): {
   columns: ColumnDef<IUser>[];
   listItem: (item: IUser) => JSX.Element;

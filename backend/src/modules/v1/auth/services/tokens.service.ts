@@ -130,7 +130,7 @@ export class TokenService {
     await this.refreshTokenRepo.update({ token }, { revoked: true });
   }
 
-  async invalidateAllTokens(userId: number): Promise<void> {
+  async invalidateAllTokens(userId: string): Promise<void> {
     await this.refreshTokenRepo.update(
       { user: { id: userId } as any },
       { revoked: true },

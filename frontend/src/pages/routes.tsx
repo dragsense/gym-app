@@ -11,39 +11,40 @@ const UnauthorizedPage = lazy(() => import("./unauthorized"));
 // React 19: Enhanced loading component for common routes
 const CommonRouteLoadingFallback = () => {
   const componentId = useId();
-  
+
   return (
-    <div 
-      className="flex flex-col items-center justify-center min-h-screen bg-background"
-      data-component-id={componentId}
-    >
-      <div className="text-center mb-4">
-        <h3 className="text-lg font-semibold text-foreground">Loading Page</h3>
-        <p className="text-sm text-muted-foreground">Please wait while we load the content...</p>
-      </div>
-      <AppLoader />
+    <div className="h-screen w-screen">
+      <AppLoader
+        data-component-id={componentId}
+      >
+        <div className="text-center mb-4">
+          <h3 className="text-lg font-semibold text-foreground">Loading Page</h3>
+          <p className="text-sm text-muted-foreground">Please wait while we load the content...</p>
+        </div>
+      </AppLoader>
     </div>
+
   );
 };
 
 // React 19: Enhanced common routes with lazy loading and Suspense
 const commonRoutes = [
-    {
-        path: COMMON_ROUTES.NOT_FOUND,
-        element: (
-            <Suspense fallback={<CommonRouteLoadingFallback />}>
-                <NotFound />
-            </Suspense>
-        ),
-    },
-    {
-        path: COMMON_ROUTES.UNAUTHORIZED,
-        element: (
-            <Suspense fallback={<CommonRouteLoadingFallback />}>
-                <UnauthorizedPage />
-            </Suspense>
-        ),
-    }
+  {
+    path: COMMON_ROUTES.NOT_FOUND,
+    element: (
+      <Suspense fallback={<CommonRouteLoadingFallback />}>
+        <NotFound />
+      </Suspense>
+    ),
+  },
+  {
+    path: COMMON_ROUTES.UNAUTHORIZED,
+    element: (
+      <Suspense fallback={<CommonRouteLoadingFallback />}>
+        <UnauthorizedPage />
+      </Suspense>
+    ),
+  }
 ];
 
 export default commonRoutes;

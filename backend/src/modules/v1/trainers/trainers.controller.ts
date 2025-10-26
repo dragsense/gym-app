@@ -7,7 +7,6 @@ import {
   Delete,
   Param,
   Query,
-  ParseIntPipe,
   Patch,
 } from '@nestjs/common';
 
@@ -62,7 +61,7 @@ export class TrainersController {
   @ApiResponse({ status: 404, description: 'Trainer not found' })
   @Get(':id')
   findOne(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Query() query: SingleQueryDto<Trainer>,
   ) {
     return this.trainersService.getSingle(id, query);
@@ -89,7 +88,7 @@ export class TrainersController {
   @ApiResponse({ status: 404, description: 'Trainer not found' })
   @Patch(':id')
   update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() updateTrainerDto: UpdateTrainerDto,
   ) {
     return this.trainersService.updateTrainer(id, updateTrainerDto);
@@ -100,7 +99,7 @@ export class TrainersController {
   @ApiResponse({ status: 200, description: 'Trainer deleted successfully' })
   @ApiResponse({ status: 404, description: 'Trainer not found' })
   @Delete(':id')
-  async remove(@Param('id', ParseIntPipe) id: number) {
+  async remove(@Param('id') id: string) {
     await this.trainersService.delete(id);
   }
 }

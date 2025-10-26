@@ -1,19 +1,22 @@
 import { Entity, Column } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
-import { EScheduleStatus, EScheduleFrequency, EDayOfWeek, EIntervalUnit } from '@shared/enums/schedule.enum';
+import {
+  EScheduleStatus,
+  EScheduleFrequency,
+  EDayOfWeek,
+  EIntervalUnit,
+} from '@shared/enums/schedule.enum';
 import { GeneralBaseEntity } from '@/common/entities';
 
 @Entity('schedules')
 export class Schedule extends GeneralBaseEntity {
-
   @ApiProperty({ example: 'Daily Report Generation' })
-  @Column({ default: "Schedule"})
+  @Column({ default: 'Schedule' })
   title?: string;
 
-
-  @ApiProperty({ example: 123 })
+  @ApiProperty({ example: '550e8400-e29b-41d4-a716-446655440000' })
   @Column({ nullable: true })
-  entityId?: number;
+  entityId?: string;
 
   @ApiProperty({ example: 'generateReport' })
   @Column({ nullable: true })
@@ -24,7 +27,11 @@ export class Schedule extends GeneralBaseEntity {
   data?: Record<string, any>;
 
   @ApiProperty({ enum: EScheduleFrequency })
-  @Column({ type: 'enum', enum: EScheduleFrequency, default: EScheduleFrequency.ONCE })
+  @Column({
+    type: 'enum',
+    enum: EScheduleFrequency,
+    default: EScheduleFrequency.ONCE,
+  })
   frequency: EScheduleFrequency;
 
   @ApiProperty({ example: '2025-10-15T00:00:00Z' })
@@ -43,7 +50,10 @@ export class Schedule extends GeneralBaseEntity {
   @Column({ nullable: true })
   endTime?: string;
 
-  @ApiProperty({ example: 2, description: 'Interval value (e.g., 2 for "every 2 hours")' })
+  @ApiProperty({
+    example: 2,
+    description: 'Interval value (e.g., 2 for "every 2 hours")',
+  })
   @Column({ type: 'int', nullable: true })
   intervalValue?: number;
 
@@ -51,7 +61,10 @@ export class Schedule extends GeneralBaseEntity {
   @Column({ type: 'varchar', nullable: true })
   intervalUnit?: EIntervalUnit;
 
-  @ApiProperty({ example: 120, description: 'Interval in minutes (calculated)' })
+  @ApiProperty({
+    example: 120,
+    description: 'Interval in minutes (calculated)',
+  })
   @Column({ type: 'int', nullable: true })
   interval?: number;
 
@@ -59,7 +72,10 @@ export class Schedule extends GeneralBaseEntity {
   @Column({ nullable: true, default: 'UTC' })
   timezone?: string;
 
-  @ApiProperty({ example: '0 9 * * 1,5', description: 'Generated cron expression' })
+  @ApiProperty({
+    example: '0 9 * * 1,5',
+    description: 'Generated cron expression',
+  })
   @Column({ nullable: true })
   cronExpression?: string;
 
@@ -76,7 +92,11 @@ export class Schedule extends GeneralBaseEntity {
   months?: number[];
 
   @ApiProperty({ enum: EScheduleStatus })
-  @Column({ type: 'enum', enum: EScheduleStatus, default: EScheduleStatus.ACTIVE })
+  @Column({
+    type: 'enum',
+    enum: EScheduleStatus,
+    default: EScheduleStatus.ACTIVE,
+  })
   status: EScheduleStatus;
 
   @ApiProperty({ example: '2025-10-16T00:00:00Z' })
@@ -103,13 +123,16 @@ export class Schedule extends GeneralBaseEntity {
   @Column({ nullable: true })
   lastExecutionStatus?: string;
 
-  @ApiProperty({ example: 'Connection timeout', description: 'Last error message if failed' })
+  @ApiProperty({
+    example: 'Connection timeout',
+    description: 'Last error message if failed',
+  })
   @Column({ type: 'text', nullable: true })
   lastErrorMessage?: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     example: [{ executedAt: '2025-10-15T09:00:00Z', status: 'success' }],
-    description: 'Execution history (last 50 executions)' 
+    description: 'Execution history (last 50 executions)',
   })
   @Column({ type: 'jsonb', nullable: true })
   executionHistory?: Array<{
@@ -134,4 +157,3 @@ export class Schedule extends GeneralBaseEntity {
   @Column({ type: 'int', default: 15 })
   retryDelayMinutes: number;
 }
-

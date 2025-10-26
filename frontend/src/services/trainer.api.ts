@@ -2,7 +2,7 @@
 import { BaseService } from "./base.service";
 
 // Types
-import type{ IListQueryParams } from "@shared/interfaces/api/param.interface";
+import type { IListQueryParams } from "@shared/interfaces/api/param.interface";
 import type { ITrainer } from "@shared/interfaces/trainer.interface";
 import type { TTrainerData } from "@shared/types/trainer.type";
 
@@ -10,11 +10,17 @@ import type { TTrainerData } from "@shared/types/trainer.type";
 const TRAINERS_API_PATH = "/trainers";
 
 // Create base service instance
-const trainerService = new BaseService<ITrainer, TTrainerData, Partial<TTrainerData>>(TRAINERS_API_PATH);
+const trainerService = new BaseService<
+  ITrainer,
+  TTrainerData,
+  Partial<TTrainerData>
+>(TRAINERS_API_PATH);
 
 // Re-export common CRUD operations
-export const fetchTrainers = (params: IListQueryParams) => trainerService.get(params);
-export const fetchTrainer = (id: number, params: IListQueryParams) => trainerService.getSingle(id, params);
+export const fetchTrainers = (params: IListQueryParams) =>
+  trainerService.get(params);
+export const fetchTrainer = (id: string, params: IListQueryParams) =>
+  trainerService.getSingle(id, params);
 export const createTrainer = (data: TTrainerData) => trainerService.post(data);
-export const updateTrainer = (id: number) => trainerService.patch(id);
-export const deleteTrainer = (id: number) => trainerService.delete(id);
+export const updateTrainer = (id: string) => trainerService.patch(id);
+export const deleteTrainer = (id: string) => trainerService.delete(id);

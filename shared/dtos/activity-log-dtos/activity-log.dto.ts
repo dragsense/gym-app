@@ -17,8 +17,11 @@ import { FieldOptions, FieldType } from "../../decorators/field.decorator";
 import { EActivityType, EActivityStatus } from "../../enums/activity-log.enum";
 
 export class ActivityLogDto {
-  @ApiProperty({ example: 1, description: "Activity log ID" })
-  id: number;
+  @ApiProperty({
+    example: "550e8400-e29b-41d4-a716-446655440000",
+    description: "Activity log ID",
+  })
+  id: string;
 
   @ApiProperty({
     example: "User logged in successfully",
@@ -89,7 +92,7 @@ export class ActivityLogDto {
 
   @ApiProperty({ description: "User who performed the activity" })
   user: {
-    id: number;
+    id: string;
     email: string;
     profile?: {
       firstName: string;

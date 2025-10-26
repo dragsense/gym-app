@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useFieldArray, useFormContext, useWatch } from "react-hook-form";
 import { useId, useMemo, useTransition } from "react";
 import { Input } from "@/components/ui/input";
@@ -465,7 +465,7 @@ export function useObjectField<T>({
             {({ isDisabled }) => {
                 return (
                     <div className={cn(isDisabled && "opacity-50 pointer-events-none", commonClass)}>
-                        
+
                         {renderItem ? renderItem(item) : Object.keys(item).map((key) => item[key])}
                     </div>
                 );
@@ -500,6 +500,13 @@ export function useArrayField<T>({
         name: fieldName,
     });
 
+    useEffect(() => {
+        if (minItems > 0 && fields.length < minItems) {
+            const missing = minItems - fields.length;
+            for (let i = 0; i < missing; i++) append({} as T);
+        }
+    }, [fields.length, minItems, append]);
+
     const addItem = () => {
 
         if (maxItems && fields.length >= maxItems) return;
@@ -527,7 +534,7 @@ export function useArrayField<T>({
         ((index: number) => <Button type="button" onClick={() => removeItem(index)}>Remove</Button>)
         ;
 
-    const items = (fields?.length > 0 ? fields : minItems > 0 ? [{} as T] : []).map((_, index) => {
+    const items = fields.map((_, index) => {
         return renderField(field.subFields, `${fieldName}.${index}`);
 
     });
@@ -541,16 +548,23 @@ export function useArrayField<T>({
         {({ isDisabled }) => {
             return (
                 <div className={cn(isDisabled && "opacity-50 pointer-events-none", commonClass)}>
-                    {renderItem ? renderItem(items, AddButton, removeButton) : items.length > 0 ? items.map((item, index) => {
-                        return (
-                            <div className="flex items-end gap-2" key={index}>
-                                {Object.keys(item).map((key) => item[key])}
-                                {index === items.length - 1 && minItems > 0 ?
-                                    AddButton : removeButton(index)
-                                }
+                    {renderItem ? (
+                        renderItem(items, AddButton, removeButton)
+                    ) : items.length > 0 ? (
+                        items.map((item, index) => (
+                            <div className="flex items-end gap-2" key={fields[index].id}>
+                                {typeof item === "object" && !React.isValidElement(item)
+                                    ? Object.keys(item).map((key) => (
+                                        <div key={key}>{item[key]}</div>
+                                    ))
+                                    : item}
+                                {minItems > 0 && index > 0 && removeButton(index)}
+                                {index < maxItems - 1 && index === items.length - 1 && AddButton}
                             </div>
-                        );
-                    }) : AddButton}
+                        ))
+                    ) : (
+                        AddButton
+                    )}
                 </div>
 
             );

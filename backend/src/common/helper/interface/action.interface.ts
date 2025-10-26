@@ -1,5 +1,5 @@
 export interface ActionHandler {
-    handler: (data?: any, entityId?: number, userId?: number) => Promise<any>;
+    handler: (data?: any, entityId?: string, userId?: string) => Promise<any>;
     description?: string;
     retryable?: boolean;
     timeout?: number;

@@ -17,14 +17,14 @@ import { AppLoader } from "@/components/layout-ui/app-loader";
 export default function PublicRoute() {
   // React 19: Essential IDs
   const componentId = useId();
-  
+
   const { user, isLoading } = useAuthUser();
 
   if (isLoading) return <AppLoader />;
 
 
   if (user) {
-    return <Navigate to={ADMIN_ROUTES.USERS} replace />;
+    return <Navigate to={ADMIN_ROUTES.DASHBOARD} replace />;
   }
 
   return (

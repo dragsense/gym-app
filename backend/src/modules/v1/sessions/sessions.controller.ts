@@ -8,7 +8,6 @@ import {
   Delete,
   Param,
   Query,
-  ParseIntPipe,
   Patch,
 } from '@nestjs/common';
 
@@ -58,10 +57,7 @@ export class SessionsController {
   })
   @ApiResponse({ status: 404, description: 'Session not found' })
   @Get(':id')
-  findOne(
-    @Param('id', ParseIntPipe) id: number,
-    @Query() query: SingleQueryDto<Session>,
-  ) {
+  findOne(@Param('id') id: string, @Query() query: SingleQueryDto<Session>) {
     return this.sessionsService.getSingle(id, query);
   }
 
@@ -85,10 +81,7 @@ export class SessionsController {
   @ApiResponse({ status: 200, description: 'Session updated successfully' })
   @ApiResponse({ status: 404, description: 'Session not found' })
   @Patch(':id')
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateSessionDto: UpdateSessionDto,
-  ) {
+  update(@Param('id') id: string, @Body() updateSessionDto: UpdateSessionDto) {
     return this.sessionsService.updateSession(id, updateSessionDto);
   }
 
@@ -97,7 +90,7 @@ export class SessionsController {
   @ApiResponse({ status: 200, description: 'Session deleted successfully' })
   @ApiResponse({ status: 404, description: 'Session not found' })
   @Delete(':id')
-  async remove(@Param('id', ParseIntPipe) id: number) {
+  async remove(@Param('id') id: string) {
     await this.sessionsService.delete(id);
   }
 }

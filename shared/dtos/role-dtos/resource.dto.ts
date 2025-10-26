@@ -12,9 +12,12 @@ import { FieldType } from "../../decorators";
 import { OmitType } from "../../lib/dto-type-adapter";
 
 export class ResourceDto {
-  @ApiProperty({ example: 1, description: "Resource ID" })
-  @IsNumber()
-  id: number;
+  @ApiProperty({
+    example: "550e8400-e29b-41d4-a716-446655440000",
+    description: "Resource ID",
+  })
+  @IsString()
+  id: string;
 
   @ApiProperty({ example: "users", description: "Resource name (table name)" })
   @IsOptional()

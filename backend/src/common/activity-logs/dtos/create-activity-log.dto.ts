@@ -72,10 +72,8 @@ export class CreateActivityLogDto {
     @IsString()
     errorMessage?: string;
   
-    @ApiPropertyOptional({ example: 1, description: 'User who performed the activity' })
+    @ApiPropertyOptional({ example: '550e8400-e29b-41d4-a716-446655440000', description: 'User who performed the activity' })
     @IsOptional()
-    @IsNumber()
-    @Type(() => Number)
-    @Min(1)
-    userId?: number;
+    @IsString()
+    userId?: string;
   }

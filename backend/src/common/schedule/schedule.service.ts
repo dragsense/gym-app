@@ -77,7 +77,7 @@ export class ScheduleService extends CrudService<Schedule> {
   /**
    * Track successful execution
    */
-  async trackExecution(id: number, success: boolean, errorMessage?: string): Promise<void> {
+  async trackExecution(id: string, success: boolean, errorMessage?: string): Promise<void> {
     const schedule = await this.getSingle(id);
 
     schedule.executionCount += 1;
@@ -138,7 +138,7 @@ export class ScheduleService extends CrudService<Schedule> {
   /**
    * Get schedule by ID (alias for findOne)
    */
-  async getScheduleById(id: number): Promise<Schedule> {
+  async getScheduleById(id: string): Promise<Schedule> {
     return this.getSingle(id);
   }
 
@@ -161,7 +161,7 @@ export class ScheduleService extends CrudService<Schedule> {
   /**
    * Execute schedule and update nextRunDate
    */
-  async executeAndUpdateNext(id: number): Promise<Schedule> {
+  async executeAndUpdateNext(id: string): Promise<Schedule> {
     const schedule = await this.getSingle(id);
 
     schedule.lastRunAt = new Date();
@@ -189,7 +189,7 @@ export class ScheduleService extends CrudService<Schedule> {
   }
 
   async updateSchedule(
-    id: number,
+    id: string,
     updateData: UpdateScheduleDto,
     timezone?: string,
     manager?: EntityManager,

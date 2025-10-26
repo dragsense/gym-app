@@ -101,13 +101,14 @@ export class UpdateReferralLinkDto extends PartialType(CreateReferralLinkDto) {
 export class ReferralLinkListDto extends ListQueryDto<IReferralLink> {}
 
 export class ReferralLinkDto {
-  @ApiProperty({ example: 1, description: "Referral link ID" })
+  @ApiProperty({
+    example: "550e8400-e29b-41d4-a716-446655440000",
+    description: "Referral link ID",
+  })
   @IsNotEmpty()
-  @IsNumber()
-  @Type(() => Number)
-  @FieldType("number", true)
-  @Min(1)
-  id: number;
+  @IsString()
+  @FieldType("text", true)
+  id: string;
 
   @ApiProperty({
     example: "My Referral Link",

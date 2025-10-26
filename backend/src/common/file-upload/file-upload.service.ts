@@ -118,7 +118,7 @@ export class FileUploadService extends CrudService<FileUpload> {
    * Auto-corrects type based on file mimetype if file is provided
    */
   async updateFile(
-    id: number,
+    id: string,
     updateData: OmitType<UpdateFileUploadDto, 'file'>,
     file?: Express.Multer.File,
     saveFile: boolean = true,

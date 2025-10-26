@@ -8,7 +8,6 @@ import {
   Delete,
   Param,
   Query,
-  ParseIntPipe,
   Patch,
   BadRequestException,
 } from '@nestjs/common';
@@ -69,10 +68,7 @@ export class BillingsController {
   })
   @ApiResponse({ status: 404, description: 'Billing not found' })
   @Get(':id')
-  findOne(
-    @Param('id', ParseIntPipe) id: number,
-    @Query() query: SingleQueryDto<Billing>,
-  ) {
+  findOne(@Param('id') id: string, @Query() query: SingleQueryDto<Billing>) {
     return this.billingsService.getSingle(id, query);
   }
 
@@ -96,10 +92,7 @@ export class BillingsController {
   @ApiResponse({ status: 200, description: 'Billing updated successfully' })
   @ApiResponse({ status: 404, description: 'Billing not found' })
   @Patch(':id')
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateBillingDto: UpdateBillingDto,
-  ) {
+  update(@Param('id') id: string, @Body() updateBillingDto: UpdateBillingDto) {
     return this.billingsService.updateBilling(id, updateBillingDto);
   }
 
@@ -108,7 +101,7 @@ export class BillingsController {
   @ApiResponse({ status: 200, description: 'Billing deleted successfully' })
   @ApiResponse({ status: 404, description: 'Billing not found' })
   @Delete(':id')
-  async remove(@Param('id', ParseIntPipe) id: number) {
+  async remove(@Param('id') id: string) {
     await this.billingsService.delete(id);
   }
 
@@ -119,7 +112,7 @@ export class BillingsController {
     description: 'Checkout URL created successfully',
   })
   @ApiResponse({ status: 404, description: 'Billing not found' })
-  @ApiParam({ name: 'id', type: 'number', description: 'Billing ID' })
+  @ApiParam({ name: 'id', type: 'string', description: 'Billing ID' })
   @ApiBody({
     schema: {
       type: 'object',
@@ -138,7 +131,7 @@ export class BillingsController {
   })
   async createCheckoutUrl(
     @AuthUser() user: User,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() body: { paymentSuccessUrl: string; paymentCancelUrl: string },
   ) {
     const billing = await this.billingsService.getSingle(id, {
@@ -236,7 +229,7 @@ export class BillingsController {
           type: 'object',
           nullable: true,
           properties: {
-            id: { type: 'number' },
+            id: { type: 'string' },
             amount: { type: 'number' },
             currency: { type: 'string' },
             status: { type: 'string' },

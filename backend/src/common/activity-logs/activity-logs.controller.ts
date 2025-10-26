@@ -6,7 +6,6 @@ import {
   Query,
   Param,
   UseGuards,
-  ParseIntPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -55,7 +54,7 @@ export class ActivityLogsController {
     type: ActivityLogPaginatedDto,
   })
   async findByUser(
-    @Param('userId', ParseIntPipe) userId: number,
+    @Param('userId') userId: string,
     @Query() queryDto: SingleQueryDto<ActivityLog>,
   ) {
     return await this.activityLogsService.getSingle({ userId }, queryDto);
@@ -71,7 +70,7 @@ export class ActivityLogsController {
   })
   @ApiResponse({ status: 404, description: 'Activity log not found' })
   async findOne(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Query() queryDto: SingleQueryDto<ActivityLog>,
   ) {
     return await this.activityLogsService.get({ id }, queryDto);

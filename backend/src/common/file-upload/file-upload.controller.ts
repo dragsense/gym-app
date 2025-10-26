@@ -3,7 +3,6 @@ import {
   Get,
   NotFoundException,
   Param,
-  ParseIntPipe,
   Query,
   Res,
   UseGuards,
@@ -55,9 +54,9 @@ export class FileUploadController {
   @ApiOperation({ summary: 'Get file by ID' })
   @ApiResponse({ status: 200, description: 'File found' })
   @ApiResponse({ status: 404, description: 'File not found' })
-  @ApiParam({ name: 'id', type: 'number', description: 'File ID' })
+  @ApiParam({ name: 'id', type: 'string', description: 'File ID' })
   findOne(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Query() queryDto: SingleQueryDto<FileUpload>,
   ) {
     return this.fileUploadService.getSingle(id, queryDto);
@@ -96,12 +95,12 @@ export class FileUploadController {
   @ApiOperation({ summary: 'Update file metadata or upload new file' })
   @ApiResponse({ status: 200, description: 'File updated successfully' })
   @ApiResponse({ status: 404, description: 'File not found' })
-  @ApiParam({ name: 'id', type: 'number', description: 'File ID' })
+  @ApiParam({ name: 'id', type: 'string', description: 'File ID' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({ type: UpdateFileUploadDto })
   @UseInterceptors(FileInterceptor('file'))
   async updateFile(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() updateData: OmitType<UpdateFileUploadDto, 'file'>,
     @UploadedFile(
       new FileValidationPipe({
@@ -129,9 +128,9 @@ export class FileUploadController {
   @ApiOperation({ summary: 'Delete file by ID' })
   @ApiResponse({ status: 200, description: 'File deleted successfully' })
   @ApiResponse({ status: 404, description: 'File not found' })
-  @ApiParam({ name: 'id', type: 'number', description: 'File ID' })
+  @ApiParam({ name: 'id', type: 'string', description: 'File ID' })
   async deleteFile(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Query() queryDto: SingleQueryDto<FileUpload>,
   ) {
     const file = await this.fileUploadService.getSingle(id, queryDto);
@@ -141,9 +140,9 @@ export class FileUploadController {
 
   @Get(':id/download')
   @ApiOperation({ summary: 'Download a file by ID (with access check)' })
-  @ApiParam({ name: 'id', type: 'number', description: 'File ID' })
+  @ApiParam({ name: 'id', type: 'string', description: 'File ID' })
   async downloadFile(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Query() queryDto: SingleQueryDto<FileUpload>,
     @AuthUser() user: User,
     @Res() res: Response,

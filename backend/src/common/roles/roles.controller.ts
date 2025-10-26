@@ -8,7 +8,6 @@ import {
   Query,
   Param,
   UseGuards,
-  ParseIntPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -69,7 +68,7 @@ export class RolesController {
     type: RoleDto,
   })
   @ApiResponse({ status: 404, description: 'Role not found' })
-  async findRole(@Param('id', ParseIntPipe) id: number) {
+  async findRole(@Param('id') id: string) {
     return await this.rolesService.getSingle(id);
   }
 
@@ -94,7 +93,7 @@ export class RolesController {
   })
   @ApiResponse({ status: 404, description: 'Role not found' })
   async updateRole(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() updateRoleDto: UpdateRoleDto,
   ) {
     return await this.rolesService.update(id, updateRoleDto);
@@ -105,7 +104,7 @@ export class RolesController {
   @ApiParam({ name: 'id', description: 'Role ID' })
   @ApiResponse({ status: 200, description: 'Role deleted successfully' })
   @ApiResponse({ status: 404, description: 'Role not found' })
-  async deleteRole(@Param('id', ParseIntPipe) id: number) {
+  async deleteRole(@Param('id') id: string) {
     await this.rolesService.delete(id);
     return { message: 'Role deleted successfully' };
   }
@@ -134,7 +133,7 @@ export class RolesController {
     type: PermissionDto,
   })
   @ApiResponse({ status: 404, description: 'Permission not found' })
-  async findPermission(@Param('id', ParseIntPipe) id: number) {
+  async findPermission(@Param('id') id: string) {
     return await this.permissionService.getSingle(id);
   }
 
@@ -148,7 +147,7 @@ export class RolesController {
     type: PermissionPaginatedDto,
   })
   async findPermissionsByRole(
-    @Param('id', ParseIntPipe) roleId: number,
+    @Param('id') roleId: string,
     @Query() queryDto: PermissionListDto,
   ) {
     return await this.permissionService.get(
@@ -182,7 +181,7 @@ export class RolesController {
   })
   @ApiResponse({ status: 404, description: 'Permission not found' })
   async updatePermission(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() updatePermissionDto: UpdatePermissionDto,
   ) {
     return await this.permissionService.update(id, updatePermissionDto);
@@ -193,7 +192,7 @@ export class RolesController {
   @ApiParam({ name: 'id', description: 'Permission ID' })
   @ApiResponse({ status: 200, description: 'Permission deleted successfully' })
   @ApiResponse({ status: 404, description: 'Permission not found' })
-  async deletePermission(@Param('id', ParseIntPipe) id: number) {
+  async deletePermission(@Param('id') id: string) {
     await this.permissionService.delete(id);
     return { message: 'Permission deleted successfully' };
   }
@@ -220,7 +219,7 @@ export class RolesController {
     type: ResourceDto,
   })
   @ApiResponse({ status: 404, description: 'Resource not found' })
-  async findResource(@Param('id', ParseIntPipe) id: number) {
+  async findResource(@Param('id') id: string) {
     return await this.resourceService.getSingle(id);
   }
 
@@ -234,7 +233,7 @@ export class RolesController {
   })
   @ApiResponse({ status: 404, description: 'Resource not found' })
   async updateResource(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() updateResourceDto: UpdateResourceDto,
   ) {
     return await this.resourceService.update(id, updateResourceDto);

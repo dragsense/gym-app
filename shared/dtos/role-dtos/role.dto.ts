@@ -17,8 +17,11 @@ import { ERoleStatus } from "../../enums/role/role.enum";
 import { PermissionDto } from "./permission.dto";
 
 export class RoleDto {
-  @ApiProperty({ example: 1, description: "Role ID" })
-  id: number;
+  @ApiProperty({
+    example: "550e8400-e29b-41d4-a716-446655440000",
+    description: "Role ID",
+  })
+  id: string;
 
   @ApiProperty({ example: "Administrator", description: "Role name" })
   name: string;

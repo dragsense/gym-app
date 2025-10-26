@@ -130,7 +130,7 @@ export class UsersService extends CrudService<User> {
   }
 
   async updateUser(
-    id: number,
+    id: string,
     updateUserDto: UpdateUserDto,
   ): Promise<IMessageResponse> {
     const { profile, ...userData } = updateUserDto;
@@ -171,7 +171,7 @@ export class UsersService extends CrudService<User> {
   }
 
   async resetPassword(
-    id: number,
+    id: string,
     resetPasswordDto: ResetPasswordDto,
     force: boolean = false,
   ): Promise<IMessageResponse & { success: true }> {

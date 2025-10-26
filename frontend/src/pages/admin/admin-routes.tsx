@@ -26,16 +26,14 @@ const AdminRouteLoadingFallback = () => {
   const componentId = useId();
 
   return (
-    <div
-      className="flex flex-col items-center justify-center min-h-screen bg-background"
-      data-component-id={componentId}
-    >
+
+    <AppLoader>
       <div className="text-center mb-4">
         <h3 className="text-lg font-semibold text-foreground">Admin Panel</h3>
         <p className="text-sm text-muted-foreground">Loading dashboard and management tools...</p>
       </div>
-      <AppLoader />
-    </div>
+    </AppLoader>
+
   );
 };
 

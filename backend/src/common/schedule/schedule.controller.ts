@@ -7,7 +7,6 @@ import {
   Body,
   Param,
   Query,
-  ParseIntPipe,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -43,11 +42,11 @@ export class ScheduleController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get schedule by ID' })
-  @ApiParam({ name: 'id', type: 'number' })
+  @ApiParam({ name: 'id', type: 'string' })
   @ApiResponse({ status: 200, description: 'Schedule retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Schedule not found' })
   async findOne(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Query() queryDto: SingleQueryDto<Schedule>,
   ) {
     return await this.scheduleService.getSingle(id, queryDto);
@@ -75,7 +74,7 @@ export class ScheduleController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update schedule' })
-  @ApiParam({ name: 'id', type: 'number' })
+  @ApiParam({ name: 'id', type: 'string' })
   @ApiHeader({
     name: 'X-Timezone',
     description: 'User timezone',
@@ -85,7 +84,7 @@ export class ScheduleController {
   @ApiResponse({ status: 404, description: 'Schedule not found' })
   @ApiResponse({ status: 400, description: 'Invalid schedule configuration' })
   async updateSchedule(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() updateData: UpdateScheduleDto,
     @Timezone() timezone: string,
   ) {
@@ -99,10 +98,10 @@ export class ScheduleController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete schedule' })
-  @ApiParam({ name: 'id', type: 'number' })
+  @ApiParam({ name: 'id', type: 'string' })
   @ApiResponse({ status: 200, description: 'Schedule deleted successfully' })
   @ApiResponse({ status: 404, description: 'Schedule not found' })
-  async deleteSchedule(@Param('id', ParseIntPipe) id: number) {
+  async deleteSchedule(@Param('id') id: string) {
     await this.scheduleService.delete(id);
     return { message: 'Schedule deleted successfully' };
   }

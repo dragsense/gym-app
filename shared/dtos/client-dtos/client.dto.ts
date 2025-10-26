@@ -7,35 +7,33 @@ import {
   Min,
   IsDateString,
   ValidateNested,
-} from 'class-validator';
-import { ApiProperty, ApiPropertyOptional, PartialType} from '@nestjs/swagger';
-import { Type, Transform } from 'class-transformer';
-import { PaginationMetaDto } from '../common/pagination.dto';
-import { ListQueryDto, SingleQueryDto } from '../common/list-query.dto';
-import { IClient } from '../../interfaces/client.interface';
-import { FieldType } from '../../decorators/field.decorator';
-import { OmitType } from '../../lib/dto-type-adapter';
-import { 
-  Between, 
-  LessThan, 
-  GreaterThan, 
-  LessThanOrEqual, 
-  GreaterThanOrEqual, 
-  Like, 
-  In, 
-  NotIn, 
-  IsNull, 
-  IsNotNull, 
-  Equals, 
+} from "class-validator";
+import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
+import { Type, Transform } from "class-transformer";
+import { PaginationMetaDto } from "../common/pagination.dto";
+import { ListQueryDto, SingleQueryDto } from "../common/list-query.dto";
+import { IClient } from "../../interfaces/client.interface";
+import { FieldType } from "../../decorators/field.decorator";
+import { OmitType } from "../../lib/dto-type-adapter";
+import {
+  Between,
+  LessThan,
+  GreaterThan,
+  LessThanOrEqual,
+  GreaterThanOrEqual,
+  Like,
+  In,
+  NotIn,
+  IsNull,
+  IsNotNull,
+  Equals,
   NotEquals,
   DateRange,
   TransformToArray,
   TransformToDate,
   RelationFilter,
-} from '../../decorators/crud.dto.decorators';
-import { CreateUserDto, UpdateUserDto, UserDto } from '../user-dtos/user.dto';
-
-
+} from "../../decorators/crud.dto.decorators";
+import { CreateUserDto, UpdateUserDto, UserDto } from "../user-dtos/user.dto";
 
 export class CreateClientDto {
   @ApiProperty({ type: CreateUserDto })
@@ -44,39 +42,38 @@ export class CreateClientDto {
   @FieldType("nested", true, CreateUserDto)
   user: CreateUserDto;
 
-  @ApiProperty({ example: 'Weight Loss', description: 'Client goal' })
+  @ApiProperty({ example: "Weight Loss", description: "Client goal" })
   @IsString()
   @IsNotEmpty()
   @FieldType("text", true)
   goal: string;
 
-  @ApiProperty({ example: 'Beginner', description: 'Fitness level' })
+  @ApiProperty({ example: "Beginner", description: "Fitness level" })
   @IsString()
   @IsNotEmpty()
   @FieldType("text", true)
   fitnessLevel: string;
 
-
-  @ApiPropertyOptional({ example: 'No injuries', description: 'Medical conditions' })
+  @ApiPropertyOptional({
+    example: "No injuries",
+    description: "Medical conditions",
+  })
   @IsOptional()
   @IsString()
   @FieldType("text")
   medicalConditions?: string;
-
 }
 
-
-export class UpdateClientDto extends PartialType(OmitType(CreateClientDto, ['user'])) {
+export class UpdateClientDto extends PartialType(
+  OmitType(CreateClientDto, ["user"])
+) {
   @ApiProperty({ type: UpdateUserDto })
   @ValidateNested()
   @Type(() => UpdateUserDto)
   @FieldType("nested", true, UpdateUserDto)
   @IsOptional()
   user?: UpdateUserDto;
-
-} 
-
-
+}
 
 export class ClientPaginatedDto extends PaginationMetaDto {
   @ApiProperty({ type: () => [ClientDto] })
@@ -85,61 +82,82 @@ export class ClientPaginatedDto extends PaginationMetaDto {
 }
 
 export class ClientListDto extends ListQueryDto<IClient> {
-  @ApiPropertyOptional({ example: true, description: 'Filter by active status' })
+  @ApiPropertyOptional({
+    example: true,
+    description: "Filter by active status",
+  })
   @IsOptional()
   @IsBoolean()
   @Equals()
-  @FieldType('switch', false)
+  @FieldType("switch", false)
   isActive?: boolean;
 
-  @ApiPropertyOptional({ example: 'Weight Loss', description: 'Filter by goal' })
+  @ApiPropertyOptional({
+    example: "Weight Loss",
+    description: "Filter by goal",
+  })
   @IsOptional()
   @IsString()
   @Like()
-  @FieldType('text', false)
+  @FieldType("text", false)
   goal?: string;
 
-  @ApiPropertyOptional({ example: 'Beginner', description: 'Filter by fitness level' })
+  @ApiPropertyOptional({
+    example: "Beginner",
+    description: "Filter by fitness level",
+  })
   @IsOptional()
   @IsString()
   @Equals()
-  @FieldType('text', false)
+  @FieldType("text", false)
   fitnessLevel?: string;
 }
 
 export class ClientDto {
-  @ApiProperty({ example: 1, description: 'Client ID' })
+  @ApiProperty({
+    example: "550e8400-e29b-41d4-a716-446655440000",
+    description: "Client ID",
+  })
   @IsNotEmpty()
-  @IsNumber()
-  @Type(() => Number)
-  @FieldType("number", true)
-  @Min(1)
-  id: number;
+  @IsString()
+  @FieldType("text", true)
+  id: string;
 
-  @ApiProperty({ example: 'Weight Loss', description: 'Client goal' })
+  @ApiProperty({ example: "Weight Loss", description: "Client goal" })
   @IsOptional()
   @IsString()
   goal: string;
 
-  @ApiProperty({ example: 'Beginner', description: 'Fitness level' })
+  @ApiProperty({ example: "Beginner", description: "Fitness level" })
   @IsOptional()
   @IsString()
   fitnessLevel: string;
 
-
-  @ApiPropertyOptional({ example: 'No injuries', description: 'Medical conditions' })
+  @ApiPropertyOptional({
+    example: "No injuries",
+    description: "Medical conditions",
+  })
   @IsOptional()
   @IsString()
   medicalConditions?: string;
 
-  @ApiProperty({ example: true, description: 'Client active status' })
+  @ApiProperty({ example: true, description: "Client active status" })
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
 
-
- 
-  @ApiProperty({ example: { id: 1, email: 'test@test.com', profile: { firstName: 'John', lastName: 'Doe', phoneNumber: '1234567890' } }, description: 'User' })
+  @ApiProperty({
+    example: {
+      id: 1,
+      email: "test@test.com",
+      profile: {
+        firstName: "John",
+        lastName: "Doe",
+        phoneNumber: "1234567890",
+      },
+    },
+    description: "User",
+  })
   @IsOptional()
   user?: UserDto;
 

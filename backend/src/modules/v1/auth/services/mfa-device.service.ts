@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { OtpService } from './otp.service';
 import { ConfigService } from '@nestjs/config';
@@ -26,10 +30,8 @@ export class MfaService {
   ) {}
 
   async generateEmailOtp(email: string, deviceId?: string): Promise<string> {
-
     const user = await this.userRepo.findOne({ where: { email } });
     if (!user) throw new NotFoundException('User not found');
-
 
     const otp = await this.otpService.initiateLoginOtp(user, deviceId);
     await this.sendOtpEmail(email, otp);
@@ -49,25 +51,27 @@ export class MfaService {
     return payload.email;
   }
 
-  async verifyOtp(token: string, code: string, deviceId?: string,
+  async verifyOtp(
+    token: string,
+    code: string,
+    deviceId?: string,
     rememberDevice?: boolean,
-    reqMeta?: { userAgent?: string; ipAddress?: string },): Promise<{ isValid: boolean; email: string }> {
-
-
+    reqMeta?: { userAgent?: string; ipAddress?: string },
+  ): Promise<{ isValid: boolean; email: string }> {
     const email = this.verifyOtpToken(token);
 
     const user = await this.userRepo.findOne({ where: { email } });
     if (!user) throw new NotFoundException('User not found');
-
 
     const isValid = await this.otpService.verifyOtp(user, code);
 
     if (isValid) {
       this.logger.log(`OTP successfully verified for ${email}`);
 
-
       if (rememberDevice && deviceId) {
-        const exists = await this.trustedDeviceRepo.findOne({ where: { user: { id: user.id } as any, deviceId } });
+        const exists = await this.trustedDeviceRepo.findOne({
+          where: { user: { id: user.id } as any, deviceId },
+        });
         if (!exists) {
           await this.trustedDeviceRepo.save(
             this.trustedDeviceRepo.create({
@@ -80,7 +84,6 @@ export class MfaService {
           );
         }
       }
-
     } else {
       this.logger.warn(`Failed OTP verification for ${email}`);
     }
@@ -88,7 +91,7 @@ export class MfaService {
     return { isValid, email };
   }
 
-  async isDeviceTrusted(userId: number, deviceId?: string): Promise<boolean> {
+  async isDeviceTrusted(userId: string, deviceId?: string): Promise<boolean> {
     if (!deviceId) return false;
     const exists = await this.trustedDeviceRepo.findOne({
       where: { user: { id: userId } as any, deviceId },
@@ -101,10 +104,9 @@ export class MfaService {
     return !!exists;
   }
 
-
-  async removeAllDevices(userId?: number): Promise<void> {
+  async removeAllDevices(userId?: string): Promise<void> {
     if (!userId) return;
-    await this.trustedDeviceRepo.delete({ user: { id: userId } as any })
+    await this.trustedDeviceRepo.delete({ user: { id: userId } as any });
     await this.otpService.removeAllUserOtp(userId);
   }
 

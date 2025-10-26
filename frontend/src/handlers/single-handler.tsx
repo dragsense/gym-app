@@ -41,8 +41,8 @@ export interface ISingleHandlerProps<
   enabled?: boolean;
   name?: string;
   initialParams?: TQueryParams;
-  queryFn: (id: number, queryParams: TQueryParams) => Promise<IData>;
-  deleteFn?: (id: number) => Promise<void>;
+  queryFn: (id: string, queryParams: TQueryParams) => Promise<IData>;
+  deleteFn?: (id: string) => Promise<void>;
   onDeleteSuccess?: () => void;
   SingleComponent: React.ComponentType<{ storeKey: string, store: TSingleHandlerStore<IData, TExtraProps> }>;
   actionComponents?: IActionComponent<TSingleHandlerStore<IData, TExtraProps>>[];
@@ -91,7 +91,7 @@ export function SingleHandler<
   const filteredExtra = store(useShallow((state) => pickKeys(state.extra, Object.keys(initialParams) as (keyof typeof initialParams)[])
   ));
 
-  
+
   const deferredParams = useDeferredValue(params);
   const deferredFilteredExtra = useDeferredValue(filteredExtra);
 
@@ -106,11 +106,10 @@ export function SingleHandler<
           store.setState({ isLoading: true });
           try {
             const response = await queryFn(payload, { ...params, ...deferredParams, ...deferredFilteredExtra });
-
             store.setState({
               isLoading: false,
               error: null,
-              response,
+              response: response,
               isSuccess: true,
             });
             resolve(response);
@@ -118,7 +117,7 @@ export function SingleHandler<
             const err = error instanceof Error ? error : new Error(String(error));
             store.setState({
               response: null,
-              isLoading: false,
+              isLoading: true,
               error: err,
               isSuccess: false,
             });

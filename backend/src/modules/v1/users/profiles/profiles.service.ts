@@ -33,7 +33,7 @@ export class ProfilesService extends CrudService<Profile> {
   }
 
   async updateProfile(
-    id: number,
+    id: string,
     updateProfileDto: UpdateProfileDto,
     profileImage?: Express.Multer.File,
     documents?: Express.Multer.File[],

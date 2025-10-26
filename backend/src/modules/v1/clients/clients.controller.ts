@@ -8,7 +8,6 @@ import {
   Delete,
   Param,
   Query,
-  ParseIntPipe,
   Patch,
 } from '@nestjs/common';
 
@@ -62,7 +61,7 @@ export class ClientsController {
   @ApiResponse({ status: 404, description: 'Client not found' })
   @Get(':id')
   findOne(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Query() query: SingleQueryDto<Client>,
   ) {
     return this.clientsService.getSingle(id, query);
@@ -89,7 +88,7 @@ export class ClientsController {
   @ApiResponse({ status: 404, description: 'Client not found' })
   @Patch(':id')
   update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() updateClientDto: UpdateClientDto,
   ) {
     return this.clientsService.updateClient(id, updateClientDto);
@@ -100,7 +99,7 @@ export class ClientsController {
   @ApiResponse({ status: 200, description: 'Client deleted successfully' })
   @ApiResponse({ status: 404, description: 'Client not found' })
   @Delete(':id')
-  async remove(@Param('id', ParseIntPipe) id: number) {
+  async remove(@Param('id') id: string) {
     await this.clientsService.delete(id);
   }
 }

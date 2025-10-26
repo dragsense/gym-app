@@ -11,6 +11,7 @@ import {
   Matches,
   ValidateNested,
   Min,
+  ValidateIf,
 } from "class-validator";
 import { Type } from "class-transformer";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
@@ -57,12 +58,14 @@ export class DayScheduleDto {
     type: [TimeSlotDto],
     description: "Array of time slots for the day",
   })
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => TimeSlotDto)
   @ArrayMaxSize(5)
   @FieldType("nestedArray", true, TimeSlotDto)
-  timeSlots!: TimeSlotDto[];
+  @ValidateIf((obj) => obj.enabled)
+  timeSlots?: TimeSlotDto[];
 }
 
 export class UnavailablePeriodDto {
@@ -102,7 +105,8 @@ export class WeeklyScheduleDto {
   @ValidateNested()
   @Type(() => DayScheduleDto)
   @FieldType("nested", true, DayScheduleDto)
-  monday!: DayScheduleDto;
+  @IsOptional()
+  monday?: DayScheduleDto;
 
   @ApiProperty({
     type: DayScheduleDto,
@@ -111,7 +115,8 @@ export class WeeklyScheduleDto {
   @ValidateNested()
   @Type(() => DayScheduleDto)
   @FieldType("nested", true, DayScheduleDto)
-  tuesday!: DayScheduleDto;
+  @IsOptional()
+  tuesday?: DayScheduleDto;
 
   @ApiProperty({
     type: DayScheduleDto,
@@ -120,7 +125,8 @@ export class WeeklyScheduleDto {
   @ValidateNested()
   @Type(() => DayScheduleDto)
   @FieldType("nested", true, DayScheduleDto)
-  wednesday!: DayScheduleDto;
+  @IsOptional()
+  wednesday?: DayScheduleDto;
 
   @ApiProperty({
     type: DayScheduleDto,
@@ -129,7 +135,8 @@ export class WeeklyScheduleDto {
   @ValidateNested()
   @Type(() => DayScheduleDto)
   @FieldType("nested", true, DayScheduleDto)
-  thursday!: DayScheduleDto;
+  @IsOptional()
+  thursday?: DayScheduleDto;
 
   @ApiProperty({
     type: DayScheduleDto,
@@ -138,7 +145,8 @@ export class WeeklyScheduleDto {
   @ValidateNested()
   @Type(() => DayScheduleDto)
   @FieldType("nested", true, DayScheduleDto)
-  friday!: DayScheduleDto;
+  @IsOptional()
+  friday?: DayScheduleDto;
 
   @ApiProperty({
     type: DayScheduleDto,
@@ -147,7 +155,8 @@ export class WeeklyScheduleDto {
   @ValidateNested()
   @Type(() => DayScheduleDto)
   @FieldType("nested", true, DayScheduleDto)
-  saturday!: DayScheduleDto;
+  @IsOptional()
+  saturday?: DayScheduleDto;
 
   @ApiProperty({
     type: DayScheduleDto,
@@ -156,25 +165,28 @@ export class WeeklyScheduleDto {
   @ValidateNested()
   @Type(() => DayScheduleDto)
   @FieldType("nested", true, DayScheduleDto)
-  sunday!: DayScheduleDto;
+  @IsOptional()
+  sunday?: DayScheduleDto;
 }
 
 export class UserAvailabilityDto {
-  @ApiProperty({ example: 1, description: "User Availability ID" })
+  @ApiProperty({
+    example: "550e8400-e29b-41d4-a716-446655440000",
+    description: "User Availability ID",
+  })
   @IsNotEmpty()
-  @IsNumber()
-  @Type(() => Number)
-  @FieldType("number", true)
-  @Min(1)
-  id!: number;
+  @IsString()
+  @FieldType("text", true)
+  id!: string;
 
-  @ApiProperty({ example: 1, description: "User ID" })
+  @ApiProperty({
+    example: "550e8400-e29b-41d4-a716-446655440001",
+    description: "User ID",
+  })
   @IsNotEmpty()
-  @IsNumber()
-  @Type(() => Number)
-  @FieldType("number", true)
-  @Min(1)
-  userId!: number;
+  @IsString()
+  @FieldType("text", true)
+  userId!: string;
 
   @ApiProperty({
     type: () => WeeklyScheduleDto,
@@ -214,11 +226,11 @@ export class CreateUserAvailabilityDto {
     description: "Weekly schedule for the user",
     type: WeeklyScheduleDto,
   })
-  @IsNotEmpty()
   @ValidateNested()
   @Type(() => WeeklyScheduleDto)
   @FieldType("nested", true, WeeklyScheduleDto)
-  weeklySchedule!: WeeklyScheduleDto;
+  @IsOptional()
+  weeklySchedule?: WeeklyScheduleDto;
 
   @ApiProperty({
     description: "List of unavailable periods",

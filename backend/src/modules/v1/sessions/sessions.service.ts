@@ -89,7 +89,7 @@ export class SessionsService extends CrudService<Session> {
   }
 
   async updateSession(
-    id: number,
+    id: string,
     updateSessionDto: UpdateSessionDto,
   ): Promise<IMessageResponse> {
     if (updateSessionDto.trainerUser && updateSessionDto.trainerUser.id) {

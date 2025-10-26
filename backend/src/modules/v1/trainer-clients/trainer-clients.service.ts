@@ -72,7 +72,7 @@ export class TrainerClientsService extends CrudService<TrainerClient> {
   }
 
   async updateTrainerClient(
-    id: number,
+    id: string,
     updateDto: UpdateTrainerClientDto,
   ): Promise<TrainerClient> {
     if (updateDto.trainer && updateDto.trainer.id) {

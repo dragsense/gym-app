@@ -13,9 +13,9 @@ const VerifyOtpPage = lazy(() => import("./otp"));
 // React 19: Enhanced loading component for auth routes
 const AuthRouteLoadingFallback = () => {
   const componentId = useId();
-  
+
   return (
-    <div 
+    <div
       className="flex flex-col items-center justify-center min-h-screen bg-background"
       data-component-id={componentId}
     >

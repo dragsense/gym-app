@@ -38,7 +38,7 @@ export class WebSocketService {
    * @param event - The event name to emit
    * @param data - The data to send
    */
-  emitToUser(userId: number, event: string, data: unknown): void {
+  emitToUser(userId: string, event: string, data: unknown): void {
     const userRoom = `user_${userId}`;
     this.emitToRoom(userRoom, event, data);
   }
@@ -49,7 +49,7 @@ export class WebSocketService {
    * @param event - The event name to emit
    * @param data - The data to send
    */
-  emitToUsers(userIds: number[], event: string, data: unknown): void {
+  emitToUsers(userIds: string[], event: string, data: unknown): void {
     if (!this.server) {
       this.logger.warn(
         'WebSocket server not initialized. Cannot emit message.',

@@ -66,19 +66,19 @@ export default function ReferralList({
     });
   };
 
-  const handleEdit = (id: number) => {
+  const handleEdit = (id: string) => {
     startTransition(() => {
       setAction('createOrUpdate', id);
     });
   }
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     startTransition(() => {
       setAction('delete', id);
     });
   }
 
-  const handleView = (id: number) => {
+  const handleView = (id: string) => {
 
   }
 

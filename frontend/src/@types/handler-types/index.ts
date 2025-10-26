@@ -4,30 +4,24 @@ export type TItemActionProps = {
   itemName: string;
   action: string;
   type?: string;
-  id: number;
+  id: string;
 };
-
-
-
 
 export type TListHandlerComponentProps<T, S = unknown> = {
   storeKey: string;
-  store: T,
-  singleStore?: S,
+  store: T;
+  singleStore?: S;
 };
-
 
 export interface IListActionComponent<T, S = unknown> {
   action: string;
   comp: React.ComponentType<TListHandlerComponentProps<T, S>>;
 }
 
-
 export type THandlerComponentProps<T> = {
   storeKey: string;
-  store: T
+  store: T;
 };
-
 
 export interface IActionComponent<T> {
   action: string;
@@ -35,8 +29,8 @@ export interface IActionComponent<T> {
 }
 
 export interface MutationFns<TFormData, TResponse> {
-  deleteFn?: (id: number) => Promise<void>;
-  updateFn?: (id: number) => (item: TFormData) => Promise<IMessageResponse>;
+  deleteFn?: (id: string) => Promise<void>;
+  updateFn?: (id: string) => (item: TFormData) => Promise<IMessageResponse>;
   createFn?: (
     item: Omit<TFormData, "id" | "createdAt" | "updatedAt">
   ) => Promise<TResponse>;

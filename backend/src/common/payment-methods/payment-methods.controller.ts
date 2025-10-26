@@ -8,7 +8,6 @@ import {
   Delete,
   Param,
   Query,
-  ParseIntPipe,
   Patch,
 } from '@nestjs/common';
 
@@ -58,7 +57,7 @@ export class PaymentMethodsController {
   })
   @ApiResponse({ status: 404, description: 'Payment method not found' })
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id') id: string) {
     return this.paymentMethodsService.getSingle(id);
   }
 
@@ -91,7 +90,7 @@ export class PaymentMethodsController {
   @ApiResponse({ status: 404, description: 'Payment method not found' })
   @Patch(':id')
   update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() updatePaymentMethodDto: UpdatePaymentMethodDto,
   ) {
     return this.paymentMethodsService.updatePaymentMethod(
@@ -108,7 +107,7 @@ export class PaymentMethodsController {
   })
   @ApiResponse({ status: 404, description: 'Payment method not found' })
   @Delete(':id')
-  async remove(@Param('id', ParseIntPipe) id: number) {
+  async remove(@Param('id') id: string) {
     return this.paymentMethodsService.delete(id);
   }
 }

@@ -44,7 +44,7 @@ export class PaymentMethodsService extends CrudService<PaymentMethod> {
   }
 
   async updatePaymentMethod(
-    id: number,
+    id: string,
     updatePaymentMethodDto: UpdatePaymentMethodDto,
   ) {
     const paymentMethod = await this.paymentMethodRepository.findOne({

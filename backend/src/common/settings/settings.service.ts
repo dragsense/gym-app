@@ -17,7 +17,7 @@ export class SettingsService extends CrudService<Setting> {
     super(settingsRepository, dataSource, eventService);
   }
 
-  async getEntitySettings(entityId: number): Promise<Record<string, any>> {
+  async getEntitySettings(entityId: string): Promise<Record<string, any>> {
     const settings = await this.settingsRepository.find({
       where: { entityId },
     });
@@ -34,7 +34,7 @@ export class SettingsService extends CrudService<Setting> {
     return settingsObject;
   }
 
-  async getSetting(entityId: number, key: string): Promise<any> {
+  async getSetting(entityId: string, key: string): Promise<any> {
     const setting = await this.settingsRepository.findOne({
       where: { entityId, key },
     });
@@ -47,7 +47,7 @@ export class SettingsService extends CrudService<Setting> {
   }
 
   async setSetting(
-    entityId: number,
+    entityId: string,
     key: string,
     value: any,
     type: ESettingType = ESettingType.STRING,
@@ -80,7 +80,7 @@ export class SettingsService extends CrudService<Setting> {
   }
 
   async setMultipleSettings(
-    entityId: number,
+    entityId: string,
     settings: Record<
       string,
       { value: any; type?: ESettingType; description?: string }
@@ -102,7 +102,7 @@ export class SettingsService extends CrudService<Setting> {
     return results;
   }
 
-  async deleteSetting(entityId: number, key: string): Promise<void> {
+  async deleteSetting(entityId: string, key: string): Promise<void> {
     const setting = await this.getSingle({
       entityId,
       key,
@@ -116,7 +116,7 @@ export class SettingsService extends CrudService<Setting> {
    * Automatically detects value types and creates appropriate settings
    */
   async saveSettings(
-    entityId: number,
+    entityId: string,
     data: Record<string, any>,
     prefix: string = '',
   ): Promise<Setting[]> {
@@ -184,7 +184,7 @@ export class SettingsService extends CrudService<Setting> {
    * Reconstructs the original object structure from flat settings
    */
   async getSettings(
-    entityId: number,
+    entityId: string,
     prefix?: string,
   ): Promise<Record<string, unknown>> {
     const allSettings = await this.getEntitySettings(entityId);

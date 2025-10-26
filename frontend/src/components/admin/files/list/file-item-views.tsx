@@ -10,9 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
 interface IItemViewArgs {
-  handleEdit: (id: number) => void;
-  handleDelete: (id: number) => void;
-  handleView: (id: number) => void;
+  handleEdit: (id: string) => void;
+  handleDelete: (id: string) => void;
+  handleView: (id: string) => void;
 }
 
 export const itemViews = ({

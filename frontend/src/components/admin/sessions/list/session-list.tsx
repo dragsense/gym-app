@@ -68,13 +68,13 @@ export default function SessionList({
     });
   };
 
-  const handleEdit = (id: number) => {
+  const handleEdit = (id: string) => {
     startTransition(() => {
       setAction('createOrUpdate', id);
     });
   }
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     startTransition(() => {
       setAction('delete', id);
     });

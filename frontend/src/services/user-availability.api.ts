@@ -10,11 +10,20 @@ import type { TUserAvailabilityData } from "@shared/types";
 const USER_AVAILABILITY_API_PATH = "/user-availability";
 
 // Create base service instance
-const userAvailabilityService = new BaseService<IUserAvailability, TUserAvailabilityData, Partial<TUserAvailabilityData>>(USER_AVAILABILITY_API_PATH);
+const userAvailabilityService = new BaseService<
+  IUserAvailability,
+  TUserAvailabilityData,
+  Partial<TUserAvailabilityData>
+>(USER_AVAILABILITY_API_PATH);
 
 // Re-export common CRUD operations
-export const fetchUserAvailabilities = (params: IListQueryParams) => userAvailabilityService.get(params);
-export const fetchUserAvailability = (id: number, params: IListQueryParams) => userAvailabilityService.getSingle(id, params);
-export const createUserAvailability = (data: TUserAvailabilityData) => userAvailabilityService.post(data);
-export const updateUserAvailability = (id: number) => userAvailabilityService.patch(id);
-export const deleteUserAvailability = (id: number) => userAvailabilityService.delete(id);
+export const fetchUserAvailabilities = (params: IListQueryParams) =>
+  userAvailabilityService.get(params);
+export const fetchUserAvailability = (id: string, params: IListQueryParams) =>
+  userAvailabilityService.getSingle(id, params);
+export const createUserAvailability = (data: TUserAvailabilityData) =>
+  userAvailabilityService.post(data);
+export const updateUserAvailability = (id: string) =>
+  userAvailabilityService.patch(id);
+export const deleteUserAvailability = (id: string) =>
+  userAvailabilityService.delete(id);

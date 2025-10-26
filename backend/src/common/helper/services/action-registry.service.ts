@@ -1,10 +1,11 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '../../logger/logger.service';
 import { ActivityLogsService } from '../../activity-logs/activity-logs.service';
-import { EActivityType, EActivityStatus } from '@shared/enums/activity-log.enum';
+import {
+  EActivityType,
+  EActivityStatus,
+} from '@shared/enums/activity-log.enum';
 import { ActionHandler, ActionResult } from '../interface/action.interface';
-
-
 
 @Injectable()
 export class ActionRegistryService implements OnModuleInit {
@@ -25,8 +26,8 @@ export class ActionRegistryService implements OnModuleInit {
     description: string,
     status: EActivityStatus,
     metadata?: Record<string, any>,
-    userId?: number,
-    errorMessage?: string
+    userId?: string,
+    errorMessage?: string,
   ): Promise<void> {
     try {
       const activityData: any = {
@@ -36,11 +37,11 @@ export class ActionRegistryService implements OnModuleInit {
         metadata,
         errorMessage,
       };
-      
+
       if (userId) {
         activityData.userId = userId;
       }
-      
+
       await this.activityLogsService.create(activityData);
     } catch (error) {
       this.logger.error(`Failed to log action activity: ${error.message}`);
@@ -93,13 +94,15 @@ export class ActionRegistryService implements OnModuleInit {
   async executeAction(
     actionName: string,
     data?: Record<string, any>,
-    entityId?: number,
-    userId?: number
+    entityId?: string,
+    userId?: string,
   ): Promise<ActionResult> {
     const startTime = Date.now();
-    
-    this.logger.log(`🔄 Executing action: ${actionName} (Entity: ${entityId}, User: ${userId})`);
-    
+
+    this.logger.log(
+      `🔄 Executing action: ${actionName} (Entity: ${entityId}, User: ${userId})`,
+    );
+
     // Log action start
     await this.logActivity(
       EActivityType.ACTION_START,
@@ -109,16 +112,16 @@ export class ActionRegistryService implements OnModuleInit {
         actionName,
         entityId,
         userId,
-        startTime: new Date().toISOString()
+        startTime: new Date().toISOString(),
       },
-      userId
+      userId,
     );
-    
+
     const handler = this.actions.get(actionName);
     if (!handler) {
       const error = `Action '${actionName}' not found in registry`;
       this.logger.error(error);
-      
+
       // Log action error
       await this.logActivity(
         EActivityType.ACTION_ERROR,
@@ -128,12 +131,12 @@ export class ActionRegistryService implements OnModuleInit {
           actionName,
           entityId,
           userId,
-          errorMessage: error
+          errorMessage: error,
         },
         userId,
-        error
+        error,
       );
-      
+
       return {
         success: false,
         error,
@@ -147,9 +150,13 @@ export class ActionRegistryService implements OnModuleInit {
       if (handler.timeout) {
         result = await Promise.race([
           handler.handler(data, entityId, userId),
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error(`Action timeout after ${handler.timeout}ms`)), handler.timeout)
-          )
+          new Promise((_, reject) =>
+            setTimeout(
+              () =>
+                reject(new Error(`Action timeout after ${handler.timeout}ms`)),
+              handler.timeout,
+            ),
+          ),
         ]);
       } else {
         result = await handler.handler(data, entityId, userId);
@@ -161,7 +168,7 @@ export class ActionRegistryService implements OnModuleInit {
         data: result,
         executionTime,
       };
-      
+
       // Log action success
       await this.logActivity(
         EActivityType.ACTION_SUCCESS,
@@ -173,12 +180,14 @@ export class ActionRegistryService implements OnModuleInit {
           userId,
           executionTime,
           result,
-          endTime: new Date().toISOString()
+          endTime: new Date().toISOString(),
         },
-        userId
+        userId,
       );
-      
-      this.logger.log(`✅ Action executed successfully: ${actionName} (${executionTime}ms)`);
+
+      this.logger.log(
+        `✅ Action executed successfully: ${actionName} (${executionTime}ms)`,
+      );
       return actionResult;
     } catch (error) {
       const executionTime = Date.now() - startTime;
@@ -187,7 +196,7 @@ export class ActionRegistryService implements OnModuleInit {
         error: error.message,
         executionTime,
       };
-      
+
       // Log action error
       await this.logActivity(
         EActivityType.ACTION_ERROR,
@@ -199,13 +208,15 @@ export class ActionRegistryService implements OnModuleInit {
           userId,
           executionTime,
           errorMessage: error.message,
-          endTime: new Date().toISOString()
+          endTime: new Date().toISOString(),
         },
         userId,
-        error.message
+        error.message,
       );
-      
-      this.logger.error(`❌ Action execution failed: ${actionName} - ${error.message} (${executionTime}ms)`);
+
+      this.logger.error(
+        `❌ Action execution failed: ${actionName} - ${error.message} (${executionTime}ms)`,
+      );
       return actionResult;
     }
   }
@@ -216,40 +227,43 @@ export class ActionRegistryService implements OnModuleInit {
   async executeActionWithRetry(
     actionName: string,
     data?: Record<string, any>,
-    entityId?: number,
-    userId?: number,
+    entityId?: string,
+    userId?: string,
     maxRetries: number = 3,
-    retryDelay: number = 1000
+    retryDelay: number = 1000,
   ): Promise<ActionResult> {
     let lastResult: ActionResult;
-    
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      this.logger.log(`🔄 Attempt ${attempt}/${maxRetries} for action: ${actionName}`);
-      
+      this.logger.log(
+        `🔄 Attempt ${attempt}/${maxRetries} for action: ${actionName}`,
+      );
+
       lastResult = await this.executeAction(actionName, data, entityId, userId);
-      
+
       if (lastResult.success) {
         return lastResult;
       }
-      
+
       if (attempt < maxRetries) {
-        this.logger.log(`⏳ Retrying action ${actionName} in ${retryDelay}ms...`);
+        this.logger.log(
+          `⏳ Retrying action ${actionName} in ${retryDelay}ms...`,
+        );
         await this.delay(retryDelay);
         retryDelay *= 2; // Exponential backoff
       }
     }
-    
-    this.logger.error(`❌ Action ${actionName} failed after ${maxRetries} attempts`);
+
+    this.logger.error(
+      `❌ Action ${actionName} failed after ${maxRetries} attempts`,
+    );
     return lastResult!;
   }
-
-
-
 
   /**
    * Utility method for delay
    */
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }

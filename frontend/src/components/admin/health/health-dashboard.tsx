@@ -71,8 +71,17 @@ export const HealthDashboard = ({ storeKey, store }: IHealthDashboardProps) => {
     </div>;
   }
 
+
+  if (!data) {
+    return <div className="flex items-center justify-center h-64">
+      <p className="text-gray-500">{t('health.noData')}</p>
+    </div>;
+  }
+
   const { status, checks, uptime, version, environment } = data;
   const { database, memory, network } = checks;
+
+
 
   // Status icon and color
   const getStatusIcon = (status: string) => {

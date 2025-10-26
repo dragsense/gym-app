@@ -14,9 +14,9 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { EScheduleFrequency } from "@shared/enums/schedule.enum";
 
 interface IBillingItemViewsProps {
-  handleEdit: (id: number) => void;
-  handleDelete: (id: number) => void;
-  handleView: (id: number) => void;
+  handleEdit: (id: string) => void;
+  handleDelete: (id: string) => void;
+  handleView: (id: string) => void;
 }
 
 export function billingItemViews({ handleEdit, handleDelete, handleView }: IBillingItemViewsProps) {

@@ -92,8 +92,11 @@ export class UpdateUserDto extends PartialType(
 }
 
 export class UserSafeDto {
-  @ApiProperty({ example: 1, description: "User ID" })
-  id: number;
+  @ApiProperty({
+    example: "550e8400-e29b-41d4-a716-446655440000",
+    description: "User ID",
+  })
+  id: string;
 
   @ApiProperty({ example: "email@example.com", description: "User email" })
   email: string;
@@ -135,13 +138,14 @@ export class UserListDto extends ListQueryDto<IUser> {
 }
 
 export class UserDto {
-  @ApiProperty({ example: 1, description: "User ID" })
+  @ApiProperty({
+    example: "550e8400-e29b-41d4-a716-446655440000",
+    description: "User ID",
+  })
   @IsNotEmpty()
-  @IsNumber()
-  @Type(() => Number)
-  @FieldType("number", true)
-  @Min(1)
-  id: number;
+  @IsString()
+  @FieldType("text", true)
+  id: string;
 
   @ApiProperty({ example: "email@example.com", description: "User email" })
   @IsOptional()

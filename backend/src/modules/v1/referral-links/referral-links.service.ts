@@ -31,7 +31,7 @@ export class ReferralLinksService extends CrudService<ReferralLink> {
 
   async createReferralLink(
     createReferralLinkDto: CreateReferralLinkDto,
-    userId: number,
+    userId: string,
   ): Promise<ReferralLink> {
     // Get user who created the link
     const createdBy = await this.usersService.getSingle(userId);
@@ -85,7 +85,7 @@ export class ReferralLinksService extends CrudService<ReferralLink> {
   }
 
   async updateReferralLink(
-    id: number,
+    id: string,
     updateReferralLinkDto: UpdateReferralLinkDto,
   ): Promise<ReferralLink> {
     return this.update(id, updateReferralLinkDto);

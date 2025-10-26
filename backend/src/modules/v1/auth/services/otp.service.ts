@@ -62,7 +62,7 @@ export class OtpService {
     return true;
   }
 
-  async removeAllUserOtp(userId?: number): Promise<void> {
+  async removeAllUserOtp(userId?: string): Promise<void> {
     if (!userId) return;
     await this.otpRepo.delete({ user: { id: userId } as any });
   }

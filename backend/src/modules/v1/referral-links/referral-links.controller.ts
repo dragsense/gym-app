@@ -8,7 +8,6 @@ import {
   Delete,
   Query,
   UseGuards,
-  ParseIntPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -68,7 +67,7 @@ export class ReferralLinksController {
     description: 'Referral link retrieved successfully',
   })
   @ApiResponse({ status: 404, description: 'Referral link not found' })
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id') id: string) {
     return this.referralLinksService.getSingle(id);
   }
 
@@ -80,7 +79,7 @@ export class ReferralLinksController {
   })
   @ApiResponse({ status: 404, description: 'Referral link not found' })
   update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() updateReferralLinkDto: UpdateReferralLinkDto,
   ) {
     return this.referralLinksService.updateReferralLink(
@@ -96,7 +95,7 @@ export class ReferralLinksController {
     description: 'Referral link deleted successfully',
   })
   @ApiResponse({ status: 404, description: 'Referral link not found' })
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id') id: string) {
     return this.referralLinksService.delete(id);
   }
 }

@@ -13,9 +13,9 @@ import { EReferralLinkStatus, EReferralLinkType } from "@shared/enums/referral-l
 import type { ColumnDef } from "@tanstack/react-table";
 
 interface IReferralItemViewsProps {
-  handleEdit: (id: number) => void;
-  handleDelete: (id: number) => void;
-  handleView: (id: number) => void;
+  handleEdit: (id: string) => void;
+  handleDelete: (id: string) => void;
+  handleView: (id: string) => void;
 }
 
 // Component for link cell with copy functionality

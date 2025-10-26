@@ -1,5 +1,4 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { useId, useTransition } from "react";
+import { useId } from "react";
 
 // Types
 import { type IUserAvailability } from "@shared/interfaces/user-availability.interface";
@@ -14,7 +13,7 @@ import { UserAvailabilityView } from "@/components/admin";
 import { UserAvailabilityForm, type TUserAvailabilityExtraProps } from "@/page-components";
 
 // API
-import { deleteUserAvailability, fetchUserAvailability } from "@/services/user-availability.api";
+import { fetchUserAvailability } from "@/services/user-availability.api";
 
 // Layouts
 import { PageInnerLayout } from "@/layouts";
@@ -22,9 +21,7 @@ import { PageInnerLayout } from "@/layouts";
 export default function UserAvailabilityPage() {
   // React 19: Essential IDs and transitions
   const componentId = useId();
-  const [, startTransition] = useTransition();
 
-  const queryClient = useQueryClient();
 
   const STORE_KEY = "user-availability";
 
@@ -33,14 +30,8 @@ export default function UserAvailabilityPage() {
       <div data-component-id={componentId}>
         <SingleHandler<IUserAvailability, TUserAvailabilityExtraProps>
           queryFn={fetchUserAvailability}
-          deleteFn={deleteUserAvailability}
           storeKey={STORE_KEY}
           enabled={true}
-          onDeleteSuccess={() => {
-            startTransition(() => {
-              queryClient.invalidateQueries({ queryKey: [STORE_KEY] });
-            });
-          }}
           SingleComponent={UserAvailabilityView}
           actionComponents={[
             {

@@ -4,7 +4,7 @@ import { EventService as IEventService } from '../interface/event.interface';
 
 export type EventPayload = {
   entity: any;
-  entityId: number;
+  entityId: string;
   operation: string;
   source: string;
   tableName: string;
@@ -30,11 +30,7 @@ export class EventService implements IEventService {
   /**
    * Create and emit an event with structured data
    */
-  emitEvent(
-    type: string, 
-    payload: EventPayload, 
-  
-  ): void {
+  emitEvent(type: string, payload: EventPayload): void {
     this.emit(type, payload);
   }
 }

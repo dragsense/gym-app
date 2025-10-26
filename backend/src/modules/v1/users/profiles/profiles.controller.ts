@@ -4,7 +4,6 @@ import {
   Body,
   Patch,
   Param,
-  ParseIntPipe,
   Req,
   UseInterceptors,
   UploadedFiles,
@@ -80,7 +79,7 @@ export class ProfilesController {
   @ApiParam({ name: 'id', type: Number, description: 'User ID' })
   @ApiResponse({ status: 200, description: 'Profile found', type: Profile })
   @ApiResponse({ status: 404, description: 'Profile not found' })
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id') id: string) {
     return this.profilesService.getSingle({ userId: id });
   }
 
@@ -97,7 +96,7 @@ export class ProfilesController {
   @ApiResponse({ status: 200, description: 'Profile updated', type: Profile })
   @ApiResponse({ status: 404, description: 'Profile not found' })
   update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @UploadedFiles()
     files: { image?: Express.Multer.File[]; documents?: Express.Multer.File[] },
     @Body() updateProfileDto: OmitType<UpdateProfileDto, 'image' | 'documents'>,

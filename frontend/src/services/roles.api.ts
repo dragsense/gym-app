@@ -34,29 +34,29 @@ const resourceService = new BaseService<
 // Role CRUD Operations
 // =========================
 export const fetchRoles = (params: IListQueryParams) => roleService.get(params);
-export const fetchRole = (id: number, params?: IListQueryParams) =>
+export const fetchRole = (id: string, params?: IListQueryParams) =>
   roleService.getSingle(id, params);
 export const createRole = (data: IRole) => roleService.post(data);
-export const updateRole = (id: number, data: Partial<IRole>) =>
+export const updateRole = (id: string, data: Partial<IRole>) =>
   roleService.patch(id, data);
-export const deleteRole = (id: number) => roleService.delete(id);
+export const deleteRole = (id: string) => roleService.delete(id);
 
 // =========================
 // Permission CRUD Operations
 // =========================
 export const fetchPermissions = (params: IListQueryParams) =>
   permissionService.get(params);
-export const fetchPermission = (id: number, params?: IListQueryParams) =>
+export const fetchPermission = (id: string, params?: IListQueryParams) =>
   permissionService.getSingle(id, params);
 export const createPermission = (data: IPermission) =>
   permissionService.post(data);
-export const updatePermission = (id: number, data: Partial<IPermission>) =>
+export const updatePermission = (id: string, data: Partial<IPermission>) =>
   permissionService.patch(id, data);
-export const deletePermission = (id: number) => permissionService.delete(id);
+export const deletePermission = (id: string) => permissionService.delete(id);
 
 // (Optional) Permissions by Role
 export const fetchPermissionsByRole = (
-  roleId: number,
+  roleId: string,
   params: IListQueryParams
 ) => roleService.get(params, `${roleId}/permissions`);
 
@@ -65,9 +65,9 @@ export const fetchPermissionsByRole = (
 // =========================
 export const fetchResources = (params: IListQueryParams) =>
   resourceService.get(params);
-export const fetchResource = (id: number, params?: IListQueryParams) =>
+export const fetchResource = (id: string, params?: IListQueryParams) =>
   resourceService.getSingle(id, params);
 export const createResource = (data: IResource) => resourceService.post(data);
-export const updateResource = (id: number, data: Partial<IResource>) =>
+export const updateResource = (id: string, data: Partial<IResource>) =>
   resourceService.patch(id, data);
-export const deleteResource = (id: number) => resourceService.delete(id);
+export const deleteResource = (id: string) => resourceService.delete(id);

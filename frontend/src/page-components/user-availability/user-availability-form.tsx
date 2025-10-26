@@ -18,14 +18,14 @@ import { type TSingleHandlerStore } from "@/stores";
 // Components
 
 // Services
-import { createUserAvailability, updateUserAvailability } from "@/services/user-availability.api";
+import { createUserAvailability } from "@/services/user-availability.api";
 import { strictDeepMerge } from "@/utils";
-import { CreateUserAvailabilityDto, UpdateUserAvailabilityDto } from "@shared/dtos/user-availability-dtos";
+import { CreateUserAvailabilityDto } from "@shared/dtos/user-availability-dtos";
 import type { TUserAvailabilityData } from '@shared/types';
-import { UserAvailabilityFormModal } from '@/components/admin';
+import { UserAvailabilityFormModal, type IUserAvailabilityFormModalExtraProps } from '@/components/admin';
+import type { IMessageResponse } from '@shared/interfaces';
 
-export type TUserAvailabilityExtraProps = {
-}
+
 
 interface IUserAvailabilityFormProps extends THandlerComponentProps<TSingleHandlerStore<IUserAvailability, TUserAvailabilityExtraProps>> {
 }
@@ -54,11 +54,11 @@ export default function UserAvailabilityForm({
 
     const INITIAL_VALUES = {
         weeklySchedule: {
-            monday: { enabled: true, timeSlots: [{ start: "09:00", end: "17:00" }] },
-            tuesday: { enabled: true, timeSlots: [{ start: "09:00", end: "17:00" }] },
-            wednesday: { enabled: true, timeSlots: [{ start: "09:00", end: "17:00" }] },
-            thursday: { enabled: true, timeSlots: [{ start: "09:00", end: "17:00" }] },
-            friday: { enabled: true, timeSlots: [{ start: "09:00", end: "17:00" }] },
+            monday: { enabled: true, timeSlots: [] },
+            tuesday: { enabled: true, timeSlots: [] },
+            wednesday: { enabled: true, timeSlots: [] },
+            thursday: { enabled: true, timeSlots: [] },
+            friday: { enabled: true, timeSlots: [] },
             saturday: { enabled: false, timeSlots: [] },
             sunday: { enabled: false, timeSlots: [] },
         },
@@ -66,27 +66,18 @@ export default function UserAvailabilityForm({
     };
 
     // React 19: Memoized initial values with deferred processing
-    const initialValues = useMemo(() => {
-        return strictDeepMerge<TUserAvailabilityData>(INITIAL_VALUES, response ?? {});
-    }, [INITIAL_VALUES, response?.id]);
+    const initialValues = strictDeepMerge<TUserAvailabilityData>(INITIAL_VALUES, response ?? {});
 
     const handleClose = useCallback(() => {
         startTransition(() => {
-            reset();
             setAction('none');
         });
     }, [reset, setAction, startTransition]);
 
-    const isEditing = !!response?.id;
-
-    const mutationFn = useMemo(() => {
-        return isEditing ? updateUserAvailability(response.id) : createUserAvailability;
-    }, [isEditing, response?.id]);
+    const isEditing = false;
 
     // React 19: Memoized DTO to prevent unnecessary re-renders
-    const dto = useMemo(() => {
-        return isEditing ? UpdateUserAvailabilityDto : CreateUserAvailabilityDto;
-    }, [isEditing]);
+    const dto = CreateUserAvailabilityDto;
 
     if (isLoading) {
         return (
@@ -98,8 +89,8 @@ export default function UserAvailabilityForm({
 
     return (
         <div data-component-id={componentId}>
-            <FormHandler<any, any, any>
-                mutationFn={mutationFn}
+            <FormHandler<TUserAvailabilityData, IMessageResponse, IUserAvailabilityFormModalExtraProps>
+                mutationFn={createUserAvailability}
                 FormComponent={UserAvailabilityFormModal}
                 storeKey={storeKey}
                 initialValues={initialValues}
@@ -108,7 +99,7 @@ export default function UserAvailabilityForm({
                 isEditing={isEditing}
                 onSuccess={() => {
                     startTransition(() => {
-                        queryClient.invalidateQueries({ queryKey: [storeKey + "-list"] });
+                        queryClient.invalidateQueries({ queryKey: [storeKey + "-single"] });
                         handleClose();
                     });
                 }}

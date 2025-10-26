@@ -1,4 +1,3 @@
-
 import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
@@ -7,13 +6,13 @@ import {
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 
-
 export abstract class GeneralBaseEntity extends BaseEntity {
-
-  @ApiProperty({ example: '1', description: 'The unique identifier of the entity' })
-  @PrimaryGeneratedColumn()
-  id: number;
-
+  @ApiProperty({
+    example: '550e8400-e29b-41d4-a716-446655440000',
+    description: 'The unique identifier of the entity',
+  })
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @ApiProperty({
     example: '2024-02-12T14:30:00.000Z',

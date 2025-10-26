@@ -65,7 +65,7 @@ export class BillingsService extends CrudService<Billing> {
     return { message: 'Billing created successfully.', billing };
   }
 
-  async updateBilling(id: number, updateBillingDto: UpdateBillingDto): Promise<IMessageResponse> {
+  async updateBilling(id: string, updateBillingDto: UpdateBillingDto): Promise<IMessageResponse> {
     if (updateBillingDto.recipientUser && updateBillingDto.recipientUser.id) {
       // Check if trainer exists and is actually a trainer
       const recipientUser = await this.usersService.getSingle(updateBillingDto.recipientUser.id);

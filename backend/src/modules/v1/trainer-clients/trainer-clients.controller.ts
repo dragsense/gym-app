@@ -7,7 +7,6 @@ import {
   Body,
   Param,
   Query,
-  ParseIntPipe,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -46,7 +45,7 @@ export class TrainerClientsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get trainer-client assignment by ID' })
-  @ApiParam({ name: 'id', type: 'number' })
+  @ApiParam({ name: 'id', type: 'string' })
   @ApiResponse({
     status: 200,
     description: 'Trainer-client assignment retrieved successfully',
@@ -56,7 +55,7 @@ export class TrainerClientsController {
     description: 'Trainer-client assignment not found',
   })
   async findOne(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Query() queryDto: SingleQueryDto<TrainerClient>,
   ) {
     return await this.trainerClientsService.getSingle(id, queryDto);
@@ -64,12 +63,12 @@ export class TrainerClientsController {
 
   @Get('trainer/:trainerId')
   @ApiOperation({ summary: 'Get all clients for a specific trainer' })
-  @ApiParam({ name: 'trainerId', type: 'number' })
+  @ApiParam({ name: 'trainerId', type: 'string' })
   @ApiResponse({
     status: 200,
     description: 'Trainer clients retrieved successfully',
   })
-  async getTrainerClients(@Param('trainerId', ParseIntPipe) trainerId: number) {
+  async getTrainerClients(@Param('trainerId') trainerId: string) {
     return await this.trainerClientsService.get({
       trainerId,
       _relations: ['client', 'client.user', 'client.user.profile'],
@@ -84,12 +83,12 @@ export class TrainerClientsController {
 
   @Get('client/:clientId')
   @ApiOperation({ summary: 'Get all trainers for a specific client' })
-  @ApiParam({ name: 'clientId', type: 'number' })
+  @ApiParam({ name: 'clientId', type: 'string' })
   @ApiResponse({
     status: 200,
     description: 'Client trainers retrieved successfully',
   })
-  async getClientTrainers(@Param('clientId', ParseIntPipe) clientId: number) {
+  async getClientTrainers(@Param('clientId') clientId: string) {
     return await this.trainerClientsService.get({
       clientId,
       _relations: ['trainer', 'trainer.user', 'trainer.user.profile'],
@@ -121,7 +120,7 @@ export class TrainerClientsController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update trainer-client assignment' })
-  @ApiParam({ name: 'id', type: 'number' })
+  @ApiParam({ name: 'id', type: 'string' })
   @ApiResponse({
     status: 200,
     description: 'Trainer-client assignment updated successfully',
@@ -131,7 +130,7 @@ export class TrainerClientsController {
     description: 'Trainer-client assignment not found',
   })
   async update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() updateDto: UpdateTrainerClientDto,
   ) {
     const assignment = await this.trainerClientsService.updateTrainerClient(
@@ -146,7 +145,7 @@ export class TrainerClientsController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete trainer-client assignment' })
-  @ApiParam({ name: 'id', type: 'number' })
+  @ApiParam({ name: 'id', type: 'string' })
   @ApiResponse({
     status: 200,
     description: 'Trainer-client assignment deleted successfully',
@@ -155,7 +154,7 @@ export class TrainerClientsController {
     status: 404,
     description: 'Trainer-client assignment not found',
   })
-  async delete(@Param('id', ParseIntPipe) id: number) {
+  async delete(@Param('id') id: string) {
     await this.trainerClientsService.delete(id);
     return { message: 'Trainer-client assignment deleted successfully' };
   }

@@ -30,7 +30,7 @@ export class UserAvailabilityService extends CrudService<UserAvailability> {
 
   async createOrUpdateUserAvailability(
     createUserAvailabilityDto: CreateUserAvailabilityDto,
-    userId: number,
+    userId: string,
   ): Promise<UserAvailability> {
     let existingAvailability: UserAvailability | null = null;
 
