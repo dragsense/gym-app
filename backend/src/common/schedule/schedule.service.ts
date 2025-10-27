@@ -18,8 +18,6 @@ import {
 import { ScheduleUtils } from './utils/schedule.utils';
 import { CrudService } from '@/common/crud/crud.service';
 import { EventService } from '../helper/services/event.service';
-import { REQUEST } from '@nestjs/core';
-import { Request } from 'express';
 
 @Injectable()
 export class ScheduleService extends CrudService<Schedule> {
@@ -28,9 +26,9 @@ export class ScheduleService extends CrudService<Schedule> {
     private scheduleRepo: Repository<Schedule>,
     dataSource: DataSource,
     eventService: EventService,
-    @Inject(REQUEST) request: Request,
+    
   ) {
-    super(scheduleRepo, dataSource, eventService, request);
+    super(scheduleRepo, dataSource, eventService);
   }
 
   /**

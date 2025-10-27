@@ -13,8 +13,6 @@ import { FileUpload } from '@/common/file-upload/entities/file-upload.entity';
 import { EFileType } from '@shared/enums';
 import { EventService } from '@/common/helper/services/event.service';
 import { CrudOptions } from '@/common/crud/interfaces/crud.interface';
-import { REQUEST } from '@nestjs/core';
-import { Request } from 'express';
 
 @Injectable()
 export class ProfilesService extends CrudService<Profile> {
@@ -24,7 +22,6 @@ export class ProfilesService extends CrudService<Profile> {
     private readonly fileUploadService: FileUploadService,
     dataSource: DataSource,
     crudEventService: EventService,
-    @Inject(REQUEST) request: Request,
   ) {
     const crudOptions: CrudOptions = {
       searchableFields: ['firstName', 'lastName'],
@@ -32,7 +29,7 @@ export class ProfilesService extends CrudService<Profile> {
       defaultSort: { field: 'createdAt', order: 'DESC' },
     };
 
-    super(profileRepo, dataSource, crudEventService, request, crudOptions);
+    super(profileRepo, dataSource, crudEventService, crudOptions);
   }
 
   async updateProfile(

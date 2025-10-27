@@ -1,6 +1,5 @@
 import {
   ConflictException,
-  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -21,8 +20,6 @@ import { CrudService } from '@/common/crud/crud.service';
 import { EventService } from '@/common/helper/services/event.service';
 import { ProfilesService } from './profiles/profiles.service';
 import { CrudOptions } from '@/common/crud/interfaces/crud.interface';
-import { REQUEST } from '@nestjs/core';
-import { Request } from 'express';
 
 @Injectable()
 export class UsersService extends CrudService<User> {
@@ -37,13 +34,12 @@ export class UsersService extends CrudService<User> {
     private tokenService: TokenService,
     dataSource: DataSource,
     eventService: EventService,
-    @Inject(REQUEST) request: Request,
   ) {
     const crudOptions: CrudOptions = {
       restrictedFields: ['password', 'passwordHistory'],
       searchableFields: ['email', 'profile.firstName', 'profile.lastName'],
     };
-    super(userRepo, dataSource, eventService, request, crudOptions);
+    super(userRepo, dataSource, eventService, crudOptions);
   }
 
   async getUserByEmail(email: string): Promise<User | null> {

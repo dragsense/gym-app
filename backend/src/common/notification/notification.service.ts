@@ -6,8 +6,6 @@ import { Notification } from './entities/notification.entity';
 import { CreateNotificationDto } from './dtos/create-notification.dto';
 import { CrudService } from '@/common/crud/crud.service';
 import { EventService } from '../helper/services/event.service';
-import { REQUEST } from '@nestjs/core';
-import { Request } from 'express';
 
 export interface NotificationConfig {
   enabled: boolean;
@@ -24,9 +22,9 @@ export class NotificationService extends CrudService<Notification> {
     private readonly configService: ConfigService,
     dataSource: DataSource,
     eventService: EventService,
-    @Inject(REQUEST) request: Request,
+    
   ) {
-    super(notificationRepository, dataSource, eventService, request);
+    super(notificationRepository, dataSource, eventService);
   }
 
   /**

@@ -17,8 +17,6 @@ import { CrudOptions } from '@/common/crud/interfaces/crud.interface';
 import { EUserLevels, EUserRole } from '@shared/enums';
 import { TrainersService } from '../trainers/trainers.service';
 import { ClientsService } from '../clients/clients.service';
-import { REQUEST } from '@nestjs/core';
-import { Request } from 'express';
 
 @Injectable()
 export class TrainerClientsService extends CrudService<TrainerClient> {
@@ -29,13 +27,13 @@ export class TrainerClientsService extends CrudService<TrainerClient> {
     private readonly clientsService: ClientsService,
     dataSource: DataSource,
     eventService: EventService,
-    @Inject(REQUEST) request: Request,
+    
   ) {
     const crudOptions: CrudOptions = {
       restrictedFields: ['trainer.user.password', 'client.user.password'],
       searchableFields: ['trainer.user.email', 'client.user.email'],
     };
-    super(trainerClientRepo, dataSource, eventService, request, crudOptions);
+    super(trainerClientRepo, dataSource, eventService, crudOptions);
   }
 
   async createTrainerClient(

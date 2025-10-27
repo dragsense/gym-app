@@ -6,7 +6,7 @@ import { Injectable } from '@nestjs/common';
 @Injectable()
 export class PaymentMethodsSeed {
   private readonly logger = new LoggerService(PaymentMethodsSeed.name);
-  constructor(private paymentMethodsService: PaymentMethodsService) { }
+  constructor(private paymentMethodsService: PaymentMethodsService) {}
 
   async run(): Promise<void> {
     const paymentMethods = [

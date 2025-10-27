@@ -1,8 +1,6 @@
-import { Injectable, Inject } from '@nestjs/common';
-import { REQUEST } from '@nestjs/core';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
-import { Request } from 'express';
 
 import { Trainer } from './entities/trainer.entity';
 import { CreateTrainerDto, UpdateTrainerDto } from '@shared/dtos';
@@ -21,7 +19,6 @@ export class TrainersService extends CrudService<Trainer> {
     private readonly userService: UsersService,
     dataSource: DataSource,
     eventService: EventService,
-    @Inject(REQUEST) request: Request,
   ) {
     const crudOptions: CrudOptions = {
       restrictedFields: ['user.password'],
@@ -31,7 +28,7 @@ export class TrainersService extends CrudService<Trainer> {
         'user.profile.lastName',
       ],
     };
-    super(trainerRepo, dataSource, eventService, request, crudOptions);
+    super(trainerRepo, dataSource, eventService, crudOptions);
   }
 
   async createTrainer(

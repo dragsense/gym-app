@@ -1,12 +1,10 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { CrudService } from '@/common/crud/crud.service';
 import { Setting } from './entities/setting.entity';
 import { ESettingType } from '@shared/enums/setting.enum';
 import { EventService } from '@/common/helper/services/event.service';
-import { REQUEST } from '@nestjs/core';
-import { Request } from 'express';
 
 @Injectable()
 export class SettingsService extends CrudService<Setting> {
@@ -15,9 +13,9 @@ export class SettingsService extends CrudService<Setting> {
     private readonly settingsRepository: Repository<Setting>,
     dataSource: DataSource,
     eventService: EventService,
-    @Inject(REQUEST) request: Request,
+    
   ) {
-    super(settingsRepository, dataSource, eventService, request);
+    super(settingsRepository, dataSource, eventService);
   }
 
   async getEntitySettings(entityId: string): Promise<Record<string, unknown>> {

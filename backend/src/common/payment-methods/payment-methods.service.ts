@@ -2,7 +2,6 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
-  Inject,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
@@ -15,8 +14,6 @@ import {
 import { EventService } from '@/common/helper/services/event.service';
 import { CrudOptions } from '@/common/crud/interfaces/crud.interface';
 import { EPaymentMethodType } from '@shared/enums';
-import { REQUEST } from '@nestjs/core';
-import { Request } from 'express';
 
 @Injectable()
 export class PaymentMethodsService extends CrudService<PaymentMethod> {
@@ -25,19 +22,12 @@ export class PaymentMethodsService extends CrudService<PaymentMethod> {
     private readonly paymentMethodRepository: Repository<PaymentMethod>,
     dataSource: DataSource,
     eventService: EventService,
-    @Inject(REQUEST) request: Request,
   ) {
     const crudOptions: CrudOptions = {
       restrictedFields: [],
       searchableFields: ['type', 'description'],
     };
-    super(
-      paymentMethodRepository,
-      dataSource,
-      eventService,
-      request,
-      crudOptions,
-    );
+    super(paymentMethodRepository, dataSource, eventService, crudOptions);
   }
 
   async createPaymentMethod(createPaymentMethodDto: CreatePaymentMethodDto) {

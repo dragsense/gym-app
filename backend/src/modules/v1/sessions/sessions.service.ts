@@ -21,8 +21,6 @@ import { EventService } from '@/common/helper/services/event.service';
 import { CrudOptions } from '@/common/crud/interfaces/crud.interface';
 import { UsersService } from '../users/users.service';
 import { EUserLevels, EUserRole } from '@shared/enums';
-import { REQUEST } from '@nestjs/core';
-import { Request } from 'express';
 
 @Injectable()
 export class SessionsService extends CrudService<Session> {
@@ -34,13 +32,13 @@ export class SessionsService extends CrudService<Session> {
     private readonly usersService: UsersService,
     dataSource: DataSource,
     eventService: EventService,
-    @Inject(REQUEST) request: Request,
+    
   ) {
     const crudOptions: CrudOptions = {
       restrictedFields: ['trainer.user.password', 'clients.user.password'],
       searchableFields: ['title', 'description', 'location', 'notes'],
     };
-    super(sessionRepo, dataSource, eventService, request, crudOptions);
+    super(sessionRepo, dataSource, eventService, crudOptions);
   }
 
   async createSession(

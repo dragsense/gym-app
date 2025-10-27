@@ -13,8 +13,6 @@ import {
 } from '@shared/dtos';
 import { User } from '../../users/entities/user.entity';
 import { BaseStripeService } from '../services/base-stripe.service';
-import { REQUEST } from '@nestjs/core';
-import { Request } from 'express';
 
 @Injectable()
 export class StripeConnectService extends CrudService<StripeConnectAccount> {
@@ -25,9 +23,9 @@ export class StripeConnectService extends CrudService<StripeConnectAccount> {
     private readonly baseStripeService: BaseStripeService,
     dataSource: DataSource,
     eventService: EventService,
-    @Inject(REQUEST) request: Request,
+    
   ) {
-    super(stripeConnectRepository, dataSource, eventService, request);
+    super(stripeConnectRepository, dataSource, eventService);
   }
 
   async connectStripeAccount(

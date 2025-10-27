@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -20,8 +19,6 @@ import { detectFileType } from '@/lib/utils/detect-file-type.util';
 import { OmitType } from '@shared/lib/type-utils';
 import { CrudService } from '@/common/crud/crud.service';
 import { EventService } from '../helper/services/event.service';
-import { REQUEST } from '@nestjs/core';
-import { Request } from 'express';
 
 @Injectable()
 export class FileUploadService extends CrudService<FileUpload> {
@@ -33,9 +30,8 @@ export class FileUploadService extends CrudService<FileUpload> {
     private configService: ConfigService,
     dataSource: DataSource,
     eventService: EventService,
-    @Inject(REQUEST) request: Request,
   ) {
-    super(fileRepo, dataSource, eventService, request);
+    super(fileRepo, dataSource, eventService);
     this.appUrl =
       this.configService.get<string>('app.url') || 'http://localhost:3000';
   }

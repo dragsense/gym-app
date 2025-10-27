@@ -23,8 +23,6 @@ import { JwtService } from '@nestjs/jwt';
 import { StripeService } from '../stripe/stripe.service';
 import { StripeBillingService } from '../stripe/services/stripe-billing.service';
 import { EBillingStatus } from '@shared/enums/billing.enum';
-import { REQUEST } from '@nestjs/core';
-import { Request } from 'express';
 
 @Injectable()
 export class BillingsService extends CrudService<Billing> {
@@ -39,13 +37,13 @@ export class BillingsService extends CrudService<Billing> {
     private readonly stripeService: StripeService,
     dataSource: DataSource,
     eventService: EventService,
-    @Inject(REQUEST) request: Request,
+    
   ) {
     const crudOptions: CrudOptions = {
       restrictedFields: ['recipientUser.password'],
       searchableFields: ['title', 'description', 'notes'],
     };
-    super(billingRepo, dataSource, eventService, request, crudOptions);
+    super(billingRepo, dataSource, eventService, crudOptions);
   }
 
   async createBilling(

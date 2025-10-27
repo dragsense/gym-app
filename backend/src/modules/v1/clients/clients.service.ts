@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 
@@ -10,8 +10,6 @@ import { CrudOptions } from '@/common/crud/interfaces/crud.interface';
 import { UsersService } from '../users/users.service';
 import { EUserLevels, EUserRole } from '@shared/enums';
 import { IMessageResponse } from '@shared/interfaces';
-import { REQUEST } from '@nestjs/core';
-import { Request } from 'express';
 import { User } from '../users/entities/user.entity';
 
 @Injectable()
@@ -22,7 +20,7 @@ export class ClientsService extends CrudService<Client> {
     private readonly userService: UsersService,
     dataSource: DataSource,
     eventService: EventService,
-    @Inject(REQUEST) request: Request,
+    
   ) {
     const crudOptions: CrudOptions = {
       restrictedFields: ['user.password'],
@@ -32,7 +30,7 @@ export class ClientsService extends CrudService<Client> {
         'user.profile.lastName',
       ],
     };
-    super(clientRepo, dataSource, eventService, request, crudOptions);
+    super(clientRepo, dataSource, eventService, crudOptions);
   }
 
   async createClient(

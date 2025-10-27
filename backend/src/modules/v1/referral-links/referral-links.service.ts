@@ -6,8 +6,6 @@ import { ReferralLink } from './entities/referral-link.entity';
 import { CreateReferralLinkDto, UpdateReferralLinkDto } from '@shared/dtos';
 import { EReferralLinkStatus } from '@shared/enums/referral-link.enum';
 import { EventService } from '@/common/helper/services/event.service';
-import { REQUEST } from '@nestjs/core';
-import { Request } from 'express';
 
 @Injectable()
 export class ReferralLinksService extends CrudService<ReferralLink> {
@@ -16,9 +14,9 @@ export class ReferralLinksService extends CrudService<ReferralLink> {
     private readonly referralLinkRepository: Repository<ReferralLink>,
     dataSource: DataSource,
     eventService: EventService,
-    @Inject(REQUEST) request: Request,
+    
   ) {
-    super(referralLinkRepository, dataSource, eventService, request);
+    super(referralLinkRepository, dataSource, eventService);
   }
 
   async createReferralLink(
