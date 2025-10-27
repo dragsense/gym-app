@@ -1,29 +1,26 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Inject, Scope } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, FindOptionsWhere, DataSource } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { ActivityLog } from './entities/activity-log.entity';
-import { 
-  ActivityLogListDto, 
-} from '@shared/dtos/activity-log-dtos';
-import { IPaginatedResponse } from '@shared/interfaces';
 import { CreateActivityLogDto } from './dtos/create-activity-log.dto';
 import { CrudService } from '@/common/crud/crud.service';
 import { EventService } from '../helper/services/event.service';
+import { REQUEST } from '@nestjs/core';
+import { Request } from 'express';
 
 @Injectable()
 export class ActivityLogsService extends CrudService<ActivityLog> {
-
   constructor(
     @InjectRepository(ActivityLog)
     private readonly activityLogRepository: Repository<ActivityLog>,
     private readonly configService: ConfigService,
     dataSource: DataSource,
     eventService: EventService,
+    @Inject(REQUEST) request: Request,
   ) {
-    super(activityLogRepository, dataSource, eventService);
+    super(activityLogRepository, dataSource, eventService, request);
   }
-
 
   /**
    * Check if activity should be logged based on configuration
@@ -31,11 +28,9 @@ export class ActivityLogsService extends CrudService<ActivityLog> {
   shouldLogActivity(
     endpoint: string,
     method: string,
-    activityType?: string
+    activityType?: string,
   ): boolean {
-
     const config = this.configService.get('activityLogs');
-
 
     // If logging is disabled, don't log
     if (!config.enabled) {
@@ -44,7 +39,9 @@ export class ActivityLogsService extends CrudService<ActivityLog> {
 
     // Check if endpoint should be logged (if logEndpoints is empty, log all)
     if (config.logEndpoints.length > 0) {
-      const shouldLogEndpoint = config.logEndpoints.some(logged => endpoint.includes(logged));
+      const shouldLogEndpoint = config.logEndpoints.some((logged) =>
+        endpoint.includes(logged),
+      );
       if (!shouldLogEndpoint) {
         return false;
       }
@@ -53,9 +50,12 @@ export class ActivityLogsService extends CrudService<ActivityLog> {
     }
 
     // Check if method should be logged
-    if (config.logMethods.length <= 0 || !config.logMethods.includes(method.toUpperCase())) {
+    if (
+      config.logMethods.length <= 0 ||
+      !config.logMethods.includes(method.toUpperCase())
+    ) {
       return false;
-    } 
+    }
 
     // Check activity type filtering
     if (activityType && config.logActivityTypes.length > 0) {
@@ -68,14 +68,14 @@ export class ActivityLogsService extends CrudService<ActivityLog> {
     return true;
   }
 
-
-
-  async createActivityLog(createActivityLogDto: CreateActivityLogDto): Promise<ActivityLog | null> {
+  async createActivityLog(
+    createActivityLogDto: CreateActivityLogDto,
+  ): Promise<ActivityLog | null> {
     // Check if activity should be logged based on configuration
     const shouldLog = this.shouldLogActivity(
       createActivityLogDto.endpoint || '',
       createActivityLogDto.method || '',
-      createActivityLogDto.type
+      createActivityLogDto.type,
     );
 
     if (!shouldLog) {
@@ -84,5 +84,4 @@ export class ActivityLogsService extends CrudService<ActivityLog> {
 
     return await this.create(createActivityLogDto);
   }
-
 }

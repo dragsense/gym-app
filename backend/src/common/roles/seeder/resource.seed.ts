@@ -1,26 +1,19 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { LoggerService } from '@/common/logger/logger.service';
+import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { Resource } from '../entities/resource.entity';
+import { ResourcesService } from '../services/resources.service';
 
 @Injectable()
-export class ResourceSeeder implements OnModuleInit {
+export class ResourceSeed {
+  private readonly logger = new LoggerService(ResourceSeed.name);
   constructor(
-    @InjectRepository(Resource)
-    private readonly resourceRepository: Repository<Resource>,
+    private readonly resourcesService: ResourcesService,
     private readonly dataSource: DataSource,
   ) {}
 
-  async onModuleInit() {
-    await this.seed();
-  }
-
-  /**
-   * Seed all entities as resources
-   */
-  async seed(): Promise<void> {
-    console.log('🌱 Starting resource seeding...');
+  async run(): Promise<void> {
+    this.logger.log('🌱 Starting resource seeding...');
 
     const entities = this.dataSource.entityMetadatas;
     const resources: Partial<Resource>[] = [];
@@ -42,15 +35,30 @@ export class ResourceSeeder implements OnModuleInit {
       resources.push(resource);
     }
 
-    // Insert or update resources
+    // Insert or update resources using service
     for (const resource of resources) {
-      await this.resourceRepository.upsert(
-        resource,
-        ['name'], // Conflict resolution on name
-      );
+      try {
+        // Try to find existing resource
+        const existingResource = await this.resourcesService
+          .getSingle({ name: resource.name })
+          .catch(() => null);
+
+        if (existingResource) {
+          this.logger.log(`Resource already exists: ${resource.name}`);
+        } else {
+          // Create new resource using service
+          await this.resourcesService.create(resource);
+          this.logger.log(`Created resource: ${resource.name}`);
+        }
+      } catch (error: unknown) {
+        this.logger.error(
+          `Error creating resource ${resource.name}:`,
+          error instanceof Error ? error.message : String(error),
+        );
+      }
     }
 
-    console.log(`✅ Seeded ${resources.length} resources`);
+    this.logger.log(`✅ Seeded ${resources.length} resources`);
   }
 
   /**

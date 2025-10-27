@@ -5,7 +5,7 @@ import { LoggerService } from '@/common/logger/logger.service';
 export class AppService {
   private readonly logger = new LoggerService(AppService.name);
 
-  constructor() { }
+  constructor() {}
 
   getAppInfo() {
     this.logger.log('Getting app info');

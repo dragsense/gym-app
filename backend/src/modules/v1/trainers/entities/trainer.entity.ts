@@ -1,17 +1,14 @@
-import {
-  Entity,
-  Column,
-  ManyToOne,
-  JoinColumn,
-} from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { GeneralBaseEntity } from '@/common/entities';
 import { User } from '@/modules/v1/users/entities/user.entity';
 
 @Entity('trainers')
 export class Trainer extends GeneralBaseEntity {
-
-  @ApiProperty({ example: 'Fitness Training', description: 'Trainer specialization' })
+  @ApiProperty({
+    example: 'Fitness Training',
+    description: 'Trainer specialization',
+  })
   @Column({ type: 'varchar', length: 255 })
   specialization: string;
 
@@ -19,7 +16,10 @@ export class Trainer extends GeneralBaseEntity {
   @Column({ type: 'int' })
   experience: number;
 
-  @ApiProperty({ example: 'Certified Personal Trainer', description: 'Certification' })
+  @ApiProperty({
+    example: 'Certified Personal Trainer',
+    description: 'Certification',
+  })
   @Column({ type: 'varchar', length: 255, nullable: true })
   certification?: string;
 
@@ -32,8 +32,12 @@ export class Trainer extends GeneralBaseEntity {
   @JoinColumn()
   user: User;
 
-  @ApiProperty({ type: () => User, description: 'Created by user' })
-  @ManyToOne(() => User, { eager: true })
+  @ApiPropertyOptional({
+    type: () => User,
+    description: 'User who created this trainer record',
+    required: false,
+  })
+  @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'createdByUserId' })
-  createdBy: User;
+  createdBy?: User;
 }

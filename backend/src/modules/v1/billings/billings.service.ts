@@ -2,12 +2,17 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  Inject,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 
 import { Billing } from './entities/billing.entity';
-import { CreateBillingDto, UpdateBillingDto, BillingListDto } from '@shared/dtos';
+import {
+  CreateBillingDto,
+  UpdateBillingDto,
+  BillingListDto,
+} from '@shared/dtos';
 import { IMessageResponse } from '@shared/interfaces';
 import { LoggerService } from '@/common/logger/logger.service';
 import { CrudService } from '@/common/crud/crud.service';
@@ -18,6 +23,8 @@ import { JwtService } from '@nestjs/jwt';
 import { StripeService } from '../stripe/stripe.service';
 import { StripeBillingService } from '../stripe/services/stripe-billing.service';
 import { EBillingStatus } from '@shared/enums/billing.enum';
+import { REQUEST } from '@nestjs/core';
+import { Request } from 'express';
 
 @Injectable()
 export class BillingsService extends CrudService<Billing> {
@@ -32,45 +39,57 @@ export class BillingsService extends CrudService<Billing> {
     private readonly stripeService: StripeService,
     dataSource: DataSource,
     eventService: EventService,
+    @Inject(REQUEST) request: Request,
   ) {
     const crudOptions: CrudOptions = {
       restrictedFields: ['recipientUser.password'],
       searchableFields: ['title', 'description', 'notes'],
     };
-    super(billingRepo, dataSource, eventService, crudOptions);
+    super(billingRepo, dataSource, eventService, request, crudOptions);
   }
 
-  async createBilling(createBillingDto: CreateBillingDto): Promise<IMessageResponse & { billing: Billing }> {
+  async createBilling(
+    createBillingDto: CreateBillingDto,
+  ): Promise<IMessageResponse & { billing: Billing }> {
     // Check if trainer exists and is actually a trainer
-    const recipientUser = await this.usersService.getSingle(createBillingDto.recipientUser.id);
+    const recipientUser = await this.usersService.getSingle(
+      createBillingDto.recipientUser.id,
+    );
 
     if (!recipientUser) {
-      throw new NotFoundException('Recipient user not found or invalid recipient level');
+      throw new NotFoundException(
+        'Recipient user not found or invalid recipient level',
+      );
     }
 
     // Use CRUD service create method
-    const billing = await this.create(createBillingDto,
-      {
-        beforeCreate: async (manager: EntityManager) => {
-          return {
-            ...createBillingDto,
-            recipientUser: {
-              id: createBillingDto.recipientUser.id,
-            },
-          };
-        },
-      }
-    );
+    const billing = await this.create(createBillingDto, {
+      beforeCreate: async (manager: EntityManager) => {
+        return {
+          ...createBillingDto,
+          recipientUser: {
+            id: createBillingDto.recipientUser.id,
+          },
+        };
+      },
+    });
 
     return { message: 'Billing created successfully.', billing };
   }
 
-  async updateBilling(id: string, updateBillingDto: UpdateBillingDto): Promise<IMessageResponse> {
+  async updateBilling(
+    id: string,
+    updateBillingDto: UpdateBillingDto,
+  ): Promise<IMessageResponse> {
     if (updateBillingDto.recipientUser && updateBillingDto.recipientUser.id) {
       // Check if trainer exists and is actually a trainer
-      const recipientUser = await this.usersService.getSingle(updateBillingDto.recipientUser.id);
+      const recipientUser = await this.usersService.getSingle(
+        updateBillingDto.recipientUser.id,
+      );
       if (!recipientUser) {
-        throw new NotFoundException('Recipient user not found or invalid recipient level');
+        throw new NotFoundException(
+          'Recipient user not found or invalid recipient level',
+        );
       }
     }
     // Update billing data
@@ -81,8 +100,10 @@ export class BillingsService extends CrudService<Billing> {
     };
   }
 
-
-  async handleCheckoutSuccess(token: string, sessionId: string): Promise<{
+  async handleCheckoutSuccess(
+    token: string,
+    sessionId: string,
+  ): Promise<{
     success: boolean;
     billing: any | null;
   }> {
@@ -91,23 +112,25 @@ export class BillingsService extends CrudService<Billing> {
       const decoded = this.jwtService.verify(token);
       const { id: userId, billingId } = decoded;
 
-
       const billing = await this.getSingle(billingId, {
-        _relations: ['recipientUser']
+        _relations: ['recipientUser'],
       });
 
-      let success = false
+      let success = false;
 
       try {
-        const session = sessionId ? await this.stripeBillingService.getCheckoutSession(sessionId) : null;
+        const session = sessionId
+          ? await this.stripeBillingService.getCheckoutSession(sessionId)
+          : null;
 
         if (session) {
-
-          if (session.status === 'complete' && session.payment_status === 'paid') {
+          if (
+            session.status === 'complete' &&
+            session.payment_status === 'paid'
+          ) {
             await this.stripeService.handleSessionPaymentSuccess(session);
-            success = true
+            success = true;
           }
-
         }
       } catch (error) {
         console.error(`Failed to get checkout session: ${error.message}`);
@@ -115,12 +138,13 @@ export class BillingsService extends CrudService<Billing> {
 
       return {
         success,
-        billing
+        billing,
       };
-
     } catch (error) {
       console.error(`Checkout success handling failed: ${error.message}`);
-      throw new BadRequestException(`Failed to complete order purchase: ${error.message}`);
+      throw new BadRequestException(
+        `Failed to complete order purchase: ${error.message}`,
+      );
     }
   }
 
@@ -130,16 +154,16 @@ export class BillingsService extends CrudService<Billing> {
     billing: null;
   }> {
     try {
-
       return {
         message: 'Billing payment was canceled. You can try again anytime.',
         success: false,
-        billing: null
+        billing: null,
       };
-
     } catch (error) {
       console.error(`Checkout cancel handling failed: ${error.message}`);
-      throw new BadRequestException(`Failed to handle checkout cancellation: ${error.message}`);
+      throw new BadRequestException(
+        `Failed to handle checkout cancellation: ${error.message}`,
+      );
     }
   }
 }

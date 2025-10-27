@@ -2,7 +2,11 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Inject,
+  Scope,
 } from '@nestjs/common';
+import { REQUEST } from '@nestjs/core';
+import { Request } from 'express';
 import {
   Repository,
   FindOptionsWhere,
@@ -24,17 +28,19 @@ import {
   RelationFilterOptions,
 } from '@shared/decorators/crud.dto.decorators';
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
   protected readonly logger = new LoggerService(CrudService.name);
   protected readonly repository: Repository<T>;
   protected readonly dataSource: DataSource;
   protected readonly eventService: EventService;
   protected options: CrudOptions;
+
   constructor(
     repository: Repository<T>,
     dataSource: DataSource,
     eventService: EventService,
+    @Inject(REQUEST) private readonly request: Request,
     options?: CrudOptions, // ✅ optional, child can pass this
   ) {
     this.repository = repository;
@@ -47,6 +53,25 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
       defaultSort: { field: 'id', order: 'ASC' }, // Default sort by ID ascending
       ...options,
     };
+  }
+
+  /**
+   * Get the current user ID from request context
+   */
+  protected getCurrentUserId(): string | undefined {
+    const user = (this.request as any)?.user;
+    return user?.id;
+  }
+
+  /**
+   * Automatically add createdByUserId if user is authenticated
+   */
+  protected enrichWithCreatedBy(data: any): any {
+    const userId = this.getCurrentUserId();
+    if (userId && !data.createdByUserId) {
+      return { ...data, createdByUserId: userId };
+    }
+    return data;
   }
 
   /**
@@ -64,14 +89,14 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
     await queryRunner.startTransaction();
 
     try {
-      let processedData = createDto;
+      let processedData = this.enrichWithCreatedBy(createDto as any);
       // Execute beforeCreate callback if provided
       if (callbacks?.beforeCreate) {
         processedData = await callbacks.beforeCreate(queryRunner.manager);
       }
 
       // Emit before create event
-      const entity = this.repository.create(processedData as any);
+      const entity = this.repository.create(processedData);
       const savedEntity = await queryRunner.manager.save(entity);
       const finalEntity = Array.isArray(savedEntity)
         ? savedEntity[0]

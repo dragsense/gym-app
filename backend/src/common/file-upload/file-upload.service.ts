@@ -1,16 +1,27 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository, DataSource } from 'typeorm';
 import { FileUpload } from './entities/file-upload.entity';
-import { FileListDto, CreateFileUploadDto, UpdateFileUploadDto } from '@shared/dtos/file-upload-dtos/file-upload.dto';
+import {
+  FileListDto,
+  CreateFileUploadDto,
+  UpdateFileUploadDto,
+} from '@shared/dtos/file-upload-dtos/file-upload.dto';
 import { IPaginatedResponse } from '@shared/interfaces';
 import { ConfigService } from '@nestjs/config';
 import { detectFileType } from '@/lib/utils/detect-file-type.util';
 import { OmitType } from '@shared/lib/type-utils';
 import { CrudService } from '@/common/crud/crud.service';
 import { EventService } from '../helper/services/event.service';
+import { REQUEST } from '@nestjs/core';
+import { Request } from 'express';
 
 @Injectable()
 export class FileUploadService extends CrudService<FileUpload> {
@@ -22,17 +33,17 @@ export class FileUploadService extends CrudService<FileUpload> {
     private configService: ConfigService,
     dataSource: DataSource,
     eventService: EventService,
+    @Inject(REQUEST) request: Request,
   ) {
-    super(fileRepo, dataSource, eventService);
-    this.appUrl = this.configService.get<string>('app.url') || 'http://localhost:3000';
+    super(fileRepo, dataSource, eventService, request);
+    this.appUrl =
+      this.configService.get<string>('app.url') || 'http://localhost:3000';
   }
   private ensureDirectoryExists(dir: string) {
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
   }
-
-
 
   /**
    * Create file: If file is provided, upload it (ignore URL). Otherwise, use URL.
@@ -44,7 +55,6 @@ export class FileUploadService extends CrudService<FileUpload> {
     saveFile: boolean = true,
     manager?: EntityManager,
   ): Promise<FileUpload> {
-
     const folder = createDto.folder || 'general';
 
     // If physical file is provided, upload it (ignore URL)
@@ -77,7 +87,9 @@ export class FileUploadService extends CrudService<FileUpload> {
         url,
       };
 
-      return manager ? await manager.save(this.fileRepo.create(fileData)) : await this.create(fileData);
+      return manager
+        ? await manager.save(this.fileRepo.create(fileData))
+        : await this.create(fileData);
     }
 
     // If no file but URL is provided
@@ -90,7 +102,9 @@ export class FileUploadService extends CrudService<FileUpload> {
         url: createDto.url,
       };
 
-      return manager ? await manager.save(this.fileRepo.create(fileData)) : await this.create(fileData);
+      return manager
+        ? await manager.save(this.fileRepo.create(fileData))
+        : await this.create(fileData);
     }
 
     throw new NotFoundException('Either file or url must be provided');
@@ -110,9 +124,6 @@ export class FileUploadService extends CrudService<FileUpload> {
     await this.delete(file.id);
   }
 
-
-
-
   /**
    * Update file: If file is provided, delete old and upload new (ignore URL). Otherwise, update metadata only.
    * Auto-corrects type based on file mimetype if file is provided
@@ -124,8 +135,6 @@ export class FileUploadService extends CrudService<FileUpload> {
     saveFile: boolean = true,
     manager?: EntityManager,
   ): Promise<FileUpload> {
-
-
     const existingFile = await this.getSingle(id);
 
     // If physical file is provided, delete old and upload new (ignore URL)
@@ -138,7 +147,12 @@ export class FileUploadService extends CrudService<FileUpload> {
 
       // Upload new file
       const uploadFolder = updateData.folder || existingFile.folder;
-      const uploadDir = path.join(process.cwd(), 'public', 'uploads', uploadFolder);
+      const uploadDir = path.join(
+        process.cwd(),
+        'public',
+        'uploads',
+        uploadFolder,
+      );
       this.ensureDirectoryExists(uploadDir);
 
       const timestamp = Date.now();
@@ -168,25 +182,29 @@ export class FileUploadService extends CrudService<FileUpload> {
       if (updateData.type) existingFile.type = updateData.type;
     }
 
-    return manager ? await manager.save(existingFile) : await this.update(id, existingFile);
+    return manager
+      ? await manager.save(existingFile)
+      : await this.update(id, existingFile);
   }
 
-
-  async saveFiles(fileUploads: { file: Express.Multer.File, fileUpload: FileUpload }[]): Promise<void> {
-
-
+  async saveFiles(
+    fileUploads: { file: Express.Multer.File; fileUpload: FileUpload }[],
+  ): Promise<void> {
     for (let i = 0; i < fileUploads.length; i++) {
-
       if (!fileUploads[i].file) {
         throw new BadRequestException('File not found');
       }
 
-      const uploadDir = path.join(process.cwd(), 'public', 'uploads', fileUploads[i].fileUpload.folder);
+      const uploadDir = path.join(
+        process.cwd(),
+        'public',
+        'uploads',
+        fileUploads[i].fileUpload.folder,
+      );
       this.ensureDirectoryExists(uploadDir);
       const physicalPath = path.join(uploadDir, fileUploads[i].fileUpload.name);
       fs.writeFileSync(physicalPath, fileUploads[i].file.buffer);
     }
-
   }
 
   async deleteFiles(fileUploads: FileUpload[]): Promise<void> {

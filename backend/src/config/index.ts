@@ -10,3 +10,4 @@ export { default as cacheConfig, getCacheConfig } from './cache.config';
 export { default as scalarConfig } from './scalar.config';
 export { default as superAdminConfig } from './admin-user.config';
 export { default as stripeConfig } from './stripe.config';
+export { default as healthConfig } from './health.config';

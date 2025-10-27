@@ -1,7 +1,6 @@
 import { registerAs } from '@nestjs/config';
 import { ConfigService } from '@nestjs/config';
 
-
 export default registerAs('bullQueue', () => ({
   redis: {
     host: process.env.REDIS_HOST || 'localhost',
@@ -23,7 +22,6 @@ export default registerAs('bullQueue', () => ({
     enableOfflineQueue: false,
   },
 }));
-
 
 export const getBullQueueConfig = (configService: ConfigService) => {
   const redisConfig = configService.get('bullQueue.redis');

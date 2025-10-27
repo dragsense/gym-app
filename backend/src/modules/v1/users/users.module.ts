@@ -18,6 +18,7 @@ import { RefreshToken } from '../auth/entities/tokens.entity';
 import { User } from '@/modules/v1/users/entities/user.entity';
 import { CrudModule } from '@/common/crud/crud.module';
 import { UserSeeder } from './seeders/user.seeder';
+import { UserSeed } from './seeder/user.seed';
 import { ActionModule } from '@/common/helper/action.module';
 
 @Module({
@@ -32,15 +33,18 @@ import { ActionModule } from '@/common/helper/action.module';
       inject: [ConfigService],
     }),
   ],
-  exports: [UsersService, UserEmailService],
+  exports: [UsersService, UserEmailService, UserSeed],
   controllers: [UsersController],
-  providers: [UsersService,
+  providers: [
+    UsersService,
     UserEmailService,
     UserEventListenerService,
     UserProcessor,
     UserSubscriber,
     PasswordService,
     TokenService,
-    UserSeeder],
+    UserSeeder,
+    UserSeed,
+  ],
 })
-export class UsersModule { }
+export class UsersModule {}

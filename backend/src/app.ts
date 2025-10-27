@@ -19,7 +19,7 @@ export async function app() {
   });
 
   const configService = app.get(ConfigService);
- 
+
   // Use custom logger globally
   const loggerService = app.get(LoggerService);
   loggerService.setContext('Bootstrap');
@@ -51,4 +51,3 @@ export async function app() {
 
   loggerService.log(`Application is running on: http://localhost:${port}`);
 }
-

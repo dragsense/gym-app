@@ -1,16 +1,10 @@
-import {
-  Entity,
-  Column,
-  ManyToOne,
-  JoinColumn,
-} from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { GeneralBaseEntity } from '@/common/entities';
 import { User } from '@/modules/v1/users/entities/user.entity';
 
 @Entity('clients')
 export class Client extends GeneralBaseEntity {
-
   @ApiProperty({ example: 'Weight Loss', description: 'Client goal' })
   @Column({ type: 'varchar', length: 255 })
   goal: string;
@@ -26,10 +20,14 @@ export class Client extends GeneralBaseEntity {
   @ApiProperty({ type: () => User, description: 'Associated user' })
   @ManyToOne(() => User, { eager: true })
   @JoinColumn()
-  user: User; 
+  user: User;
 
-  @ApiProperty({ type: () => User, description: 'Created by user' })
-  @ManyToOne(() => User, { eager: true })
+  @ApiPropertyOptional({
+    type: () => User,
+    description: 'User who created this client record',
+    required: false,
+  })
+  @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'createdByUserId' })
-  createdBy: User;
+  createdBy?: User;
 }

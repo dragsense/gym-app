@@ -7,7 +7,6 @@ import {
   Delete,
   Param,
   Query,
-  Version,
   Patch,
 } from '@nestjs/common';
 
@@ -54,7 +53,7 @@ export class UsersController {
     type: UserPaginatedDto,
   })
   @Get()
-  findAll(@Query() query: UserListDto, @AuthUser() user: any) {
+  findAll(@Query() query: UserListDto) {
     return this.usersService.get(query, UserListDto);
   }
 
@@ -66,9 +65,10 @@ export class UsersController {
   })
   @ApiResponse({ status: 404, description: 'User not found' })
   @Get('me')
-  findMe(@AuthUser() user: any) {
-    const userId = user.id;
-    return this.usersService.getSingle(userId, { _relations: ['profile'] });
+  findMe(@AuthUser() currentUser: User) {
+    return this.usersService.getSingle(currentUser.id, {
+      _relations: ['profile'],
+    });
   }
 
   @ApiOperation({ summary: 'Get user by ID' })
@@ -95,7 +95,7 @@ export class UsersController {
   @ApiResponse({ status: 201, description: 'User created successfully' })
   @ApiResponse({ status: 409, description: 'Email is already taken' })
   @Post()
-  create(@AuthUser() user: any, @Body() createUserDto: CreateUserDto) {
+  create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.createUser(createUserDto);
   }
 
@@ -108,11 +108,7 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'User updated successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })
   @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateUserDto: UpdateUserDto,
-    @AuthUser() currentUser: any,
-  ) {
+  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.usersService.updateUser(id, updateUserDto);
   }
 
@@ -121,8 +117,8 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'User deleted successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })
   @Delete(':id')
-  async remove(@Param('id') id: string, @AuthUser() currentUser: any) {
-    await this.usersService.delete(id);
+  async remove(@Param('id') id: string) {
+    await this.usersService.delete({ id });
   }
 
   @ApiOperation({ summary: 'Reset authenticated user password' })
@@ -134,12 +130,10 @@ export class UsersController {
   @ApiResponse({ status: 404, description: 'User not found' })
   @Put('me/reset-password')
   async resetPassword(
-    @AuthUser() user: any,
+    @AuthUser() currentUser: User,
     @Body() resetPasswordDto: ResetPasswordDto,
   ) {
-    const id = user.id;
-
-    await this.usersService.resetPassword(id, resetPasswordDto);
+    await this.usersService.resetPassword(currentUser.id, resetPasswordDto);
 
     return { message: 'Password reset successfully' };
   }

@@ -117,7 +117,7 @@ export function SingleHandler<
             const err = error instanceof Error ? error : new Error(String(error));
             store.setState({
               response: null,
-              isLoading: true,
+              isLoading: false,
               error: err,
               isSuccess: false,
             });

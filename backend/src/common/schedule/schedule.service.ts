@@ -1,15 +1,25 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, Repository, MoreThanOrEqual, DataSource } from 'typeorm';
+import {
+  EntityManager,
+  Repository,
+  MoreThanOrEqual,
+  DataSource,
+} from 'typeorm';
 import { Schedule } from './entities/schedule.entity';
 import {
   CreateScheduleDto,
-  UpdateScheduleDto
+  UpdateScheduleDto,
 } from '@shared/dtos/schedule-dtos/schedule.dto';
-import { EScheduleStatus, EScheduleFrequency } from '@shared/enums/schedule.enum';
+import {
+  EScheduleStatus,
+  EScheduleFrequency,
+} from '@shared/enums/schedule.enum';
 import { ScheduleUtils } from './utils/schedule.utils';
 import { CrudService } from '@/common/crud/crud.service';
 import { EventService } from '../helper/services/event.service';
+import { REQUEST } from '@nestjs/core';
+import { Request } from 'express';
 
 @Injectable()
 export class ScheduleService extends CrudService<Schedule> {
@@ -18,8 +28,9 @@ export class ScheduleService extends CrudService<Schedule> {
     private scheduleRepo: Repository<Schedule>,
     dataSource: DataSource,
     eventService: EventService,
+    @Inject(REQUEST) request: Request,
   ) {
-    super(scheduleRepo, dataSource, eventService);
+    super(scheduleRepo, dataSource, eventService, request);
   }
 
   /**
@@ -35,7 +46,9 @@ export class ScheduleService extends CrudService<Schedule> {
 
     // Keep dates with timezone info as sent from frontend
     const startDate = new Date(createDto.startDate || new Date());
-    const endDate = createDto.endDate ? new Date(new Date(createDto.endDate).setHours(23, 59, 59, 999)) : undefined;
+    const endDate = createDto.endDate
+      ? new Date(new Date(createDto.endDate).setHours(23, 59, 59, 999))
+      : undefined;
     const selectedTimezone = createDto.timezone || timezone || 'UTC';
     // Generate cron expression
     const cronExpression = ScheduleUtils.generateCronExpression(
@@ -46,7 +59,7 @@ export class ScheduleService extends CrudService<Schedule> {
         months: createDto.months,
       },
       createDto.timeOfDay || '00:00',
-      0 // No delay for first run
+      0, // No delay for first run
     );
 
     // Calculate next run date using cron-parser
@@ -54,7 +67,7 @@ export class ScheduleService extends CrudService<Schedule> {
       cronExpression,
       startDate,
       endDate || null,
-      selectedTimezone
+      selectedTimezone,
     );
 
     const schedule = this.scheduleRepo.create({
@@ -71,13 +84,19 @@ export class ScheduleService extends CrudService<Schedule> {
       failureCount: 0,
     });
 
-    return manager ? await manager.save(schedule) : await this.scheduleRepo.save(schedule);
+    return manager
+      ? await manager.save(schedule)
+      : await this.scheduleRepo.save(schedule);
   }
 
   /**
    * Track successful execution
    */
-  async trackExecution(id: string, success: boolean, errorMessage?: string): Promise<void> {
+  async trackExecution(
+    id: string,
+    success: boolean,
+    errorMessage?: string,
+  ): Promise<void> {
     const schedule = await this.getSingle(id);
 
     schedule.executionCount += 1;
@@ -113,27 +132,29 @@ export class ScheduleService extends CrudService<Schedule> {
     switch (dto.frequency) {
       case EScheduleFrequency.WEEKLY:
         if (!dto.weekDays || dto.weekDays.length === 0) {
-          throw new BadRequestException('weekDays is required for WEEKLY frequency');
+          throw new BadRequestException(
+            'weekDays is required for WEEKLY frequency',
+          );
         }
         break;
 
       case EScheduleFrequency.MONTHLY:
         if (!dto.monthDays || dto.monthDays.length === 0) {
-          throw new BadRequestException('monthDays is required for MONTHLY frequency');
+          throw new BadRequestException(
+            'monthDays is required for MONTHLY frequency',
+          );
         }
         break;
 
       case EScheduleFrequency.YEARLY:
         if (!dto.months || dto.months.length === 0) {
-          throw new BadRequestException('months is required for YEARLY frequency');
+          throw new BadRequestException(
+            'months is required for YEARLY frequency',
+          );
         }
         break;
     }
   }
-
-
-
-
 
   /**
    * Get schedule by ID (alias for findOne)
@@ -174,7 +195,7 @@ export class ScheduleService extends CrudService<Schedule> {
       const nextRunAt = ScheduleUtils.getNextRunDate(
         schedule.cronExpression,
         new Date(),
-        timezone
+        timezone,
       );
 
       // Check if next run is beyond end date
@@ -197,9 +218,14 @@ export class ScheduleService extends CrudService<Schedule> {
     const schedule = await this.getSingle(id);
 
     // If frequency-related fields changed, recalculate cron and nextRunDate
-    if (updateData.startDate || updateData.frequency || updateData.timeOfDay ||
-      updateData.weekDays !== undefined || updateData.monthDays || updateData.months) {
-
+    if (
+      updateData.startDate ||
+      updateData.frequency ||
+      updateData.timeOfDay ||
+      updateData.weekDays !== undefined ||
+      updateData.monthDays ||
+      updateData.months
+    ) {
       // Merge with existing schedule for validation
       const merged = { ...schedule, ...updateData };
       this.validateScheduleConfig(merged);
@@ -208,10 +234,12 @@ export class ScheduleService extends CrudService<Schedule> {
         ? new Date(updateData.startDate)
         : schedule.startDate;
 
-      const newEndDate = updateData.endDate !== undefined
-        ? (updateData.endDate ? new Date(new Date(updateData.endDate).setHours(23, 59, 59, 999)) : undefined)
-        : schedule.endDate;
-
+      const newEndDate =
+        updateData.endDate !== undefined
+          ? updateData.endDate
+            ? new Date(new Date(updateData.endDate).setHours(23, 59, 59, 999))
+            : undefined
+          : schedule.endDate;
 
       const selectedTimezone = merged.timezone || timezone || 'UTC';
 
@@ -224,7 +252,7 @@ export class ScheduleService extends CrudService<Schedule> {
           months: merged.months,
         },
         merged.timeOfDay || '00:00',
-        0
+        0,
       );
 
       // Calculate next run date
@@ -232,7 +260,7 @@ export class ScheduleService extends CrudService<Schedule> {
         cronExpression,
         newStartDate,
         newEndDate || null,
-        selectedTimezone
+        selectedTimezone,
       );
 
       Object.assign(schedule, updateData, {
@@ -247,10 +275,8 @@ export class ScheduleService extends CrudService<Schedule> {
       Object.assign(schedule, updateData);
     }
 
-    return manager ? await manager.save(schedule) : await this.scheduleRepo.save(schedule);
+    return manager
+      ? await manager.save(schedule)
+      : await this.scheduleRepo.save(schedule);
   }
-
-
-
 }
-

@@ -6,6 +6,7 @@ import {
   OneToMany,
   BeforeUpdate,
   BeforeInsert,
+  ManyToOne,
 } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
@@ -69,6 +70,15 @@ export class User extends GeneralBaseEntity {
     cascade: true,
   })
   stripeConnectAccount: StripeConnectAccount;
+
+  @ApiProperty({
+    type: () => User,
+    description: 'User who created this user record',
+    required: false,
+  })
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'createdByUserId' })
+  createdBy: User;
 
   @BeforeInsert()
   @BeforeUpdate()

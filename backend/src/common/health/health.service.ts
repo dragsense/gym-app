@@ -1,4 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import * as https from 'https';
+
 import { ConfigService } from '@nestjs/config';
 import { EntityRouterService } from '../database/entity-router.service';
 import { DatabaseManager } from '../database/database-manager.service';
@@ -15,13 +17,13 @@ import { LoggerService } from '../logger/logger.service';
 @Injectable()
 export class HealthService {
   private readonly logger = new LoggerService(HealthService.name);
-  private startTime: Date = new Date();
+  private readonly startTime: Date = new Date();
 
   constructor(
     private readonly configService: ConfigService,
     private readonly entityRouter: EntityRouterService,
     private readonly databaseManager: DatabaseManager,
-  ) {}
+  ) { }
 
   /**
    * Get comprehensive health status
@@ -83,12 +85,14 @@ export class HealthService {
             lastChecked: new Date(),
           });
         } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : 'Unknown error';
           connectionHealth.push({
             name,
             status: EHealthStatus.UNHEALTHY,
             responseTime: 0,
             lastChecked: new Date(),
-            error: error.message,
+            error: errorMessage,
           });
         }
       }
@@ -109,7 +113,9 @@ export class HealthService {
         lastChecked: new Date(),
       };
     } catch (error) {
-      this.logger.error(`Database health check failed: ${error.message}`);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Database health check failed: ${errorMessage}`);
       return {
         status: EHealthStatus.UNHEALTHY,
         connections: [],
@@ -123,7 +129,7 @@ export class HealthService {
   /**
    * Check memory health
    */
-  private async checkMemoryHealth(): Promise<IMemoryHealth> {
+  private checkMemoryHealth(): Promise<IMemoryHealth> {
     try {
       const memUsage = process.memoryUsage();
       const total = memUsage.heapTotal;
@@ -139,51 +145,52 @@ export class HealthService {
         status = EHealthStatus.DEGRADED;
       }
 
-      return {
+      return Promise.resolve({
         status,
         used,
         total,
         percentage: Math.round(percentage * 100) / 100,
         free,
-      };
+      });
     } catch (error) {
-      this.logger.error(`Memory health check failed: ${error.message}`);
-      return {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Memory health check failed: ${errorMessage}`);
+      return Promise.resolve({
         status: EHealthStatus.UNHEALTHY,
         used: 0,
         total: 0,
         percentage: 0,
         free: 0,
-      };
+      });
     }
   }
 
-  /**
-   * Check network health
-   */
   private async checkNetworkHealth(): Promise<INetworkHealth> {
     try {
-      // Simulate network check
       const startTime = Date.now();
-      await this.entityRouter.executeQuery('SELECT 1');
+      const pingUrl =
+        this.configService.get<string>('health.pingUrl') ||
+        'https://www.google.com';
+
+      // Make HTTPS request to check network connectivity
+      await this.pingUrl(pingUrl);
       const latency = Date.now() - startTime;
 
       let status = EHealthStatus.HEALTHY;
-
-      if (latency > 5000) {
-        status = EHealthStatus.UNHEALTHY;
-      } else if (latency > 1000) {
-        status = EHealthStatus.DEGRADED;
-      }
+      if (latency > 2000) status = EHealthStatus.UNHEALTHY;
+      else if (latency > 500) status = EHealthStatus.DEGRADED;
 
       return {
         status,
         latency,
-        throughput: 1000, // Simplified
-        connections: 10, // Simplified
+        throughput: 0, // could later measure upload/download speed
+        connections: 1,
       };
     } catch (error) {
-      this.logger.error(`Network health check failed: ${error.message}`);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Network health check failed: ${errorMessage}`);
       return {
         status: EHealthStatus.UNHEALTHY,
         latency: 0,
@@ -191,6 +198,29 @@ export class HealthService {
         connections: 0,
       };
     }
+  }
+
+  /**
+   * Ping a URL via HTTPS
+   */
+  private pingUrl(url: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const request = https.get(url, (response) => {
+        response.on('data', () => { });
+        response.on('end', () => {
+          resolve();
+        });
+      });
+
+      request.on('error', (error) => {
+        reject(new Error(error?.message || 'Unknown error'));
+      });
+
+      request.setTimeout(5000, () => {
+        request.destroy();
+        reject(new Error('Request timeout'));
+      });
+    });
   }
 
   /**

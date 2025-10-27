@@ -1,25 +1,17 @@
 import {
   ConflictException,
+  Inject,
   Injectable,
   NotFoundException,
-  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  DataSource,
-  EntityManager,
-  Repository,
-  FindOptionsWhere,
-  DeepPartial,
-  In,
-} from 'typeorm';
-import { ConfigService } from '@nestjs/config';
+import { DataSource, EntityManager, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 
 import { User } from '@/modules/v1/users/entities/user.entity';
 import { Profile } from '@/modules/v1/users/profiles/entities/profile.entity';
-import { CreateUserDto, UpdateUserDto, UserListDto } from '@shared/dtos';
-import { IMessageResponse, IPaginatedResponse } from '@shared/interfaces';
+import { CreateUserDto, UpdateUserDto } from '@shared/dtos';
+import { IMessageResponse } from '@shared/interfaces';
 import { ResetPasswordDto } from '@shared/dtos/user-dtos/reset-password.dto';
 import { PasswordService } from './services/password.service';
 import { TokenService } from '../auth/services/tokens.service';
@@ -29,6 +21,8 @@ import { CrudService } from '@/common/crud/crud.service';
 import { EventService } from '@/common/helper/services/event.service';
 import { ProfilesService } from './profiles/profiles.service';
 import { CrudOptions } from '@/common/crud/interfaces/crud.interface';
+import { REQUEST } from '@nestjs/core';
+import { Request } from 'express';
 
 @Injectable()
 export class UsersService extends CrudService<User> {
@@ -43,12 +37,13 @@ export class UsersService extends CrudService<User> {
     private tokenService: TokenService,
     dataSource: DataSource,
     eventService: EventService,
+    @Inject(REQUEST) request: Request,
   ) {
     const crudOptions: CrudOptions = {
       restrictedFields: ['password', 'passwordHistory'],
       searchableFields: ['email', 'profile.firstName', 'profile.lastName'],
     };
-    super(userRepo, dataSource, eventService, crudOptions);
+    super(userRepo, dataSource, eventService, request, crudOptions);
   }
 
   async getUserByEmail(email: string): Promise<User | null> {
@@ -137,7 +132,7 @@ export class UsersService extends CrudService<User> {
 
     // Update user data with callbacks
 
-    await this.update(id, userData, {
+    await this.update({ id }, userData, {
       beforeUpdate: async (existingEntity: User, manager: EntityManager) => {
         // Check if email is being changed and if it already exists
         if (userData.email && userData.email !== existingEntity.email) {
@@ -160,7 +155,7 @@ export class UsersService extends CrudService<User> {
           if (profile && existingUser.profile)
             await manager.update(Profile, existingUser.profile.id, profile);
         } catch (error) {
-          throw new Error('Failed to update user', error);
+          throw new Error('Failed to update user', { cause: error as Error });
         }
       },
     });

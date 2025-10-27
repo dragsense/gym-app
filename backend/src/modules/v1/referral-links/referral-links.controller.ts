@@ -20,9 +20,9 @@ import {
   CreateReferralLinkDto,
   UpdateReferralLinkDto,
   ReferralLinkListDto,
-  ReferralLinkDto,
-} from '@shared/dtos/referral-link-dtos';
-import { AuthUser } from '@/decorators/user.decorator';
+  SingleQueryDto,
+} from '@shared/dtos';
+import { ReferralLink } from './entities/referral-link.entity';
 
 @ApiTags('Referral Links')
 @ApiBearerAuth()
@@ -37,15 +37,8 @@ export class ReferralLinksController {
     description: 'Referral link created successfully',
   })
   @ApiResponse({ status: 400, description: 'Bad request' })
-  create(
-    @Body() createReferralLinkDto: CreateReferralLinkDto,
-    @AuthUser() user: any,
-  ) {
-    const userId = user.id;
-    return this.referralLinksService.createReferralLink(
-      createReferralLinkDto,
-      userId,
-    );
+  create(@Body() createReferralLinkDto: CreateReferralLinkDto) {
+    return this.referralLinksService.createReferralLink(createReferralLinkDto);
   }
 
   @Get()
@@ -56,7 +49,7 @@ export class ReferralLinksController {
     status: 200,
     description: 'Referral links retrieved successfully',
   })
-  findAll(@Query() query: ReferralLinkListDto, @AuthUser() user: any) {
+  findAll(@Query() query: ReferralLinkListDto) {
     return this.referralLinksService.get(query, ReferralLinkListDto);
   }
 
@@ -67,8 +60,11 @@ export class ReferralLinksController {
     description: 'Referral link retrieved successfully',
   })
   @ApiResponse({ status: 404, description: 'Referral link not found' })
-  findOne(@Param('id') id: string) {
-    return this.referralLinksService.getSingle(id);
+  findOne(
+    @Param('id') id: string,
+    @Query() query: SingleQueryDto<ReferralLink>,
+  ) {
+    return this.referralLinksService.getSingle(id, query);
   }
 
   @Patch(':id')

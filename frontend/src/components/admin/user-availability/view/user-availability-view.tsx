@@ -62,15 +62,7 @@ export default function UserAvailabilityView({
         );
     }
 
-    if (error) {
-        return (
-            <div className="flex items-center justify-center min-h-[400px]">
-                <div className="text-center">
-                    <p className="text-red-500">{error.message}</p>
-                </div>
-            </div>
-        );
-    }
+
 
     if (!response) {
         return (
@@ -88,6 +80,13 @@ export default function UserAvailabilityView({
                     </div>
                 }
             >
+
+                {error && (
+                    <div className="text-center">
+                        <p className="text-red-500">{error?.message}</p>
+                    </div>
+                )}
+
                 <div className="text-center py-8">
                     <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <h3 className="text-lg font-semibold mb-2">No Availability Set</h3>

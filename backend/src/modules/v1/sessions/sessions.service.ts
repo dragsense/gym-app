@@ -3,6 +3,7 @@ import {
   NotFoundException,
   ConflictException,
   BadRequestException,
+  Inject,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, Repository } from 'typeorm';
@@ -20,6 +21,8 @@ import { EventService } from '@/common/helper/services/event.service';
 import { CrudOptions } from '@/common/crud/interfaces/crud.interface';
 import { UsersService } from '../users/users.service';
 import { EUserLevels, EUserRole } from '@shared/enums';
+import { REQUEST } from '@nestjs/core';
+import { Request } from 'express';
 
 @Injectable()
 export class SessionsService extends CrudService<Session> {
@@ -31,25 +34,27 @@ export class SessionsService extends CrudService<Session> {
     private readonly usersService: UsersService,
     dataSource: DataSource,
     eventService: EventService,
+    @Inject(REQUEST) request: Request,
   ) {
     const crudOptions: CrudOptions = {
       restrictedFields: ['trainer.user.password', 'clients.user.password'],
       searchableFields: ['title', 'description', 'location', 'notes'],
     };
-    super(sessionRepo, dataSource, eventService, crudOptions);
+    super(sessionRepo, dataSource, eventService, request, crudOptions);
   }
 
   async createSession(
     createSessionDto: CreateSessionDto,
+    userId: string,
   ): Promise<IMessageResponse & { session: Session }> {
     if (!createSessionDto.trainerUser || !createSessionDto.trainerUser.id) {
       throw new BadRequestException('Trainer user is required');
     }
 
     // Check if trainer exists and is actually a trainer
-    const trainerUser = await this.usersService.getSingle(
-      createSessionDto.trainerUser.id,
-    );
+    const trainerUser = await this.usersService.getSingle({
+      id: createSessionDto.trainerUser.id,
+    });
     if (!trainerUser || trainerUser.level !== EUserLevels[EUserRole.TRAINER]) {
       throw new NotFoundException('Trainer not found or invalid trainer level');
     }
@@ -62,7 +67,9 @@ export class SessionsService extends CrudService<Session> {
 
     // Check if all clients exist and are actually clients
     for (const clientUserDto of createSessionDto.clientsUsers) {
-      const clientUser = await this.usersService.getSingle(clientUserDto.id);
+      const clientUser = await this.usersService.getSingle({
+        id: clientUserDto.id,
+      });
       if (!clientUser || clientUser.level !== EUserLevels[EUserRole.CLIENT]) {
         throw new NotFoundException(
           `Client with ID ${clientUserDto.id} not found or invalid client level`,
@@ -75,6 +82,9 @@ export class SessionsService extends CrudService<Session> {
       beforeCreate: async (manager: EntityManager) => {
         return {
           ...createSessionDto,
+          createdByUser: {
+            id: userId,
+          },
           trainerUser: {
             id: createSessionDto.trainerUser.id,
           },
@@ -91,11 +101,13 @@ export class SessionsService extends CrudService<Session> {
   async updateSession(
     id: string,
     updateSessionDto: UpdateSessionDto,
+    userId: string,
   ): Promise<IMessageResponse> {
     if (updateSessionDto.trainerUser && updateSessionDto.trainerUser.id) {
       // Check if trainer exists and is actually a trainer
       const trainerUser = await this.usersService.getSingle(
-        updateSessionDto.trainerUser.id,
+        { id: updateSessionDto.trainerUser.id },
+        { __relations: ['user'] },
       );
       if (
         !trainerUser ||
@@ -113,7 +125,9 @@ export class SessionsService extends CrudService<Session> {
     ) {
       // Check if all clients exist and are actually clients
       for (const clientUserDto of updateSessionDto.clientsUsers) {
-        const clientUser = await this.usersService.getSingle(clientUserDto.id);
+        const clientUser = await this.usersService.getSingle({
+          id: clientUserDto.id,
+        });
         if (!clientUser || clientUser.level !== EUserLevels[EUserRole.CLIENT]) {
           throw new NotFoundException(
             `Client with ID ${clientUserDto.id} not found or invalid client level`,
@@ -123,7 +137,7 @@ export class SessionsService extends CrudService<Session> {
     }
 
     // Update session data
-    await this.update(id, updateSessionDto);
+    await this.update({ id }, updateSessionDto);
 
     return {
       message: 'Session updated successfully',

@@ -245,6 +245,11 @@ export class EnvironmentVariables {
   @IsOptional()
   CLUSTER_WORKERS: number;
 
+  // Health Check Configuration
+  @IsString()
+  @IsOptional()
+  HEALTHCHECK_PING_URL: string;
+
   // Activity Logs Configuration
   @IsBoolean()
   @IsOptional()

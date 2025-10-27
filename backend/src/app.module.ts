@@ -11,6 +11,7 @@ import {
   configOptions,
   appConfig,
   cacheConfig,
+  healthConfig,
   databaseConfig,
   jwtConfig,
   mailerConfig,
@@ -54,7 +55,7 @@ import { SettingsModule } from './common/settings/settings.module';
 import { UserAvailabilityModule } from './modules/v1/user-availability/user-availability.module';
 import { PaymentMethodsModule } from './common/payment-methods/payment-methods.module';
 import { StripeModule } from './modules/v1/stripe/stripe.module';
-import { SeedsModule } from './common/seeds/seeds.module';
+import { SeedsModule } from './seeds/seeds.module';
 import { ActionModule } from './common/helper/action.module';
 import { getBullQueueConfig } from './config/bull-queue.config';
 import { CacheModule } from './common/cache/cache.module';
@@ -79,6 +80,7 @@ import { HealthModule } from './common/health/health.module';
         activityLogsConfig,
         stripeConfig,
         cacheConfig,
+        healthConfig,
       ],
       isGlobal: true,
     }),

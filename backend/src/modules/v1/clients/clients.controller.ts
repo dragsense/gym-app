@@ -1,10 +1,8 @@
 import {
   Controller,
   Get,
-  UseGuards,
   Body,
   Post,
-  Put,
   Delete,
   Param,
   Query,
@@ -31,6 +29,7 @@ import {
 } from '@shared/dtos';
 import { Client } from './entities/client.entity';
 import { AuthUser } from '@/decorators/user.decorator';
+import { User } from '../users/entities/user.entity';
 
 @ApiTags('Clients')
 @Controller('clients')
@@ -44,11 +43,8 @@ export class ClientsController {
     type: ClientPaginatedDto,
   })
   @Get()
-  findAll(@Query() query: ClientListDto, @AuthUser() user: any) {
-    return this.clientsService.get(
-      { ...query, createdByUserId: user.id },
-      ClientListDto,
-    );
+  findAll(@Query() query: ClientListDto) {
+    return this.clientsService.get(query, ClientListDto);
   }
 
   @ApiOperation({ summary: 'Get client by ID' })
@@ -60,10 +56,7 @@ export class ClientsController {
   })
   @ApiResponse({ status: 404, description: 'Client not found' })
   @Get(':id')
-  findOne(
-    @Param('id') id: string,
-    @Query() query: SingleQueryDto<Client>,
-  ) {
+  findOne(@Param('id') id: string, @Query() query: SingleQueryDto<Client>) {
     return this.clientsService.getSingle(id, query);
   }
 
@@ -74,8 +67,8 @@ export class ClientsController {
   })
   @ApiResponse({ status: 201, description: 'Client created successfully' })
   @Post()
-  create(@Body() createClientDto: CreateClientDto, @AuthUser() user: any) {
-    return this.clientsService.createClient(createClientDto, user.id);
+  create(@Body() createClientDto: CreateClientDto) {
+    return this.clientsService.createClient(createClientDto);
   }
 
   @ApiOperation({ summary: 'Update client by ID' })
@@ -87,10 +80,7 @@ export class ClientsController {
   @ApiResponse({ status: 200, description: 'Client updated successfully' })
   @ApiResponse({ status: 404, description: 'Client not found' })
   @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateClientDto: UpdateClientDto,
-  ) {
+  update(@Param('id') id: string, @Body() updateClientDto: UpdateClientDto) {
     return this.clientsService.updateClient(id, updateClientDto);
   }
 
@@ -99,7 +89,7 @@ export class ClientsController {
   @ApiResponse({ status: 200, description: 'Client deleted successfully' })
   @ApiResponse({ status: 404, description: 'Client not found' })
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    await this.clientsService.delete(id);
+  async remove(@Param('id') id: string, @AuthUser() currentUser: User) {
+    await this.clientsService.deleteClient(id, currentUser.id);
   }
 }

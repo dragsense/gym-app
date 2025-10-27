@@ -101,6 +101,15 @@ export class Session extends GeneralBaseEntity {
   clientsUsers: User[];
 
   @ApiPropertyOptional({
+    type: () => User,
+    description: 'User who created this session',
+    required: false,
+  })
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'createdByUserId' })
+  createdBy?: User;
+
+  @ApiPropertyOptional({
     example: EScheduleFrequency.DAILY,
     description: 'Session recurrence',
     enum: EScheduleFrequency,

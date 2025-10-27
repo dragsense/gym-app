@@ -1,45 +1,30 @@
-import {
-  Injectable,
-  ConflictException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { CrudService } from '@/common/crud/crud.service';
 import { ReferralLink } from './entities/referral-link.entity';
-import {
-  CreateReferralLinkDto,
-  UpdateReferralLinkDto,
-  ReferralLinkListDto,
-} from '@shared/dtos/referral-link-dtos';
-import { User } from '@/modules/v1/users/entities/user.entity';
+import { CreateReferralLinkDto, UpdateReferralLinkDto } from '@shared/dtos';
 import { EReferralLinkStatus } from '@shared/enums/referral-link.enum';
 import { EventService } from '@/common/helper/services/event.service';
-import { UsersService } from '../users/users.service';
+import { REQUEST } from '@nestjs/core';
+import { Request } from 'express';
 
 @Injectable()
 export class ReferralLinksService extends CrudService<ReferralLink> {
   constructor(
     @InjectRepository(ReferralLink)
     private readonly referralLinkRepository: Repository<ReferralLink>,
-    private readonly usersService: UsersService,
     dataSource: DataSource,
     eventService: EventService,
+    @Inject(REQUEST) request: Request,
   ) {
-    super(referralLinkRepository, dataSource, eventService);
+    super(referralLinkRepository, dataSource, eventService, request);
   }
 
   async createReferralLink(
     createReferralLinkDto: CreateReferralLinkDto,
-    userId: string,
   ): Promise<ReferralLink> {
     // Get user who created the link
-    const createdBy = await this.usersService.getSingle(userId);
-
-    if (!createdBy) {
-      throw new Error('User not found');
-    }
-
     // Generate unique referral code
     const referralCode = await this.generateUniqueReferralCode();
 
@@ -52,7 +37,6 @@ export class ReferralLinksService extends CrudService<ReferralLink> {
       ...createReferralLinkDto,
       referralCode,
       linkUrl,
-      createdBy: { id: createdBy.id },
       status: EReferralLinkStatus.ACTIVE,
       referralCount: 0,
       currentUses: 0,
@@ -72,12 +56,12 @@ export class ReferralLinksService extends CrudService<ReferralLink> {
         await this.getSingle({
           referralCode,
         });
-      } catch (error) {
-        if (error instanceof NotFoundException) {
-          isUnique = true;
-        } else {
-          throw error;
-        }
+      } catch (error: unknown) {
+        if (error instanceof NotFoundException) isUnique = true;
+        else
+          throw new Error('Failed to generate unique referral code', {
+            cause: error,
+          });
       }
     }
 

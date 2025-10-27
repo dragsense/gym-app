@@ -63,7 +63,7 @@ export class AuthService {
       );
 
       // Log successful signup activity
-      await this.activityLogsService.create({
+      await this.activityLogsService.createActivityLog({
         description: `User registered successfully: ${signupDto.email}`,
         type: EActivityType.SIGNUP,
         status: EActivityStatus.SUCCESS,
@@ -77,13 +77,12 @@ export class AuthService {
           referralCode: referralCode || null,
           timestamp: new Date().toISOString(),
         },
-        userId: res.id,
       });
 
       return { message: 'Registration successful' };
     } catch (error) {
       // Log failed signup activity
-      await this.activityLogsService.create({
+      await this.activityLogsService.createActivityLog({
         description: `Failed to register user: ${signupDto.email}`,
         type: EActivityType.SIGNUP,
         status: EActivityStatus.FAILED,
@@ -107,7 +106,7 @@ export class AuthService {
       const user = await this.userService.getUserByEmail(email);
       if (!user) {
         // Log failed login attempt
-        await this.activityLogsService.create({
+        await this.activityLogsService.createActivityLog({
           description: `Failed login attempt: ${email}`,
           type: EActivityType.LOGIN,
           status: EActivityStatus.FAILED,
@@ -133,7 +132,7 @@ export class AuthService {
 
       if (!isMatch) {
         // Log failed login attempt
-        await this.activityLogsService.create({
+        await this.activityLogsService.createActivityLog({
           description: `Failed login attempt: ${email}`,
           type: EActivityType.LOGIN,
           status: EActivityStatus.FAILED,
@@ -153,7 +152,7 @@ export class AuthService {
 
       if (!user.isActive) {
         // Log failed login attempt
-        await this.activityLogsService.create({
+        await this.activityLogsService.createActivityLog({
           description: `Failed login attempt: ${email}`,
           type: EActivityType.LOGIN,
           status: EActivityStatus.FAILED,
@@ -184,7 +183,7 @@ export class AuthService {
       const { password, ...userWithoutPassword } = user;
 
       // Log successful login activity
-      await this.activityLogsService.create({
+      await this.activityLogsService.createActivityLog({
         description: `User logged in successfully: ${email}`,
         type: EActivityType.LOGIN,
         status: EActivityStatus.SUCCESS,
@@ -196,7 +195,6 @@ export class AuthService {
           userId: user.id,
           timestamp: new Date().toISOString(),
         },
-        userId: user.id,
       });
 
       return { token, user: userWithoutPassword };
@@ -207,7 +205,7 @@ export class AuthService {
       }
 
       // Log unexpected error
-      await this.activityLogsService.create({
+      await this.activityLogsService.createActivityLog({
         description: `Login error: ${email}`,
         type: EActivityType.LOGIN,
         status: EActivityStatus.FAILED,
@@ -219,7 +217,6 @@ export class AuthService {
           timestamp: new Date().toISOString(),
         },
         errorMessage: error.message,
-        userId: undefined,
       });
 
       throw error;
@@ -289,7 +286,7 @@ export class AuthService {
           });
 
           // Log successful password reset request
-          await this.activityLogsService.create({
+          await this.activityLogsService.createActivityLog({
             description: `Password reset link sent successfully: ${email}`,
             type: EActivityType.FORGOT_PASSWORD,
             status: EActivityStatus.SUCCESS,
@@ -301,13 +298,12 @@ export class AuthService {
               userId: user.id,
               timestamp: new Date().toISOString(),
             },
-            userId: user.id,
           });
         } catch (error) {
           this.logger.error('Error sending reset email', error.stack);
 
           // Log failed password reset request
-          await this.activityLogsService.create({
+          await this.activityLogsService.createActivityLog({
             description: `Failed to send password reset link: ${email}`,
             type: EActivityType.FORGOT_PASSWORD,
             status: EActivityStatus.FAILED,
@@ -320,7 +316,6 @@ export class AuthService {
               timestamp: new Date().toISOString(),
             },
             errorMessage: error.message,
-            userId: user.id,
           });
 
           throw new HttpException(
@@ -330,7 +325,7 @@ export class AuthService {
         }
       } else {
         // Log password reset request for non-existent user
-        await this.activityLogsService.create({
+        await this.activityLogsService.createActivityLog({
           description: `Password reset requested for non-existent email: ${email}`,
           type: EActivityType.FORGOT_PASSWORD,
           status: EActivityStatus.SUCCESS,
@@ -341,7 +336,6 @@ export class AuthService {
             email,
             timestamp: new Date().toISOString(),
           },
-          userId: undefined,
         });
       }
 
@@ -351,7 +345,7 @@ export class AuthService {
       };
     } catch (error) {
       // Log unexpected error
-      await this.activityLogsService.create({
+      await this.activityLogsService.createActivityLog({
         description: `Password reset request error: ${email}`,
         type: EActivityType.FORGOT_PASSWORD,
         status: EActivityStatus.FAILED,
@@ -363,7 +357,6 @@ export class AuthService {
           timestamp: new Date().toISOString(),
         },
         errorMessage: error.message,
-        userId: undefined,
       });
 
       throw error;
@@ -381,7 +374,7 @@ export class AuthService {
         payload = this.jwtService.verify(token);
       } catch (e) {
         // Log failed password reset due to invalid token
-        await this.activityLogsService.create({
+        await this.activityLogsService.createActivityLog({
           description: `Failed password reset attempt - invalid token`,
           type: EActivityType.RESET_PASSWORD,
           status: EActivityStatus.FAILED,
@@ -392,7 +385,6 @@ export class AuthService {
             timestamp: new Date().toISOString(),
           },
           errorMessage: 'Invalid or expired token',
-          userId: undefined,
         });
         throw new BadRequestException('Invalid or expired token');
       }
@@ -404,7 +396,7 @@ export class AuthService {
       );
 
       // Log successful password reset
-      await this.activityLogsService.create({
+      await this.activityLogsService.createActivityLog({
         description: `Password reset successfully for user ID: ${payload.id}`,
         type: EActivityType.RESET_PASSWORD,
         status: EActivityStatus.SUCCESS,
@@ -415,13 +407,12 @@ export class AuthService {
           userId: payload.id,
           timestamp: new Date().toISOString(),
         },
-        userId: payload.id,
       });
 
       return result;
     } catch (error) {
       // Log failed password reset
-      await this.activityLogsService.create({
+      await this.activityLogsService.createActivityLog({
         description: `Failed password reset attempt`,
         type: EActivityType.RESET_PASSWORD,
         status: EActivityStatus.FAILED,
@@ -432,7 +423,6 @@ export class AuthService {
           timestamp: new Date().toISOString(),
         },
         errorMessage: error.message,
-        userId: undefined,
       });
 
       throw error;

@@ -4,7 +4,11 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { apiReference } from '@scalar/nestjs-api-reference';
 import { LoggerService } from '../logger/logger.service';
 
-export function setupApiDocumentation(app: INestApplication, configService: ConfigService, loggerService: LoggerService) {
+export function setupApiDocumentation(
+  app: INestApplication,
+  configService: ConfigService,
+  loggerService: LoggerService,
+) {
   const port = configService.get<number>('app.port', 3000);
 
   // API documentation with Scalar
@@ -30,7 +34,9 @@ export function setupApiDocumentation(app: INestApplication, configService: Conf
     const document = SwaggerModule.createDocument(app, config);
     const scalarConfig = configService.get('scalar');
     const title = scalarConfig?.title || 'Customer App Web API';
-    const description = scalarConfig?.description || 'Empower coaches to manage clients, track progress, and deliver results — all in one simple, powerful tool.';
+    const description =
+      scalarConfig?.description ||
+      'Empower coaches to manage clients, track progress, and deliver results — all in one simple, powerful tool.';
     app.use(
       '/api/docs',
       apiReference({

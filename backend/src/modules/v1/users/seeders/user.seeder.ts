@@ -12,10 +12,7 @@ export class UserSeeder implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    // Only run seeders in development
-    if (this.configService.get('NODE_ENV') === 'development') {
-      await this.seed();
-    }
+    await this.seed();
   }
 
   async seed(): Promise<void> {

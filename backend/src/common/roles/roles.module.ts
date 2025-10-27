@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RolesService } from './roles.service';
 import { RolesController } from './roles.controller';
-import { ResourceSeeder } from './seeders/resource.seeder';
+import { ResourceSeed } from './seeder/resource.seed';
 import { Resource } from './entities/resource.entity';
 import { Role } from './entities/role.entity';
 import { Permission } from './entities/permission.entity';
@@ -13,12 +13,7 @@ import { CrudModule } from '../crud/crud.module';
 @Module({
   imports: [TypeOrmModule.forFeature([Resource, Role, Permission]), CrudModule],
   controllers: [RolesController],
-  providers: [
-    RolesService,
-    PermissionsService,
-    ResourcesService,
-    ResourceSeeder,
-  ],
-  exports: [RolesService, PermissionsService, ResourcesService, ResourceSeeder],
+  providers: [RolesService, PermissionsService, ResourcesService, ResourceSeed],
+  exports: [RolesService, PermissionsService, ResourcesService, ResourceSeed],
 })
 export class RolesModule {}

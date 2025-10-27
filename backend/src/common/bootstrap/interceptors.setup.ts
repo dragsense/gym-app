@@ -1,13 +1,16 @@
 import { INestApplication } from '@nestjs/common';
 import { LoggerService } from '../logger/logger.service';
 import { ResponseEncryptionInterceptor } from '../../interceptors/response-encryption-interceptor';
-import { BrowserHtmlInterceptor } from '../../interceptors/BrowserHtmlInterceptor';
-import { LoggerInterceptor } from '../logger/interceptors/logger.interceptor';
-import { ActivityLogInterceptor } from '../activity-logs/interceptors/activity-log.interceptor';
+import { BrowserHtmlInterceptor } from '../../interceptors/browser-html-interceptor';
 
-export function setupInterceptors(app: INestApplication, loggerService: LoggerService) {
+import { NestInterceptor } from '@nestjs/common';
+
+export function setupInterceptors(
+  app: INestApplication,
+  loggerService: LoggerService,
+) {
   // Build interceptors array based on environment
-  const interceptors: any[] = [new BrowserHtmlInterceptor()];
+  const interceptors: NestInterceptor[] = [new BrowserHtmlInterceptor()];
 
   // Only use encryption in production
   if (process.env.NODE_ENV === 'production') {
@@ -18,11 +21,8 @@ export function setupInterceptors(app: INestApplication, loggerService: LoggerSe
     loggerService.warn('⚠️ Encryption disabled (development mode)');
   }
 
-  const loggerInterceptor = app.get(LoggerInterceptor);
-  interceptors.push(loggerInterceptor);
-
-  const activityLogInterceptor = app.get(ActivityLogInterceptor);
-  interceptors.push(activityLogInterceptor);
+  // Note: ActivityLogInterceptor and LoggerInterceptor are registered globally
+  // via APP_INTERCEPTOR in their respective modules, not here
 
   app.useGlobalInterceptors(...interceptors);
 }

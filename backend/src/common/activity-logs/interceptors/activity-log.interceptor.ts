@@ -3,15 +3,19 @@ import {
   NestInterceptor,
   ExecutionContext,
   CallHandler,
+  Scope,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { Request, Response } from 'express';
-import { ActivityLogsService } from     '@/common/activity-logs/activity-logs.service';
-import { EActivityType, EActivityStatus } from '@shared/enums/activity-log.enum';
+import { ActivityLogsService } from '@/common/activity-logs/activity-logs.service';
+import {
+  EActivityType,
+  EActivityStatus,
+} from '@shared/enums/activity-log.enum';
 import { LoggerService } from '@/common/logger/logger.service';
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class ActivityLogInterceptor implements NestInterceptor {
   private readonly logger = new LoggerService(ActivityLogInterceptor.name);
 
@@ -30,9 +34,13 @@ export class ActivityLogInterceptor implements NestInterceptor {
       if (Object.prototype.hasOwnProperty.call(obj, key)) {
         const fullKey = prefix ? `${prefix}.${key}` : key;
         keys.push(fullKey);
-        
+
         // Recursively get nested keys
-        if (obj[key] && typeof obj[key] === 'object' && !Array.isArray(obj[key])) {
+        if (
+          obj[key] &&
+          typeof obj[key] === 'object' &&
+          !Array.isArray(obj[key])
+        ) {
           keys.push(...this.getNestedKeys(obj[key], fullKey));
         }
       }
@@ -43,46 +51,52 @@ export class ActivityLogInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const request = context.switchToHttp().getRequest<Request>();
     const response = context.switchToHttp().getResponse<Response>();
-    
+
     const startTime = Date.now();
     const { method, url, ip, headers } = request;
 
     const userAgent = headers['user-agent'];
-    const user = (request as any).user;
+
+    // Skip activity logging for the activity logs endpoint itself to prevent infinite recursion
+    if (url.includes('/api/activity-logs')) {
+      return next.handle();
+    }
 
     // Determine activity type based on HTTP method
     const activityType = this.getActivityType(method);
     const description = this.getDescription(method, url);
 
     return next.handle().pipe(
-      tap(async (data) => {
+      tap((data) => {
+        // Fire and forget - don't await the async operation
+        const duration = Date.now() - startTime;
+
+        // Check if activity should be logged based on configuration
+        const shouldLog = this.activityLogsService.shouldLogActivity(
+          url,
+          method,
+          activityType,
+        );
+
+        if (!shouldLog) {
+          return;
+        }
+
+        // Safely get response size without circular reference errors
+        let responseSize = 0;
         try {
-          const duration = Date.now() - startTime;
-          
-          // Check if activity should be logged based on configuration
-          const shouldLog = this.activityLogsService.shouldLogActivity(
-            url,
-            method,
-            activityType
-          );
+          responseSize = JSON.stringify(data).length;
+        } catch {
+          // Ignore circular reference errors
+          responseSize = 0;
+        }
 
-          if (!shouldLog) {
-            return;
-          }
-          
-          // Safely get response size without circular reference errors
-          let responseSize = 0;
-          try {
-            responseSize = JSON.stringify(data).length;
-          } catch (e) {
-            // Ignore circular reference errors
-            responseSize = 0;
-          }
+        // Get all nested keys from request body (not values for privacy)
+        const bodyKeys = request.body ? this.getNestedKeys(request.body) : [];
 
-          // Get all nested keys from request body (not values for privacy)
-          const bodyKeys = request.body ? this.getNestedKeys(request.body) : [];
-          
-          await this.activityLogsService.create({
+        // Fire and forget the activity log
+        this.activityLogsService
+          .createActivityLog({
             description,
             type: activityType,
             status: EActivityStatus.SUCCESS,
@@ -97,51 +111,49 @@ export class ActivityLogInterceptor implements NestInterceptor {
               timestamp: new Date().toISOString(),
               bodyKeys,
             },
-            userId: user?.id || null,
+          })
+          .catch((error) => {
+            this.logger.error('Failed to log activity', error);
           });
-        } catch (error) {
-          this.logger.error('Failed to log activity', error);
-        }
       }),
-      catchError(async (error) => {
-        try {
-          const duration = Date.now() - startTime;
+      catchError((error) => {
+        // Fire and forget - don't await the async operation
+        const duration = Date.now() - startTime;
 
-          // Check if activity should be logged based on configuration
-          const shouldLog = this.activityLogsService.shouldLogActivity(
-            url,
-            method,
-            activityType
-          );
+        // Check if activity should be logged based on configuration
+        const shouldLog = this.activityLogsService.shouldLogActivity(
+          url,
+          method,
+          activityType,
+        );
 
-          if (!shouldLog) {
-            throw error;
-          }
-
+        if (shouldLog) {
           // Get all nested keys from request body (not values for privacy)
           const bodyKeys = request.body ? this.getNestedKeys(request.body) : [];
-          
-          await this.activityLogsService.createActivityLog({
-            description,
-            type: activityType,
-            status: EActivityStatus.FAILED,
-            ipAddress: ip,
-            userAgent,
-            endpoint: url,
-            method,
-            statusCode: error.status || 500,
-            metadata: {
-              duration,
-              timestamp: new Date().toISOString(),
-              bodyKeys,
-            },
-            errorMessage: error.message,
-            userId: user?.id || null,
-          });
-        } catch (logError) {
-          this.logger.error('Failed to log activity error', logError);
+
+          // Fire and forget the activity log
+          this.activityLogsService
+            .createActivityLog({
+              description,
+              type: activityType,
+              status: EActivityStatus.FAILED,
+              ipAddress: ip,
+              userAgent,
+              endpoint: url,
+              method,
+              statusCode: error.status || 500,
+              metadata: {
+                duration,
+                timestamp: new Date().toISOString(),
+                bodyKeys,
+              },
+              errorMessage: error.message,
+            })
+            .catch((logError) => {
+              this.logger.error('Failed to log activity error', logError);
+            });
         }
-        
+
         throw error;
       }),
     );
@@ -167,7 +179,7 @@ export class ActivityLogInterceptor implements NestInterceptor {
     const segments = url.split('/').filter(Boolean);
     const resource = segments[segments.length - 1] || 'resource';
     const action = method.toLowerCase();
-    
+
     const actionDescriptions = {
       get: 'Retrieved',
       post: 'Created',

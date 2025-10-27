@@ -1,7 +1,6 @@
 import {
   Controller,
   Get,
-  UseGuards,
   Body,
   Post,
   Delete,
@@ -29,7 +28,6 @@ import {
   SingleQueryDto,
 } from '@shared/dtos';
 import { Trainer } from './entities/trainer.entity';
-import { AuthUser } from '@/decorators/user.decorator';
 
 @ApiBearerAuth('access-token')
 @ApiTags('Trainers')
@@ -44,11 +42,8 @@ export class TrainersController {
     type: TrainerPaginatedDto,
   })
   @Get()
-  findAll(@Query() query: TrainerListDto, @AuthUser() user: any) {
-    return this.trainersService.get(
-      { ...query, createdByUserId: user.id },
-      TrainerListDto,
-    );
+  findAll(@Query() query: TrainerListDto) {
+    return this.trainersService.get(query, TrainerListDto);
   }
 
   @ApiOperation({ summary: 'Get trainer by ID' })
@@ -60,10 +55,7 @@ export class TrainersController {
   })
   @ApiResponse({ status: 404, description: 'Trainer not found' })
   @Get(':id')
-  findOne(
-    @Param('id') id: string,
-    @Query() query: SingleQueryDto<Trainer>,
-  ) {
+  findOne(@Param('id') id: string, @Query() query: SingleQueryDto<Trainer>) {
     return this.trainersService.getSingle(id, query);
   }
 
@@ -74,8 +66,8 @@ export class TrainersController {
   })
   @ApiResponse({ status: 201, description: 'Trainer created successfully' })
   @Post()
-  create(@Body() createTrainerDto: CreateTrainerDto, @AuthUser() user: any) {
-    return this.trainersService.createTrainer(createTrainerDto, user.id);
+  create(@Body() createTrainerDto: CreateTrainerDto) {
+    return this.trainersService.createTrainer(createTrainerDto);
   }
 
   @ApiOperation({ summary: 'Update trainer by ID' })
@@ -87,10 +79,7 @@ export class TrainersController {
   @ApiResponse({ status: 200, description: 'Trainer updated successfully' })
   @ApiResponse({ status: 404, description: 'Trainer not found' })
   @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateTrainerDto: UpdateTrainerDto,
-  ) {
+  update(@Param('id') id: string, @Body() updateTrainerDto: UpdateTrainerDto) {
     return this.trainersService.updateTrainer(id, updateTrainerDto);
   }
 
@@ -100,6 +89,6 @@ export class TrainersController {
   @ApiResponse({ status: 404, description: 'Trainer not found' })
   @Delete(':id')
   async remove(@Param('id') id: string) {
-    await this.trainersService.delete(id);
+    await this.trainersService.deleteTrainer(id);
   }
 }

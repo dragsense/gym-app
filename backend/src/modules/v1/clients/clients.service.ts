@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 
@@ -10,6 +10,9 @@ import { CrudOptions } from '@/common/crud/interfaces/crud.interface';
 import { UsersService } from '../users/users.service';
 import { EUserLevels, EUserRole } from '@shared/enums';
 import { IMessageResponse } from '@shared/interfaces';
+import { REQUEST } from '@nestjs/core';
+import { Request } from 'express';
+import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class ClientsService extends CrudService<Client> {
@@ -19,6 +22,7 @@ export class ClientsService extends CrudService<Client> {
     private readonly userService: UsersService,
     dataSource: DataSource,
     eventService: EventService,
+    @Inject(REQUEST) request: Request,
   ) {
     const crudOptions: CrudOptions = {
       restrictedFields: ['user.password'],
@@ -28,39 +32,32 @@ export class ClientsService extends CrudService<Client> {
         'user.profile.lastName',
       ],
     };
-    super(clientRepo, dataSource, eventService, crudOptions);
+    super(clientRepo, dataSource, eventService, request, crudOptions);
   }
 
   async createClient(
     createClientDto: CreateClientDto,
-    userId: string,
   ): Promise<IMessageResponse & { client: Client }> {
     const { user, ...clientData } = createClientDto;
-    const savedClient = await this.create(
-      { ...clientData, createdBy: { id: userId } },
-      {
-        afterCreate: async (savedEntity, manager) => {
-          try {
-            const savedUser = await this.userService.createUser({
-              ...user,
-              level: EUserLevels[EUserRole.CLIENT],
-            });
-            savedEntity.user = savedUser.user;
+    const savedClient = await this.create(clientData, {
+      afterCreate: async (savedEntity, manager) => {
+        try {
+          const savedUser = await this.userService.createUser({
+            ...user,
+            level: EUserLevels[EUserRole.CLIENT],
+          });
+          savedEntity.user = savedUser.user;
 
-            await manager.update(Client, savedEntity.id, {
-              user: savedUser.user,
-            });
-          } catch (error) {
-            throw new Error('Failed to create user', error);
-          }
-        },
+          await manager.update(Client, savedEntity.id, {
+            user: savedUser.user,
+          });
+        } catch (error) {
+          throw new Error('Failed to create user', { cause: error });
+        }
       },
-    );
+    });
 
-    return {
-      message: 'Client created successfully',
-      client: savedClient,
-    };
+    return { message: 'Client created successfully', client: savedClient };
   }
 
   async updateClient(
@@ -71,15 +68,25 @@ export class ClientsService extends CrudService<Client> {
     return await this.update(id, clientData, {
       afterUpdate: async (existingEntity) => {
         try {
-          const existingTrainer = await this.getSingle(
+          const existingClient = await this.getSingle(
             { id: existingEntity.id },
             { __relations: 'user' },
           );
 
-          if (user && existingTrainer.user)
-            await this.userService.updateUser(existingTrainer.user.id, user);
+          if (user && existingClient.user)
+            await this.userService.updateUser(existingClient.user.id, user);
         } catch (error) {
-          throw new Error('Failed to update user', error);
+          throw new Error('Failed to update user', { cause: error as Error });
+        }
+      },
+    });
+  }
+
+  async deleteClient(id: string, userId: string): Promise<void> {
+    await this.delete(id, {
+      beforeDelete: async (entity: Client) => {
+        if (entity.user) {
+          await this.userService.delete({ id: entity.user.id });
         }
       },
     });
