@@ -9,7 +9,26 @@ import { EventPayload } from '@/common/helper/services/event.service';
 export class UserEventListenerService {
   private readonly logger = new Logger(UserEventListenerService.name);
 
-  constructor(@InjectQueue('user') private userQueue: Queue) {}
+  constructor(@InjectQueue('user') private userQueue: Queue) {
+    this.logger.log('✅ UserEventListenerService initialized');
+
+    // 🔄 Queue Event Listeners
+    this.userQueue.on('waiting', (jobId) =>
+      this.logger.log(`⏳ Job waiting: ${jobId}`),
+    );
+
+    this.userQueue.on('active', (job) =>
+      this.logger.log(`⚙️ Job active: ${job.id}`),
+    );
+
+    this.userQueue.on('completed', (job) =>
+      this.logger.log(`✅ Job completed: ${job.id}`),
+    );
+
+    this.userQueue.on('failed', (job, err) =>
+      this.logger.error(`💥 Job failed: ${job.id} - ${err.message}`),
+    );
+  }
 
   /**
    * Handle user created event - send welcome email
@@ -17,15 +36,20 @@ export class UserEventListenerService {
   @OnEvent('user.crud.create')
   async handleUserCreated(payload: EventPayload): Promise<void> {
     // Check if this is a user creation event
-    if (!payload.entity) return;
+    if (!payload.entity) {
+      this.logger.warn('User creation event received but entity is null');
+      return;
+    }
 
     const user = payload.entity as User;
-    const data = payload.data;
+    const data = payload.data as { tempPassword?: string; createdBy?: string };
 
-    this.logger.log(`Creating queue job for user ${user.id}`);
+    this.logger.log(
+      `📥 Event received: Creating queue job for user ${user.id}`,
+    );
 
     try {
-      await this.userQueue.add(
+      const job = await this.userQueue.add(
         'send-welcome-email',
         {
           userId: user.id,
@@ -33,7 +57,8 @@ export class UserEventListenerService {
           createdBy: data?.createdBy,
         },
         {
-          delay: 10000,
+          // Temporarily removed delay for debugging
+          // delay: 10000,
           attempts: 3,
           backoff: {
             type: 'exponential',
@@ -50,10 +75,16 @@ export class UserEventListenerService {
         },
       );
 
-      this.logger.log(`Welcome email sent to ${user.email}`);
+      this.logger.log(`✅ Job ${job.id} added to queue for user ${user.email}`);
+
+      // Log job status for debugging
+      const jobCounts = await this.userQueue.getJobCounts();
+      this.logger.log(`📊 Queue stats: ${JSON.stringify(jobCounts)}`);
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(
-        `Failed to send welcome email to ${user.email}: ${error.message}`,
+        `❌ Failed to add job to queue for ${user.email}: ${errorMessage}`,
       );
     }
   }
@@ -62,7 +93,7 @@ export class UserEventListenerService {
    * Handle user updated event - send notification if needed
    */
   @OnEvent('user.crud.update')
-  async handleUserUpdated(payload: EventPayload): Promise<void> {
+  handleUserUpdated(payload: EventPayload): void {
     console.log('handleUserUpdated', payload);
 
     // Check if this is a user update event
@@ -73,8 +104,10 @@ export class UserEventListenerService {
       // You can add logic here to determine what type of update notification to send
       this.logger.log(`User ${user.email} was updated`);
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(
-        `Failed to handle user update for ${user.email}: ${error.message}`,
+        `Failed to handle user update for ${user.email}: ${errorMessage}`,
       );
     }
   }
@@ -89,7 +122,8 @@ export class UserEventListenerService {
     try {
       const user = payload.entity as User;
 
-      const type = payload.data?.type as string;
+      const data = payload.data as { type?: string };
+      const type = data?.type;
       this.logger.log(
         `Password reset event triggered for user ${user.email} with type ${type}`,
       );
@@ -122,9 +156,9 @@ export class UserEventListenerService {
         );
       }
     } catch (error) {
-      this.logger.error(
-        `Failed to send password reset email: ${error.message}`,
-      );
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Failed to send password reset email: ${errorMessage}`);
     }
   }
 
@@ -132,7 +166,7 @@ export class UserEventListenerService {
    * Handle user deleted event
    */
   @OnEvent('user.crud.delete')
-  async handleUserDeleted(payload: EventPayload): Promise<void> {
+  handleUserDeleted(payload: EventPayload): void {
     // Check if this is a user deletion event
     if (!payload.entity) return;
 
@@ -141,8 +175,10 @@ export class UserEventListenerService {
       this.logger.log(`User ${user.email} was deleted`);
       // You can add logic here for cleanup or notifications
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(
-        `Failed to handle user deletion for ${user.email}: ${error.message}`,
+        `Failed to handle user deletion for ${user.email}: ${errorMessage}`,
       );
     }
   }

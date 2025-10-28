@@ -1,23 +1,22 @@
 // React & Hooks
-import { useEffect, useState, useId, useMemo, useTransition } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useId, useTransition } from "react";
 
 // External libraries
-import { List, Plus, Table } from "lucide-react";
+import { Plus } from "lucide-react";
 
 // Types
 import { type IUser } from "@shared/interfaces/user.interface";
 
 // UI Components
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 
 // Custom UI Components
 import { Table as TTable } from "@/components/table-ui/table";
 import { List as TList } from "@/components/list-ui/list";
+import { ViewToggle } from "@/components/shared-ui/view-toggle";
 
 import { UserFilters } from "./user-filters";
-import { AppCard } from "@/components/layout-ui/app-card";
 
 // Local
 import { userItemViews as itemViews } from "./user-item-views";
@@ -38,9 +37,8 @@ export interface IUserListExtraProps {
 }
 
 
-interface IUserListProps extends TListHandlerComponentProps<TListHandlerStore<IUser, TUserListData, IUserListExtraProps>,
-  TSingleHandlerStore<IUser, TUserViewExtraProps>> {
-}
+type IUserListProps = TListHandlerComponentProps<TListHandlerStore<IUser, TUserListData, IUserListExtraProps>,
+  TSingleHandlerStore<IUser, TUserViewExtraProps>>;
 
 export type ViewType = "table" | "list";
 
@@ -53,6 +51,7 @@ export default function UserList({
   // React 19: Essential IDs and transitions
   const componentId = useId();
   const [, startTransition] = useTransition();
+  const [currentView, setCurrentView] = useState<ViewType>("table");
 
   if (!store) {
     return (`List store "${storeKey}" not found. Did you forget to register it?`);
@@ -63,8 +62,6 @@ export default function UserList({
   }
 
   const setAction = singleStore(state => state.setAction);
-
-  const [currentView, setCurrentView] = useState<ViewType>("table");
 
   // React 19: Smooth action transitions
   const handleCreate = () => {
@@ -91,9 +88,9 @@ export default function UserList({
     });
   }
 
-  const handleView = (trainerId: number) => {
+  const handleView = (id: string | number) => {
     startTransition(() => {
-      setAction('view', trainerId);
+      setAction('view', id);
     });
   }
 
@@ -102,41 +99,13 @@ export default function UserList({
     handleDelete,
     handleView,
     handleUpdateProfile
-  }
-  );
-
-
-
-  // React 19: Memoized view toggle for better performance
-  const renderViewToggle = useMemo(() => (
-    <TabsList className="flex justify-center items-center w-auto border-gray-200" data-component-id={componentId}>
-      <TabsTrigger
-        value="table"
-        className="flex items-center gap-2 px-4 data-[state=active]:text-secondary data-[state=active]:font-semibold"
-      >
-        <Table className="h-4 w-4" />
-        <span className="hidden sm:inline">Table</span>
-      </TabsTrigger>
-
-      <TabsTrigger
-        value="list"
-        className="flex items-center gap-2 px-4 data-[state=active]:text-secondary data-[state=active]:font-semibold"
-      >
-        <List className="h-4 w-4" />
-        <span className="hidden sm:inline">List</span>
-      </TabsTrigger>
-    </TabsList>
-  ), [componentId]);
+  });
 
   return (
     <Tabs value={currentView} onValueChange={(value) => setCurrentView(value as ViewType)} data-component-id={componentId}>
-
-
       <div className="flex flex-1 justify-between items-start md:items-center gap-2 flex-wrap">
-        <UserFilters
-          store={store}
-        />
-        {renderViewToggle}
+        <UserFilters store={store} />
+        <ViewToggle componentId={componentId} />
         <Button
           onClick={handleCreate}
           data-component-id={componentId}
@@ -144,9 +113,6 @@ export default function UserList({
           <Plus /> <span className="hidden sm:inline capitalize">Add User</span>
         </Button>
       </div>
-
-
-
 
       <TabsContent value="table">
         <TTable<IUser>
@@ -156,7 +122,6 @@ export default function UserList({
           showPagination={true}
         />
       </TabsContent>
-
 
       <TabsContent value="list">
         <div>
@@ -168,8 +133,6 @@ export default function UserList({
           />
         </div>
       </TabsContent>
-
-
     </Tabs>
   );
 }

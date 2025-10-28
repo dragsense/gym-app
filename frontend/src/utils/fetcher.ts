@@ -7,6 +7,23 @@ export const BASE_API_URL = config.apiUrl;
 
 let csrfTokenCache: string | null = null;
 let accessToken: string | null = null;
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (value?: string | null) => void;
+  reject: (reason?: unknown) => void;
+}> = [];
+
+const processQueue = (error: unknown, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+
+  failedQueue = [];
+};
 // Fetch CSRF token
 const getCsrfToken = async (): Promise<string> => {
   if (csrfTokenCache) return csrfTokenCache;
@@ -19,11 +36,10 @@ const getCsrfToken = async (): Promise<string> => {
     csrfTokenCache = res.data.csrfToken;
     return csrfTokenCache!;
   } catch (error) {
-    console.error('Failed to fetch CSRF token:', error);
+    console.error("Failed to fetch CSRF token:", error);
   }
 
-  return '';
-
+  return "";
 };
 
 // Axios instance
@@ -31,7 +47,6 @@ const api = axios.create({
   baseURL: BASE_API_URL,
   withCredentials: true,
 });
-
 
 const refreshApi = axios.create({
   baseURL: BASE_API_URL,
@@ -45,7 +60,7 @@ api.interceptors.request.use(async (config) => {
   // Ensure headers is AxiosHeaders
   if (!config.headers) config.headers = new AxiosHeaders();
   (config.headers as AxiosHeaders).set("X-CSRF-Token", csrfToken);
-  
+
   // Add user timezone to all requests
   const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   (config.headers as AxiosHeaders).set("X-Timezone", userTimezone);
@@ -58,7 +73,7 @@ api.interceptors.response.use(
   async (response) => {
     if (response.data?.accessToken?.token) {
       accessToken = response.data.accessToken.token;
-      api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+      api.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
     }
 
     return response;
@@ -68,25 +83,72 @@ api.interceptors.response.use(
 
     if (
       error.response?.status === 401 &&
+      originalRequest &&
       !originalRequest._retry
     ) {
-      originalRequest._retry = true;
+      if (isRefreshing) {
+        // If already refreshing, wait for it to complete
+        try {
+          await new Promise<string | null | undefined>((resolve, reject) => {
+            failedQueue.push({ resolve, reject });
+          });
+          // Retry after refresh completes with the new token
+          originalRequest.headers = originalRequest.headers || {};
+          (originalRequest.headers as AxiosHeaders).set(
+            "Authorization",
+            `Bearer ${accessToken}`
+          );
+          // Mark as retried to prevent infinite retry loops
+          originalRequest._retry = true;
+          return api(originalRequest);
+        } catch (err) {
+          return Promise.reject(err);
+        }
+      }
 
-      const csrf = await getCsrfToken();
+      originalRequest._retry = true;
+      isRefreshing = true;
 
       try {
+        const csrf = await getCsrfToken();
         const res = await refreshApi.post(
           "/auth/refresh",
           {},
           { headers: { "X-CSRF-Token": csrf }, withCredentials: true }
         );
 
-        accessToken = res.data.accessToken?.token;
-        api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
-      } catch (error) {
-        console.error('Failed to refresh token:', error);
+        // Only proceed if token refresh was successful
+        if (res.data?.accessToken?.token) {
+          accessToken = res.data.accessToken.token;
+          api.defaults.headers.common[
+            "Authorization"
+          ] = `Bearer ${accessToken}`;
+          isRefreshing = false;
+
+          // Resolve all queued requests
+          processQueue(null, accessToken);
+
+          // Update the original request with new token
+          originalRequest.headers = originalRequest.headers || {};
+          (originalRequest.headers as AxiosHeaders).set(
+            "Authorization",
+            `Bearer ${accessToken}`
+          );
+
+          // Retry the original request
+          return api(originalRequest);
+        } else {
+          isRefreshing = false;
+          console.error("Failed to refresh token: No access token in response");
+          processQueue(error, null);
+          return Promise.reject(error);
+        }
+      } catch (refreshError) {
+        isRefreshing = false;
+        console.error("Failed to refresh token:", refreshError);
+        processQueue(refreshError, null);
+        return Promise.reject(refreshError);
       }
-      return api(originalRequest);
     }
 
     return Promise.reject(error);
@@ -95,12 +157,15 @@ api.interceptors.response.use(
 
 // Generic fetcher with decryption
 const fetcher = async <T>(fetchConfig: AxiosRequestConfig): Promise<T> => {
-  const isDevelopment = config.environment === 'development';
+  const isDevelopment = config.environment === "development";
 
   try {
     const res = await api.request(fetchConfig);
 
-    if (fetchConfig.responseType === "arraybuffer" || fetchConfig.responseType === "blob") {
+    if (
+      fetchConfig.responseType === "arraybuffer" ||
+      fetchConfig.responseType === "blob"
+    ) {
       return res as unknown as T;
     }
 
@@ -108,61 +173,74 @@ const fetcher = async <T>(fetchConfig: AxiosRequestConfig): Promise<T> => {
 
     const payload = res.data;
 
-    if (payload && typeof payload === 'object' && payload.encrypted) {
+    if (payload && typeof payload === "object" && payload.encrypted) {
       try {
         const decryptedData = await decryptionService.decryptResponse(payload);
         return decryptedData as T;
-      } catch (decryptError) {
+      } catch {
         throw new Error("Failed to decrypt response data");
       }
     }
 
     return payload as T;
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Log full error in development only
+    const axiosError = error as {
+      response?: {
+        data?: {
+          message?: string;
+          error?: { message?: string };
+          stack?: string;
+          exceptionType?: string;
+        };
+        status?: number;
+      };
+      message?: string;
+    };
+
     if (isDevelopment) {
-      console.error('API Error:', error);
-      console.error('Response data:', error.response?.data);
-      if (error.response?.data?.stack) {
-        console.error('Stack trace:', error.response.data.stack);
+      console.error("API Error:", error);
+      console.error("Response data:", axiosError.response?.data);
+      if (axiosError.response?.data?.stack) {
+        console.error("Stack trace:", axiosError.response.data.stack);
       }
     }
 
     // Extract error message
     const message =
-      error.response?.data?.message ||
-      error.response?.data?.error?.message ||
-      error.message ||
+      axiosError.response?.data?.message ||
+      axiosError.response?.data?.error?.message ||
+      axiosError.message ||
       "Something went wrong";
 
     // In development, show detailed error with status code and stack
     if (isDevelopment) {
-      const statusCode = error.response?.status;
-      const stack = error.response?.data?.stack;
-      const exceptionType = error.response?.data?.exceptionType;
-      
+      const statusCode = axiosError.response?.status;
+      const stack = axiosError.response?.data?.stack;
+      const exceptionType = axiosError.response?.data?.exceptionType;
+
       let errorMessage = message;
-      
+
       if (statusCode) {
         errorMessage += ` (Status: ${statusCode})`;
       }
-      
+
       if (exceptionType) {
         errorMessage += ` [${exceptionType}]`;
       }
-      
+
       const detailedError = new Error(errorMessage);
-      
+
       // Attach stack trace if available
       if (stack) {
         detailedError.stack = `${detailedError.stack}\n\nServer Stack:\n${stack}`;
       }
-      
+
       throw detailedError;
     }
 
     // In production, only show the error message without technical details
-    throw new Error(message);  
+    throw new Error(message);
   }
 };
 
@@ -193,15 +271,14 @@ export const apiFileRequest = async <T>(
   });
 };
 
-
 export const downloadFile = async (path: string, fileName?: string) => {
-  const res = await fetcher<any>({
-    url: path, method: "GET",
+  const res = await fetcher<ArrayBuffer>({
+    url: path,
+    method: "GET",
     responseType: "arraybuffer",
   });
 
-
-  const blob = new Blob([res.data])
+  const blob = new Blob([res]);
   const link = document.createElement("a");
   link.href = window.URL.createObjectURL(blob);
   link.download = fileName || `file_${Date.now()}`;

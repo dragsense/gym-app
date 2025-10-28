@@ -3,18 +3,19 @@ import { useEffect, useState, useId, useMemo, useTransition } from "react";
 import { useNavigate } from "react-router-dom";
 
 // External libraries
-import { List, Plus, Table } from "lucide-react";
+import { Plus } from "lucide-react";
 
 // Types
 import { type ITrainer } from "@shared/interfaces/trainer.interface";
 
 // UI Components
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 
 // Custom UI Components
 import { Table as TTable } from "@/components/table-ui/table";
 import { List as TList } from "@/components/list-ui/list";
+import { ViewToggle } from "@/components/shared-ui/view-toggle";
 
 import { TrainerFilters } from "./trainer-filters";
 import { AppCard } from "@/components/layout-ui/app-card";
@@ -99,34 +100,11 @@ export default function TrainerList({
     handleUpdateProfile
   });
 
-  // React 19: Memoized view toggle for better performance
-  const renderViewToggle = useMemo(() => (
-    <TabsList className="flex justify-center items-center w-auto border-gray-200" data-component-id={componentId}>
-      <TabsTrigger
-        value="table"
-        className="flex items-center gap-2 px-4 data-[state=active]:text-secondary data-[state=active]:font-semibold"
-      >
-        <Table className="h-4 w-4" />
-        <span className="hidden sm:inline">Table</span>
-      </TabsTrigger>
-
-      <TabsTrigger
-        value="list"
-        className="flex items-center gap-2 px-4 data-[state=active]:text-secondary data-[state=active]:font-semibold"
-      >
-        <List className="h-4 w-4" />
-        <span className="hidden sm:inline">List</span>
-      </TabsTrigger>
-    </TabsList>
-  ), [componentId]);
-
   return (
     <Tabs value={currentView} onValueChange={(value) => setCurrentView(value as ViewType)} data-component-id={componentId}>
       <div className="flex flex-1 justify-between items-start md:items-center gap-2 flex-wrap">
-        <TrainerFilters
-          store={store}
-        />
-        {renderViewToggle}
+        <TrainerFilters store={store} />
+        <ViewToggle componentId={componentId} className="border-gray-200" />
         <Button
           onClick={handleCreate}
           data-component-id={componentId}
@@ -145,14 +123,12 @@ export default function TrainerList({
       </TabsContent>
 
       <TabsContent value="list">
-        <div>
-          <TList<ITrainer>
-            listStore={store}
-            emptyMessage="No trainers found."
-            showPagination={true}
-            renderItem={listItem}
-          />
-        </div>
+        <TList<ITrainer>
+          listStore={store}
+          emptyMessage="No trainers found."
+          showPagination={true}
+          renderItem={listItem}
+        />
       </TabsContent>
     </Tabs>
   );

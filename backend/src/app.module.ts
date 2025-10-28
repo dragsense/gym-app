@@ -21,6 +21,7 @@ import {
   activityLogsConfig,
   stripeConfig,
   getJwtConfig,
+  bullQueueConfig,
 } from './config';
 
 import { AppController } from './app.controller';
@@ -83,6 +84,7 @@ import { HealthModule } from './common/health/health.module';
         stripeConfig,
         cacheConfig,
         healthConfig,
+        bullQueueConfig,
       ],
       isGlobal: true,
     }),

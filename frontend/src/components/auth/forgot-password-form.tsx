@@ -36,9 +36,9 @@ const ForgotPasswordForm = React.memo(function ForgotPasswordForm({
   }
 
   const isSubmitting = store(state => state.isSubmitting);
-  
+
   // React 19: Memoized fields for better performance
-  const fields = useMemo(() => store(state => state.fields), [store]);
+  const fields = store(state => state.fields);
 
   const inputs = useInput<TForgotPasswordData>({
     fields: fields as any,

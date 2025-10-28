@@ -9,7 +9,7 @@ export default registerAs('bullQueue', () => ({
     db: parseInt(process.env.REDIS_DB || '0', 10),
     retryDelayOnFailover: 50,
     maxRetriesPerRequest: 3,
-    lazyConnect: true,
+    lazyConnect: false,
     keepAlive: 60000,
     connectTimeout: 10000,
     commandTimeout: 5000,
@@ -19,7 +19,7 @@ export default registerAs('bullQueue', () => ({
     // Add additional timeout settings
     retryDelayOnClusterDown: 100,
     // Prevent hanging on connection issues
-    enableOfflineQueue: false,
+    enableOfflineQueue: true,
   },
 }));
 

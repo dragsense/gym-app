@@ -8,7 +8,7 @@ export class CacheController {
   constructor(private readonly configService: ConfigService) {}
 
   @Get('monitor-url')
-  @ApiOperation({ summary: 'Get Dragonfly cache monitor URL' })
+  @ApiOperation({ summary: 'Get RedisInsight monitor URL for Dragonfly cache' })
   @ApiResponse({
     status: 200,
     description: 'Cache monitor URL retrieved successfully',
@@ -16,13 +16,17 @@ export class CacheController {
   getCacheMonitorUrl() {
     const cacheConfig = this.configService.get('cache');
     const host = 'localhost';
-    const port = 6380;
-    const dragonflyUrl = `http://${host}:${port}/`;
+    const redisInsightUrl = `http://${host}:8081`;
 
     return {
-      url: dragonflyUrl,
-      name: 'Dragonfly Cache Monitor',
-      description: 'Monitor Dragonfly cache in real-time',
+      url: redisInsightUrl,
+      name: 'RedisInsight Monitor',
+      description: 'Monitor Dragonfly cache via RedisInsight GUI',
+      connectionInfo: {
+        host: cacheConfig?.host || 'localhost',
+        port: cacheConfig?.port || 6380,
+        name: 'Dragonfly Cache',
+      },
     };
   }
 }

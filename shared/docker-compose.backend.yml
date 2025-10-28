@@ -32,8 +32,8 @@ services:
     container_name: app-mailpit
     restart: unless-stopped
     ports:
-      - "1025:1025"   # SMTP
-      - "8025:8025"   # Web UI
+      - "1025:1025" # SMTP
+      - "8025:8025" # Web UI
 
   redis:
     image: redis:latest
@@ -53,6 +53,17 @@ services:
     restart: unless-stopped
     ports:
       - "6380:6379"
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: app-redis-commander
+    environment:
+      - REDIS_HOSTS=local:dragonfly:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - dragonfly
+    restart: unless-stopped
 
   # PostgreSQL 17 Database
   postgres:
@@ -76,5 +87,4 @@ services:
 
 volumes:
   postgres_data:
-
 #docker-compose up -d

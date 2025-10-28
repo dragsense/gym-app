@@ -14,6 +14,7 @@ services:
     depends_on:
       - redis
       - dragonfly
+      - redisinsight
     restart: unless-stopped
 
   redis:
@@ -25,12 +26,23 @@ services:
 
   dragonfly:
     image: docker.dragonflydb.io/dragonflydb/dragonfly:latest
-    container_name: app-dragonfly-prod
+    container_name: app-dragonfly
     restart: unless-stopped
     ports:
       - "6380:6379"
 
-# PostgreSQL 17 Database
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: app-redis-commander
+    environment:
+      - REDIS_HOSTS=local:dragonfly:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - dragonfly
+    restart: unless-stopped
+
+  # PostgreSQL 17 Database
   postgres:
     image: postgres:17
     container_name: app-postgres-prod

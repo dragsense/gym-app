@@ -2,18 +2,19 @@
 import { useState, useId, useMemo, useTransition } from "react";
 
 // External libraries
-import { List, Plus, Table } from "lucide-react";
+import { Plus } from "lucide-react";
 
 // Types
 import { type ISchedule } from "@shared/interfaces/schedule.interface";
 
 // UI Components
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 
 // Custom UI Components
 import { Table as TTable } from "@/components/table-ui/table";
 import { List as TList } from "@/components/list-ui/list";
+import { ViewToggle } from "@/components/shared-ui/view-toggle";
 
 import { AppCard } from "@/components/layout-ui/app-card";
 
@@ -27,7 +28,7 @@ import { type TListHandlerStore, type TSingleHandlerStore } from "@/stores";
 // Config
 import { type TListHandlerComponentProps } from "@/@types/handler-types";
 
-export interface IScheduleListExtraProps {}
+export interface IScheduleListExtraProps { }
 
 interface IScheduleListProps extends TListHandlerComponentProps<TListHandlerStore<ISchedule, any, IScheduleListExtraProps>,
   TSingleHandlerStore<ISchedule, any>> {
@@ -87,33 +88,11 @@ export default function ScheduleList({
     handleView
   });
 
-  // React 19: Memoized view toggle for better performance
-  const renderViewToggle = useMemo(() => (
-    <TabsList className="flex justify-center items-center w-auto border-gray-200" data-component-id={componentId}>
-      <TabsTrigger
-        value="table"
-        className="flex items-center gap-2 px-4 data-[state=active]:text-secondary data-[state=active]:font-semibold"
-      >
-        <Table className="h-4 w-4" />
-        <span className="hidden sm:inline">Table</span>
-      </TabsTrigger>
-
-      <TabsTrigger
-        value="list"
-        className="flex items-center gap-2 px-4 data-[state=active]:text-secondary data-[state=active]:font-semibold"
-      >
-        <List className="h-4 w-4" />
-        <span className="hidden sm:inline">List</span>
-      </TabsTrigger>
-    </TabsList>
-  ), [componentId]);
-
   return (
     <Tabs value={currentView} onValueChange={(value) => setCurrentView(value as ViewType)} data-component-id={componentId}>
-
       <div className="flex flex-1 justify-between items-start md:items-center gap-2 flex-wrap">
         <ScheduleFilters store={store} />
-        {renderViewToggle}
+        <ViewToggle componentId={componentId} className="border-gray-200" />
         <div className="flex gap-2">
           <Button
             onClick={handleCreate}
@@ -122,7 +101,7 @@ export default function ScheduleList({
           >
             <Plus /> <span className="hidden sm:inline">Create Schedule</span>
           </Button>
-      
+
         </div>
       </div>
 
