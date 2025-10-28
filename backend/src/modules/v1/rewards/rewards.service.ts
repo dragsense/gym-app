@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { Repository } from 'typeorm';
+import { ModuleRef } from '@nestjs/core';
 import { CrudService } from '@/common/crud/crud.service';
 import { RewardPoints } from './entities/reward-points.entity';
 import { ReferralLink } from '@/modules/v1/referral-links/entities/referral-link.entity';
 import { ERewardType, ERewardStatus } from './enums/reward.enum';
-import { EventService } from '@/common/helper/services/event.service';
 
 @Injectable()
 export class RewardsService extends CrudService<RewardPoints> {
@@ -14,11 +14,9 @@ export class RewardsService extends CrudService<RewardPoints> {
     private readonly rewardPointsRepository: Repository<RewardPoints>,
     @InjectRepository(ReferralLink)
     private readonly referralLinkRepository: Repository<ReferralLink>,
-    dataSource: DataSource,
-    eventService: EventService,
-    
+    moduleRef: ModuleRef,
   ) {
-    super(rewardPointsRepository, dataSource, eventService);
+    super(rewardPointsRepository, moduleRef);
   }
 
   async processReferralSignup(

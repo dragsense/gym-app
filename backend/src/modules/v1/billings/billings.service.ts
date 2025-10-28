@@ -5,7 +5,8 @@ import {
   Inject,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, EntityManager, Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
+import { ModuleRef } from '@nestjs/core';
 
 import { Billing } from './entities/billing.entity';
 import {
@@ -16,7 +17,6 @@ import {
 import { IMessageResponse } from '@shared/interfaces';
 import { LoggerService } from '@/common/logger/logger.service';
 import { CrudService } from '@/common/crud/crud.service';
-import { EventService } from '@/common/helper/services/event.service';
 import { CrudOptions } from '@/common/crud/interfaces/crud.interface';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
@@ -35,15 +35,13 @@ export class BillingsService extends CrudService<Billing> {
     private readonly jwtService: JwtService,
     private readonly stripeBillingService: StripeBillingService,
     private readonly stripeService: StripeService,
-    dataSource: DataSource,
-    eventService: EventService,
-    
+    moduleRef: ModuleRef,
   ) {
     const crudOptions: CrudOptions = {
       restrictedFields: ['recipientUser.password'],
       searchableFields: ['title', 'description', 'notes'],
     };
-    super(billingRepo, dataSource, eventService, crudOptions);
+    super(billingRepo, moduleRef, crudOptions);
   }
 
   async createBilling(

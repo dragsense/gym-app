@@ -4,14 +4,14 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
+import { ModuleRef } from '@nestjs/core';
 import { CrudService } from '@/common/crud/crud.service';
 import { PaymentMethod } from './entities/payment-method.entity';
 import {
   CreatePaymentMethodDto,
   UpdatePaymentMethodDto,
 } from '@shared/dtos/payment-methods-dtos';
-import { EventService } from '@/common/helper/services/event.service';
 import { CrudOptions } from '@/common/crud/interfaces/crud.interface';
 import { EPaymentMethodType } from '@shared/enums';
 
@@ -20,14 +20,13 @@ export class PaymentMethodsService extends CrudService<PaymentMethod> {
   constructor(
     @InjectRepository(PaymentMethod)
     private readonly paymentMethodRepository: Repository<PaymentMethod>,
-    dataSource: DataSource,
-    eventService: EventService,
+    moduleRef: ModuleRef,
   ) {
     const crudOptions: CrudOptions = {
       restrictedFields: [],
       searchableFields: ['type', 'description'],
     };
-    super(paymentMethodRepository, dataSource, eventService, crudOptions);
+    super(paymentMethodRepository, moduleRef, crudOptions);
   }
 
   async createPaymentMethod(createPaymentMethodDto: CreatePaymentMethodDto) {

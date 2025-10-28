@@ -1,11 +1,11 @@
 import { Injectable, BadRequestException, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
+import { ModuleRef } from '@nestjs/core';
 import Stripe from 'stripe';
 import { ConfigService } from '@nestjs/config';
 import { StripeConnectAccount } from '../entities/stripe-connect-account.entity';
 import { CrudService } from '@/common/crud/crud.service';
-import { EventService } from '@/common/helper/services/event.service';
 import {
   CreateStripeConnectDto,
   StripeConnectCreateResponseDto,
@@ -21,11 +21,9 @@ export class StripeConnectService extends CrudService<StripeConnectAccount> {
     private stripeConnectRepository: Repository<StripeConnectAccount>,
     private readonly configService: ConfigService,
     private readonly baseStripeService: BaseStripeService,
-    dataSource: DataSource,
-    eventService: EventService,
-    
+    moduleRef: ModuleRef,
   ) {
-    super(stripeConnectRepository, dataSource, eventService);
+    super(stripeConnectRepository, moduleRef);
   }
 
   async connectStripeAccount(

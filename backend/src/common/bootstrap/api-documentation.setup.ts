@@ -38,7 +38,7 @@ export function setupApiDocumentation(
       scalarConfig?.description ||
       'Empower coaches to manage clients, track progress, and deliver results — all in one simple, powerful tool.';
     app.use(
-      '/api/docs',
+      '/api/scalar-docs',
       apiReference({
         content: document,
         routePrefix: '/api',
@@ -50,7 +50,18 @@ export function setupApiDocumentation(
     );
 
     // Also keep the JSON endpoint for external tools
-    SwaggerModule.setup('api/docs-json', app, document);
+    SwaggerModule.setup('api/swagger-docs', app, document);
+
+    // 4️⃣ Express-only JSON endpoint (safe)
+    const httpAdapter = app.getHttpAdapter();
+
+    if (httpAdapter.getType() === 'express') {
+      const instance = httpAdapter.getInstance();
+      instance.get('/api/docs-json', (_req, res) => {
+        res.setHeader('Content-Type', 'application/json');
+        res.send(document);
+      });
+    }
 
     loggerService.log(
       `🚀 Scalar API documentation available at: http://localhost:${port}/api/docs`,

@@ -36,4 +36,12 @@ export abstract class GeneralBaseEntity extends BaseEntity {
   })
   @Column({ type: 'uuid', nullable: true })
   createdByUserId: string;
+
+  @ApiProperty({
+    example: '550e8400-e29b-41d4-a716-446655440000',
+    description: 'ID of the user who last updated this entity',
+    required: false,
+  })
+  @Column({ type: 'uuid', nullable: true })
+  updatedByUserId: string;
 }

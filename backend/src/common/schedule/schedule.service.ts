@@ -1,11 +1,7 @@
 import { Injectable, BadRequestException, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  EntityManager,
-  Repository,
-  MoreThanOrEqual,
-  DataSource,
-} from 'typeorm';
+import { EntityManager, Repository, MoreThanOrEqual } from 'typeorm';
+import { ModuleRef } from '@nestjs/core';
 import { Schedule } from './entities/schedule.entity';
 import {
   CreateScheduleDto,
@@ -17,18 +13,15 @@ import {
 } from '@shared/enums/schedule.enum';
 import { ScheduleUtils } from './utils/schedule.utils';
 import { CrudService } from '@/common/crud/crud.service';
-import { EventService } from '../helper/services/event.service';
 
 @Injectable()
 export class ScheduleService extends CrudService<Schedule> {
   constructor(
     @InjectRepository(Schedule)
     private scheduleRepo: Repository<Schedule>,
-    dataSource: DataSource,
-    eventService: EventService,
-    
+    moduleRef: ModuleRef,
   ) {
-    super(scheduleRepo, dataSource, eventService);
+    super(scheduleRepo, moduleRef);
   }
 
   /**

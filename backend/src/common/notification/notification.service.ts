@@ -1,11 +1,11 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, FindOptionsWhere, DataSource } from 'typeorm';
+import { Repository, FindOptionsWhere } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
+import { ModuleRef } from '@nestjs/core';
 import { Notification } from './entities/notification.entity';
 import { CreateNotificationDto } from './dtos/create-notification.dto';
 import { CrudService } from '@/common/crud/crud.service';
-import { EventService } from '../helper/services/event.service';
 
 export interface NotificationConfig {
   enabled: boolean;
@@ -20,11 +20,9 @@ export class NotificationService extends CrudService<Notification> {
     @InjectRepository(Notification)
     private readonly notificationRepository: Repository<Notification>,
     private readonly configService: ConfigService,
-    dataSource: DataSource,
-    eventService: EventService,
-    
+    moduleRef: ModuleRef,
   ) {
-    super(notificationRepository, dataSource, eventService);
+    super(notificationRepository, moduleRef);
   }
 
   /**

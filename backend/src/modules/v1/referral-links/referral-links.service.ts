@@ -1,22 +1,20 @@
 import { Injectable, NotFoundException, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
+import { ModuleRef } from '@nestjs/core';
 import { CrudService } from '@/common/crud/crud.service';
 import { ReferralLink } from './entities/referral-link.entity';
 import { CreateReferralLinkDto, UpdateReferralLinkDto } from '@shared/dtos';
 import { EReferralLinkStatus } from '@shared/enums/referral-link.enum';
-import { EventService } from '@/common/helper/services/event.service';
 
 @Injectable()
 export class ReferralLinksService extends CrudService<ReferralLink> {
   constructor(
     @InjectRepository(ReferralLink)
     private readonly referralLinkRepository: Repository<ReferralLink>,
-    dataSource: DataSource,
-    eventService: EventService,
-    
+    moduleRef: ModuleRef,
   ) {
-    super(referralLinkRepository, dataSource, eventService);
+    super(referralLinkRepository, moduleRef);
   }
 
   async createReferralLink(

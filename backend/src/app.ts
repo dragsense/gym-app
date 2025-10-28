@@ -12,6 +12,7 @@ import { setupSecurity } from './common/bootstrap/security.middleware';
 import { setupApiDocumentation } from './common/bootstrap/api-documentation.setup';
 import { setupInterceptors } from './common/bootstrap/interceptors.setup';
 import { setupBullBoard } from './common/bootstrap/bull-board.setup';
+import { setupRequestContext } from './common/bootstrap/request-context.setup';
 
 export async function app() {
   const app = await NestFactory.create(AppModule, {
@@ -27,6 +28,7 @@ export async function app() {
 
   // Setup application components
   setupCors(app, configService);
+  setupRequestContext(app);
   setupSecurity(app, configService);
   setupApiDocumentation(app, configService, loggerService);
   setupInterceptors(app, loggerService);

@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
+import { ModuleRef } from '@nestjs/core';
 
 import { Trainer } from './entities/trainer.entity';
 import { CreateTrainerDto, UpdateTrainerDto } from '@shared/dtos';
 import { CrudService } from '@/common/crud/crud.service';
-import { EventService } from '@/common/helper/services/event.service';
 import { CrudOptions } from '@/common/crud/interfaces/crud.interface';
 import { UsersService } from '../users/users.service';
 import { EUserLevels, EUserRole } from '@shared/enums';
@@ -17,8 +17,7 @@ export class TrainersService extends CrudService<Trainer> {
     @InjectRepository(Trainer)
     private readonly trainerRepo: Repository<Trainer>,
     private readonly userService: UsersService,
-    dataSource: DataSource,
-    eventService: EventService,
+    moduleRef: ModuleRef,
   ) {
     const crudOptions: CrudOptions = {
       restrictedFields: ['user.password'],
@@ -28,7 +27,7 @@ export class TrainersService extends CrudService<Trainer> {
         'user.profile.lastName',
       ],
     };
-    super(trainerRepo, dataSource, eventService, crudOptions);
+    super(trainerRepo, moduleRef, crudOptions);
   }
 
   async createTrainer(

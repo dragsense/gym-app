@@ -3,9 +3,11 @@ import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../users.service';
 import { CreateUserDto } from '@shared/dtos';
 import { EUserLevels, EUserRole } from '@shared/enums';
+import { LoggerService } from '@/common/logger/logger.service';
 
 @Injectable()
 export class UserSeeder implements OnModuleInit {
+  private readonly logger = new LoggerService(UserSeeder.name);
   constructor(
     private readonly usersService: UsersService,
     private readonly configService: ConfigService,
@@ -19,7 +21,9 @@ export class UserSeeder implements OnModuleInit {
     const adminConfig = this.configService.get('superAdmin');
 
     if (!adminConfig) {
-      console.log('Super admin configuration not found, skipping seed...');
+      this.logger.error(
+        'Super admin configuration not found, skipping seed...',
+      );
       return;
     }
 
@@ -30,7 +34,7 @@ export class UserSeeder implements OnModuleInit {
       });
 
       if (existingAdmin) {
-        console.log('Admin user already exists, skipping seed...');
+        this.logger.error('Admin user already exists, skipping seed...');
         return;
       }
     } catch (error) {
@@ -50,13 +54,15 @@ export class UserSeeder implements OnModuleInit {
         },
       };
 
-      console.log('Creating super admin user...', adminConfig);
+      this.logger.log('Creating super admin user... ' + adminConfig);
 
       await this.usersService.createUser(createUserDto);
 
-      console.log('Super Admin user seeded successfully:', adminConfig.email);
+      this.logger.log(
+        'Super Admin user seeded successfully: ' + adminConfig.email,
+      );
     } catch (error) {
-      console.error('Error seeding admin user:', error);
+      this.logger.error('Error seeding admin user: ' + error);
     }
   }
 }

@@ -27,6 +27,10 @@ export const getBullQueueConfig = (configService: ConfigService) => {
   const redisConfig = configService.get('bullQueue.redis');
 
   return {
-    redis: { ...redisConfig },
+    redis: {
+      ...redisConfig,
+      maxRetriesPerRequest: null,
+      enableReadyCheck: false,
+    },
   };
 };

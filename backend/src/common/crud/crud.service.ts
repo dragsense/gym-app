@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  OnModuleInit,
 } from '@nestjs/common';
 import {
   Repository,
@@ -22,23 +23,27 @@ import {
   getRelationFilters,
   QueryFilterOptions,
 } from '@shared/decorators/crud.dto.decorators';
+import { ModuleRef } from '@nestjs/core';
+import { RequestContext } from '../context/request-context';
 
-export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
+@Injectable()
+export class CrudService<T extends ObjectLiteral>
+  implements ICrudService<T>, OnModuleInit
+{
   protected readonly logger = new LoggerService(CrudService.name);
   protected readonly repository: Repository<T>;
-  protected readonly dataSource: DataSource;
-  protected readonly eventService: EventService;
+  protected readonly moduleRef: ModuleRef;
+  protected dataSource!: DataSource;
+  protected eventService!: EventService;
   protected options: CrudOptions;
 
   constructor(
     repository: Repository<T>,
-    dataSource: DataSource,
-    eventService: EventService,
-    options?: CrudOptions, // ✅ optional, child can pass this
+    moduleRef: ModuleRef,
+    options?: CrudOptions,
   ) {
     this.repository = repository;
-    this.dataSource = dataSource;
-    this.eventService = eventService;
+    this.moduleRef = moduleRef;
 
     // ✅ Merge default + custom options directly here
     this.options = {
@@ -46,6 +51,12 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
       defaultSort: { field: 'id', order: 'ASC' }, // Default sort by ID ascending
       ...options,
     };
+  }
+
+  async onModuleInit(): Promise<void> {
+    // Auto resolve dependencies
+    this.dataSource = this.moduleRef.get(DataSource, { strict: false });
+    this.eventService = this.moduleRef.get(EventService, { strict: false });
   }
 
   /**
@@ -64,12 +75,16 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
 
     try {
       let processedData = createDto as any;
-      // Execute beforeCreate callback if provided
+
+      const userId = RequestContext.get<string>('userId');
+      if (userId && !processedData.createdByUserId) {
+        processedData = { ...processedData, createdByUserId: userId };
+      }
+
       if (callbacks?.beforeCreate) {
         processedData = await callbacks.beforeCreate(queryRunner.manager);
       }
 
-      // Emit before create event
       const entity = this.repository.create(processedData);
       const savedEntity = await queryRunner.manager.save(entity);
       const finalEntity = Array.isArray(savedEntity)
@@ -124,7 +139,11 @@ export class CrudService<T extends ObjectLiteral> implements ICrudService<T> {
 
       let processedData = updateDto;
 
-      // Execute beforeUpdate callback if provided
+      const userId = RequestContext.get<string>('userId');
+      if (userId && !(processedData as any).updatedByUserId) {
+        processedData = { ...processedData, updatedByUserId: userId };
+      }
+
       if (callbacks?.beforeUpdate) {
         processedData = await callbacks.beforeUpdate(
           existingEntity,

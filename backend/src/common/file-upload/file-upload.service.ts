@@ -6,7 +6,8 @@ import {
 import * as fs from 'fs';
 import * as path from 'path';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, Repository, DataSource } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
+import { ModuleRef } from '@nestjs/core';
 import { FileUpload } from './entities/file-upload.entity';
 import {
   FileListDto,
@@ -18,7 +19,6 @@ import { ConfigService } from '@nestjs/config';
 import { detectFileType } from '@/lib/utils/detect-file-type.util';
 import { OmitType } from '@shared/lib/type-utils';
 import { CrudService } from '@/common/crud/crud.service';
-import { EventService } from '../helper/services/event.service';
 
 @Injectable()
 export class FileUploadService extends CrudService<FileUpload> {
@@ -28,10 +28,9 @@ export class FileUploadService extends CrudService<FileUpload> {
     @InjectRepository(FileUpload)
     private fileRepo: Repository<FileUpload>,
     private configService: ConfigService,
-    dataSource: DataSource,
-    eventService: EventService,
+    moduleRef: ModuleRef,
   ) {
-    super(fileRepo, dataSource, eventService);
+    super(fileRepo, moduleRef);
     this.appUrl =
       this.configService.get<string>('app.url') || 'http://localhost:3000';
   }

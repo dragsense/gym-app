@@ -5,6 +5,7 @@ import { BullAdapter } from '@bull-board/api/bullAdapter';
 import { Queue } from 'bull';
 import { LoggerService } from '../logger/logger.service';
 import { ConfigService } from '@nestjs/config';
+import { getQueueToken } from '@nestjs/bull';
 
 export function setupBullBoard(
   app: INestApplication,
@@ -23,12 +24,13 @@ export function setupBullBoard(
 
   for (const queueName of queueNames) {
     try {
-      const queue = app.get<Queue>(`BullQueue_${queueName}`);
+      const token = getQueueToken(queueName);
+      const queue = app.get<Queue>(token, { strict: false });
       if (queue) {
         queues.push(queue);
       }
     } catch (error) {
-      // Queue not found, skip it
+      loggerService.warn(`⚠️ Bull Board: Queue '${queueName}' not found`);
     }
   }
 
@@ -43,5 +45,7 @@ export function setupBullBoard(
     loggerService.log(
       `🎯 Bull Board available at: http://localhost:${port}/bull-board`,
     );
+  } else {
+    loggerService.error('❌ Bull Board: No queues found!');
   }
 }

@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, EntityManager, Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 
 import { User } from '@/modules/v1/users/entities/user.entity';
@@ -17,9 +17,9 @@ import { TokenService } from '../auth/services/tokens.service';
 import { UserEmailService } from './services/user-email.service';
 import { LoggerService } from '@/common/logger/logger.service';
 import { CrudService } from '@/common/crud/crud.service';
-import { EventService } from '@/common/helper/services/event.service';
 import { ProfilesService } from './profiles/profiles.service';
 import { CrudOptions } from '@/common/crud/interfaces/crud.interface';
+import { ModuleRef } from '@nestjs/core';
 
 @Injectable()
 export class UsersService extends CrudService<User> {
@@ -32,14 +32,13 @@ export class UsersService extends CrudService<User> {
     private readonly passwordService: PasswordService,
     private readonly userEmailService: UserEmailService,
     private tokenService: TokenService,
-    dataSource: DataSource,
-    eventService: EventService,
+    moduleRef: ModuleRef,
   ) {
     const crudOptions: CrudOptions = {
       restrictedFields: ['password', 'passwordHistory'],
       searchableFields: ['email', 'profile.firstName', 'profile.lastName'],
     };
-    super(userRepo, dataSource, eventService, crudOptions);
+    super(userRepo, moduleRef, crudOptions);
   }
 
   async getUserByEmail(email: string): Promise<User | null> {

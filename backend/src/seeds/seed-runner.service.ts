@@ -7,7 +7,11 @@ import { LoggerService } from '../common/logger/logger.service';
 @Injectable()
 export class SeedRunnerService implements OnModuleInit {
   private readonly logger = new LoggerService(SeedRunnerService.name);
-  constructor(private paymentMethdSeeder: PaymentMethodsSeed) {}
+  constructor(
+    private paymentMethdSeeder: PaymentMethodsSeed,
+    private userSeed: UserSeed,
+    private resourceSeed: ResourceSeed,
+  ) {}
 
   async onModuleInit() {
     // Wait for database connection
@@ -16,6 +20,12 @@ export class SeedRunnerService implements OnModuleInit {
 
       // Run payment methods seed
       await this.paymentMethdSeeder.run();
+
+      // Run resource seed
+      await this.resourceSeed.run();
+
+      // Run user seed
+      await this.userSeed.run();
 
       this.logger.log('Database seeding completed successfully!');
     } catch (error: unknown) {

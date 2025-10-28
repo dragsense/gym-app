@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
+import { ModuleRef } from '@nestjs/core';
 
 import { IMessageResponse } from '@shared/interfaces';
 import { CrudService } from '@/common/crud/crud.service';
@@ -11,7 +12,6 @@ import { UpdateProfileDto } from '@shared/dtos/user-dtos/profile.dto';
 import { FileUploadService } from '@/common/file-upload/file-upload.service';
 import { FileUpload } from '@/common/file-upload/entities/file-upload.entity';
 import { EFileType } from '@shared/enums';
-import { EventService } from '@/common/helper/services/event.service';
 import { CrudOptions } from '@/common/crud/interfaces/crud.interface';
 
 @Injectable()
@@ -20,8 +20,7 @@ export class ProfilesService extends CrudService<Profile> {
     @InjectRepository(Profile)
     private readonly profileRepo: Repository<Profile>,
     private readonly fileUploadService: FileUploadService,
-    dataSource: DataSource,
-    crudEventService: EventService,
+    moduleRef: ModuleRef,
   ) {
     const crudOptions: CrudOptions = {
       searchableFields: ['firstName', 'lastName'],
@@ -29,7 +28,7 @@ export class ProfilesService extends CrudService<Profile> {
       defaultSort: { field: 'createdAt', order: 'DESC' },
     };
 
-    super(profileRepo, dataSource, crudEventService, crudOptions);
+    super(profileRepo, moduleRef, crudOptions);
   }
 
   async updateProfile(

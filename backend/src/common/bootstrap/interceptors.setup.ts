@@ -2,6 +2,7 @@ import { INestApplication } from '@nestjs/common';
 import { LoggerService } from '../logger/logger.service';
 import { ResponseEncryptionInterceptor } from '../../interceptors/response-encryption-interceptor';
 import { BrowserHtmlInterceptor } from '../../interceptors/browser-html-interceptor';
+import { RequestContextInterceptor } from '../context/request-context.interceptor';
 
 import { NestInterceptor } from '@nestjs/common';
 
@@ -9,8 +10,12 @@ export function setupInterceptors(
   app: INestApplication,
   loggerService: LoggerService,
 ) {
-  // Build interceptors array based on environment
-  const interceptors: NestInterceptor[] = [new BrowserHtmlInterceptor()];
+  const requestContextInterceptor = app.get(RequestContextInterceptor);
+
+  const interceptors: NestInterceptor[] = [
+    requestContextInterceptor,
+    new BrowserHtmlInterceptor(),
+  ];
 
   // Only use encryption in production
   if (process.env.NODE_ENV === 'production') {

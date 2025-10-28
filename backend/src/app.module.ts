@@ -41,6 +41,8 @@ import { ServerGatewayModule } from './gateways/server-gateway.module';
 
 import { join } from 'path';
 import { ResponseEncryptionInterceptor } from './interceptors/response-encryption-interceptor';
+import { RequestContextMiddleware } from './common/context/request-context.middleware';
+import { RequestContextInterceptor } from './common/context/request-context.interceptor';
 
 import { EncryptionService } from './lib/encryption.service';
 import { ClientsModule } from './modules/v1/clients/clients.module';
@@ -162,6 +164,8 @@ import { HealthModule } from './common/health/health.module';
     AppService,
     EncryptionService,
     ResponseEncryptionInterceptor,
+    RequestContextMiddleware,
+    RequestContextInterceptor,
     JwtStrategy,
     {
       provide: APP_GUARD,

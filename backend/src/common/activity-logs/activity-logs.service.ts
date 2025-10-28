@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
+import { ModuleRef } from '@nestjs/core';
 import { ActivityLog } from './entities/activity-log.entity';
 import { CreateActivityLogDto } from './dtos/create-activity-log.dto';
 import { CrudService } from '@/common/crud/crud.service';
-import { EventService } from '../helper/services/event.service';
 
 @Injectable()
 export class ActivityLogsService extends CrudService<ActivityLog> {
@@ -13,10 +13,9 @@ export class ActivityLogsService extends CrudService<ActivityLog> {
     @InjectRepository(ActivityLog)
     private readonly activityLogRepository: Repository<ActivityLog>,
     private readonly configService: ConfigService,
-    dataSource: DataSource,
-    eventService: EventService,
+    moduleRef: ModuleRef,
   ) {
-    super(activityLogRepository, dataSource, eventService);
+    super(activityLogRepository, moduleRef);
   }
 
   /**
