@@ -16,7 +16,7 @@ import { ProfileForm, UserForm, type TUserExtraProps } from "@/page-components";
 import { deleteUser, fetchUser, fetchUsers } from "@/services/user.api";
 
 // Types
-import { EUserLevels, EUserRole } from "@shared/enums/user.enum";
+import { EUserLevels } from "@shared/enums/user.enum";
 
 
 // Layouts
@@ -54,7 +54,7 @@ export default function UsersPage() {
           }
         ]}
         singleProps={{
-          level: EUserLevels[EUserRole.USER],
+          level: EUserLevels.USER,
         }}
       />
 
@@ -64,13 +64,13 @@ export default function UsersPage() {
         dto={UserListDto}
         initialParams={{
           _relations: 'profile',
-          _select: 'email, level, profile.firstName,profile.lastName,profile.phoneNumber, createdAt',
+          _select: 'email, level, isActive, profile.firstName,profile.lastName,profile.phoneNumber, createdAt',
           sortBy: 'createdAt',
           sortOrder: 'ASC',
         }}
         storeKey={STORE_KEY}
         listProps={{
-          level: EUserLevels[EUserRole.USER],
+          level: EUserLevels.USER,
         }}
       />
     </PageInnerLayout>

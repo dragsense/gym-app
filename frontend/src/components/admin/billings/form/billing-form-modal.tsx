@@ -18,7 +18,7 @@ import { useSearchableUsers } from "@/hooks/use-searchable";
 import type { TCustomInputWrapper, TFieldConfigObject } from "@/@types/form/field-config.type";
 import type { ReminderDto } from "@shared/dtos/reminder-dtos";
 import type { UserDto } from "@shared/dtos";
-import { EUserLevels, EUserRole } from "@shared/enums";
+import { EUserLevels } from "@shared/enums";
 
 export interface IBillingFormModalExtraProps {
   open: boolean;
@@ -53,7 +53,7 @@ const BillingFormModal = React.memo(function BillingFormModal({
       return <SearchableInputWrapper<UserDto>
         {...props}
         modal={true}
-        useSearchable={() => useSearchableUsers({ level: EUserLevels[EUserRole.CLIENT] })}
+        useSearchable={() => useSearchableUsers({ level: EUserLevels.CLIENT })}
         getLabel={(item) => {
           if (!item?.profile) return 'Select Recipient'
           return `${item.id} - ${item.profile?.firstName} ${item.profile?.lastName}`

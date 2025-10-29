@@ -73,7 +73,7 @@ export function AppSelect({
 
     // Map value -> label (keys must be strings)
     const labelMap = React.useMemo(
-        () => Object.fromEntries(options.map((o) => [toKey(o.value), o.label])),
+        () => Object.fromEntries(options.map((o) => typeof option === "object" ? [toKey(o.value), o.label] : [toKey(o), o])),
         [options]
     );
 

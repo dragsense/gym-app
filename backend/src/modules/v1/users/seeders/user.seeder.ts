@@ -2,7 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../users.service';
 import { CreateUserDto } from '@shared/dtos';
-import { EUserLevels, EUserRole } from '@shared/enums';
+import { EUserLevels } from '@shared/enums';
 import { LoggerService } from '@/common/logger/logger.service';
 
 @Injectable()
@@ -47,7 +47,7 @@ export class UserSeeder implements OnModuleInit {
         email: adminConfig.email,
         password: adminConfig.password,
         isActive: true,
-        level: EUserLevels[EUserRole.SUPER_ADMIN], // Set level directly in creation
+        level: EUserLevels.SUPER_ADMIN, // Set level directly in creation
         profile: {
           firstName: adminConfig.firstName,
           lastName: adminConfig.lastName,

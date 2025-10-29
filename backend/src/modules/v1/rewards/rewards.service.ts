@@ -1,11 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { LessThan, MoreThan, Repository } from 'typeorm';
 import { ModuleRef } from '@nestjs/core';
 import { CrudService } from '@/common/crud/crud.service';
 import { RewardPoints } from './entities/reward-points.entity';
 import { ReferralLink } from '@/modules/v1/referral-links/entities/referral-link.entity';
 import { ERewardType, ERewardStatus } from './enums/reward.enum';
+import { EReferralLinkStatus } from '@shared/enums/referral-link.enum';
+import { ServerGateway } from '@/common/gateways/server.gateway';
 
 @Injectable()
 export class RewardsService extends CrudService<RewardPoints> {
@@ -15,6 +17,7 @@ export class RewardsService extends CrudService<RewardPoints> {
     @InjectRepository(ReferralLink)
     private readonly referralLinkRepository: Repository<ReferralLink>,
     moduleRef: ModuleRef,
+    private serverGateway: ServerGateway,
   ) {
     super(rewardPointsRepository, moduleRef);
   }
@@ -25,11 +28,19 @@ export class RewardsService extends CrudService<RewardPoints> {
   ): Promise<void> {
     // Find the referral link
     const referralLink = await this.referralLinkRepository.findOne({
-      where: { referralCode },
+      where: {
+        referralCode,
+        expiresAt: MoreThan(new Date()),
+        status: EReferralLinkStatus.ACTIVE,
+      },
       relations: ['createdBy'],
     });
 
-    if (!referralLink) {
+    if (
+      !referralLink ||
+      (referralLink.maxUses || 0) <= referralLink.currentUses
+    ) {
+      this.logger.error(`Invalid referral code: ${referralCode}`);
       return; // Invalid referral code, no reward
     }
 
@@ -70,6 +81,11 @@ export class RewardsService extends CrudService<RewardPoints> {
           },
         },
       );
+
+      this.serverGateway.emitToClient(`user_${referrer.id}`, 'rewardsUpdated', {
+        message: `You have received ${rewardPoints} points for referring ${referralCount} user${referralCount > 1 ? 's' : ''}`,
+        timestamp: new Date().toISOString(),
+      });
     }
   }
 

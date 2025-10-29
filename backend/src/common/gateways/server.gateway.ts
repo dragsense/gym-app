@@ -76,21 +76,6 @@ export class ServerGateway implements OnGatewayInit {
     this.logger.log(`📡 Emitted '${event}' to ${clientIds.length} clients`);
   }
 
-  /**
-   * Emit a message to a specific room
-   */
-  emitToRoom(roomName: string, event: string, data: unknown): void {
-    if (!this.server) {
-      this.logger.warn(
-        'WebSocket server not initialized. Cannot emit message.',
-      );
-      return;
-    }
-
-    this.server.to(roomName).emit(event, data);
-    this.logger.log(`📡 Emitted '${event}' to room ${roomName}`);
-  }
-
   handleConnection(client: Socket) {
     this.logger.log(`🔌 Client connected: ${client.id}`);
   }

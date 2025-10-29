@@ -3,7 +3,7 @@ import { LoggerService } from '@/common/logger/logger.service';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { CreateUserDto } from '@shared/dtos';
-import { EUserLevels, EUserRole } from '@shared/enums';
+import { EUserLevels } from '@shared/enums';
 
 @Injectable()
 export class UserSeed {
@@ -14,7 +14,12 @@ export class UserSeed {
   ) {}
 
   async run(): Promise<void> {
-    const adminConfig: any = this.configService.get('superAdmin');
+    const adminConfig = this.configService.get('superAdmin') as {
+      email: string;
+      password: string;
+      firstName: string;
+      lastName: string;
+    };
 
     if (!adminConfig) {
       this.logger.warn(
@@ -46,7 +51,7 @@ export class UserSeed {
         email: adminConfig.email,
         password: adminConfig.password,
         isActive: true,
-        level: EUserLevels[EUserRole.SUPER_ADMIN],
+        level: EUserLevels.SUPER_ADMIN,
         profile: {
           firstName: adminConfig.firstName,
           lastName: adminConfig.lastName,

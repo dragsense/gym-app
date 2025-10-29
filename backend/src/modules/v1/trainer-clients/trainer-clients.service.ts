@@ -2,7 +2,6 @@ import {
   Injectable,
   ConflictException,
   NotFoundException,
-  Inject,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -14,7 +13,7 @@ import {
 } from '@shared/dtos/trainer-client-dtos';
 import { CrudService } from '@/common/crud/crud.service';
 import { CrudOptions } from '@/common/crud/interfaces/crud.interface';
-import { EUserLevels, EUserRole } from '@shared/enums';
+import { EUserLevels } from '@shared/enums';
 import { TrainersService } from '../trainers/trainers.service';
 import { ClientsService } from '../clients/clients.service';
 
@@ -42,7 +41,7 @@ export class TrainerClientsService extends CrudService<TrainerClient> {
       _relations: ['user'],
     });
 
-    if (!trainer || trainer.user?.level !== EUserLevels[EUserRole.TRAINER]) {
+    if (!trainer || trainer.user?.level !== EUserLevels.TRAINER) {
       // 1 = TRAINER level
       throw new NotFoundException('Trainer not found or invalid trainer level');
     }
@@ -51,7 +50,7 @@ export class TrainerClientsService extends CrudService<TrainerClient> {
     const client = await this.clientsService.getSingle(createDto.client.id, {
       _relations: ['user'],
     });
-    if (!client || client.user?.level !== EUserLevels[EUserRole.CLIENT]) {
+    if (!client || client.user?.level !== EUserLevels.CLIENT) {
       // 2 = CLIENT level
       throw new NotFoundException('Client not found or invalid client level');
     }
@@ -81,7 +80,7 @@ export class TrainerClientsService extends CrudService<TrainerClient> {
         updateDto.trainer.id,
         { _relations: ['user'] },
       );
-      if (!trainer || trainer.user?.level !== EUserLevels[EUserRole.TRAINER]) {
+      if (!trainer || trainer.user?.level !== EUserLevels.TRAINER) {
         // 1 = TRAINER level
         throw new NotFoundException(
           'Trainer not found or invalid trainer level',
@@ -94,7 +93,7 @@ export class TrainerClientsService extends CrudService<TrainerClient> {
       const client = await this.clientsService.getSingle(updateDto.client.id, {
         _relations: ['user'],
       });
-      if (!client || client.user?.level !== EUserLevels[EUserRole.CLIENT]) {
+      if (!client || client.user?.level !== EUserLevels.CLIENT) {
         // 2 = CLIENT level
         throw new NotFoundException('Client not found or invalid client level');
       }

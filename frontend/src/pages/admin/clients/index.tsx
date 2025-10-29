@@ -19,7 +19,6 @@ import { ClientForm, ProfileForm } from "@/page-components";
 // Layouts
 import { PageInnerLayout } from "@/layouts";
 import { EUserLevels } from "@shared/enums";
-import { EUserRole } from "@shared/enums";
 import type { TClientListData } from "@shared/types";
 import type { TClientViewExtraProps } from "@/components/admin/clients/view/client-view";
 import type { IClientListExtraProps } from "@/components/admin/clients/list/client-list";
@@ -65,7 +64,7 @@ export default function ClientsPage() {
                 dto={ClientListDto}
                 storeKey={CLIENTS_STORE_KEY}
                 listProps={{
-                    level: EUserLevels[EUserRole.CLIENT]
+                    level: EUserLevels.CLIENT
                 }}
             />
         </PageInnerLayout>

@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { AppSelect } from "@/components/layout-ui/app-select";
 import { DatePicker, DateTimePicker, DateRangePicker, DateTimeRangePicker } from "@/components/form-ui/date-picker";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
 import { EORDER_CLASSES } from "@/enums/general.enum";
 import type { TFieldConfig } from "@/@types/form/field-config.type";
@@ -219,6 +220,62 @@ export const SwitchField = React.memo(function SwitchField({
                         onCheckedChange={controllerField.onChange}
                         disabled={isDisabled}
                     />
+                );
+            }}
+        </FormFieldWrapper>
+    );
+});
+
+export const RadioField = React.memo(function RadioField({
+    field,
+    fieldName,
+    showRequiredAsterisk,
+    layout = "vertical"
+}: BaseFieldProps) {
+    const onChangeHandler = (value: any) => {
+        field?.onChange?.(value);
+        return value;
+    };
+
+    const options = field.options || [];
+
+    return (
+        <FormFieldWrapper
+            field={field}
+            fieldName={fieldName}
+            showRequiredAsterisk={showRequiredAsterisk}
+            layout={layout}
+        >
+            {({ field: controllerField, isDisabled }) => {
+                return (
+                    <RadioGroup
+                        value={controllerField.value?.toString()}
+                        onValueChange={(value) => {
+                            // Convert value based on field type or let the field handle it
+                            const processedValue = onChangeHandler(value);
+                            controllerField.onChange(processedValue);
+                        }}
+                        disabled={isDisabled}
+                        className={cn("flex gap-4", field.className)}
+                    >
+                        {options.map((option: any) => {
+                            const optionValue = typeof option === "object" ? option.value : option;
+                            const optionLabel = typeof option === "object" ? option.label : option;
+                            const valueStr = optionValue?.toString();
+
+                            return (
+                                <div key={valueStr} className="flex items-center space-x-2">
+                                    <RadioGroupItem value={valueStr} id={`${fieldName}-${valueStr}`} />
+                                    <Label
+                                        htmlFor={`${fieldName}-${valueStr}`}
+                                        className="font-normal cursor-pointer"
+                                    >
+                                        {optionLabel}
+                                    </Label>
+                                </div>
+                            );
+                        })}
+                    </RadioGroup>
                 );
             }}
         </FormFieldWrapper>

@@ -1,5 +1,5 @@
 // React & Hooks
-import React, { createContext, useContext, useDeferredValue, useMemo, useTransition, useId } from "react";
+import React, { createContext, useContext, useDeferredValue, useMemo, useTransition, useId, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 // Types
@@ -7,6 +7,7 @@ import { type IAuthUser } from '@shared/interfaces/auth.interface';
 
 // Services
 import { me } from "@/services/user.api";
+import { ensureConnected, socketEmitter } from "@/utils/socket";
 
 interface IAuthUserContextType {
   user?: IAuthUser;
@@ -36,7 +37,25 @@ export function AuthUserProvider({ children }: { children: React.ReactNode }) {
 
   // React 19: Deferred user data for better performance
   const deferredUser = useDeferredValue(data);
-  
+
+  // Join user's websocket room once and leave on unmount
+  useEffect(() => {
+    const userId = deferredUser?.id;
+    if (!userId) return;
+
+    let isMounted = true;
+    ensureConnected()
+      .then(() => isMounted && socketEmitter<{ success: boolean; message: string }>('joinUserRoom', { userId }))
+      .catch(() => { });
+
+    return () => {
+      isMounted = false;
+      ensureConnected()
+        .then(() => socketEmitter<{ success: boolean; message: string }>('leaveUserRoom', { userId }))
+        .catch(() => { });
+    };
+  }, [deferredUser?.id]);
+
   // React 19: Memoized context value to prevent unnecessary re-renders
   const value = useMemo(() => ({
     user: deferredUser,

@@ -38,7 +38,7 @@ import { WorkerModule } from './common/worker/worker.module';
 // Common modules
 import { LoggerModule } from './common/logger/logger.module';
 import { DatabaseModule } from './common/database/database.module';
-import { ServerGatewayModule } from './gateways/server-gateway.module';
+import { ServerGatewayModule } from './common/gateways/server-gateway.module';
 
 import { join } from 'path';
 import { ResponseEncryptionInterceptor } from './interceptors/response-encryption-interceptor';

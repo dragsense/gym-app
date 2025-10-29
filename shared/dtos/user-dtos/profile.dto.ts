@@ -12,7 +12,7 @@ import {
   ValidateNested,
   ArrayMaxSize,
 } from "class-validator";
-import { EUserGender, EUserSkill } from "../../enums/user.enum";
+import { EUserGender } from "../../enums/user.enum";
 import { FieldOptions, FieldType } from "../../decorators/field.decorator";
 import { FileUploadDto } from "../file-upload-dtos";
 
@@ -80,25 +80,6 @@ export class CreateProfileDto {
   @ArrayMaxSize(10)
   @FieldType("custom")
   documents?: any[];
-
-  @ApiPropertyOptional({
-    enum: EUserSkill,
-    isArray: true,
-    example: [EUserSkill.JAVASCRIPT, EUserSkill.REACT],
-    description: "User skills",
-  })
-  @IsOptional()
-  @IsArray()
-  @IsEnum(EUserSkill, { each: true })
-  @ArrayMaxSize(10)
-  @FieldType("multiSelect")
-  @FieldOptions(
-    Object.values(EUserSkill).map((v) => ({
-      value: v as string,
-      label: (v.charAt(0) + v.slice(1).toLowerCase()) as string,
-    }))
-  )
-  skills?: EUserSkill[];
 }
 
 export class UpdateProfileDto extends PartialType(CreateProfileDto) {}
@@ -130,11 +111,4 @@ export class ProfileDto {
 
   @ApiProperty({ type: [FileUploadDto] })
   documents?: FileUploadDto[];
-
-  @ApiPropertyOptional({
-    enum: EUserSkill,
-    isArray: true,
-    example: [EUserSkill.JAVASCRIPT, EUserSkill.REACT],
-  })
-  skills?: EUserSkill[];
 }

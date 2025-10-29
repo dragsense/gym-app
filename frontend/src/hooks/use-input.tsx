@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { TextField, TextareaField, SelectField, SwitchField, DateField, DateRangeField, DateTimeRangeField, useArrayField, CustomField, FileField, MultiFileField, useObjectField } from "@/components/form-ui/field-components";
+import { TextField, TextareaField, SelectField, SwitchField, RadioField, DateField, DateRangeField, DateTimeRangeField, useArrayField, CustomField, FileField, MultiFileField, useObjectField } from "@/components/form-ui/field-components";
 import type { TFieldConfig, TFieldConfigObject } from "@/@types/form/field-config.type";
 
 interface UseInputProps<T> {
@@ -47,9 +47,9 @@ export function useInput<T>({
     if (!field) return null;
     if (!field.type) return null;
     const fieldName = parentName ? `${parentName}.${field.name}` : field.name;
-   
+
     if (field.type === "nested") {
-   
+
       return useObjectField({
         field,
         layout,
@@ -83,6 +83,8 @@ export function useInput<T>({
         return <SelectField {...commonProps} />;
       case "switch":
         return <SwitchField {...commonProps} />;
+      case "radio":
+        return <RadioField {...commonProps} />;
       case "date":
       case "datetime":
         return <DateField {...commonProps} />;

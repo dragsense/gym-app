@@ -20,6 +20,7 @@ import { CrudModule } from '@/common/crud/crud.module';
 import { UserSeeder } from './seeders/user.seeder';
 import { UserSeed } from './seeder/user.seed';
 import { ActionModule } from '@/common/helper/action.module';
+import { UsersWebSocketService } from './services/users-websocket.service';
 
 @Module({
   imports: [
@@ -33,7 +34,7 @@ import { ActionModule } from '@/common/helper/action.module';
       inject: [ConfigService],
     }),
   ],
-  exports: [UsersService, UserEmailService, UserSeed],
+  exports: [UsersService, UserEmailService, UserSeed, UsersWebSocketService],
   controllers: [UsersController],
   providers: [
     UsersService,
@@ -45,6 +46,7 @@ import { ActionModule } from '@/common/helper/action.module';
     TokenService,
     UserSeeder,
     UserSeed,
+    UsersWebSocketService,
   ],
 })
 export class UsersModule {}

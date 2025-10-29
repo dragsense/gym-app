@@ -1,5 +1,4 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
 
 // Types
 import type { ITrainer } from '@shared/interfaces/trainer.interface';
@@ -18,7 +17,7 @@ import { TrainerForm } from "@/page-components/trainer";
 
 // Layouts
 import { PageInnerLayout } from "@/layouts";
-import { EUserLevels, EUserRole } from "@shared/enums";
+import { EUserLevels } from "@shared/enums";
 import type { ITrainerListExtraProps } from "@/components/admin/trainers/list/trainer-list";
 import type { TTrainerListData } from "@shared/types";
 import type { TTrainerViewExtraProps } from "@/components/admin/trainers/view/trainer-view";
@@ -63,7 +62,7 @@ export default function TrainersPage() {
                 dto={TrainerListDto}
                 storeKey={TRAINERS_STORE_KEY}
                 listProps={{
-                    level: EUserLevels[EUserRole.TRAINER]
+                    level: EUserLevels.TRAINER
                 }}
             />
         </PageInnerLayout>

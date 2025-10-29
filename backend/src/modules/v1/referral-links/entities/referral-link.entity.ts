@@ -35,7 +35,7 @@ export class ReferralLink extends GeneralBaseEntity {
   @Column({
     type: 'enum',
     enum: EReferralLinkType,
-    default: EReferralLinkType.ADMIN,
+    default: EReferralLinkType.USER,
   })
   type: EReferralLinkType;
 

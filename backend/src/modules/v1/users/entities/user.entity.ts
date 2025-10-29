@@ -12,13 +12,10 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
 import { GeneralBaseEntity } from '@/common/entities';
 import { Profile } from '../profiles/entities/profile.entity';
-import { EUserLevels, EUserRole } from '@shared/enums/user.enum';
+import { EUserLevels } from '@shared/enums/user.enum';
 import { RefreshToken } from '@/modules/v1/auth/entities/tokens.entity';
 import * as bcrypt from 'bcrypt';
 import { StripeConnectAccount } from '@/modules/v1/stripe/entities/stripe-connect-account.entity';
-
-export type UserLevelType = (typeof EUserLevels)[EUserRole];
-export const UserLevelValues = Object.values(EUserLevels);
 
 @Entity('users')
 export class User extends GeneralBaseEntity {
@@ -42,7 +39,7 @@ export class User extends GeneralBaseEntity {
     example: 0,
     description: 'User level (0=USER, 1=TRAINER, 2=CLIENT)',
   })
-  @Column({ type: 'int', default: EUserLevels[EUserRole.USER] })
+  @Column({ type: 'int', default: EUserLevels.USER })
   level?: number;
 
   @OneToOne(() => Profile, { cascade: true, eager: true })

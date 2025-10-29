@@ -3,16 +3,20 @@ import {
   SubscribeMessage,
   MessageBody,
   ConnectedSocket,
+  WebSocketGateway,
 } from '@nestjs/websockets';
 import { Socket } from 'socket.io';
-import { ServerGateway } from '@/gateways/server.gateway';
+import { ServerGateway } from '@/common/gateways/server.gateway';
+import { LoggerService } from '@/common/logger/logger.service';
 
 /**
  * User WebSocket Service
  * Add this to your users module to handle user-specific WebSocket events
  */
 @Injectable()
+@WebSocketGateway({ cors: { origin: '*' } })
 export class UsersWebSocketService {
+  private readonly logger = new LoggerService(UsersWebSocketService.name);
   constructor(private readonly serverGateway: ServerGateway) {}
 
   /**
@@ -35,7 +39,7 @@ export class UsersWebSocketService {
   ) {
     const userRoom = `user_${userId}`;
     void client.join(userRoom);
-    console.log(`👤 User ${userId} joined room: ${userRoom}`);
+    this.logger.log(`👤 User ${userId} joined room: ${userRoom}`);
     return { success: true, message: `Joined user room ${userId}` };
   }
 
@@ -49,7 +53,7 @@ export class UsersWebSocketService {
   ) {
     const userRoom = `user_${userId}`;
     void client.leave(userRoom);
-    console.log(`👤 User ${userId} left room: ${userRoom}`);
+    this.logger.log(`👤 User ${userId} left room: ${userRoom}`);
     return { success: true, message: `Left user room ${userId}` };
   }
 }

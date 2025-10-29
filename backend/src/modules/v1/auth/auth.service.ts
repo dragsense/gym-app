@@ -20,7 +20,6 @@ import {
   EActivityType,
   EActivityStatus,
 } from '@shared/enums/activity-log.enum';
-import { EUserLevels, EUserRole } from '@shared/enums/user.enum';
 import { RewardsService } from '@/modules/v1/rewards/rewards.service';
 
 @Injectable()
@@ -43,7 +42,6 @@ export class AuthService {
       const res = await this.userService.create(
         {
           ...userData,
-          level: EUserLevels[EUserRole.ADMIN],
           isActive: true,
           profile: {
             firstName,

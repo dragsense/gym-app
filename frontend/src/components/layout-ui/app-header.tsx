@@ -19,6 +19,7 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 // Hooks
 import { useAuthUser } from "@/hooks/use-auth-user";
 import { useLogout } from "@/hooks/use-logout";
+import { useUserRewardPoints } from "@/hooks/use-user-rewards";
 
 
 
@@ -68,6 +69,10 @@ export function AppHeader({ title }: AppHeaderProps) {
     return { firstName, fullName, email };
   }, [deferredUser]);
 
+  // Rewards points (single endpoint)
+  const { data: rewardsData, isLoading: isLoadingRewards } = useUserRewardPoints();
+  const userPoints = rewardsData?.points ?? 0;
+
   // React 19: Smooth logout transitions
   const handleLogout = (all: boolean = false) => {
     startTransition(() => {
@@ -83,16 +88,23 @@ export function AppHeader({ title }: AppHeaderProps) {
       <div className="flex flex-row w-full items-center justify-between gap-1 px-4 lg:gap-2 lg:px-6">
         <div className="flex flex-1 items-center gap-4" ref={settingsRef}>
           <SidebarTrigger className="-ml-1 block md:hidden" />
+          {title && (
+            <span className="hidden md:inline text-sm font-medium text-muted-foreground">{title}</span>
+          )}
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Rewards points badge */}
+          <div className="flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
+            Points: {!isLoadingRewards ? userPoints : "--"}
+          </div>
           {/* Language Switcher */}
           <LanguageSwitcher />
           {/* Theme Toggle */}
           <ThemeToggle />
         </div>
 
-        <div className="flex items-center gap-5 p-4 text-left text-sm bg-header rounded-full border-1 p-4 shadow-sm">
+        <div className="flex items-center gap-5 p-4 text-left text-sm bg-header rounded-full border-1 shadow-sm">
           {/* Profile Dropdown Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

@@ -8,7 +8,7 @@ import { CreateTrainerDto, UpdateTrainerDto } from '@shared/dtos';
 import { CrudService } from '@/common/crud/crud.service';
 import { CrudOptions } from '@/common/crud/interfaces/crud.interface';
 import { UsersService } from '../users/users.service';
-import { EUserLevels, EUserRole } from '@shared/enums';
+import { EUserLevels } from '@shared/enums';
 import { IMessageResponse } from '@shared/interfaces';
 
 @Injectable()
@@ -40,7 +40,7 @@ export class TrainersService extends CrudService<Trainer> {
         try {
           const savedUser = await this.userService.createUser({
             ...user,
-            level: EUserLevels[EUserRole.TRAINER],
+            level: EUserLevels.TRAINER,
           });
           savedEntity.user = savedUser.user;
 

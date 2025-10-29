@@ -54,10 +54,11 @@ export class UsersController {
   })
   @Get()
   findAll(@Query() query: UserListDto) {
-    return this.cacheService.getOrSet(
-      `users-list-${query.page}-${query.limit}`,
-      () => this.usersService.get(query, UserListDto),
-    );
+    return this.usersService.get(query, UserListDto);
+    // this.cacheService.getOrSet(
+    //   `users-list-${query.page}-${query.limit}`,
+    //   () => this.usersService.get(query, UserListDto),
+    // );
   }
 
   @ApiOperation({ summary: 'Get authenticated user' })

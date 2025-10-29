@@ -1,26 +1,20 @@
 import {
   Injectable,
   NotFoundException,
-  ConflictException,
   BadRequestException,
-  Inject,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 import { ModuleRef } from '@nestjs/core';
 
 import { Session } from './entities/session.entity';
-import {
-  CreateSessionDto,
-  UpdateSessionDto,
-  SessionListDto,
-} from '@shared/dtos';
+import { CreateSessionDto, UpdateSessionDto } from '@shared/dtos';
 import { IMessageResponse } from '@shared/interfaces';
 import { LoggerService } from '@/common/logger/logger.service';
 import { CrudService } from '@/common/crud/crud.service';
 import { CrudOptions } from '@/common/crud/interfaces/crud.interface';
 import { UsersService } from '../users/users.service';
-import { EUserLevels, EUserRole } from '@shared/enums';
+import { EUserLevels } from '@shared/enums';
 
 @Injectable()
 export class SessionsService extends CrudService<Session> {
@@ -51,7 +45,7 @@ export class SessionsService extends CrudService<Session> {
     const trainerUser = await this.usersService.getSingle({
       id: createSessionDto.trainerUser.id,
     });
-    if (!trainerUser || trainerUser.level !== EUserLevels[EUserRole.TRAINER]) {
+    if (!trainerUser || trainerUser.level !== EUserLevels.TRAINER) {
       throw new NotFoundException('Trainer not found or invalid trainer level');
     }
 
@@ -66,7 +60,7 @@ export class SessionsService extends CrudService<Session> {
       const clientUser = await this.usersService.getSingle({
         id: clientUserDto.id,
       });
-      if (!clientUser || clientUser.level !== EUserLevels[EUserRole.CLIENT]) {
+      if (!clientUser || clientUser.level !== EUserLevels.CLIENT) {
         throw new NotFoundException(
           `Client with ID ${clientUserDto.id} not found or invalid client level`,
         );
@@ -105,10 +99,7 @@ export class SessionsService extends CrudService<Session> {
         { id: updateSessionDto.trainerUser.id },
         { __relations: ['user'] },
       );
-      if (
-        !trainerUser ||
-        trainerUser.level !== EUserLevels[EUserRole.TRAINER]
-      ) {
+      if (!trainerUser || trainerUser.level !== EUserLevels.TRAINER) {
         throw new NotFoundException(
           'Trainer not found or invalid trainer level',
         );
@@ -124,7 +115,7 @@ export class SessionsService extends CrudService<Session> {
         const clientUser = await this.usersService.getSingle({
           id: clientUserDto.id,
         });
-        if (!clientUser || clientUser.level !== EUserLevels[EUserRole.CLIENT]) {
+        if (!clientUser || clientUser.level !== EUserLevels.CLIENT) {
           throw new NotFoundException(
             `Client with ID ${clientUserDto.id} not found or invalid client level`,
           );

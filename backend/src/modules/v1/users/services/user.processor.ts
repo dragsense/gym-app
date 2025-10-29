@@ -1,11 +1,11 @@
 import { Process, Processor } from '@nestjs/bull';
 import { Job } from 'bull';
-import { Injectable, Logger } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserEmailService } from '@/modules/v1/users/services/user-email.service';
 import { User } from '../entities/user.entity';
-import { EUserLevels, EUserRole } from '@shared/enums/user.enum';
+import { EUserLevels } from '@shared/enums/user.enum';
 
 @Processor('user')
 export class UserProcessor {
@@ -76,7 +76,7 @@ export class UserProcessor {
       }
 
       const superAdmin = await this.userRepository.findOne({
-        where: { level: EUserLevels[EUserRole.SUPER_ADMIN] },
+        where: { level: EUserLevels.SUPER_ADMIN },
         relations: ['profile'],
       });
 

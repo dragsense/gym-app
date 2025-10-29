@@ -20,16 +20,16 @@ import { SignupDto } from "@shared/dtos";
 
 // Config
 import { PUBLIC_ROUTES } from "@/config/routes.config";
+import { SignupUserLevel } from "@shared/enums/user.enum";
 
 
 export default function SignupPage() {
   // React 19: Essential IDs and transitions
-  const componentId = useId();
   const [, startTransition] = useTransition();
-  
+
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  
+
   // Extract referral code from URL
   const referralCodeFromUrl = searchParams.get('ref') || "";
 
@@ -39,7 +39,8 @@ export default function SignupPage() {
     email: "",
     password: "",
     confirmPassword: "",
-    referralCode: referralCodeFromUrl
+    referralCode: referralCodeFromUrl,
+    level: SignupUserLevel.ADMIN,
   };
 
   return (

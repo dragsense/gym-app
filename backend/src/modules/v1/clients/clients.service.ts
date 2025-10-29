@@ -8,9 +8,8 @@ import { CreateClientDto, UpdateClientDto } from '@shared/dtos';
 import { CrudService } from '@/common/crud/crud.service';
 import { CrudOptions } from '@/common/crud/interfaces/crud.interface';
 import { UsersService } from '../users/users.service';
-import { EUserLevels, EUserRole } from '@shared/enums';
+import { EUserLevels } from '@shared/enums';
 import { IMessageResponse } from '@shared/interfaces';
-import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class ClientsService extends CrudService<Client> {
@@ -40,7 +39,7 @@ export class ClientsService extends CrudService<Client> {
         try {
           const savedUser = await this.userService.createUser({
             ...user,
-            level: EUserLevels[EUserRole.CLIENT],
+            level: EUserLevels.CLIENT,
           });
           savedEntity.user = savedUser.user;
 

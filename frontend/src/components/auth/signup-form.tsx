@@ -17,9 +17,12 @@ import { Form } from '@/components/form-ui/form';
 
 // Hooks
 import { type FormInputs, useInput } from '@/hooks/use-input';
+import { useAuthUser } from '@/hooks/use-auth-user';
 
 // Stores
 import { AppCard } from '../layout-ui/app-card';
+import { SignupUserLevel } from '@shared/enums/user.enum';
+import { EUserLevels } from '@shared/enums/user.enum';
 
 interface ISignupFormProps extends THandlerComponentProps<TFormHandlerStore<TSignupData, IMessageResponse, any>> {
 }
@@ -32,6 +35,8 @@ const SignupForm = React.memo(function SignupForm({
   const componentId = useId();
   const [, startTransition] = useTransition();
 
+  const { user } = useAuthUser();
+
   if (!store) {
     return `Form store "${storeKey}" not found. Did you forget to register it?`;
   }
@@ -41,7 +46,7 @@ const SignupForm = React.memo(function SignupForm({
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const originalFields = store(state => state.fields);
-  
+
   // React 19: Memoized fields for better performance
   const fields = useMemo(() => ({
     ...originalFields,
@@ -119,6 +124,16 @@ const SignupForm = React.memo(function SignupForm({
         }
       >
         <div className="space-y-6">
+
+
+          <div>
+            <h3 className="text-sm font-medium text-muted-foreground mb-3">Join As</h3>
+            <div className="space-y-4">
+              {inputs.level}
+            </div>
+          </div>
+
+
           {/* Account Information Section */}
           <div>
             <h3 className="text-sm font-medium text-muted-foreground mb-3">Account Information</h3>
@@ -138,15 +153,7 @@ const SignupForm = React.memo(function SignupForm({
             </div>
           </div>
 
-          {/* Referral Code Section */}
-          {inputs.referralCode && (
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground mb-3">Referral Code</h3>
-              <div className="space-y-4">
-                {inputs.referralCode}
-              </div>
-            </div>
-          )}
+
         </div>
       </AppCard>
     </Form>

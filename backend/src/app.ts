@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { RedisIoAdapter } from './common/gateways/redis-io.adapter';
 
 import { AppModule } from './app.module';
 import { ExceptionsFilter } from './exceptions/exceptions-filter';
@@ -33,6 +34,11 @@ export async function app() {
   setupApiDocumentation(app, configService, loggerService);
   setupInterceptors(app, loggerService);
   setupBullBoard(app, loggerService, configService);
+
+  // Socket.IO adapter (Redis) per Nest WebSockets Adapter docs
+  const redisAdapter = new RedisIoAdapter(app, configService);
+  await redisAdapter.connectToRedis();
+  app.useWebSocketAdapter(redisAdapter);
 
   // Global filters and pipes
   app.useGlobalFilters(new ExceptionsFilter());

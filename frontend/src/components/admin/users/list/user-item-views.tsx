@@ -16,17 +16,13 @@ import {
 
 // Types
 import type { IUser } from "@shared/interfaces/user.interface";
-import { EUserRole, EUserLevels } from "@shared/enums/user.enum";
+import { EUserLevels } from "@shared/enums/user.enum";
 import { Badge } from "@/components/ui/badge";
 import { AppCard } from "@/components/layout-ui/app-card";
+import { getUserRole } from "@shared/lib/utils";
 
 const API_URL = import.meta.env.VITE_PUBLIC_API_URL || "http://localhost:5000";
 
-// Helper function to get role name from level
-const getUserRoleFromLevel = (level: number): string => {
-  const roleEntry = Object.entries(EUserLevels).find(([, lvl]) => lvl === level);
-  return roleEntry ? roleEntry[0] : 'USER';
-};
 
 
 const UserActions = ({
@@ -173,16 +169,15 @@ export const userItemViews = ({
       header: "Role",
       cell: ({ row }) => {
         const level = row.getValue<number>("level");
-        const roleName = getUserRoleFromLevel(level);
         const roleColors = {
-          [EUserRole.ADMIN]: "bg-red-100 text-red-800 border-red-200",
-          [EUserRole.TRAINER]: "bg-blue-100 text-blue-800 border-blue-200",
-          [EUserRole.CLIENT]: "bg-green-100 text-green-800 border-green-200",
-          [EUserRole.USER]: "bg-gray-100 text-gray-800 border-gray-200"
+          [EUserLevels.ADMIN]: "bg-red-100 text-red-800 border-red-200",
+          [EUserLevels.TRAINER]: "bg-blue-100 text-blue-800 border-blue-200",
+          [EUserLevels.CLIENT]: "bg-green-100 text-green-800 border-green-200",
+          [EUserLevels.USER]: "bg-gray-100 text-gray-800 border-gray-200"
         };
         return (
-          <Badge className={`${roleColors[roleName as EUserRole] || roleColors[EUserRole.USER]} text-xs`}>
-            {roleName}
+          <Badge className={`${roleColors[level] || roleColors[EUserLevels.USER]} text-xs`}>
+            {getUserRole(level)}
           </Badge>
         );
       },
@@ -225,7 +220,6 @@ export const userItemViews = ({
     const name = profile ? `${profile.firstName} ${profile.lastName}` : 'Unknown User';
     const imagePath = profile?.image?.url;
     const phoneNumber = profile?.phoneNumber || '-';
-    const roleName = getUserRoleFromLevel(item.level || 3); // Default to USER level
 
     // React 19: Memoized badge classes for better performance
     const statusBadgeClass = useMemo(() =>
@@ -237,13 +231,13 @@ export const userItemViews = ({
 
     const roleBadgeClass = useMemo(() => {
       const roleColors = {
-        [EUserRole.ADMIN]: 'bg-red-100 text-red-800 border-red-200',
-        [EUserRole.TRAINER]: 'bg-blue-100 text-blue-800 border-blue-200',
-        [EUserRole.CLIENT]: 'bg-green-100 text-green-800 border-green-200',
-        [EUserRole.USER]: 'bg-gray-100 text-gray-800 border-gray-200'
+        [EUserLevels.ADMIN]: 'bg-red-100 text-red-800 border-red-200',
+        [EUserLevels.TRAINER]: 'bg-blue-100 text-blue-800 border-blue-200',
+        [EUserLevels.CLIENT]: 'bg-green-100 text-green-800 border-green-200',
+        [EUserLevels.USER]: 'bg-gray-100 text-gray-800 border-gray-200'
       };
-      return `${roleColors[roleName as EUserRole] || roleColors[EUserRole.USER]} text-xs`;
-    }, [roleName]);
+      return `${roleColors[item.level] || roleColors[EUserLevels.USER]} text-xs`;
+    }, [item.level]);
 
     return (
       <AppCard data-component-id={componentId}>
@@ -253,7 +247,7 @@ export const userItemViews = ({
 
             <div className="flex items-center gap-1 flex-wrap">
               <Badge className={roleBadgeClass}>
-                {roleName}
+                {getUserRole(item.level)}
               </Badge>
               <Badge className={statusBadgeClass}>
                 {item.isActive ? "Active" : "Inactive"}

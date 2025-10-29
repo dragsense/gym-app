@@ -100,6 +100,33 @@ export function referralLinkItemViews({ handleEdit, handleDelete, handleView }: 
       cell: ({ row }) => <LinkCell linkUrl={row.original.linkUrl} />,
     },
     {
+      accessorKey: 'expiresAt',
+      header: "Expired At",
+      cell: ({ row }) => (
+        <span className="text-sm">
+          {format(new Date(row.original.expiresAt), 'MMM dd, yyyy HH:mm')}
+        </span>
+      )
+    },
+    {
+      accessorKey: 'maxUses',
+      header: "Max Uses",
+      cell: ({ row }) => (
+        <span className="text-sm">
+          {row.original.maxUses}
+        </span>
+      )
+    },
+    {
+      accessorKey: 'currentUses',
+      header: "Current Uses",
+      cell: ({ row }) => (
+        <span className="text-sm">
+          {row.original.currentUses}
+        </span>
+      )
+    },
+    {
       id: 'type',
       header: 'Type',
       cell: ({ row }) => {

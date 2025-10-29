@@ -6,7 +6,6 @@ export enum EReferralLinkStatus {
 }
 
 export enum EReferralLinkType {
-  ADMIN = "ADMIN",
+  USER = "USER",
   CLIENT = "CLIENT",
-  TRAINER = "TRAINER",
 }

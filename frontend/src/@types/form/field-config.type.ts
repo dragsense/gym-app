@@ -24,7 +24,7 @@ export type BaseField<T> = {
   placeholder?: string;
 
   // Options (select/multiSelect, radio, checkbox groups, enums)
-  options?: { label: string; value: string }[];
+  options?: { label: string; value: string }[] | [];
 
   // Numeric inputs (slider, rating, number)
   min?: number;

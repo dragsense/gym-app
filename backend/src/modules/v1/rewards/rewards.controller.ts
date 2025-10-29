@@ -1,6 +1,8 @@
 import { Controller, Get, UseGuards, Request } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { RewardsService } from './rewards.service';
+import { AuthUser } from '@/decorators/user.decorator';
+import { User } from '../users/entities/user.entity';
 
 @ApiTags('Rewards')
 @Controller('rewards')
@@ -13,23 +15,9 @@ export class RewardsController {
     status: 200,
     description: 'User reward points retrieved successfully',
   })
-  async getUserRewardPoints(@Request() req: any) {
-    const userId = req.user.id;
+  async getUserRewardPoints(@AuthUser() user: User) {
+    const userId = user.id;
     const points = await this.rewardsService.getUserRewardPoints(userId);
     return { points };
-  }
-
-  @Get('history')
-  @ApiOperation({ summary: 'Get user reward history' })
-  @ApiResponse({
-    status: 200,
-    description: 'User reward history retrieved successfully',
-  })
-  async getUserRewards(@Request() req: any) {
-    const userId = req.user.id;
-    return this.rewardsService.get(
-      { userId },
-      { _relations: ['referralLink'], _sortFields: ['createdAt:DESC'] },
-    );
   }
 }

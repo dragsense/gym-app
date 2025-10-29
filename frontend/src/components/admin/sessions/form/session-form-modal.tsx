@@ -18,7 +18,7 @@ import type { TCustomInputWrapper, TFieldConfigObject } from "@/@types/form/fiel
 import type { UserDto } from "@shared/dtos";
 import type { ReminderDto } from "@shared/dtos/reminder-dtos";
 import { useSearchableUsers } from "@/hooks/use-searchable";
-import { EUserLevels, EUserRole } from "@shared/enums";
+import { EUserLevels } from "@shared/enums";
 
 export interface ISessionFormModalExtraProps {
   open: boolean;
@@ -53,7 +53,7 @@ const SessionFormModal = React.memo(function SessionFormModal({
       return <SearchableInputWrapper<UserDto>
         {...props}
         modal={true}
-        useSearchable={() => useSearchableUsers({ level: EUserLevels[EUserRole.TRAINER] })}
+        useSearchable={() => useSearchableUsers({ level: EUserLevels.TRAINER })}
         getLabel={(item) => {
           if (!item?.profile) return 'Select Trainer'
           return `${item.id} - ${item.profile?.firstName} ${item.profile?.lastName}`
@@ -70,7 +70,7 @@ const SessionFormModal = React.memo(function SessionFormModal({
       <SearchableInputWrapper<UserDto>
         {...props}
         modal={true}
-        useSearchable={() => useSearchableUsers({ level: EUserLevels[EUserRole.CLIENT] })}
+        useSearchable={() => useSearchableUsers({ level: EUserLevels.CLIENT })}
         getLabel={(item) => {
           if (!item?.profile) return 'Select Clients'
 
