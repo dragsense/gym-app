@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Loader2, LogOutIcon, X } from "lucide-react";
-import { useId, useMemo, useTransition } from "react";
+import { useId, useTransition } from "react";
 
 // UI Components
 import {
@@ -23,7 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 // Config
-import { navItems } from "@/config/nav.config";
+import { navItemsByLevel } from "@/config/nav.config";
 import { ROOT_ROUTE } from "@/config/routes.config";
 
 // Utils
@@ -31,6 +31,7 @@ import { matchRoutePath } from "@/lib/utils";
 
 // Hooks
 import { useLogout } from "@/hooks/use-logout";
+import { useAuthUser } from "@/hooks/use-auth-user";
 
 // Assets
 import logo from "@/assets/logos/logo.png";
@@ -51,6 +52,13 @@ export function AppSidebar({
   const location = useLocation();
   const { logout, isLoading } = useLogout();
   const { setOpenMobile, isMobile } = useSidebar();
+  const { user } = useAuthUser();
+
+  // Get navigation items based on user level
+  const navItems = React.useMemo(() => {
+    if (!user) return [];
+    return navItemsByLevel[user.level]() || [];
+  }, [user]);
 
   const [expandedItems, setExpandedItems] = React.useState<Record<string, boolean>>({});
 
@@ -69,7 +77,7 @@ export function AppSidebar({
       }
     });
     setExpandedItems(newExpandedItems);
-  }, [location.pathname]);
+  }, [location.pathname, navItems]);
 
   // Auto-close mobile sidebar on route change
   React.useEffect(() => {
@@ -114,7 +122,7 @@ export function AppSidebar({
         )}
       </div>
     </SidebarHeader>
-  ), [componentId]);
+  ), [componentId, setOpenMobile, startTransition]);
 
   const renderNavItems = () => (
     <SidebarContent className="mt-2">
@@ -135,9 +143,7 @@ export function AppSidebar({
                     <SidebarMenuItem>
                       <CollapsibleTrigger asChild>
                         <SidebarMenuButton
-                          isActive={item.urls?.some((url) =>
-                            matchRoutePath(url, location.pathname)
-                          )}
+                          isActive={matchRoutePath(item.url, location.pathname)}
                           tooltip={item.title}
                           className="group cursor-pointer text-muted-foreground/50 p-6 rounded-xl hover:bg-muted/50 transition-all duration-200"
                         >
@@ -172,11 +178,9 @@ export function AppSidebar({
 
               return (
                 <SidebarMenuItem key={item.title}>
-                  <Link to={item.urls[0]}>
+                  <Link to={item.url}>
                     <SidebarMenuButton
-                      isActive={item.urls?.some((url) =>
-                        matchRoutePath(url, location.pathname)
-                      )}
+                      isActive={matchRoutePath(item.url, location.pathname)}
                       tooltip={item.title}
                       className="group cursor-pointer text-muted-foreground/50 p-6 rounded-xl hover:bg-muted/50 transition-all duration-200"
                     >

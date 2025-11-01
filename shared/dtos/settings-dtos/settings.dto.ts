@@ -11,7 +11,8 @@ import {
   IsUrl,
   ValidateNested,
 } from "class-validator";
-import { ApiProperty, PartialType } from "@nestjs/swagger";
+import { ApiProperty } from "@nestjs/swagger";
+import { PartialType } from "../../lib/dto-type-adapter";
 import { Type } from "class-transformer";
 import { FieldType, FieldOptions } from "../../decorators/field.decorator";
 import {

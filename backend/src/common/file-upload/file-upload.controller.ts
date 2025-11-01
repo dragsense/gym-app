@@ -5,7 +5,6 @@ import {
   Param,
   Query,
   Res,
-  UseGuards,
   Delete,
   Post,
   Patch,
@@ -32,7 +31,7 @@ import { AuthUser } from '@/decorators/user.decorator';
 import { join } from 'path';
 import { createReadStream, existsSync } from 'fs';
 import { Response } from 'express';
-import { User } from '@/modules/v1/users/entities/user.entity';
+import { User } from '@/common/system-user/entities/user.entity';
 import { FileValidationPipe } from '@/pipes/file-validation.pipe';
 import { OmitType } from '@shared/lib/type-utils';
 import { SingleQueryDto } from '@shared/dtos/common/list-query.dto';

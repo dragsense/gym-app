@@ -77,11 +77,11 @@ export class ClientsService extends CrudService<Client> {
     });
   }
 
-  async deleteClient(id: string, userId: string): Promise<void> {
+  async deleteClient(id: string): Promise<void> {
     await this.delete(id, {
       beforeDelete: async (entity: Client) => {
         if (entity.user) {
-          await this.userService.delete({ id: entity.user.id });
+          await this.userService.deleteUser(entity.user.id);
         }
       },
     });

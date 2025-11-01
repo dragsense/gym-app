@@ -7,7 +7,7 @@ import type { IHealthStatus } from "@shared/interfaces/health.interface";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 
-export default function DashboardPage() {
+export default function SystemDashboardPage() {
   const componentId = useId();
 
   const queryClient = useQueryClient();

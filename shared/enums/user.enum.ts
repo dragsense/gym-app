@@ -14,6 +14,6 @@ export enum EUserGender {
 }
 
 export enum SignupUserLevel {
-  TRAINER = EUserLevels.TRAINER,
   ADMIN = EUserLevels.ADMIN,
+  TRAINER = EUserLevels.TRAINER,
 }

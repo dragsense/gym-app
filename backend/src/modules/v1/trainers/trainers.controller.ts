@@ -28,9 +28,15 @@ import {
   SingleQueryDto,
 } from '@shared/dtos';
 import { Trainer } from './entities/trainer.entity';
+import { User } from '@/common/system-user/entities/user.entity';
+import { AuthUser } from '@/decorators/user.decorator';
+import { SelectQueryBuilder } from 'typeorm';
+import { EUserLevels } from '@shared/enums';
+import { MinUserLevel } from '@/common/decorators/level.decorator';
 
 @ApiBearerAuth('access-token')
 @ApiTags('Trainers')
+@MinUserLevel(EUserLevels.ADMIN)
 @Controller('trainers')
 export class TrainersController {
   constructor(private readonly trainersService: TrainersService) {}
@@ -42,8 +48,17 @@ export class TrainersController {
     type: TrainerPaginatedDto,
   })
   @Get()
-  findAll(@Query() query: TrainerListDto) {
-    return this.trainersService.get(query, TrainerListDto);
+  findAll(@Query() query: TrainerListDto, @AuthUser() currentUser: User) {
+    const isSuperAdmin = currentUser.level === EUserLevels.SUPER_ADMIN;
+    return this.trainersService.get(query, TrainerListDto, {
+      beforeQuery: (query: SelectQueryBuilder<Trainer>) => {
+        if (!isSuperAdmin) {
+          query.andWhere('entity.createdByUserId = :createdByUserId', {
+            createdByUserId: currentUser.id,
+          });
+        }
+      },
+    });
   }
 
   @ApiOperation({ summary: 'Get trainer by ID' })

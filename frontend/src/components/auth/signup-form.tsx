@@ -1,5 +1,5 @@
 // React
-import React, { useState, useId, useMemo, useTransition } from 'react';
+import React, { useState, useId, useMemo, useTransition, type ReactNode } from 'react';
 
 // Types
 import { type TSignupData } from '@shared/types/auth.type';
@@ -87,6 +87,21 @@ const SignupForm = React.memo(function SignupForm({
     lastName: {
       ...originalFields.lastName,
       startAdornment: <User className="h-4 w-4 text-muted-foreground" />
+    },
+    trainer: {
+      ...originalFields.trainer,
+      renderItem: (item) => {
+        return (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {item.experience}
+            {item.specialization}
+          </div>
+        );
+      },
+      visible: (ctx) => {
+        const { values } = ctx;
+        return values.level == SignupUserLevel.TRAINER;
+      }
     }
   }), [originalFields, showPassword, showConfirmPassword]);
 
@@ -152,7 +167,9 @@ const SignupForm = React.memo(function SignupForm({
               {inputs.lastName}
             </div>
           </div>
-
+          <div>
+            {inputs.trainer as ReactNode}
+          </div>
 
         </div>
       </AppCard>

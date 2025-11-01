@@ -22,12 +22,16 @@ export function matchRoutePath(pattern: string, path: string): boolean {
 
 type RouteParam = Record<string, string | number>;
 
-export function buildRoutePath(path: string, params?: RouteParam, queryParams?: Record<string, string | number>): string {
+export function buildRoutePath(
+  path: string,
+  params?: RouteParam,
+  queryParams?: Record<string, string | number>
+): string {
   let result = path;
 
   if (params) {
     for (const [key, value] of Object.entries(params)) {
-      let valueStr = String(value);
+      const valueStr = String(value);
       result = result.replace(`:${key}`, valueStr);
     }
   }
@@ -35,7 +39,7 @@ export function buildRoutePath(path: string, params?: RouteParam, queryParams?: 
   if (queryParams) {
     const queryString = Object.entries(queryParams)
       .map(([key, value]) => `${key}=${value}`)
-      .join('&');
+      .join("&");
     if (queryString) {
       result += `?${queryString}`;
     }
@@ -43,8 +47,6 @@ export function buildRoutePath(path: string, params?: RouteParam, queryParams?: 
 
   return result;
 }
-
-
 
 // lib/utils.ts
 
@@ -57,16 +59,16 @@ export function buildRoutePath(path: string, params?: RouteParam, queryParams?: 
  */
 export function formatCurrency(
   amount: number,
-  currency: string = 'USD',
-  locale: string = 'en-US',
+  currency: string = "USD",
+  locale: string = "en-US",
   minimumFractionDigits: number = 2,
   maximumFractionDigits: number = 2
 ): string {
   return new Intl.NumberFormat(locale, {
-    style: 'currency',
+    style: "currency",
     currency,
     minimumFractionDigits,
-    maximumFractionDigits
+    maximumFractionDigits,
   }).format(amount);
 }
 
@@ -79,12 +81,12 @@ export function formatCurrency(
 export function formatPercentage(
   value: number,
   decimals: number = 1,
-  locale: string = 'en-US'
+  locale: string = "en-US"
 ): string {
   return new Intl.NumberFormat(locale, {
-    style: 'percent',
+    style: "percent",
     minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals
+    maximumFractionDigits: decimals,
   }).format(value / 100); // Input is already a percentage (e.g., 95 for 95%)
 }
 
@@ -98,26 +100,26 @@ export function formatPercentage(
 export function formatNumber(
   value: number,
   decimals: number = 0,
-  locale: string = 'en-US'
+  locale: string = "en-US"
 ): string {
   return new Intl.NumberFormat(locale, {
     minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals
+    maximumFractionDigits: decimals,
   }).format(value);
 }
 
 // Additional currency-related utilities
 export const CURRENCY_SYMBOLS: Record<string, string> = {
-  USD: '$',
-  EUR: '€',
-  GBP: '£',
-  JPY: '¥',
-  CAD: 'CA$',
-  AUD: 'A$',
-  CHF: 'CHF',
-  CNY: 'CN¥',
-  HKD: 'HK$',
-  SGD: 'S$',
+  USD: "$",
+  EUR: "€",
+  GBP: "£",
+  JPY: "¥",
+  CAD: "CA$",
+  AUD: "A$",
+  CHF: "CHF",
+  CNY: "CN¥",
+  HKD: "HK$",
+  SGD: "S$",
   // Add more currencies as needed
 };
 

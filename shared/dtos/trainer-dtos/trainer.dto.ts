@@ -8,7 +8,8 @@ import {
   IsDecimal,
   ValidateNested,
 } from "class-validator";
-import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { PartialType } from "../../lib/dto-type-adapter";
 import { Type, Transform } from "class-transformer";
 import { PaginationMetaDto } from "../common/pagination.dto";
 import { ListQueryDto, SingleQueryDto } from "../common/list-query.dto";
@@ -185,12 +186,12 @@ export class TrainerDto {
   })
   @IsOptional()
   @IsString()
-  specialization: string;
+  specialization?: string;
 
   @ApiProperty({ example: 5, description: "Years of experience" })
   @IsOptional()
   @IsNumber()
-  experience: number;
+  experience?: number;
 
   @ApiPropertyOptional({
     example: "Certified Personal Trainer",

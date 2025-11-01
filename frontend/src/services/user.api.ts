@@ -36,9 +36,6 @@ export const createUser = (data: TUserData) => userService.post(data);
 export const updateUser = (id: string) => userService.patch(id);
 export const deleteUser = (id: string) => userService.delete(id);
 
-// Custom methods using BaseService
-export const me = () => userService.getSingle(0, undefined, "/me");
-
 export const fetchProfile = () =>
   profileService.getSingle(null, undefined, "/me");
 export const updateProfile = (data: TUpdateProfileData) =>

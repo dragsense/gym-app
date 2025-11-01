@@ -1,9 +1,7 @@
 import {
   Entity,
   Column,
-  OneToOne,
   JoinColumn,
-  OneToMany,
   BeforeUpdate,
   BeforeInsert,
   ManyToOne,
@@ -11,11 +9,8 @@ import {
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
 import { GeneralBaseEntity } from '@/common/entities';
-import { Profile } from '../profiles/entities/profile.entity';
 import { EUserLevels } from '@shared/enums/user.enum';
-import { RefreshToken } from '@/modules/v1/auth/entities/tokens.entity';
 import * as bcrypt from 'bcrypt';
-import { StripeConnectAccount } from '@/modules/v1/stripe/entities/stripe-connect-account.entity';
 
 @Entity('users')
 export class User extends GeneralBaseEntity {
@@ -42,31 +37,11 @@ export class User extends GeneralBaseEntity {
   @Column({ type: 'int', default: EUserLevels.USER })
   level?: number;
 
-  @OneToOne(() => Profile, { cascade: true, eager: true })
-  @JoinColumn()
-  profile?: Profile;
-
-  @OneToMany(() => RefreshToken, (token) => token.user)
-  refreshTokens: RefreshToken[];
-
   @Column({ type: 'timestamp', nullable: true })
   lastPasswordChange: Date;
 
   @Column('text', { array: true, default: [], select: false })
   passwordHistory: string[];
-
-  @Column({ type: 'varchar', nullable: true })
-  stripeCustomerId: string;
-
-  @ApiProperty({
-    type: () => StripeConnectAccount,
-    description: 'Stripe Connect account of the trainer',
-    required: false,
-  })
-  @OneToOne(() => StripeConnectAccount, (stripeConnect) => stripeConnect.user, {
-    cascade: true,
-  })
-  stripeConnectAccount: StripeConnectAccount;
 
   @ApiProperty({
     type: () => User,

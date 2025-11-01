@@ -55,7 +55,7 @@ export const TrainerClientFormModal = React.memo(function TrainerClientFormModal
         getLabel={(item) => {
           if (!item?.user?.profile) return 'Select Trainer';
 
-          return `${item.id} - ${item.user?.profile?.firstName} ${item.user?.profile?.lastName}`
+          return `${item.user?.profile?.firstName} ${item.user?.profile?.lastName} (${item.user?.email})`
         }}
         getKey={(item) => item.id.toString()}
         getValue={(item) => { return { id: item.id, user: item.user } }}
@@ -72,7 +72,7 @@ export const TrainerClientFormModal = React.memo(function TrainerClientFormModal
         useSearchable={() => useSearchableClients({})}
         getLabel={(item) => {
           if (!item?.user?.profile) return 'Select Clients';
-          return `${item.id} - ${item.user?.profile?.firstName} ${item.user?.profile?.lastName}`
+          return `${item.user?.profile?.firstName} ${item.user?.profile?.lastName} (${item.user?.email})`
         }}
         getKey={(item) => item.id.toString()}
         getValue={(item) => { return { id: item.id, user: item.user } }}

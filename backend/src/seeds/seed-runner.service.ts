@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { PaymentMethodsSeed } from '../common/payment-methods/seeder/payment-methods.seed';
-import { UserSeed } from '../modules/v1/users/seeder/user.seed';
+import { UserSeed } from '../common/system-user/seeder/user.seed';
 import { ResourceSeed } from '../common/roles/seeder/resource.seed';
 import { LoggerService } from '../common/logger/logger.service';
 
@@ -8,7 +8,7 @@ import { LoggerService } from '../common/logger/logger.service';
 export class SeedRunnerService implements OnModuleInit {
   private readonly logger = new LoggerService(SeedRunnerService.name);
   constructor(
-    private paymentMethdSeeder: PaymentMethodsSeed,
+    private paymentMethdSeed: PaymentMethodsSeed,
     private userSeed: UserSeed,
     private resourceSeed: ResourceSeed,
   ) {}
@@ -19,7 +19,7 @@ export class SeedRunnerService implements OnModuleInit {
       this.logger.log('Starting database seeding...');
 
       // Run payment methods seed
-      await this.paymentMethdSeeder.run();
+      await this.paymentMethdSeed.run();
 
       // Run resource seed
       await this.resourceSeed.run();

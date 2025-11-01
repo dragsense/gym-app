@@ -17,7 +17,6 @@ import {
 // Types
 import type { ITrainer } from "@shared/interfaces/trainer.interface";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import { AppCard } from "@/components/layout-ui/app-card";
 
 const API_URL = import.meta.env.VITE_PUBLIC_API_URL || "http://localhost:5000";
@@ -165,7 +164,7 @@ export const trainerItemViews = ({
       accessorKey: "user.isActive",
       header: "Status",
       cell: ({ row }) => {
-        const isActive = row.getValue<boolean>("user.isActive");
+        const isActive = row.original.user?.isActive;
         return (
           <Badge variant={isActive ? "default" : "secondary"}>
             {isActive ? "Active" : "Inactive"}

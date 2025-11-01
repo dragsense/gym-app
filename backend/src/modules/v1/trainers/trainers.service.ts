@@ -86,7 +86,7 @@ export class TrainersService extends CrudService<Trainer> {
     await this.delete(id, {
       beforeDelete: async (entity: Trainer) => {
         if (entity.user) {
-          await this.userService.delete({ id: entity.user.id });
+          await this.userService.deleteUser(entity.user.id);
         }
       },
     });

@@ -1,11 +1,9 @@
-// auth/refresh-token.entity.ts
 import { Entity, Column, ManyToOne } from 'typeorm';
-import { User } from '@/modules/v1/users/entities/user.entity';
+import { User } from '@/common/system-user/entities/user.entity';
 import { GeneralBaseEntity } from '../../../../common/entities';
 
 @Entity('refresh_tokens')
 export class RefreshToken extends GeneralBaseEntity {
-
   @Column()
   token: string;
 
@@ -18,7 +16,7 @@ export class RefreshToken extends GeneralBaseEntity {
   @Column({ default: false })
   revoked: boolean;
 
-  @ManyToOne(() => User, user => user.refreshTokens, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
   user: User;
 
   isExpired(): boolean {

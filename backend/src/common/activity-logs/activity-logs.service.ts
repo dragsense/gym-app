@@ -28,6 +28,11 @@ export class ActivityLogsService extends CrudService<ActivityLog> {
   ): boolean {
     const config = this.configService.get('activityLogs');
 
+    console.log('config', config);
+    console.log('endpoint', endpoint);
+    console.log('method', method);
+    console.log('activityType', activityType);
+
     // If logging is disabled, don't log
     if (!config.enabled) {
       return false;

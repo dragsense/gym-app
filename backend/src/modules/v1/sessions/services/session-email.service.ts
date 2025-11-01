@@ -4,7 +4,6 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { Session } from '../entities/session.entity';
 import { LoggerService } from '@/common/logger/logger.service';
 
-
 export enum ReminderType {
   CONFIRMATION = 'confirmation',
   REMINDER = 'reminder',
@@ -45,7 +44,11 @@ export class SessionEmailService {
   /**
    * Send session confirmation email when session is created
    */
-  async sendSessionConfirmation(session: Session, recipientEmail: string, recipientName: string): Promise<void> {
+  async sendSessionConfirmation(
+    session: Session,
+    recipientEmail: string,
+    recipientName: string,
+  ): Promise<void> {
     try {
       const context: SessionEmailContext = {
         session,
@@ -55,9 +58,14 @@ export class SessionEmailService {
       };
 
       await this.sendSessionEmail(context);
-      this.logger.log(`Session confirmation email sent for session: ${session.title}`);
+      this.logger.log(
+        `Session confirmation email sent for session: ${session.title}`,
+      );
     } catch (error) {
-      this.logger.error(`Failed to send session confirmation email for session ${session.id}:`, error);
+      this.logger.error(
+        `Failed to send session confirmation email for session ${session.id}:`,
+        error,
+      );
       throw error;
     }
   }
@@ -65,7 +73,11 @@ export class SessionEmailService {
   /**
    * Send session reminder email
    */
-  async sendSessionReminder(session: Session, recipientEmail: string, recipientName: string): Promise<void> {
+  async sendSessionReminder(
+    session: Session,
+    recipientEmail: string,
+    recipientName: string,
+  ): Promise<void> {
     try {
       const context: SessionEmailContext = {
         session,
@@ -75,15 +87,23 @@ export class SessionEmailService {
       };
 
       await this.sendSessionEmail(context);
-      this.logger.log(`Session reminder email sent for session: ${session.title}`);
+      this.logger.log(
+        `Session reminder email sent for session: ${session.title}`,
+      );
     } catch (error) {
-      this.logger.error(`Failed to send session reminder email for session ${session.id}:`, error);
+      this.logger.error(
+        `Failed to send session reminder email for session ${session.id}:`,
+        error,
+      );
       throw error;
     }
   }
 
-
-  async sendSessionStatusUpdate(session: Session, recipientEmail: string, recipientName: string): Promise<void> {
+  async sendSessionStatusUpdate(
+    session: Session,
+    recipientEmail: string,
+    recipientName: string,
+  ): Promise<void> {
     try {
       const context: SessionEmailContext = {
         session,
@@ -93,40 +113,60 @@ export class SessionEmailService {
       };
 
       await this.sendSessionEmail(context);
-      this.logger.log(`Session status update email sent for session: ${session.title}`);
+      this.logger.log(
+        `Session status update email sent for session: ${session.title}`,
+      );
     } catch (error) {
-      this.logger.error(`Failed to send session status update email for session ${session.id}:`, error);
+      this.logger.error(
+        `Failed to send session status update email for session ${session.id}:`,
+        error,
+      );
       throw error;
     }
   }
 
-
-    /**
+  /**
    * Send session reminder email
    */
-    async sendSessionDeleted(session: Session, recipientEmail: string, recipientName: string, sendBefore?: number): Promise<void> {
-      try {
-        const context: SessionEmailContext = {
-          session,
-          reminderType: ReminderType.DELETED,
-          recipientEmail,
-          recipientName
-        };
-  
-        await this.sendSessionEmail(context);
-        this.logger.log(`Session deleted email sent for session: ${session.title}`);
-      } catch (error) {
-        this.logger.error(`Failed to send session deleted email for session ${session.id}:`, error);
-        throw error;
-      }
+  async sendSessionDeleted(
+    session: Session,
+    recipientEmail: string,
+    recipientName: string,
+    sendBefore?: number,
+  ): Promise<void> {
+    try {
+      const context: SessionEmailContext = {
+        session,
+        reminderType: ReminderType.DELETED,
+        recipientEmail,
+        recipientName,
+      };
+
+      await this.sendSessionEmail(context);
+      this.logger.log(
+        `Session deleted email sent for session: ${session.title}`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to send session deleted email for session ${session.id}:`,
+        error,
+      );
+      throw error;
     }
+  }
 
   /**
    * Generic method to send session-related emails
    */
   private async sendSessionEmail(context: SessionEmailContext): Promise<void> {
     try {
-      const { session, recipientEmail, recipientName, reminderType, sendBefore } = context;
+      const {
+        session,
+        recipientEmail,
+        recipientName,
+        reminderType,
+        sendBefore,
+      } = context;
 
       if (!recipientEmail) {
         this.logger.warn(`No recipient email found for session ${session.id}`);
@@ -143,15 +183,22 @@ export class SessionEmailService {
         sendBefore,
       };
 
-      const emailConfig = this.getEmailConfig(reminderType || ReminderType.CONFIRMATION);
+      const emailConfig = this.getEmailConfig(
+        reminderType || ReminderType.CONFIRMATION,
+      );
 
       await this.mailerService.sendMail({
         to: recipientEmail,
         subject: emailConfig.subject,
-        html: this.generateSessionEmailHTML(templateData, reminderType || ReminderType.CONFIRMATION),
-        text: this.generateSessionEmailText(templateData, reminderType || ReminderType.CONFIRMATION),
+        html: this.generateSessionEmailHTML(
+          templateData,
+          reminderType || ReminderType.CONFIRMATION,
+        ),
+        text: this.generateSessionEmailText(
+          templateData,
+          reminderType || ReminderType.CONFIRMATION,
+        ),
       });
-
     } catch (error) {
       this.logger.error(`Failed to send session email:`, error);
       throw error;
@@ -200,12 +247,17 @@ export class SessionEmailService {
   /**
    * Generate HTML email template for session emails
    */
-  private generateSessionEmailHTML(data: SessionEmailTemplateData, reminderType: ReminderType): string {
+  private generateSessionEmailHTML(
+    data: SessionEmailTemplateData,
+    reminderType: ReminderType,
+  ): string {
     const { session, recipientName, loginUrl, sessionUrl, sendBefore } = data;
     const appName = this.appConfig.name;
     const sessionDate = new Date(session.startDateTime).toLocaleDateString();
     const sessionTime = new Date(session.startDateTime).toLocaleTimeString();
-    const sessionEndTime = session.endDateTime ? new Date(session.endDateTime).toLocaleTimeString() : 'TBD';
+    const sessionEndTime = session.endDateTime
+      ? new Date(session.endDateTime).toLocaleTimeString()
+      : 'TBD';
 
     const getEmailContent = () => {
       switch (reminderType) {
@@ -216,7 +268,8 @@ export class SessionEmailService {
             icon: '✅',
             actionText: 'View Session Details',
             actionUrl: sessionUrl,
-            additionalInfo: 'Please arrive on time and bring any necessary materials.'
+            additionalInfo:
+              'Please arrive on time and bring any necessary materials.',
           };
         case ReminderType.REMINDER:
           return {
@@ -225,7 +278,9 @@ export class SessionEmailService {
             icon: '⏰',
             actionText: 'View Session Details',
             actionUrl: sessionUrl,
-            additionalInfo: sendBefore ? `This reminder is sent ${sendBefore} minutes before your session.` : 'Please arrive on time.'
+            additionalInfo: sendBefore
+              ? `This reminder is sent ${sendBefore} minutes before your session.`
+              : 'Please arrive on time.',
           };
         case ReminderType.STATUS_UPDATE:
           return {
@@ -234,7 +289,7 @@ export class SessionEmailService {
             icon: '📋',
             actionText: 'View Session Details',
             actionUrl: sessionUrl,
-            additionalInfo: 'Please check the updated details for any changes.'
+            additionalInfo: 'Please check the updated details for any changes.',
           };
         case ReminderType.DELETED:
           return {
@@ -243,7 +298,8 @@ export class SessionEmailService {
             icon: '❌',
             actionText: 'View Other Sessions',
             actionUrl: sessionUrl,
-            additionalInfo: 'If you have any questions, please contact your trainer.'
+            additionalInfo:
+              'If you have any questions, please contact your trainer.',
           };
         default:
           return {
@@ -252,7 +308,7 @@ export class SessionEmailService {
             icon: '📝',
             actionText: 'View Session Details',
             actionUrl: sessionUrl,
-            additionalInfo: 'Please check the details for any changes.'
+            additionalInfo: 'Please check the details for any changes.',
           };
       }
     };
@@ -371,12 +427,16 @@ export class SessionEmailService {
             </div>
         </div>
 
-        ${content.additionalInfo ? `
+        ${
+          content.additionalInfo
+            ? `
         <div class="section">
             <h3 class="section-title">ℹ️ Important Information</h3>
             <p>${content.additionalInfo}</p>
         </div>
-        ` : ''}
+        `
+            : ''
+        }
 
         <div style="text-align: center;">
             <a href="${content.actionUrl}" class="action-button">${content.actionText}</a>
@@ -394,12 +454,17 @@ export class SessionEmailService {
   /**
    * Generate text email template for session emails
    */
-  private generateSessionEmailText(data: SessionEmailTemplateData, reminderType: ReminderType): string {
+  private generateSessionEmailText(
+    data: SessionEmailTemplateData,
+    reminderType: ReminderType,
+  ): string {
     const { session, recipientName, loginUrl, sessionUrl, sendBefore } = data;
     const appName = this.appConfig.name;
     const sessionDate = new Date(session.startDateTime).toLocaleDateString();
     const sessionTime = new Date(session.startDateTime).toLocaleTimeString();
-    const sessionEndTime = session.endDateTime ? new Date(session.endDateTime).toLocaleTimeString() : 'TBD';
+    const sessionEndTime = session.endDateTime
+      ? new Date(session.endDateTime).toLocaleTimeString()
+      : 'TBD';
 
     const getEmailContent = () => {
       switch (reminderType) {
@@ -407,31 +472,35 @@ export class SessionEmailService {
           return {
             title: 'Session Confirmed!',
             message: `Your session "${session.title}" has been successfully scheduled.`,
-            additionalInfo: 'Please arrive on time and bring any necessary materials.'
+            additionalInfo:
+              'Please arrive on time and bring any necessary materials.',
           };
         case ReminderType.REMINDER:
           return {
             title: 'Session Reminder',
             message: `This is a reminder that your session "${session.title}" is coming up soon.`,
-            additionalInfo: sendBefore ? `This reminder is sent ${sendBefore} minutes before your session.` : 'Please arrive on time.'
+            additionalInfo: sendBefore
+              ? `This reminder is sent ${sendBefore} minutes before your session.`
+              : 'Please arrive on time.',
           };
         case ReminderType.STATUS_UPDATE:
           return {
             title: 'Session Status Update',
             message: `Your session "${session.title}" status has been updated.`,
-            additionalInfo: 'Please check the updated details for any changes.'
+            additionalInfo: 'Please check the updated details for any changes.',
           };
         case ReminderType.DELETED:
           return {
             title: 'Session Cancelled',
             message: `Your session "${session.title}" has been cancelled.`,
-            additionalInfo: 'If you have any questions, please contact your trainer.'
+            additionalInfo:
+              'If you have any questions, please contact your trainer.',
           };
         default:
           return {
             title: 'Session Update',
             message: `Your session "${session.title}" has been updated.`,
-            additionalInfo: 'Please check the details for any changes.'
+            additionalInfo: 'Please check the details for any changes.',
           };
       }
     };

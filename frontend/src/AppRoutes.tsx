@@ -1,82 +1,68 @@
 // src/routes/appRouter.tsx
-import { createBrowserRouter, Navigate } from "react-router-dom";
-import { lazy, Suspense, useId } from "react";
-import { ROOT_ROUTE, ADMIN_ROUTES } from "@/config/routes.config";
-import { AppLoader } from "./components/layout-ui/app-loader";
+import { Navigate, createBrowserRouter } from "react-router-dom";
+import { lazy } from "react";
+import { ROOT_ROUTE, SUPER_ADMIN_SEGMENT, ADMIN_SEGMENT, TRAINER_SEGMENT, CLIENT_SEGMENT, SEGMENTS } from "@/config/routes.config";
+import { createRouteElement } from "@/lib/route-utils";
 
 // Pages Routes - React 19: Lazy loaded with enhanced performance
 import commonRoutes, { authRoutes, adminRoutes } from "@/pages/routes";
+import LevelBasedRedirect from "./routes/level-based-redirect";
 
 // React 19: Lazy load layouts with enhanced performance
 const MainLayout = lazy(() => import("@/layouts/MainLayout"));
 const DashboardLayoutWrapper = lazy(() => import("@/layouts/DashboardLayout").then(module => ({ default: module.DashboardLayoutWrapper })));
 const AuthLayout = lazy(() => import("@/layouts/AuthLayout"));
-const PrivateRoute = lazy(() => import("@/routes/PrivateRoute"));
-const PublicRoute = lazy(() => import("@/routes/PublicRoute"));
-
-// React 19: Enhanced loading component with transitions
-const RouteLoadingFallback = () => {
-  const componentId = useId();
-
-  return (
-    <div className="h-screen w-screen" data-component-id={componentId}>
-      <AppLoader>
-        <div className="text-center mb-4">
-          <h3 className="text-lg font-semibold text-foreground">Application</h3>
-          <p className="text-sm text-muted-foreground">Initializing application components...</p>
-        </div>
-      </AppLoader>
-    </div>
-
-  );
-};
+const PrivateRoute = lazy(() => import("@/routes/private-route"));
+const PublicRoute = lazy(() => import("@/routes/public-route"));
 
 
 // React 19: Enhanced route configuration with lazy loading
 const appRouter = createBrowserRouter([
   {
     path: ROOT_ROUTE,
-    element: (
-      <Suspense fallback={<RouteLoadingFallback />}>
-        <MainLayout />
-      </Suspense>
-    ),
+    element: createRouteElement(MainLayout, "App", "Initializing application..."),
     children: [
       {
-        element: (
-          <Suspense fallback={<RouteLoadingFallback />}>
-            <PublicRoute />
-          </Suspense>
-        ),
+        element: createRouteElement(PublicRoute, "App", "Loading public routes..."),
         children: [
           {
-            element: (
-              <Suspense fallback={<RouteLoadingFallback />}>
-                <AuthLayout />
-              </Suspense>
-            ),
+            element: createRouteElement(AuthLayout, "App", "Loading authentication..."),
             children: authRoutes,
           },
         ],
       },
       {
-        element: (
-          <Suspense fallback={<RouteLoadingFallback />}>
-            <PrivateRoute />
-          </Suspense>
-        ),
+        element: createRouteElement(PrivateRoute, "App", "Loading private routes..."),
         children: [
           {
             index: true,
-            element: <Navigate to={ADMIN_ROUTES.DASHBOARD} replace />,
+            element: <LevelBasedRedirect />,
           },
           {
-            element: (
-              <Suspense fallback={<RouteLoadingFallback />}>
-                <DashboardLayoutWrapper />
-              </Suspense>
-            ),
-            children: adminRoutes,
+            element: <LevelBasedRedirect />,
+            children: [
+              {
+                element: createRouteElement(DashboardLayoutWrapper, "App", "Loading dashboard..."),
+                children: [
+                  {
+                    path: SUPER_ADMIN_SEGMENT,
+                    children: adminRoutes.superAdminRoutes,
+                  },
+                  {
+                    path: ADMIN_SEGMENT,
+                    children: adminRoutes.adminRoutes,
+                  },
+                  {
+                    path: TRAINER_SEGMENT,
+                    children: adminRoutes.trainerRoutes,
+                  },
+                  {
+                    path: CLIENT_SEGMENT,
+                    children: adminRoutes.clientRoutes,
+                  },
+                ],
+              },
+            ],
           },
         ],
       },

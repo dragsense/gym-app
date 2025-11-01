@@ -31,7 +31,7 @@ export default function ClientsPage() {
 
     return (
         <PageInnerLayout Header={<Header />}>
-            <SingleHandler<IClient, any>
+            <SingleHandler<IClient>
                 queryFn={fetchClient}
                 initialParams={{
                     _relations: 'user.profile',
@@ -47,7 +47,7 @@ export default function ClientsPage() {
                     },
                     {
                         action: 'updateProfile',
-                        comp: ProfileForm as any
+                        comp: ProfileForm
                     }
                 ]}
             />
@@ -56,7 +56,7 @@ export default function ClientsPage() {
                 queryFn={fetchClients}
                 initialParams={{
                     _relations: 'user.profile',
-                    _select: 'user.email, user.profile.firstName, user.profile.lastName, user.profile.phoneNumber',
+                    _select: 'user.email, user.isActive, user.profile.firstName, user.profile.lastName, user.profile.phoneNumber',
                     sortBy: 'createdAt',
                     sortOrder: 'DESC',
                 }}

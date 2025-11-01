@@ -9,6 +9,7 @@ import {
   Param,
   Query,
   Patch,
+  BadRequestException,
 } from '@nestjs/common';
 
 import {
@@ -31,10 +32,14 @@ import {
 } from '@shared/dtos';
 import { Session } from './entities/session.entity';
 import { AuthUser } from '@/decorators/user.decorator';
-import { User } from '../users/entities/user.entity';
+import { User } from '@/common/system-user/entities/user.entity';
+import { EUserLevels } from '@shared/enums';
+import { Brackets, SelectQueryBuilder } from 'typeorm';
+import { MinUserLevel } from '@/common/decorators/level.decorator';
 
 @ApiBearerAuth('access-token')
 @ApiTags('Sessions')
+@MinUserLevel(EUserLevels.CLIENT)
 @Controller('sessions')
 export class SessionsController {
   constructor(private readonly sessionsService: SessionsService) {}
@@ -46,8 +51,31 @@ export class SessionsController {
     type: SessionPaginatedDto,
   })
   @Get()
-  findAll(@Query() query: SessionListDto) {
-    return this.sessionsService.get(query, SessionListDto);
+  findAll(@Query() query: SessionListDto, @AuthUser() currentUser: User) {
+    const isSuperAdmin = currentUser.level === EUserLevels.SUPER_ADMIN;
+    return this.sessionsService.get(query, SessionListDto, {
+      beforeQuery: (query: SelectQueryBuilder<Session>) => {
+        if (!isSuperAdmin) {
+          query
+            .leftJoin('entity.trainer', '_trainer')
+            .leftJoin('entity.clients', '_clients')
+            .andWhere(
+              new Brackets((qb2) => {
+                qb2
+                  .where('entity.createdByUserId = :uid', {
+                    uid: currentUser.id,
+                  })
+                  .orWhere('_trainer.userId = :uid', {
+                    uid: currentUser.id,
+                  })
+                  .orWhere('_clients.userId = :uid', {
+                    uid: currentUser.id,
+                  });
+              }),
+            );
+        }
+      },
+    });
   }
 
   @ApiOperation({ summary: 'Get session by ID' })
@@ -78,7 +106,7 @@ export class SessionsController {
     @Body() createSessionDto: CreateSessionDto,
     @AuthUser() currentUser: User,
   ) {
-    return this.sessionsService.createSession(createSessionDto, currentUser.id);
+    return this.sessionsService.createSession(createSessionDto, currentUser);
   }
 
   @ApiOperation({ summary: 'Update session by ID' })
@@ -98,7 +126,7 @@ export class SessionsController {
     return this.sessionsService.updateSession(
       id,
       updateSessionDto,
-      currentUser.id,
+      currentUser,
     );
   }
 

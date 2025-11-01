@@ -1,22 +1,10 @@
-/* eslint-disable prettier/prettier */
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  Index,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
-import { User } from '@/modules/v1/users/entities/user.entity';
+import { Column, Entity, Index, ManyToOne } from 'typeorm';
+import { User } from '@/common/system-user/entities/user.entity';
+import { GeneralBaseEntity } from '@/common/entities';
 
 @Entity('auth_otp_codes')
-export class OtpCode {
-  @ApiProperty({ example: '550e8400-e29b-41d4-a716-446655440000' })
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
+export class OtpCode extends GeneralBaseEntity {
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   user: User;
 
@@ -40,10 +28,4 @@ export class OtpCode {
   @ApiProperty({ example: false })
   @Column({ type: 'boolean', default: false })
   isUsed: boolean;
-
-  @CreateDateColumn({ type: 'timestamp with time zone' })
-  createdAt: Date;
-
-  @UpdateDateColumn({ type: 'timestamp with time zone' })
-  updatedAt: Date;
 }

@@ -24,6 +24,10 @@ import {
 } from '@shared/dtos/trainer-client-dtos';
 import { SingleQueryDto } from '@shared/dtos';
 import { TrainerClient } from './entities/trainer-client.entity';
+import { AuthUser } from '@/decorators/user.decorator';
+import { User } from '@/common/system-user/entities/user.entity';
+import { EUserLevels } from '@shared/enums';
+import { Brackets, SelectQueryBuilder } from 'typeorm';
 
 @ApiTags('Trainer-Clients')
 @ApiBearerAuth('access-token')
@@ -39,8 +43,33 @@ export class TrainerClientsController {
     status: 200,
     description: 'Trainer-client assignments retrieved successfully',
   })
-  async findAll(@Query() queryDto: TrainerClientListDto) {
-    return await this.trainerClientsService.get(queryDto, TrainerClientListDto);
+  async findAll(
+    @Query() queryDto: TrainerClientListDto,
+    @AuthUser() currentUser: User,
+  ) {
+    const isSuperAdmin = currentUser.level === EUserLevels.SUPER_ADMIN;
+    return await this.trainerClientsService.get(
+      queryDto,
+      TrainerClientListDto,
+      {
+        beforeQuery: (query: SelectQueryBuilder<TrainerClient>) => {
+          if (!isSuperAdmin) {
+            query.leftJoin('entity.trainer', '_trainer').andWhere(
+              new Brackets((qb2) => {
+                qb2
+                  .where('entity.createdByUserId = :uid', {
+                    uid: currentUser.id,
+                  })
+                  .orWhere('_trainer.createdByUserId = :uid', {
+                    uid: currentUser.id,
+                  });
+              }),
+            );
+          }
+          return query;
+        },
+      },
+    );
   }
 
   @Get(':id')

@@ -8,7 +8,8 @@ import {
   IsDateString,
   ValidateNested,
 } from "class-validator";
-import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { PartialType } from "../../lib/dto-type-adapter";
 import { Type, Transform } from "class-transformer";
 import { PaginationMetaDto } from "../common/pagination.dto";
 import { ListQueryDto, SingleQueryDto } from "../common/list-query.dto";
@@ -126,12 +127,14 @@ export class ClientDto {
   @ApiProperty({ example: "Weight Loss", description: "Client goal" })
   @IsOptional()
   @IsString()
-  goal: string;
+  @IsNotEmpty()
+  goal?: string;
 
   @ApiProperty({ example: "Beginner", description: "Fitness level" })
   @IsOptional()
   @IsString()
-  fitnessLevel: string;
+  @IsNotEmpty()
+  fitnessLevel?: string;
 
   @ApiPropertyOptional({
     example: "No injuries",
@@ -139,11 +142,13 @@ export class ClientDto {
   })
   @IsOptional()
   @IsString()
+  @IsNotEmpty()
   medicalConditions?: string;
 
   @ApiProperty({ example: true, description: "Client active status" })
   @IsOptional()
   @IsBoolean()
+  @IsNotEmpty()
   isActive?: boolean;
 
   @ApiProperty({
@@ -159,6 +164,9 @@ export class ClientDto {
     description: "User",
   })
   @IsOptional()
+  @ValidateNested()
+  @Type(() => UserDto)
+  @FieldType("nested", true, UserDto)
   user?: UserDto;
 
   @IsOptional()

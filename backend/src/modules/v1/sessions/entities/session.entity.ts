@@ -11,8 +11,10 @@ import { GeneralBaseEntity } from '@/common/entities';
 import { ESessionStatus, ESessionType } from '@shared/enums/session.enum';
 import { BeforeInsert, BeforeUpdate } from 'typeorm';
 import { ReminderDto } from '@shared/dtos/reminder-dtos';
-import { User } from '../../users/entities/user.entity';
+import { User } from '@/common/system-user/entities/user.entity';
 import { EScheduleFrequency } from '@shared/enums/schedule.enum';
+import { Client } from '../../clients/entities/client.entity';
+import { Trainer } from '../../trainers/entities/trainer.entity';
 
 @Entity('sessions')
 export class Session extends GeneralBaseEntity {
@@ -87,18 +89,18 @@ export class Session extends GeneralBaseEntity {
   })
   status: ESessionStatus;
 
-  @ApiProperty({ type: () => User, description: 'Associated trainer' })
-  @ManyToOne(() => User, { eager: true })
+  @ApiProperty({ type: () => Trainer, description: 'Associated trainer' })
+  @ManyToOne(() => Trainer, { eager: true })
   @JoinColumn({ name: 'trainerUserId' })
-  trainerUser: User;
+  trainer: Trainer;
 
   @ApiProperty({
-    type: () => [User],
+    type: () => [Client],
     description: 'Associated clients (at least one required)',
   })
-  @ManyToMany(() => User, { eager: true })
+  @ManyToMany(() => Client, { eager: true })
   @JoinTable({ name: 'session_clients_users' })
-  clientsUsers: User[];
+  clients: Client[];
 
   @ApiPropertyOptional({
     type: () => User,

@@ -1,10 +1,20 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { PermissionService } from '@/common/roles/services/permission.service';
-import { RESOURCE_KEY, ACTION_KEY, PERMISSION_KEY, ROLES_KEY } from '@/decorators';
+import {
+  RESOURCE_KEY,
+  ACTION_KEY,
+  PERMISSION_KEY,
+  ROLES_KEY,
+} from '@/decorators';
 import { EPermissionAction } from '@shared/enums';
 import { InjectEntity } from '@/decorators/inject-entity.decorator';
-import { User } from '@/modules/v1/users/entities/user.entity';
+import { User } from '@/common/system-user/entities/user.entity';
 
 @Injectable()
 export class PermissionGuard implements CanActivate {
@@ -23,18 +33,33 @@ export class PermissionGuard implements CanActivate {
     }
 
     // Check if permissions should be skipped
-    const skipPermissions = this.reflector.get<boolean>('skipPermissions', context.getHandler());
+    const skipPermissions = this.reflector.get<boolean>(
+      'skipPermissions',
+      context.getHandler(),
+    );
     if (skipPermissions) {
       return true;
     }
 
     // Get permission requirements from decorators
-    const requiredPermissions = this.reflector.get<string[]>(PERMISSION_KEY, context.getHandler());
-    const requiredRoles = this.reflector.get<string[]>(ROLES_KEY, context.getHandler());
+    const requiredPermissions = this.reflector.get<string[]>(
+      PERMISSION_KEY,
+      context.getHandler(),
+    );
+    const requiredRoles = this.reflector.get<string[]>(
+      ROLES_KEY,
+      context.getHandler(),
+    );
 
     // Get resource and action from decorators (for backward compatibility)
-    const resourceName = this.reflector.get<string>(RESOURCE_KEY, context.getHandler());
-    const action = this.reflector.get<EPermissionAction>(ACTION_KEY, context.getHandler());
+    const resourceName = this.reflector.get<string>(
+      RESOURCE_KEY,
+      context.getHandler(),
+    );
+    const action = this.reflector.get<EPermissionAction>(
+      ACTION_KEY,
+      context.getHandler(),
+    );
 
     // If no permission requirements are specified, allow access
     if (!requiredPermissions && !requiredRoles && !resourceName) {
@@ -45,39 +70,55 @@ export class PermissionGuard implements CanActivate {
     if (requiredRoles && requiredRoles.length > 0) {
       const hasRole = await this.checkRoles(resource.id, requiredRoles);
       if (!hasRole) {
-        throw new ForbiddenException(`Insufficient roles. Required: ${requiredRoles.join(', ')}.`);
+        throw new ForbiddenException(
+          `Insufficient roles. Required: ${requiredRoles.join(', ')}.`,
+        );
       }
     }
 
     // Check permission-based access
     if (requiredPermissions && requiredPermissions.length > 0) {
-      const hasPermission = await this.checkPermissions(resource.id, requiredPermissions);
+      const hasPermission = await this.checkPermissions(
+        resource.id,
+        requiredPermissions,
+      );
       if (!hasPermission) {
-        throw new ForbiddenException(`Insufficient permissions. Required: ${requiredPermissions.join(', ')}.`);
+        throw new ForbiddenException(
+          `Insufficient permissions. Required: ${requiredPermissions.join(', ')}.`,
+        );
       }
-
     }
 
-     // Check legacy resource/action permissions (for backward compatibility)
-     if (resourceName) {
-       // Use action from decorator or determine from HTTP method
-       const finalAction = action || this.getActionFromMethod(request.method);
-       
-       const hasPermission = await this.permissionService.hasPermission(
-         resource.id,
-         resourceName,
-         finalAction,
-       );
+    // Check legacy resource/action permissions (for backward compatibility)
+    if (resourceName) {
+      // Use action from decorator or determine from HTTP method
+      const finalAction = action || this.getActionFromMethod(request.method);
 
-       if (!hasPermission) {
-         throw new ForbiddenException(`Insufficient permissions. Required: ${resourceName}:${finalAction}.`);
-       }
+      const hasPermission = await this.permissionService.hasPermission(
+        resource.id,
+        resourceName,
+        finalAction,
+      );
 
-       // Check column-level permissions if this is a data access operation
-       if (finalAction === EPermissionAction.READ || finalAction === EPermissionAction.UPDATE) {
-         await this.checkColumnPermissions(request, resource.id, resourceName, finalAction);
-       }
-     }
+      if (!hasPermission) {
+        throw new ForbiddenException(
+          `Insufficient permissions. Required: ${resourceName}:${finalAction}.`,
+        );
+      }
+
+      // Check column-level permissions if this is a data access operation
+      if (
+        finalAction === EPermissionAction.READ ||
+        finalAction === EPermissionAction.UPDATE
+      ) {
+        await this.checkColumnPermissions(
+          request,
+          resource.id,
+          resourceName,
+          finalAction,
+        );
+      }
+    }
 
     return true;
   }
@@ -85,63 +126,73 @@ export class PermissionGuard implements CanActivate {
   /**
    * Check if user has required roles
    */
-  private async checkRoles(userId: number, requiredRoles: string[]): Promise<boolean> {
+  private async checkRoles(
+    userId: number,
+    requiredRoles: string[],
+  ): Promise<boolean> {
     const userRoles = await this.permissionService.getResourceRoles(userId);
-    return requiredRoles.some(role => userRoles.includes(role));
+    return requiredRoles.some((role) => userRoles.includes(role));
   }
 
   /**
    * Check if user has required permissions
    */
-  private async checkPermissions(userId: number, requiredPermissions: string[]): Promise<boolean> {
-    const userPermissions = await this.permissionService.getResourcePermissions(userId);
-    return requiredPermissions.some(permission => userPermissions.includes(permission));
+  private async checkPermissions(
+    userId: number,
+    requiredPermissions: string[],
+  ): Promise<boolean> {
+    const userPermissions =
+      await this.permissionService.getResourcePermissions(userId);
+    return requiredPermissions.some((permission) =>
+      userPermissions.includes(permission),
+    );
   }
 
-   /**
-    * Get action from HTTP method
-    */
-   private getActionFromMethod(method: string): EPermissionAction {
-     switch (method.toUpperCase()) {
-       case 'GET':
-         return EPermissionAction.READ;
-       case 'POST':
-         return EPermissionAction.CREATE;
-       case 'PUT':
-       case 'PATCH':
-         return EPermissionAction.UPDATE;
-       case 'DELETE':
-         return EPermissionAction.DELETE;
-       default:
-         return EPermissionAction.READ;
-     }
-   }
+  /**
+   * Get action from HTTP method
+   */
+  private getActionFromMethod(method: string): EPermissionAction {
+    switch (method.toUpperCase()) {
+      case 'GET':
+        return EPermissionAction.READ;
+      case 'POST':
+        return EPermissionAction.CREATE;
+      case 'PUT':
+      case 'PATCH':
+        return EPermissionAction.UPDATE;
+      case 'DELETE':
+        return EPermissionAction.DELETE;
+      default:
+        return EPermissionAction.READ;
+    }
+  }
 
-   /**
-    * Check column-level permissions for data access
-    */
-   private async checkColumnPermissions(
-     request: any,
-     resourceId: number,
-     resourceName: string,
-     action: EPermissionAction
-   ): Promise<void> {
-     // Get request body/query parameters to check column access
-     const requestData = request.body || request.query || {};
-     const columns = Object.keys(requestData);
+  /**
+   * Check column-level permissions for data access
+   */
+  private async checkColumnPermissions(
+    request: any,
+    resourceId: number,
+    resourceName: string,
+    action: EPermissionAction,
+  ): Promise<void> {
+    // Get request body/query parameters to check column access
+    const requestData = request.body || request.query || {};
+    const columns = Object.keys(requestData);
 
-     if (columns.length > 0) {
-       const columnAccess = await this.permissionService.canAccessColumns(
-         resourceId,
-         resourceName,
-         columns,
-         action === EPermissionAction.READ ? 'read' : 'write'
-       );
+    if (columns.length > 0) {
+      const columnAccess = await this.permissionService.canAccessColumns(
+        resourceId,
+        resourceName,
+        columns,
+        action === EPermissionAction.READ ? 'read' : 'write',
+      );
 
-       if (columnAccess.denied.length > 0) {
-         throw new ForbiddenException(`Access denied to columns: [${columnAccess.denied.join(', ')}].`);
-       }
-     }
-   }
+      if (columnAccess.denied.length > 0) {
+        throw new ForbiddenException(
+          `Access denied to columns: [${columnAccess.denied.join(', ')}].`,
+        );
+      }
+    }
+  }
 }
-

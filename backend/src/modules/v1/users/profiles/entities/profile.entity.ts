@@ -7,10 +7,11 @@ import {
   JoinTable,
 } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { User } from '@/modules/v1/users/entities/user.entity';
+import { User } from '@/common/system-user/entities/user.entity';
 import { FileUpload } from '@/common/file-upload/entities/file-upload.entity';
 import { GeneralBaseEntity } from '@/common/entities';
 import { EUserGender } from '@shared/enums/user.enum';
+import { StripeConnectAccount } from '@/modules/v1/stripe/entities/stripe-connect-account.entity';
 
 @Entity('profiles')
 export class Profile extends GeneralBaseEntity {
@@ -55,7 +56,7 @@ export class Profile extends GeneralBaseEntity {
   address?: string;
 
   @ApiProperty({ type: () => User, description: 'Associated user' })
-  @OneToOne(() => User, (user) => user.profile, { onDelete: 'CASCADE' })
+  @OneToOne(() => User, { onDelete: 'CASCADE' })
   user: User;
 
   @ApiPropertyOptional({
@@ -84,4 +85,17 @@ export class Profile extends GeneralBaseEntity {
     inverseJoinColumn: { name: 'document_id', referencedColumnName: 'id' },
   })
   documents?: FileUpload[];
+
+  @Column({ type: 'varchar', nullable: true })
+  stripeCustomerId: string;
+
+  @ApiProperty({
+    type: () => StripeConnectAccount,
+    description: 'Stripe Connect account of the trainer',
+    required: false,
+  })
+  @OneToOne(() => StripeConnectAccount, (stripeConnect) => stripeConnect.user, {
+    cascade: true,
+  })
+  stripeConnectAccount: StripeConnectAccount;
 }

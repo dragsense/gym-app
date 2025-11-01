@@ -74,8 +74,8 @@ function SessionDetailContent({ session }: ISessionDetailContentProps) {
     // React 19: Essential IDs
     const componentId = useId();
 
-    const trainer = session.trainerUser;
-    const clients = session.clientsUsers;
+    const trainer = session.trainer?.user;
+    const clients = session.clients?.map((c) => c.user);
 
     // React 19: Memoized session dates for better performance
     const sessionStartDate = useMemo(() =>

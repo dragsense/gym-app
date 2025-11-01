@@ -2,7 +2,7 @@ import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { GeneralBaseEntity } from '@/common/entities';
 import { EBillingStatus, EBillingType } from '@shared/enums/billing.enum';
-import { User } from '../../users/entities/user.entity';
+import { User } from '@/common/system-user/entities/user.entity';
 import { EScheduleFrequency } from '@shared/enums/schedule.enum';
 import { ReminderDto } from '@shared/dtos/reminder-dtos';
 

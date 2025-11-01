@@ -23,9 +23,11 @@ import {
 } from '@shared/dtos/activity-log-dtos';
 import { SingleQueryDto } from '@shared/dtos';
 import { ActivityLog } from './entities/activity-log.entity';
+import { MinUserLevel } from '../decorators/level.decorator';
 
 @ApiTags('Activity Logs')
 @ApiBearerAuth('access-token')
+@MinUserLevel(0)
 @Controller('activity-logs')
 export class ActivityLogsController {
   constructor(private readonly activityLogsService: ActivityLogsService) {}

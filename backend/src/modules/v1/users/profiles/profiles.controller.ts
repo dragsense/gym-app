@@ -24,11 +24,15 @@ import { UpdateProfileDto } from '@shared/dtos';
 
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { OmitType } from '@shared/lib/type-utils';
+import { LoggerService } from '@/common/logger/logger.service';
+import { AuthUser } from '@/decorators/user.decorator';
+import { User } from '@/common/system-user/entities/user.entity';
 
 @ApiBearerAuth('access-token')
 @ApiTags('Profiles')
 @Controller('users/profiles')
 export class ProfilesController {
+  private readonly logger = new LoggerService(ProfilesController.name);
   constructor(private readonly profilesService: ProfilesService) {}
 
   @Get('profile/me')
@@ -54,14 +58,24 @@ export class ProfilesController {
   @ApiResponse({ status: 200, description: 'Profile updated', type: Profile })
   @ApiResponse({ status: 404, description: 'Profile not found' })
   async updateMe(
-    @Req() req: any,
+    @AuthUser() currentUser: User,
     @UploadedFiles()
     files: { image?: Express.Multer.File[]; documents?: Express.Multer.File[] },
     @Body() updateProfileDto: OmitType<UpdateProfileDto, 'image' | 'documents'>,
   ) {
-    const profile = await this.profilesService.getSingle({
-      userId: req.user.id,
-    });
+    let profile: Profile | null = null;
+    try {
+      profile = await this.profilesService.getSingle({
+        userId: currentUser.id,
+      });
+    } catch (error) {
+      this.logger.error(error instanceof Error ? error.message : String(error));
+
+      profile = await this.profilesService.create({
+        userId: currentUser.id,
+        ...updateProfileDto,
+      });
+    }
 
     const image = files?.image?.[0];
     const documents = files?.documents;

@@ -1,23 +1,22 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MailerService } from '@nestjs-modules/mailer';
-import { User } from  '@/modules/v1/users/entities/user.entity';
+import { User } from '@/common/system-user/entities/user.entity';
 import { LoggerService } from '@/common/logger/logger.service';
+import { Profile } from '../profiles/entities/profile.entity';
 
 export interface OnboardingEmailContext {
-  user: User;
+  profile: Profile;
   tempPassword?: string;
-  createdBy?: User;
   welcomeMessage?: string;
   additionalInstructions?: string;
 }
 
 interface EmailTemplateData {
-  user: User;
+  profile: Profile;
   appName: string;
   loginUrl: string;
   tempPassword?: string;
-  createdBy?: User;
 }
 
 @Injectable()
@@ -37,11 +36,16 @@ export class UserEmailService {
    */
   async sendOnboardingEmail(context: OnboardingEmailContext): Promise<void> {
     try {
-      const { user } = context;
+      const { profile } = context;
       await this.sendWelcomeEmail(context);
-      this.logger.log(`Onboarding email sent successfully to ${user.email}`);
+      this.logger.log(
+        `Onboarding email sent successfully to ${profile.user.email}`,
+      );
     } catch (error) {
-      this.logger.error(`Failed to send onboarding email to ${context.user.email}:`, error);
+      this.logger.error(
+        `Failed to send onboarding email to ${context.profile.user.email}:`,
+        error,
+      );
       throw error;
     }
   }
@@ -50,19 +54,18 @@ export class UserEmailService {
    * Admin self-registration welcome email
    */
   async sendWelcomeEmail(context: OnboardingEmailContext): Promise<void> {
-    const { user, tempPassword, createdBy } = context;
+    const { profile, tempPassword } = context;
     const loginUrl = `${this.appConfig.appUrl}/${this.appConfig.loginPath}`;
 
     const templateData: EmailTemplateData = {
-      user,
+      profile,
       appName: this.appConfig.name,
       loginUrl,
       tempPassword,
-      createdBy
     };
 
     await this.mailerService.sendMail({
-      to: user.email,
+      to: profile.user.email,
       from: this.configService.get('MAIL_FROM'),
       subject: `Welcome to ${this.appConfig.name} - Account Created`,
       html: this.generateWelcomeEmailHTML(templateData),
@@ -71,9 +74,8 @@ export class UserEmailService {
   }
 
   private generateWelcomeEmailHTML(data: EmailTemplateData): string {
-    const { user, appName, loginUrl, tempPassword, createdBy } = data;
-    const userName = user.profile?.firstName || 'Valued Customer';
-    const createdByName = createdBy?.profile?.firstName ? `${createdBy.profile.firstName} ${createdBy.profile.lastName || ''}` : 'System Administrator';
+    const { profile, appName, loginUrl, tempPassword } = data;
+    const userName = profile.firstName || 'Valued Customer';
 
     return `
 <!DOCTYPE html>
@@ -177,13 +179,14 @@ export class UserEmailService {
 
         <div class="section">
             <h3 class="section-title">📋 Account Information</h3>
-            <div class="info-item"><strong>Email:</strong> ${user.email}</div>
-            <div class="info-item"><strong>Name:</strong> ${user.profile?.firstName || 'Customer'} ${user.profile?.lastName || ''}</div>
+            <div class="info-item"><strong>Email:</strong> ${profile.user.email}</div>
+            <div class="info-item"><strong>Name:</strong> ${profile.firstName || 'Customer'} ${profile.lastName || ''}</div>
             <div class="info-item"><strong>Role:</strong> Personal Customer</div>
-            ${createdBy ? `<div class="info-item"><strong>Created by:</strong> ${createdByName}</div>` : ''}
         </div>
 
-        ${tempPassword ? `
+        ${
+          tempPassword
+            ? `
         <div class="credentials">
             <h3 style="color: #856404; margin-top: 0;">🔐 Login Credentials</h3>
             <div class="info-item">
@@ -194,7 +197,9 @@ export class UserEmailService {
             </div>
             <p class="warning">⚠️ For security reasons, please change your password after your first login.</p>
         </div>
-        ` : ''}
+        `
+            : ''
+        }
 
         <div style="text-align: center;">
             <a href="${loginUrl}" class="login-button">Access Your Account</a>
@@ -211,9 +216,8 @@ export class UserEmailService {
   }
 
   private generateWelcomeEmailText(data: EmailTemplateData): string {
-    const { user, appName, loginUrl, tempPassword, createdBy } = data;
-    const userName = user.profile?.firstName || 'Valued Customer';
-    const createdByName = createdBy?.profile?.firstName ? `${createdBy.profile.firstName} ${createdBy.profile.lastName || ''}` : 'System Administrator';
+    const { profile, appName, loginUrl, tempPassword } = data;
+    const userName = profile.firstName || 'Valued Customer';
 
     return `
 Welcome to ${appName}!
@@ -223,20 +227,23 @@ Dear ${userName},
 Your account has been successfully created with ${appName}.
 
 Account Details:
-- Email: ${user.email}
-- Name: ${user.profile?.firstName || 'Customer'} ${user.profile?.lastName || ''}
+- Email: ${profile.user.email}
+- Name: ${profile.firstName || 'Customer'} ${profile.lastName || ''}
 - Role: Personal Customer
-${createdBy ? `- Created by: ${createdByName}\n` : ''}
 
-${tempPassword ? `
+${
+  tempPassword
+    ? `
 Login Credentials:
 - Temporary Password: ${tempPassword}
 - Login URL: ${loginUrl}
 
 ⚠️ For security reasons, please change your password after your first login.
-` : `
+`
+    : `
 Access your account at: ${loginUrl}
-`}
+`
+}
 
 
 Best regards,
@@ -249,7 +256,10 @@ The ${appName} Team
   /**
    * Send password reset success notification
    */
-  async sendPasswordResetConfirmation(user: User, superAdmin: User): Promise<void> {
+  async sendPasswordResetConfirmation(
+    user: User,
+    superAdmin: User,
+  ): Promise<void> {
     try {
       const supportEmail = superAdmin.email;
 
@@ -257,19 +267,22 @@ The ${appName} Team
         to: user.email,
         from: this.configService.get('MAIL_FROM'),
         subject: `Password Reset Successful - ${this.appConfig.name}`,
-        html: this.generatePasswordResetConfirmationHTML(user, supportEmail),
-        text: this.generatePasswordResetConfirmationText(user, supportEmail),
+        html: this.generatePasswordResetConfirmationHTML(supportEmail),
+        text: this.generatePasswordResetConfirmationText(supportEmail),
       });
 
       this.logger.log(`Password reset confirmation sent to ${user.email}`);
     } catch (error) {
-      this.logger.error(`Failed to send password reset confirmation to ${user.email}:`, error);
+      this.logger.error(
+        `Failed to send password reset confirmation to ${user.email}:`,
+        error,
+      );
     }
   }
 
-  private generatePasswordResetConfirmationHTML(user: User, supportEmail: string): string {
-    const userName = user.profile?.firstName || 'User';
-    
+  private generatePasswordResetConfirmationHTML(supportEmail: string): string {
+    const userName = 'Valued User';
+
     return `
 <!DOCTYPE html>
 <html lang="en">
@@ -311,9 +324,9 @@ The ${appName} Team
 </html>`;
   }
 
-  private generatePasswordResetConfirmationText(user: User, supportEmail: string): string {
-    const userName = user.profile?.firstName || 'User';
-    
+  private generatePasswordResetConfirmationText(supportEmail: string): string {
+    const userName = 'Valued User';
+
     return `
 Password Reset Successful
 

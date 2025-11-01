@@ -10,7 +10,10 @@ import { SessionEventListenerService } from './services/session-event-listener.s
 import { SessionProcessor } from './services/session.processor';
 import { CrudModule } from '@/common/crud/crud.module';
 import { ScheduleModule } from '@/common/schedule/schedule.module';
+import { TrainersModule } from '../trainers/trainers.module';
+import { ClientsModule } from '../clients/clients.module';
 import { UsersModule } from '../users/users.module';
+import { ProfilesModule } from '../users/profiles/profiles.module';
 
 @Module({
   imports: [
@@ -18,11 +21,18 @@ import { UsersModule } from '../users/users.module';
     CrudModule,
     ScheduleModule,
     BullModule.registerQueue({ name: 'session' }),
-    UsersModule
+    TrainersModule,
+    ClientsModule,
+    UsersModule,
+    ProfilesModule,
   ],
   exports: [SessionsService, SessionEmailService],
   controllers: [SessionsController],
-  providers: [SessionsService, SessionEmailService, SessionEventListenerService, SessionProcessor],
+  providers: [
+    SessionsService,
+    SessionEmailService,
+    SessionEventListenerService,
+    SessionProcessor,
+  ],
 })
-export class SessionsModule { }
- 
+export class SessionsModule {}

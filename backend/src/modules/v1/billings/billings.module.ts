@@ -15,6 +15,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { getJwtConfig } from '@/config/jwt.config';
 import { StripeModule } from '../stripe/stripe.module';
+import { ProfilesModule } from '../users/profiles/profiles.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { StripeModule } from '../stripe/stripe.module';
     BullModule.registerQueue({ name: 'billing' }),
     UsersModule,
     StripeModule,
+    ProfilesModule,
     JwtModule.registerAsync({
       useFactory: getJwtConfig,
       inject: [ConfigService],
@@ -31,6 +33,11 @@ import { StripeModule } from '../stripe/stripe.module';
   ],
   exports: [BillingsService, BillingEmailService],
   controllers: [BillingsController],
-  providers: [BillingsService, BillingEmailService, BillingEventListenerService, BillingProcessor],
+  providers: [
+    BillingsService,
+    BillingEmailService,
+    BillingEventListenerService,
+    BillingProcessor,
+  ],
 })
-export class BillingsModule { }
+export class BillingsModule {}

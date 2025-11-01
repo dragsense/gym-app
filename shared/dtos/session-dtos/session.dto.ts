@@ -12,18 +12,18 @@ import {
   ValidateIf,
   ArrayMinSize,
 } from "class-validator";
-import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
-import { Type, Transform } from "class-transformer";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { PartialType } from "../../lib/dto-type-adapter";
+import { Type } from "class-transformer";
 import { PaginationMetaDto } from "../common/pagination.dto";
-import { ListQueryDto, SingleQueryDto } from "../common/list-query.dto";
-// import { ISession } from '../../interfaces/session.interface';
+import { ListQueryDto } from "../common/list-query.dto";
 import { FieldType, FieldOptions } from "../../decorators/field.decorator";
-import { OmitType } from "../../lib/dto-type-adapter";
-import { UserDto } from "../user-dtos";
 import { Like, Equals, DateRange } from "../../decorators/crud.dto.decorators";
 import { ESessionStatus, ESessionType } from "../../enums/session.enum";
 import { ISession } from "../../interfaces/session.interface";
 import { ReminderDto } from "../reminder-dtos";
+import { TrainerDto } from "../trainer-dtos";
+import { ClientDto } from "../client-dtos";
 
 export class CreateSessionDto {
   @ApiProperty({ example: "Morning Workout", description: "Session title" })
@@ -61,22 +61,23 @@ export class CreateSessionDto {
   @Type(() => Number)
   duration?: number;
 
-  @ApiProperty({ type: UserDto })
+  @ApiProperty({ type: TrainerDto })
   @ValidateNested()
-  @Type(() => UserDto)
-  @FieldType("nested", true, UserDto)
-  trainerUser: UserDto;
+  @Type(() => TrainerDto)
+  @FieldType("nested", true, TrainerDto)
+  @IsOptional()
+  trainer?: TrainerDto;
 
   @ApiProperty({
-    type: [UserDto],
+    type: [ClientDto],
     description: "Associated clients (at least one required)",
   })
   @ValidateNested({ each: true })
-  @Type(() => UserDto)
-  @FieldType("nested", true, UserDto)
+  @Type(() => ClientDto)
+  @FieldType("nested", true, ClientDto)
   @IsArray()
   @ArrayMinSize(1, { message: "At least one client must be selected" })
-  clientsUsers: UserDto[];
+  clients: ClientDto[];
 
   @ApiProperty({
     example: "PERSONAL",
@@ -272,16 +273,16 @@ export class SessionDto {
   @IsOptional()
   status: ESessionStatus;
 
-  @ApiProperty({ type: UserDto })
+  @ApiProperty({ type: TrainerDto })
   @ValidateNested()
-  @Type(() => UserDto)
-  trainerUser: UserDto;
+  @Type(() => TrainerDto)
+  trainerUser: TrainerDto;
 
-  @ApiProperty({ type: [UserDto] })
+  @ApiProperty({ type: [ClientDto] })
   @ValidateNested()
-  @Type(() => UserDto)
+  @Type(() => ClientDto)
   @IsArray()
-  clientsUsers: UserDto[];
+  clientsUsers: ClientDto[];
 
   @ApiProperty({ example: 1, description: "Number of clients" })
   @IsOptional()

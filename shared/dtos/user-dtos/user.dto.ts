@@ -12,7 +12,8 @@ import {
   IsDateString,
   IsArray,
 } from "class-validator";
-import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { PartialType } from "../../lib/dto-type-adapter";
 import { CreateProfileDto, ProfileDto, UpdateProfileDto } from "./profile.dto";
 import { Type, Transform } from "class-transformer";
 import { PaginationMetaDto } from "../common/pagination.dto";

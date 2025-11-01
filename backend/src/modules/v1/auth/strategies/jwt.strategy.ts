@@ -4,14 +4,15 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
 import { TokenService } from '../services/tokens.service';
-import { UsersService } from '@/modules/v1/users/users.service';
+import { Profile } from '../../users/profiles/entities/profile.entity';
+import { ProfilesService } from '../../users/profiles/profiles.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(
     readonly configService: ConfigService,
     private tokenService: TokenService,
-    private userService: UsersService,
+    private profileService: ProfilesService,
   ) {
     const secret = configService.get('jwt').secret;
 
@@ -25,8 +26,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
   }
 
-  async validate(req: Request, payload: any): Promise<any> {
-
+  async validate(req: Request, payload: { id: string }) {
     const authHeader = req.headers['authorization'] || '';
     const token = authHeader.replace('Bearer ', '');
 
@@ -35,33 +35,32 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       throw new UnauthorizedException('Token revoked');
     }
 
-    const user = await this.userService.getSingle({ id: payload.id },
-      { _relations: ['profile'] });
-    if (!user) {
+    const profile = await this.profileService.getSingle(
+      { user: { id: payload.id } },
+      { _relations: ['user'] },
+    );
+    if (!profile) {
       throw new UnauthorizedException('User not found');
     }
 
     return {
-      ...user,
+      ...profile,
       token,
     };
-
   }
 }
 
-
-
 @Injectable()
-export class RefreshJwtStrategy extends PassportStrategy(Strategy, 'jwt-refresh') {
-  constructor(
-    readonly configService: ConfigService,
-
-  ) {
+export class RefreshJwtStrategy extends PassportStrategy(
+  Strategy,
+  'jwt-refresh',
+) {
+  constructor(readonly configService: ConfigService) {
     const secret = configService.get('jwt').refreshSecret;
 
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
-        (req) => req?.cookies?.refresh_token
+        (req) => req?.cookies?.refresh_token,
       ]),
       ignoreExpiration: false,
       secretOrKey: secret,
@@ -70,9 +69,8 @@ export class RefreshJwtStrategy extends PassportStrategy(Strategy, 'jwt-refresh'
   }
 
   async validate(req: Request) {
-
     return {
-      refreshToken: req.cookies?.refresh_token
+      refreshToken: req.cookies?.refresh_token,
     };
   }
 }

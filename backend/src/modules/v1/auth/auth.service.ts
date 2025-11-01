@@ -12,7 +12,12 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { ConfigService } from '@nestjs/config';
 
 import { IMessageResponse } from '@shared/interfaces';
-import { ResetPasswordWithTokenDto, SignupDto } from '@shared/dtos';
+import {
+  CreateTrainerDto,
+  ResetPasswordWithTokenDto,
+  SignupDto,
+  SignupTrainerDto,
+} from '@shared/dtos';
 import { UsersService } from '../users/users.service';
 import { LoggerService } from '@/common/logger/logger.service';
 import { ActivityLogsService } from '@/common/activity-logs/activity-logs.service';
@@ -21,6 +26,10 @@ import {
   EActivityStatus,
 } from '@shared/enums/activity-log.enum';
 import { RewardsService } from '@/modules/v1/rewards/rewards.service';
+import { TrainersService } from '../trainers/trainers.service';
+import { SignupUserLevel } from '@shared/enums/user.enum';
+import { User } from '@/common/system-user/entities/user.entity';
+import { ProfilesService } from '../users/profiles/profiles.service';
 
 @Injectable()
 export class AuthService {
@@ -31,34 +40,56 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly mailerService: MailerService,
     private readonly userService: UsersService,
+    private readonly profileService: ProfilesService,
+    private readonly trainerService: TrainersService,
+
     private readonly activityLogsService: ActivityLogsService,
     private readonly rewardsService: RewardsService,
   ) {}
 
   async signup(signupDto: SignupDto): Promise<IMessageResponse> {
     try {
-      const { firstName, lastName, referralCode, ...userData } = signupDto;
+      const { firstName, lastName, trainer, referralCode, ...userData } =
+        signupDto;
 
-      const res = await this.userService.create(
-        {
+      let user: User;
+
+      if (signupDto.level === SignupUserLevel.TRAINER) {
+        if (!trainer) {
+          throw new BadRequestException('Trainer data is required');
+        }
+
+        const trainerData: CreateTrainerDto = {
+          specialization: trainer.specialization || '',
+          experience: trainer.experience || 0,
+          user: {
+            email: userData.email,
+            password: userData.password,
+            isActive: true,
+            profile: {
+              firstName,
+              lastName,
+            },
+          },
+        };
+
+        const res = await this.trainerService.createTrainer(trainerData);
+        user = res.trainer.user;
+      } else {
+        const res = await this.userService.createUser({
           ...userData,
           isActive: true,
           profile: {
             firstName,
             lastName,
           },
-        },
-        {
-          afterCreate: async (savedEntity, manager) => {
-            if (referralCode) {
-              await this.rewardsService.processReferralSignup(
-                savedEntity.id,
-                referralCode,
-              );
-            }
-          },
-        },
-      );
+        });
+        user = res.user;
+      }
+
+      if (referralCode && user) {
+        await this.rewardsService.processReferralSignup(user.id, referralCode);
+      }
 
       // Log successful signup activity
       await this.activityLogsService.createActivityLog({
@@ -91,7 +122,7 @@ export class AuthService {
           email: signupDto.email,
           timestamp: new Date().toISOString(),
         },
-        errorMessage: error.message,
+        errorMessage: error instanceof Error ? error.message : String(error),
         userId: undefined,
       });
 
@@ -214,7 +245,7 @@ export class AuthService {
           email,
           timestamp: new Date().toISOString(),
         },
-        errorMessage: error.message,
+        errorMessage: error instanceof Error ? error.message : String(error),
       });
 
       throw error;
@@ -223,16 +254,16 @@ export class AuthService {
 
   async sendResetLink(email: string): Promise<{ message: string }> {
     try {
-      const user = await this.userService.getSingle(
-        { email },
-        { _select: ['id', 'email'], _relations: ['profile'] },
+      const profile = await this.profileService.getSingle(
+        { user: { email } },
+        { _relations: ['user'] },
       );
 
-      if (user) {
+      if (profile) {
         const appConfig = this.configService.get('app');
 
         const token = this.jwtService.sign({
-          id: user.id,
+          id: profile.user.id,
           purpose: 'password_reset',
         });
 
@@ -245,9 +276,9 @@ export class AuthService {
         <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #2c3e50;">Password Reset Request</h2>
           
-          <p>Dear ${user.profile?.firstName || 'User'},</p>
+          <p>Dear ${profile.firstName || 'User'},</p>
           
-          <p>We received a request to reset your password for account <strong>${user.email}</strong>.</p>
+          <p>We received a request to reset your password for account <strong>${profile.user.email}</strong>.</p>
           
           <p style="text-align: center; margin: 25px 0;">
             <a href="${resetUrl}" 
@@ -276,7 +307,7 @@ export class AuthService {
 
         try {
           await this.mailerService.sendMail({
-            to: user.email,
+            to: profile.user.email,
             from: mailerConfig.from,
             subject: appName + ' - Your Password Reset Instructions',
             html: emailContent,
@@ -293,12 +324,15 @@ export class AuthService {
             statusCode: 200,
             metadata: {
               email,
-              userId: user.id,
+              userId: profile.user.id,
               timestamp: new Date().toISOString(),
             },
           });
         } catch (error) {
-          this.logger.error('Error sending reset email', error.stack);
+          this.logger.error(
+            'Error sending reset email',
+            error instanceof Error ? error.stack : String(error),
+          );
 
           // Log failed password reset request
           await this.activityLogsService.createActivityLog({
@@ -310,10 +344,11 @@ export class AuthService {
             statusCode: 500,
             metadata: {
               email,
-              userId: user.id,
+              userId: profile.user.id,
               timestamp: new Date().toISOString(),
             },
-            errorMessage: error.message,
+            errorMessage:
+              error instanceof Error ? error.message : String(error),
           });
 
           throw new HttpException(
@@ -354,7 +389,7 @@ export class AuthService {
           email,
           timestamp: new Date().toISOString(),
         },
-        errorMessage: error.message,
+        errorMessage: error instanceof Error ? error.message : String(error),
       });
 
       throw error;
@@ -420,7 +455,7 @@ export class AuthService {
         metadata: {
           timestamp: new Date().toISOString(),
         },
-        errorMessage: error.message,
+        errorMessage: error instanceof Error ? error.message : String(error),
       });
 
       throw error;

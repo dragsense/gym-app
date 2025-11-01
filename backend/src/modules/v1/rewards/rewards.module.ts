@@ -3,7 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { RewardsService } from './rewards.service';
 import { RewardsController } from './rewards.controller';
 import { RewardPoints } from './entities/reward-points.entity';
-import { User } from '@/modules/v1/users/entities/user.entity';
+import { User } from '@/common/system-user/entities/user.entity';
 import { ReferralLink } from '@/modules/v1/referral-links/entities/referral-link.entity';
 import { CrudModule } from '@/common/crud/crud.module';
 

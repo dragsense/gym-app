@@ -1,6 +1,6 @@
 import { GeneralBaseEntity } from '@/common/entities';
 import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
-import { User } from '../../users/entities/user.entity';
+import { User } from '@/common/system-user/entities/user.entity';
 
 @Entity('stripe_connect_accounts')
 export class StripeConnectAccount extends GeneralBaseEntity {
@@ -25,7 +25,7 @@ export class StripeConnectAccount extends GeneralBaseEntity {
   @Column({ type: 'boolean', default: false })
   payoutsEnabled: boolean;
 
-  @OneToOne(() => User, (user) => user.stripeConnectAccount)
+  @OneToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn()
   user: User;
 

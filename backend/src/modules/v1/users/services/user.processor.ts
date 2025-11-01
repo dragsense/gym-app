@@ -3,18 +3,20 @@ import { Job } from 'bull';
 import { Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UserEmailService } from '@/modules/v1/users/services/user-email.service';
-import { User } from '../entities/user.entity';
+import { UserEmailService } from './user-email.service';
+import { User } from '@/common/system-user/entities/user.entity';
 import { EUserLevels } from '@shared/enums/user.enum';
+import { ProfilesService } from '../profiles/profiles.service';
+import { UsersService } from '../users.service';
 
 @Processor('user')
 export class UserProcessor {
   private readonly logger = new Logger(UserProcessor.name);
 
   constructor(
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
+    private readonly profilesService: ProfilesService,
     private readonly userEmailService: UserEmailService,
+    private readonly usersService: UsersService,
   ) {
     this.logger.log('✅ UserProcessor initialized and listening for jobs');
   }
@@ -24,24 +26,26 @@ export class UserProcessor {
    */
   @Process('send-welcome-email')
   async handleSendWelcomeEmail(job: Job): Promise<void> {
-    const { userId, tempPassword, createdBy } = job.data;
+    const { userId, tempPassword } = job.data as {
+      userId: string;
+      tempPassword: string;
+    };
 
     this.logger.log(`Processing welcome email for user ${userId}`);
 
     try {
-      const user = await this.userRepository.findOne({
-        where: { id: userId },
-        relations: ['profile'],
-      });
+      const profile = await this.profilesService.getSingle(
+        { user: { id: userId } },
+        { _relations: ['user'] },
+      );
 
-      if (!user) {
+      if (!profile) {
         throw new Error(`User ${userId} not found`);
       }
 
       await this.userEmailService.sendWelcomeEmail({
-        user,
+        profile,
         tempPassword,
-        createdBy,
       });
 
       this.logger.log(`Welcome email sent successfully for user ${userId}`);
@@ -66,23 +70,9 @@ export class UserProcessor {
     );
 
     try {
-      const user = await this.userRepository.findOne({
-        where: { id: userId },
-        relations: ['profile'],
-      });
+      const user = await this.usersService.getUser(userId);
 
-      if (!user) {
-        throw new Error(`User ${userId} not found`);
-      }
-
-      const superAdmin = await this.userRepository.findOne({
-        where: { level: EUserLevels.SUPER_ADMIN },
-        relations: ['profile'],
-      });
-
-      if (!superAdmin) {
-        throw new Error('Super admin not found');
-      }
+      const superAdmin = await this.usersService.getSuperAdmin();
 
       await this.userEmailService.sendPasswordResetConfirmation(
         user,

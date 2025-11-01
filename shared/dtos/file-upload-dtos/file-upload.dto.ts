@@ -5,8 +5,8 @@ import {
   IsEnum,
   IsNotEmpty,
 } from "class-validator";
-import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
-import { createPartialType } from "../../lib/type-utils";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { PartialType } from "../../lib/dto-type-adapter";
 import { Type } from "class-transformer";
 import { EFileType } from "../../enums/file-upload.enum";
 import { ListQueryDto } from "../common/list-query.dto";

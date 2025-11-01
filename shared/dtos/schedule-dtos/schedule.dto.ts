@@ -13,7 +13,8 @@ import {
   IsDateString,
   IsBoolean,
 } from "class-validator";
-import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { PartialType } from "../../lib/dto-type-adapter";
 import { Type, Transform } from "class-transformer";
 import {
   EScheduleStatus,

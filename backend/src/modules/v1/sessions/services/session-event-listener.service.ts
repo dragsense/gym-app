@@ -10,6 +10,7 @@ import { EReminderSendBefore } from '@shared/enums';
 import { SessionEmailService } from './session-email.service';
 import { UsersService } from '@/modules/v1/users/users.service';
 import { ActionRegistryService } from '@/common/helper/services/action-registry.service';
+import { ProfilesService } from '@/modules/v1/users/profiles/profiles.service';
 
 @Injectable()
 export class SessionEventListenerService implements OnModuleInit {
@@ -21,6 +22,7 @@ export class SessionEventListenerService implements OnModuleInit {
     @InjectQueue('session') private sessionQueue: Queue,
     private readonly sessionEmailService: SessionEmailService,
     private readonly userService: UsersService,
+    private readonly profilesService: ProfilesService,
     private readonly actionRegistryService: ActionRegistryService,
   ) {}
 
@@ -43,8 +45,8 @@ export class SessionEventListenerService implements OnModuleInit {
 
     try {
       const session = await this.sessionsService.getSingle(payload.entityId, {
-        _relations: ['trainer', 'clients'],
-        _select: ['trainer.id', 'clients.id'],
+        _relations: ['trainer.user', 'clients.user'],
+        _select: ['trainer.user.id', 'clients.user.id'],
       });
       this.logger.log(`Session created: ${session.title} (ID: ${session.id})`);
 
@@ -52,19 +54,19 @@ export class SessionEventListenerService implements OnModuleInit {
         'send-session-confirmation',
         {
           sessionId: session.id,
-          recipientId: session.trainerUser.id,
+          recipientId: session.trainer.user.id,
         },
         {
           delay: 10000,
         },
       );
 
-      for (const clientUser of session.clientsUsers) {
+      for (const clientUser of session.clients) {
         await this.sessionQueue.add(
           'send-session-confirmation',
           {
             sessionId: session.id,
-            recipientId: clientUser.id,
+            recipientId: clientUser.user.id,
           },
           {
             delay: 10000,
@@ -108,19 +110,19 @@ export class SessionEventListenerService implements OnModuleInit {
           'send-session-status-update',
           {
             sessionId: session.id,
-            recipientId: session.trainerUser.id,
+            recipientId: session.trainer.user.id,
           },
           {
             delay: 10000,
           },
         );
 
-        for (const clientUser of session.clientsUsers) {
+        for (const client of session.clients) {
           await this.sessionQueue.add(
             'send-session-status-update',
             {
               sessionId: session.id,
-              recipientId: clientUser.id,
+              recipientId: client.user.id,
             },
             {
               delay: 10000,
@@ -149,19 +151,19 @@ export class SessionEventListenerService implements OnModuleInit {
         'send-session-deleted',
         {
           sessionId: session.id,
-          recipientId: session.trainerUser.id,
+          recipientId: session.trainer.user.id,
         },
         {
           delay: 10000,
         },
       );
 
-      for (const clientUser of session.clientsUsers) {
+      for (const client of session.clients) {
         await this.sessionQueue.add(
           'send-session-deleted',
           {
             sessionId: session.id,
-            recipientId: clientUser.id,
+            recipientId: client.user.id,
           },
           {
             delay: 10000,
@@ -187,19 +189,20 @@ export class SessionEventListenerService implements OnModuleInit {
 
     try {
       const session = await this.sessionsService.getSingle(sessionId);
-      const recipient = await this.userService.getSingle(recipientId, {
-        _relations: ['profile'],
-      });
+      const profile = await this.profilesService.getSingle(
+        { user: { id: recipientId } },
+        { _relations: ['user'] },
+      );
 
       const recipientName =
-        recipient.profile?.firstName + ' ' + recipient.profile?.lastName;
+        `${profile?.firstName || ''} ${profile?.lastName || ''}`.trim();
       if (!recipientName) {
         throw new Error('Recipient name not found');
       }
 
       await this.sessionEmailService.sendSessionReminder(
         session,
-        recipient.email,
+        profile.user.email,
         recipientName,
       );
     } catch (error) {
@@ -290,16 +293,16 @@ export class SessionEventListenerService implements OnModuleInit {
         retryOnFailure: false,
         data: {
           sessionId: session.id,
-          recipientId: session.trainerUser.id,
+          recipientId: session.trainer.user.id,
         },
       };
       await this.scheduleService.createSchedule(scheduleData);
 
-      const clients = session.clientsUsers;
-      for (const clientUser of clients) {
+      const clients = session.clients;
+      for (const client of clients) {
         scheduleData.data = {
           sessionId: session.id,
-          recipientId: clientUser.id,
+          recipientId: client.user.id,
         };
         await this.scheduleService.createSchedule(scheduleData);
       }

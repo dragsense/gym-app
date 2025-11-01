@@ -33,12 +33,17 @@ import {
 } from '@shared/dtos';
 import { Billing } from './entities/billing.entity';
 import { AuthUser } from '@/decorators/user.decorator';
-import { User } from '../users/entities/user.entity';
+import { User } from '@/common/system-user/entities/user.entity';
 import { StripeBillingService } from '../stripe/services/stripe-billing.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { EUserLevels } from '@shared/enums';
+import { Brackets, SelectQueryBuilder } from 'typeorm';
+import { ProfilesService } from '@/modules/v1/users/profiles/profiles.service';
+import { MinUserLevel } from '@/common/decorators/level.decorator';
 
 @ApiTags('Billings')
+@MinUserLevel(EUserLevels.CLIENT)
 @Controller('billings')
 export class BillingsController {
   constructor(
@@ -46,6 +51,7 @@ export class BillingsController {
     private readonly stripeBillingService: StripeBillingService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly profilesService: ProfilesService,
   ) {}
 
   @ApiOperation({ summary: 'Get all billings with pagination and filtering' })
@@ -55,8 +61,25 @@ export class BillingsController {
     type: BillingPaginatedDto,
   })
   @Get()
-  findAll(@Query() query: BillingListDto) {
-    return this.billingsService.get(query, BillingListDto);
+  findAll(@Query() query: BillingListDto, @AuthUser() currentUser: User) {
+    const isSuperAdmin = currentUser.level === EUserLevels.SUPER_ADMIN;
+    return this.billingsService.get(query, BillingListDto, {
+      beforeQuery: (query: SelectQueryBuilder<Billing>) => {
+        if (!isSuperAdmin) {
+          query.leftJoin('entity.recipientUser', '_recipientUser').andWhere(
+            new Brackets((qb2) => {
+              qb2
+                .where('entity.createdByUserId = :uid', {
+                  uid: currentUser.id,
+                })
+                .orWhere('_recipientUser.id = :uid', {
+                  uid: currentUser.id,
+                });
+            }),
+          );
+        }
+      },
+    });
   }
 
   @ApiOperation({ summary: 'Get billing by ID' })
@@ -137,18 +160,19 @@ export class BillingsController {
     const billing = await this.billingsService.getSingle(id, {
       _relations: ['recipientUser'],
     });
-    const payerUserId = user.id; // ✅ Track who is making the payment
+    const profile = await this.profilesService.getSingle(
+      { user: { id: billing.recipientUser.id } },
+      { _relations: ['user'] },
+    );
 
     // Get or create Stripe customer for the person who is paying
-    let stripeCustomerId;
+    let stripeCustomerId: string;
     try {
       stripeCustomerId =
-        await this.stripeBillingService.createOrGetStripeCustomer(
-          billing.recipientUser,
-        );
+        await this.stripeBillingService.createOrGetStripeCustomer(profile);
     } catch (error) {
       throw new BadRequestException(
-        `Failed to create or get Stripe customer: ${error.message}`,
+        `Failed to create or get Stripe customer: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
 
@@ -188,7 +212,7 @@ export class BillingsController {
         lineItems,
         {
           billingId: billing.id.toString(),
-          userId: payerUserId.toString(),
+          userId: profile.user.id.toString(),
           type: 'billing_payment',
         },
         successUrl,

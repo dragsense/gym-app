@@ -17,7 +17,6 @@ import { VerifyOtpForm } from "@/components/auth";
 
 // Services
 import { resendOtp, verifyOtp } from "@/services/auth.api";
-import { ADMIN_ROUTES } from "@/config/routes.config";
 import { type IMessageResponse } from "@shared/interfaces/api/response.interface";
 import { VerifyOtpDto } from "@shared/dtos";
 
@@ -51,7 +50,8 @@ export default function VerifyOtpPage() {
                 startTransition(() => {
                     toast.success('Login successful')
                     queryClient.invalidateQueries({ queryKey: ["me"] });
-                    navigate(ADMIN_ROUTES.USERS);
+                    // Navigate to root - LevelBasedRedirect will handle routing based on user level
+                    navigate("/");
                 });
             }}
             onError={(error) => toast.error("OTP verification failed: " + error?.message)}

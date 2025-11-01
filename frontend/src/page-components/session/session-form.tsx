@@ -27,7 +27,7 @@ import { CreateSessionDto, UpdateSessionDto } from "@shared/dtos/session-dtos";
 import type { ISessionFormModalExtraProps } from '@/components/admin/sessions/form/session-form-modal';
 import { EReminderType } from '@shared/enums';
 import type { TUserData } from '@shared/types/user.type';
-import type { UserDto } from '@shared/dtos';
+import type { ClientDto, UserDto } from '@shared/dtos';
 import type { ReminderDto } from '@shared/dtos/reminder-dtos';
 
 export type TSessionExtraProps = {
@@ -47,6 +47,7 @@ export default function SessionForm({
 
     const queryClient = useQueryClient();
 
+
     if (!store) {
         return <div>Single store "{storeKey}" not found. Did you forget to register it?</div>;
     }
@@ -64,8 +65,8 @@ export default function SessionForm({
         description: "",
         startDateTime: new Date().toISOString(),
         duration: 60,
-        trainerUser: null,
-        clientsUsers: [] as UserDto[], // Will be validated to require at least one
+        trainer: null,
+        clients: [] as ClientDto[], // Will be validated to require at least one
         type: ESessionType.PERSONAL,
         location: "",
         price: 0,

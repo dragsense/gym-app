@@ -15,7 +15,7 @@ import {
 } from '@shared/dtos/user-availability-dtos';
 import { UserAvailability } from './entities/user-availability.entity';
 import { AuthUser } from '@/decorators/user.decorator';
-import { User } from '../users/entities/user.entity';
+import { User } from '@/common/system-user/entities/user.entity';
 
 @ApiBearerAuth('access-token')
 @ApiTags('User Availability')

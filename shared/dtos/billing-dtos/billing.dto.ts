@@ -8,18 +8,15 @@ import {
   ValidateNested,
   Min,
   IsEnum,
-  IsArray,
   ValidateIf,
-  ArrayMinSize,
 } from "class-validator";
-import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
-import { Type, Transform } from "class-transformer";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { PartialType } from "../../lib/dto-type-adapter";
+import { Type } from "class-transformer";
 import { PaginationMetaDto } from "../common/pagination.dto";
-import { ListQueryDto, SingleQueryDto } from "../common/list-query.dto";
+import { ListQueryDto } from "../common/list-query.dto";
 import { FieldType, FieldOptions } from "../../decorators/field.decorator";
-import { OmitType } from "../../lib/dto-type-adapter";
 import { UserDto } from "../user-dtos";
-import { Like, Equals, DateRange } from "../../decorators/crud.dto.decorators";
 import { EBillingStatus, EBillingType } from "../../enums/billing.enum";
 import { IBilling } from "../../interfaces/billing.interface";
 import { ReminderDto } from "../reminder-dtos";

@@ -2,7 +2,7 @@ import { Controller, Get, UseGuards, Request } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { RewardsService } from './rewards.service';
 import { AuthUser } from '@/decorators/user.decorator';
-import { User } from '../users/entities/user.entity';
+import { User } from '@/common/system-user/entities/user.entity';
 
 @ApiTags('Rewards')
 @Controller('rewards')

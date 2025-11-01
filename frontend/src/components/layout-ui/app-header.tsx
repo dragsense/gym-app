@@ -23,13 +23,11 @@ import { useUserRewardPoints } from "@/hooks/use-user-rewards";
 
 
 
-interface AppHeaderProps {
-  title?: string;
-}
+import { AppBreadcrumb } from "./app-breadcrumb";
 
 // Use separate settings config object
 
-export function AppHeader({ title }: AppHeaderProps) {
+export function AppHeader() {
   // React 19: Essential IDs and transitions
   const componentId = useId();
   const [, startTransition] = useTransition();
@@ -88,9 +86,7 @@ export function AppHeader({ title }: AppHeaderProps) {
       <div className="flex flex-row w-full items-center justify-between gap-1 px-4 lg:gap-2 lg:px-6">
         <div className="flex flex-1 items-center gap-4" ref={settingsRef}>
           <SidebarTrigger className="-ml-1 block md:hidden" />
-          {title && (
-            <span className="hidden md:inline text-sm font-medium text-muted-foreground">{title}</span>
-          )}
+          <AppBreadcrumb />
         </div>
 
         <div className="flex items-center gap-3">

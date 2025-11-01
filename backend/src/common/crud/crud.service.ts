@@ -34,7 +34,7 @@ export class CrudService<T extends ObjectLiteral>
   protected readonly repository: Repository<T>;
   protected readonly moduleRef: ModuleRef;
   protected dataSource!: DataSource;
-  protected eventService!: EventService;
+  public eventService!: EventService;
   protected options: CrudOptions;
 
   constructor(
@@ -65,7 +65,10 @@ export class CrudService<T extends ObjectLiteral>
   async create<TCreateDto>(
     createDto: TCreateDto,
     callbacks?: {
-      beforeCreate?: (manager: EntityManager) => any | Promise<any>;
+      beforeCreate?: (
+        processedData: TCreateDto,
+        manager: EntityManager,
+      ) => any | Promise<any>;
       afterCreate?: (result: any, manager: EntityManager) => any | Promise<any>;
     },
   ): Promise<T> {
@@ -82,7 +85,10 @@ export class CrudService<T extends ObjectLiteral>
       }
 
       if (callbacks?.beforeCreate) {
-        processedData = await callbacks.beforeCreate(queryRunner.manager);
+        processedData = await callbacks.beforeCreate(
+          processedData,
+          queryRunner.manager,
+        );
       }
 
       const entity = this.repository.create(processedData);
@@ -197,7 +203,6 @@ export class CrudService<T extends ObjectLiteral>
     dtoClass: any,
     callbacks?: {
       beforeQuery?: (query: any) => any | Promise<any>;
-      afterQuery?: (query: any, result: any) => any | Promise<any>;
     },
   ): Promise<T[]> {
     try {
@@ -230,11 +235,6 @@ export class CrudService<T extends ObjectLiteral>
 
       const result = await query.getMany();
 
-      // Execute afterQuery callback if provided
-      if (callbacks?.afterQuery) {
-        await callbacks.afterQuery(query, result);
-      }
-
       return result;
     } catch (error) {
       this.logger.error(
@@ -255,7 +255,6 @@ export class CrudService<T extends ObjectLiteral>
     dtoClass?: any,
     callbacks?: {
       beforeQuery?: (query: any) => any | Promise<any>;
-      afterQuery?: (query: any, result: any) => any | Promise<any>;
     },
   ): Promise<IPaginatedResponse<T>> {
     try {
@@ -302,11 +301,6 @@ export class CrudService<T extends ObjectLiteral>
         .skip(skip)
         .take(validatedLimit)
         .getManyAndCount();
-
-      // Execute afterQuery callback if provided
-      if (callbacks?.afterQuery) {
-        await callbacks.afterQuery(query, { data, total });
-      }
 
       const lastPage = Math.ceil(total / validatedLimit);
 

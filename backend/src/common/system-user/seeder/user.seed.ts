@@ -1,15 +1,13 @@
-import { UsersService } from '../users.service';
 import { LoggerService } from '@/common/logger/logger.service';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { CreateUserDto } from '@shared/dtos';
-import { EUserLevels } from '@shared/enums';
+import { SystemUsersService } from '../system-users.service';
 
 @Injectable()
 export class UserSeed {
   private readonly logger = new LoggerService(UserSeed.name);
   constructor(
-    private usersService: UsersService,
+    private readonly systemUsersService: SystemUsersService,
     private configService: ConfigService,
   ) {}
 
@@ -30,8 +28,8 @@ export class UserSeed {
 
     try {
       // Check if admin user already exists
-      const existingAdmin = await this.usersService.getSingle({
-        email: adminConfig.email,
+      const existingAdmin = await this.systemUsersService.getSingle({
+        level: 0,
       });
 
       if (existingAdmin) {
@@ -47,27 +45,23 @@ export class UserSeed {
 
     try {
       // Create admin user using user service
-      const createUserDto: CreateUserDto = {
+      const createUserDto = {
         email: adminConfig.email,
         password: adminConfig.password,
         isActive: true,
-        level: EUserLevels.SUPER_ADMIN,
-        profile: {
-          firstName: adminConfig.firstName,
-          lastName: adminConfig.lastName,
-        },
+        level: 0,
       };
 
       this.logger.log(
         `Creating super admin user with email: ${adminConfig.email}`,
       );
 
-      const result = await this.usersService.createUser(createUserDto);
+      const user = await this.systemUsersService.create(createUserDto);
 
       this.logger.log(
         `Super Admin user seeded successfully: ${adminConfig.email}`,
       );
-      this.logger.log(`User created with ID: ${result.user.id}`);
+      this.logger.log(`User created with ID: ${user?.id}`);
     } catch (error: unknown) {
       this.logger.error(
         'Error seeding admin user:',

@@ -9,6 +9,7 @@ import { EventPayload } from '@/common/helper/services/event.service';
 import { ActionRegistryService } from '@/common/helper/services/action-registry.service';
 import { BillingEmailService } from './billing-email.service';
 import { UsersService } from '@/modules/v1/users/users.service';
+import { ProfilesService } from '@/modules/v1/users/profiles/profiles.service';
 
 @Injectable()
 export class BillingEventListenerService implements OnModuleInit {
@@ -21,6 +22,7 @@ export class BillingEventListenerService implements OnModuleInit {
     private readonly actionRegistryService: ActionRegistryService,
     private readonly billingEmailService: BillingEmailService,
     private readonly userService: UsersService,
+    private readonly profilesService: ProfilesService,
   ) {}
 
   onModuleInit() {
@@ -141,15 +143,16 @@ export class BillingEventListenerService implements OnModuleInit {
         _relations: ['recipientUser'],
       });
 
-      const recipient = await this.userService.getSingle(recipientId, {
-        _relations: ['profile'],
-      });
+      const profile = await this.profilesService.getSingle(
+        { user: { id: recipientId } },
+        { _relations: ['user'] },
+      );
 
       await this.billingEmailService.sendBillingReminder({
         billing,
         recipientName:
-          `${recipient.profile?.firstName || ''} ${recipient.profile?.lastName || ''}`.trim(),
-        recipientEmail: recipient.email,
+          `${profile?.firstName || ''} ${profile?.lastName || ''}`.trim(),
+        recipientEmail: profile.user.email,
         reminderType: 'reminder' as any,
         dueDate: billing.dueDate,
         amount: billing.amount,

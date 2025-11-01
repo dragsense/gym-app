@@ -23,6 +23,10 @@ import {
   SingleQueryDto,
 } from '@shared/dtos';
 import { ReferralLink } from './entities/referral-link.entity';
+import { User } from '@/common/system-user/entities/user.entity';
+import { AuthUser } from '@/decorators/user.decorator';
+import { EUserLevels } from '@shared/enums';
+import { SelectQueryBuilder } from 'typeorm';
 
 @ApiTags('Referral Links')
 @ApiBearerAuth()
@@ -49,8 +53,17 @@ export class ReferralLinksController {
     status: 200,
     description: 'Referral links retrieved successfully',
   })
-  findAll(@Query() query: ReferralLinkListDto) {
-    return this.referralLinksService.get(query, ReferralLinkListDto);
+  findAll(@Query() query: ReferralLinkListDto, @AuthUser() currentUser: User) {
+    const isSuperAdmin = currentUser.level === EUserLevels.SUPER_ADMIN;
+    return this.referralLinksService.get(query, ReferralLinkListDto, {
+      beforeQuery: (query: SelectQueryBuilder<ReferralLink>) => {
+        if (!isSuperAdmin) {
+          query.andWhere('entity.createdByUserId = :createdByUserId', {
+            createdByUserId: currentUser.id,
+          });
+        }
+      },
+    });
   }
 
   @Get(':id')

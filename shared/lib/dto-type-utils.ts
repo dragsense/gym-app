@@ -1,7 +1,11 @@
-import { FIELD_UI_TYPE, FIELD_OPTIONS, FIELD_DTO_TYPE, FIELD_REQUIRED } from '../decorators/field.decorator';
-  
-export type Constructor<T = any> = new (...args: any[]) => T;
+import {
+  FIELD_UI_TYPE,
+  FIELD_OPTIONS,
+  FIELD_DTO_TYPE,
+  FIELD_REQUIRED,
+} from "../decorators/field.decorator";
 
+export type Constructor<T = any> = new (...args: any[]) => T;
 
 /**
  * Create an Omitted version of a class.
@@ -10,15 +14,14 @@ export type Constructor<T = any> = new (...args: any[]) => T;
 export function createOmitType<
   T extends Constructor,
   K extends keyof InstanceType<T>
->(
-  BaseClass: T,
-  omittedKeys: readonly K[]
-): new () => Omit<InstanceType<T>, K> {
+>(BaseClass: T, omittedKeys: readonly K[]): new () => Omit<InstanceType<T>, K> {
   abstract class OmitClass {
     constructor() {
       const baseInstance = new BaseClass();
 
-      for (const key of Object.keys(baseInstance) as (keyof InstanceType<T>)[]) {
+      for (const key of Object.keys(
+        baseInstance
+      ) as (keyof InstanceType<T>)[]) {
         if (!omittedKeys.includes(key as K)) {
           (this as any)[key] = (baseInstance as any)[key];
         }
@@ -33,7 +36,7 @@ export function createOmitType<
       ...Object.keys(new BaseClass()),
       ...Object.getOwnPropertyNames(prototype),
     ]),
-  ].filter(k => k !== "constructor" && !omittedKeys.includes(k as K));
+  ].filter((k) => k !== "constructor" && !omittedKeys.includes(k as K));
 
   for (const key of allKeys) {
     const uiType = Reflect.getMetadata(FIELD_UI_TYPE, prototype, key);
@@ -46,7 +49,12 @@ export function createOmitType<
     if (options !== undefined)
       Reflect.defineMetadata(FIELD_OPTIONS, options, OmitClass.prototype, key);
     if (required !== undefined)
-      Reflect.defineMetadata(FIELD_REQUIRED, required, OmitClass.prototype, key);
+      Reflect.defineMetadata(
+        FIELD_REQUIRED,
+        required,
+        OmitClass.prototype,
+        key
+      );
     if (dtoType !== undefined)
       Reflect.defineMetadata(FIELD_DTO_TYPE, dtoType, OmitClass.prototype, key);
   }
@@ -55,8 +63,75 @@ export function createOmitType<
     value: `Omit${BaseClass.name}`,
   });
 
-  return OmitClass as new () => Omit<InstanceType<T>, K>; 
+  return OmitClass as new () => Omit<InstanceType<T>, K>;
 }
 
+/**
+ * Create a Partial version of a class.
+ * Makes all fields optional but keeps FieldType-related metadata.
+ */
+export function createPartialType<T extends Constructor>(
+  BaseClass: T
+): new () => Partial<InstanceType<T>> {
+  abstract class PartialClass {
+    constructor() {
+      const baseInstance = new BaseClass();
+      for (const key of Object.keys(
+        baseInstance
+      ) as (keyof InstanceType<T>)[]) {
+        (this as any)[key] = (baseInstance as any)[key];
+      }
+    }
+  }
 
+  const prototype = BaseClass.prototype;
 
+  const allKeys = [
+    ...new Set([
+      ...Object.keys(new BaseClass()),
+      ...Object.getOwnPropertyNames(prototype),
+    ]),
+  ].filter((k) => k !== "constructor");
+
+  for (const key of allKeys) {
+    const uiType = Reflect.getMetadata(FIELD_UI_TYPE, prototype, key);
+    const options = Reflect.getMetadata(FIELD_OPTIONS, prototype, key);
+    const required = Reflect.getMetadata(FIELD_REQUIRED, prototype, key);
+    const dtoType = Reflect.getMetadata(FIELD_DTO_TYPE, prototype, key);
+
+    if (uiType !== undefined)
+      Reflect.defineMetadata(
+        FIELD_UI_TYPE,
+        uiType,
+        PartialClass.prototype,
+        key
+      );
+    if (options !== undefined)
+      Reflect.defineMetadata(
+        FIELD_OPTIONS,
+        options,
+        PartialClass.prototype,
+        key
+      );
+    if (required !== undefined)
+      Reflect.defineMetadata(
+        FIELD_REQUIRED,
+        required,
+        PartialClass.prototype,
+        key
+      );
+    if (dtoType !== undefined)
+      Reflect.defineMetadata(
+        FIELD_DTO_TYPE,
+        dtoType,
+        PartialClass.prototype,
+        key
+      );
+  }
+
+  Object.defineProperty(PartialClass, "name", {
+    value: `Partial${BaseClass.name}`,
+  });
+
+  return PartialClass as new () => Partial<InstanceType<T>>;
+}

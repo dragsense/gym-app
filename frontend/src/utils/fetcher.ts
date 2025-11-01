@@ -83,6 +83,7 @@ api.interceptors.response.use(
 
     if (
       error.response?.status === 401 &&
+      error.response?.data?.message === "Unauthorized" &&
       originalRequest &&
       !originalRequest._retry
     ) {

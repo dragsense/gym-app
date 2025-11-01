@@ -17,7 +17,6 @@ import { LoginForm } from "@/components/auth";
 // Services
 import { login } from "@/services/auth.api";
 import { LoginDto } from "@shared/dtos";
-import { ADMIN_ROUTES } from "@/config/routes.config";
 import { useNavigate } from "react-router-dom";
 import { buildRoutePath } from "@/lib/utils";
 import { PUBLIC_ROUTES } from "@/config/routes.config";
@@ -50,7 +49,8 @@ export default function LoginPage() {
           else {
             toast.success('Login successful')
             queryClient.invalidateQueries({ queryKey: ["me"] });
-            navigate(ADMIN_ROUTES.USERS);
+            // Navigate to root - LevelBasedRedirect will handle routing based on user level
+            navigate("/");
           }
         });
       }}

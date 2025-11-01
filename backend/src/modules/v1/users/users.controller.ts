@@ -33,11 +33,14 @@ import {
   UserPaginatedDto,
   UserWithProfileSafeDto,
 } from '@shared/dtos';
-import { User } from './entities/user.entity';
+import { User } from '@/common/system-user/entities/user.entity';
 import { CacheService } from '@/common/cache/cache.service';
+import { EUserLevels } from '@shared/enums';
+import { MinUserLevel } from '@/common/decorators/level.decorator';
 
 @ApiBearerAuth('access-token')
 @ApiTags('Users')
+@MinUserLevel(EUserLevels.ADMIN)
 @Controller('users')
 export class UsersController {
   constructor(
@@ -53,26 +56,8 @@ export class UsersController {
     type: UserPaginatedDto,
   })
   @Get()
-  findAll(@Query() query: UserListDto) {
-    return this.usersService.get(query, UserListDto);
-    // this.cacheService.getOrSet(
-    //   `users-list-${query.page}-${query.limit}`,
-    //   () => this.usersService.get(query, UserListDto),
-    // );
-  }
-
-  @ApiOperation({ summary: 'Get authenticated user' })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns authenticated user',
-    type: UserWithProfileSafeDto,
-  })
-  @ApiResponse({ status: 404, description: 'User not found' })
-  @Get('me')
-  findMe(@AuthUser() currentUser: User) {
-    return this.usersService.getSingle(currentUser.id, {
-      _relations: ['profile'],
-    });
+  findAll(@Query() query: UserListDto, @AuthUser() currentUser: User) {
+    return this.usersService.getUsers(query, currentUser);
   }
 
   @ApiOperation({ summary: 'Get user by ID' })
@@ -85,7 +70,7 @@ export class UsersController {
   @ApiResponse({ status: 404, description: 'User not found' })
   @Get(':id')
   findOne(@Param('id') id: string, @Query() query: SingleQueryDto<User>) {
-    return this.usersService.getSingle(id, query);
+    return this.usersService.getUser(id, query);
   }
 
   @ApiOperation({
@@ -122,9 +107,10 @@ export class UsersController {
   @ApiResponse({ status: 404, description: 'User not found' })
   @Delete(':id')
   async remove(@Param('id') id: string) {
-    await this.usersService.delete({ id });
+    await this.usersService.deleteUser(id);
   }
 
+  @MinUserLevel(EUserLevels.CLIENT)
   @ApiOperation({ summary: 'Reset authenticated user password' })
   @ApiBody({
     type: ResetPasswordDto,

@@ -12,7 +12,6 @@ import {
 import {
   ApiOperation,
   ApiResponse,
-  ApiBearerAuth,
   ApiTags,
   ApiBody,
   ApiParam,
@@ -29,9 +28,13 @@ import {
 } from '@shared/dtos';
 import { Client } from './entities/client.entity';
 import { AuthUser } from '@/decorators/user.decorator';
-import { User } from '../users/entities/user.entity';
+import { User } from '@/common/system-user/entities/user.entity';
+import { Brackets, SelectQueryBuilder } from 'typeorm';
+import { EUserLevels } from '@shared/enums';
+import { MinUserLevel } from '@/common/decorators/level.decorator';
 
 @ApiTags('Clients')
+@MinUserLevel(EUserLevels.TRAINER)
 @Controller('clients')
 export class ClientsController {
   constructor(private readonly clientsService: ClientsService) {}
@@ -43,8 +46,36 @@ export class ClientsController {
     type: ClientPaginatedDto,
   })
   @Get()
-  findAll(@Query() query: ClientListDto) {
-    return this.clientsService.get(query, ClientListDto);
+  findAll(@Query() query: ClientListDto, @AuthUser() currentUser: User) {
+    const isSuperAdmin = currentUser.level === EUserLevels.SUPER_ADMIN;
+    return this.clientsService.get(query, ClientListDto, {
+      beforeQuery: (query: SelectQueryBuilder<Client>) => {
+        if (!isSuperAdmin) {
+          query
+            .leftJoin(
+              'trainer_clients',
+              'trainerClients',
+              'trainerClients.clientId = entity.id',
+            )
+            .leftJoin('trainerClients.trainer', 'clientTrainer')
+            .andWhere(
+              new Brackets((qb2) => {
+                qb2
+                  .where('entity.createdByUserId = :uid', {
+                    uid: currentUser.id,
+                  })
+                  .orWhere('clientTrainer.userId = :uid', {
+                    uid: currentUser.id,
+                  });
+              }),
+            )
+            .distinct(true);
+
+          console.log(query.getSql());
+        }
+        return query;
+      },
+    });
   }
 
   @ApiOperation({ summary: 'Get client by ID' })
@@ -89,7 +120,7 @@ export class ClientsController {
   @ApiResponse({ status: 200, description: 'Client deleted successfully' })
   @ApiResponse({ status: 404, description: 'Client not found' })
   @Delete(':id')
-  async remove(@Param('id') id: string, @AuthUser() currentUser: User) {
-    await this.clientsService.deleteClient(id, currentUser.id);
+  async remove(@Param('id') id: string) {
+    await this.clientsService.deleteClient(id);
   }
 }

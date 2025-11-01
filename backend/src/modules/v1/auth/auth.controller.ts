@@ -34,16 +34,16 @@ import {
 } from '@shared/dtos';
 
 import { AuthService } from './auth.service';
-import { JwtGuard, JwtRefreshGuard } from '@/guards/jwt.gaurd';
+import { JwtRefreshGuard } from '@/guards/jwt.gaurd';
 import { TokenService } from './services/tokens.service';
 import { MfaService } from './services/mfa-device.service';
-import { UsersService } from '../users/users.service';
 import { ActivityLogsService } from '@/common/activity-logs/activity-logs.service';
 import {
   EActivityType,
   EActivityStatus,
 } from '@shared/enums/activity-log.enum';
 import { Private, Public } from '@/decorators/access.decorator';
+import { SystemUsersService } from '@/common/system-user/system-users.service';
 
 @Public()
 @ApiTags('Auth')
@@ -53,7 +53,7 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly tokenService: TokenService,
     private readonly mfaService: MfaService,
-    private readonly userService: UsersService,
+    private readonly systemUsersService: SystemUsersService,
     private readonly activityLogsService: ActivityLogsService,
   ) {}
 
@@ -312,7 +312,7 @@ export class AuthController {
       throw new HttpException('Invalid OTP', HttpStatus.UNAUTHORIZED);
     }
 
-    const user = await this.userService.getSingle({ email: email });
+    const user = await this.systemUsersService.getSingle({ email: email });
 
     const { accessToken, refreshToken } =
       await this.tokenService.generateTokens({

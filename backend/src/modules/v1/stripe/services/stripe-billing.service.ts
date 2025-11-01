@@ -1,58 +1,74 @@
-/* eslint-disable prettier/prettier */
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
-import { User } from '../../users/entities/user.entity';
 import { BaseStripeService } from './base-stripe.service';
+import { ProfilesService } from '@/modules/v1/users/profiles/profiles.service';
+import { Profile } from '@/modules/v1/users/profiles/entities/profile.entity';
 
 @Injectable()
 export class StripeBillingService extends BaseStripeService {
   constructor(
     configService: ConfigService,
+    private readonly profilesService: ProfilesService,
   ) {
     super(configService);
   }
 
-
-
-  async getCheckoutSession(sessionId: string): Promise<Stripe.Checkout.Session> {
+  async getCheckoutSession(
+    sessionId: string,
+  ): Promise<Stripe.Checkout.Session> {
     const stripe = await this.getStripe();
 
     try {
       const session = await stripe.checkout.sessions.retrieve(sessionId);
       return session;
     } catch (error) {
-      this.logger.error(`Error retrieving checkout session ${sessionId}: ` + error.message);
-      throw new BadRequestException(`Failed to retrieve checkout session: ${error.message}`);
+      this.logger.error(
+        `Error retrieving checkout session ${sessionId}: ` + error.message,
+      );
+      throw new BadRequestException(
+        `Failed to retrieve checkout session: ${error.message}`,
+      );
     }
   }
 
-
-  async createOrGetStripeCustomer(user: User): Promise<string> {
-    this.logger.log(`Creating or retrieving Stripe customer for user: ${user.email} (ID: ${user.id})`);
+  async createOrGetStripeCustomer(profile: Profile): Promise<string> {
+    this.logger.log(
+      `Creating or retrieving Stripe customer for user: ${profile.user.email} (ID: ${profile.user.id})`,
+    );
 
     const stripe = await this.getStripe();
 
-    if (user.stripeCustomerId) {
-      this.logger.debug(`User has existing Stripe customer ID: ${user.stripeCustomerId}`);
+    if (profile.stripeCustomerId) {
+      this.logger.debug(
+        `User has existing Stripe customer ID: ${profile.stripeCustomerId}`,
+      );
       try {
-        const existingCustomer = await stripe.customers.retrieve(user.stripeCustomerId);
+        const existingCustomer = await stripe.customers.retrieve(
+          profile.stripeCustomerId,
+        );
 
         if (!existingCustomer.deleted) {
-          this.logger.log(`Retrieved existing Stripe customer: ${existingCustomer.id}`);
+          this.logger.log(
+            `Retrieved existing Stripe customer: ${existingCustomer.id}`,
+          );
           return existingCustomer.id;
         } else {
-          this.logger.warn(`Existing Stripe customer ${user.stripeCustomerId} is deleted`);
+          this.logger.warn(
+            `Existing Stripe customer ${profile.stripeCustomerId} is deleted`,
+          );
         }
       } catch (error) {
-        this.logger.warn(`Stripe customer ID ${user.stripeCustomerId} invalid or deleted. Creating new customer.`);
+        this.logger.warn(
+          `Stripe customer ID ${profile.stripeCustomerId} invalid or deleted. Creating new customer.`,
+        );
         this.logger.error(error.message);
       }
     }
 
     try {
       const customers = await stripe.customers.list({
-        email: user.email,
+        email: profile.user.email,
         limit: 1,
       });
 
@@ -63,26 +79,34 @@ export class StripeBillingService extends BaseStripeService {
         return found.id;
       }
     } catch (error) {
-      this.logger.warn(`Failed to search Stripe customer by email: ` +  error.message);
+      this.logger.warn(
+        `Failed to search Stripe customer by email: ` + error.message,
+      );
     }
 
     try {
       const customer = await stripe.customers.create({
-        name: `${user.profile?.firstName ?? 'User'} ${user.profile?.lastName ?? ''}`,
-        email: user.email,
+        name: `${profile?.firstName ?? 'User'} ${profile?.lastName ?? ''}`,
+        email: profile.user.email,
         metadata: {
-          userId: user.id.toString(),
+          userId: profile.user.id.toString(),
         },
       });
 
-      this.logger.log(`Created new Stripe customer: ${customer.id} for user ${user.id}`);
+      this.logger.log(
+        `Created new Stripe customer: ${customer.id} for user ${profile.user.id}`,
+      );
       return customer.id;
     } catch (error) {
-      this.logger.error(`Failed to create Stripe customer for user ${user.id}:`, error.message);
-      throw new BadRequestException(`Failed to create Stripe customer: ${error.message}`);
+      this.logger.error(
+        `Failed to create Stripe customer for user ${profile.user.id}:`,
+        error.message,
+      );
+      throw new BadRequestException(
+        `Failed to create Stripe customer: ${error.message}`,
+      );
     }
   }
-
 
   //for pos
   async createCheckoutSession(
@@ -108,7 +132,6 @@ export class StripeBillingService extends BaseStripeService {
           metadata: metadata,
         },
       },
-    
     });
   }
-} 
+}

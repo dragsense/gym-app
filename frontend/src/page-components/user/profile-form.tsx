@@ -76,8 +76,7 @@ export default function ProfileForm({
         address: "",
         gender: EUserGender.MALE,
         image: undefined,
-        documents: undefined,
-        skills: []
+        documents: undefined
     };
 
     const initialValues = useMemo(() => {

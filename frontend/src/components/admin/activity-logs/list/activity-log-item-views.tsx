@@ -25,10 +25,6 @@ export const itemViews = (): {
   const componentId = useId();
   const columns: ColumnDef<IActivityLog>[] = [
     {
-      accessorKey: "id",
-      header: "ID",
-    },
-    {
       accessorKey: "description",
       header: "Description",
       cell: ({ row }) => {
@@ -95,7 +91,7 @@ export const itemViews = (): {
       header: "Error Message",
       cell: ({ row }) => {
         const errorMessage = row.getValue<string>("errorMessage") || '';
-    
+
         return (
           <TooltipProvider>
             <Tooltip>
@@ -137,7 +133,7 @@ export const itemViews = (): {
         if (!metadata) return <span className="text-muted-foreground">-</span>;
 
         const { duration, responseSize, bodyKeys } = metadata;
-        
+
         return (
           <TooltipProvider>
             <Tooltip>
@@ -187,7 +183,7 @@ export const itemViews = (): {
         );
       },
     },
-   
+
   ];
 
   const listItem = (item: IActivityLog) => {

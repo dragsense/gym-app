@@ -1,5 +1,12 @@
+import { EUserLevels } from "@shared/enums";
+
 // Common base routes
 export const ROOT_ROUTE = "/" as const;
+export const SUPER_ADMIN_SEGMENT = "/owner";
+export const ADMIN_SEGMENT = "/admin";
+export const TRAINER_SEGMENT = "/trainer";
+export const CLIENT_SEGMENT = "/client";
+
 export type RootRoute = typeof ROOT_ROUTE;
 
 // Public routes
@@ -12,26 +19,27 @@ export const PUBLIC_ROUTES = {
 } as const;
 export type PublicRoute = keyof typeof PUBLIC_ROUTES;
 
-// Admin-specific routes
+// Admin-specific routes (relative paths for nested routing)
 export const ADMIN_ROUTES = {
-  USERS: "/users",
-  TRAINERS: "/trainers",
-  CLIENTS: "/clients",
-  TRAINER_CLIENTS: "/trainer-clients",
-  SESSIONS: "/sessions",
-  BILLINGS: "/billings",
-  REFERRAL_LINKS: "/referral-links",
-  ACTIVITY_LOGS: "/activity_logs",
-  FILES: "/files",
-  SCHEDULES: "/schedules",
-  QUEUES: "/queues",
-  CACHE: "/cache",
-  QUEUE_BOARD: "/admin/queues",
-  DASHBOARD: "/dashboard",
-  WORKERS: "/workers",
-  ROLES: "/roles",
-  SETTINGS: "/settings",
-  USER_AVAILABILITY: "/user-availability",
+  SYSTEM_DASHBOARD: "system-dashboard",
+  USERS: "users",
+  TRAINERS: "trainers",
+  CLIENTS: "clients",
+  TRAINER_CLIENTS: "trainer-clients",
+  SESSIONS: "sessions",
+  BILLINGS: "billings",
+  REFERRAL_LINKS: "referral-links",
+  ACTIVITY_LOGS: "activity_logs",
+  FILES: "files",
+  SCHEDULES: "schedules",
+  QUEUES: "queues",
+  CACHE: "cache",
+  QUEUE_BOARD: "admin/queues",
+  DASHBOARD: "dashboard",
+  WORKERS: "workers",
+  ROLES: "roles",
+  SETTINGS: "settings",
+  USER_AVAILABILITY: "user-availability",
 } as const;
 export type AdminRoute = keyof typeof ADMIN_ROUTES;
 
@@ -61,4 +69,20 @@ export const ROUTE_TITLES: Record<string, string> = {
   [ADMIN_ROUTES.SETTINGS]: "Settings",
   [ADMIN_ROUTES.USER_AVAILABILITY]: "User Availability",
   [ADMIN_ROUTES.CACHE]: "Cache",
+  [ADMIN_ROUTES.SYSTEM_DASHBOARD]: "System Dashboard",
 };
+
+export const ROUTES_REDIRECTS = {
+  [EUserLevels.SUPER_ADMIN]:
+    SUPER_ADMIN_SEGMENT + "/" + ADMIN_ROUTES.SYSTEM_DASHBOARD,
+  [EUserLevels.ADMIN]: ADMIN_SEGMENT + "/" + ADMIN_ROUTES.DASHBOARD,
+  [EUserLevels.TRAINER]: TRAINER_SEGMENT + "/" + ADMIN_ROUTES.DASHBOARD,
+  [EUserLevels.CLIENT]: CLIENT_SEGMENT + "/" + ADMIN_ROUTES.DASHBOARD,
+} as const;
+
+export const SEGMENTS = {
+  [EUserLevels.SUPER_ADMIN]: SUPER_ADMIN_SEGMENT,
+  [EUserLevels.ADMIN]: ADMIN_SEGMENT,
+  [EUserLevels.TRAINER]: TRAINER_SEGMENT,
+  [EUserLevels.CLIENT]: CLIENT_SEGMENT,
+} as const;

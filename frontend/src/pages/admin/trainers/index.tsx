@@ -31,7 +31,7 @@ export default function TrainersPage() {
 
     return (
         <PageInnerLayout Header={<Header />}>
-            <SingleHandler<ITrainer, any>
+            <SingleHandler<ITrainer>
                 queryFn={fetchTrainer}
                 initialParams={{
                     _relations: 'user.profile',
@@ -47,7 +47,7 @@ export default function TrainersPage() {
                     },
                     {
                         action: 'updateProfile',
-                        comp: ProfileForm as any
+                        comp: ProfileForm
                     }
                 ]}
             />
@@ -56,7 +56,7 @@ export default function TrainersPage() {
                 queryFn={fetchTrainers}
                 initialParams={{
                     _relations: 'user.profile',
-                    _select: 'user.email, user.profile.firstName, user.profile.lastName, user.profile.phoneNumber',
+                    _select: 'user.email, user.isActive, user.profile.firstName, user.profile.lastName, user.profile.phoneNumber',
                 }}
                 ListComponent={TrainerList}
                 dto={TrainerListDto}

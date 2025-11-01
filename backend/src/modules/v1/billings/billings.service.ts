@@ -48,7 +48,7 @@ export class BillingsService extends CrudService<Billing> {
     createBillingDto: CreateBillingDto,
   ): Promise<IMessageResponse & { billing: Billing }> {
     // Check if trainer exists and is actually a trainer
-    const recipientUser = await this.usersService.getSingle(
+    const recipientUser = await this.usersService.getUser(
       createBillingDto.recipientUser.id,
     );
 
@@ -60,11 +60,14 @@ export class BillingsService extends CrudService<Billing> {
 
     // Use CRUD service create method
     const billing = await this.create(createBillingDto, {
-      beforeCreate: async (manager: EntityManager) => {
+      beforeCreate: async (
+        processedData: CreateBillingDto,
+        manager: EntityManager,
+      ) => {
         return {
-          ...createBillingDto,
+          ...processedData,
           recipientUser: {
-            id: createBillingDto.recipientUser.id,
+            id: processedData.recipientUser.id,
           },
         };
       },
@@ -79,7 +82,7 @@ export class BillingsService extends CrudService<Billing> {
   ): Promise<IMessageResponse> {
     if (updateBillingDto.recipientUser && updateBillingDto.recipientUser.id) {
       // Check if trainer exists and is actually a trainer
-      const recipientUser = await this.usersService.getSingle(
+      const recipientUser = await this.usersService.getUser(
         updateBillingDto.recipientUser.id,
       );
       if (!recipientUser) {

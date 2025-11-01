@@ -3,51 +3,38 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, Repository } from 'typeorm';
+import { EntityManager, SelectQueryBuilder } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 
-import { User } from '@/modules/v1/users/entities/user.entity';
-import { Profile } from '@/modules/v1/users/profiles/entities/profile.entity';
-import { CreateUserDto, UpdateUserDto } from '@shared/dtos';
-import { IMessageResponse } from '@shared/interfaces';
+import { User } from '@/common/system-user/entities/user.entity';
+import {
+  CreateUserDto,
+  SingleQueryDto,
+  UpdateUserDto,
+  UserListDto,
+} from '@shared/dtos';
+import { IMessageResponse, IPaginatedResponse } from '@shared/interfaces';
 import { ResetPasswordDto } from '@shared/dtos/user-dtos/reset-password.dto';
 import { PasswordService } from './services/password.service';
 import { TokenService } from '../auth/services/tokens.service';
 import { UserEmailService } from './services/user-email.service';
 import { LoggerService } from '@/common/logger/logger.service';
-import { CrudService } from '@/common/crud/crud.service';
 import { ProfilesService } from './profiles/profiles.service';
-import { CrudOptions } from '@/common/crud/interfaces/crud.interface';
-import { ModuleRef } from '@nestjs/core';
+import { SystemUsersService } from '@/common/system-user/system-users.service';
+import { EUserLevels } from '@shared/enums/user.enum';
+import { Profile } from './profiles/entities/profile.entity';
 
 @Injectable()
-export class UsersService extends CrudService<User> {
+export class UsersService {
   private readonly customLogger = new LoggerService(UsersService.name);
 
   constructor(
-    @InjectRepository(User)
-    private readonly userRepo: Repository<User>,
+    private readonly systemUsersService: SystemUsersService,
     private readonly profielService: ProfilesService,
     private readonly passwordService: PasswordService,
     private readonly userEmailService: UserEmailService,
     private tokenService: TokenService,
-    moduleRef: ModuleRef,
-  ) {
-    const crudOptions: CrudOptions = {
-      restrictedFields: ['password', 'passwordHistory'],
-      searchableFields: ['email', 'profile.firstName', 'profile.lastName'],
-    };
-    super(userRepo, moduleRef, crudOptions);
-  }
-
-  async getUserByEmail(email: string): Promise<User | null> {
-    return this.userRepo.findOne({
-      where: { email },
-      select: ['id', 'email', 'password', 'isActive', 'level'],
-      relations: ['profile'],
-    });
-  }
+  ) {}
 
   private generateStrongPassword(length: number): string {
     const chars = {
@@ -81,14 +68,43 @@ export class UsersService extends CrudService<User> {
       .join('');
   }
 
+  async getSuperAdmin(): Promise<User> {
+    return this.systemUsersService.getSingle({
+      level: EUserLevels.SUPER_ADMIN,
+    });
+  }
+
+  async getUserByEmail(email: string): Promise<User | null> {
+    return this.systemUsersService.getUserByEmailWithPassword(email);
+  }
+
+  async getUser(id: string, query?: SingleQueryDto<User>): Promise<User> {
+    return this.systemUsersService.getSingle({ id }, query);
+  }
+
+  async getUsers(
+    query: UserListDto,
+    currentUser: User,
+  ): Promise<IPaginatedResponse<User>> {
+    return this.systemUsersService.get(query, {
+      beforeQuery: (query: SelectQueryBuilder<User>) => {
+        if (currentUser.level !== EUserLevels.SUPER_ADMIN) {
+          query.andWhere('entity.createdByUserId = :createdByUserId', {
+            createdByUserId: currentUser.id,
+          });
+        }
+      },
+    });
+  }
+
   async createUser(
     createUserDto: CreateUserDto,
   ): Promise<IMessageResponse & { user: User }> {
     const { profile, ...userData } = createUserDto;
 
     // Check if email exists
-    const existingUser = await this.userRepo.findOne({
-      where: { email: userData.email },
+    const existingUser = await this.systemUsersService.getSingle({
+      email: userData.email,
     });
 
     if (existingUser) {
@@ -103,15 +119,20 @@ export class UsersService extends CrudService<User> {
     }
 
     // Use CRUD service create method
-    const user = await this.create({
-      ...userData,
-      profile: {
-        firstName: profile.firstName,
-        lastName: profile.lastName,
-        phoneNumber: profile.phoneNumber,
+    const user = await this.systemUsersService.create(
+      {
+        ...userData,
+        tempPassword,
       },
-      tempPassword,
-    });
+      {
+        afterCreate: async (savedEntity: User, manager: EntityManager) => {
+          await this.profielService.create({
+            ...profile,
+            user: savedEntity,
+          });
+        },
+      },
+    );
 
     user.password = tempPassword as string;
     user.passwordHistory = [];
@@ -127,11 +148,11 @@ export class UsersService extends CrudService<User> {
 
     // Update user data with callbacks
 
-    await this.update({ id }, userData, {
+    await this.systemUsersService.update(id, userData, {
       beforeUpdate: async (existingEntity: User, manager: EntityManager) => {
         // Check if email is being changed and if it already exists
         if (userData.email && userData.email !== existingEntity.email) {
-          const emailExists = await manager.findOne(this.repository.target, {
+          const emailExists = await this.systemUsersService.getSingle({
             where: { email: userData.email },
           });
 
@@ -141,22 +162,29 @@ export class UsersService extends CrudService<User> {
         }
       },
       afterUpdate: async (updatedEntity: User, manager: EntityManager) => {
-        try {
-          const existingUser = await this.getSingle(
-            { id: updatedEntity.id },
-            { __relations: 'profile' },
-          );
-
-          if (profile && existingUser.profile)
-            await manager.update(Profile, existingUser.profile.id, profile);
-        } catch (error) {
-          throw new Error('Failed to update user', { cause: error as Error });
-        }
+        if (profile)
+          await this.profielService.update(updatedEntity.id, profile);
       },
     });
 
     return {
       message: 'User updated successfully',
+    };
+  }
+
+  async deleteUser(id: string): Promise<IMessageResponse> {
+    await this.systemUsersService.delete(id, {
+      afterDelete: async (entity: User, manager: EntityManager) => {
+        const profile = await this.profielService.getSingle({
+          userId: entity.id,
+        });
+        if (profile) {
+          await this.profielService.delete(profile.id);
+        }
+      },
+    });
+    return {
+      message: 'User deleted successfully',
     };
   }
 
@@ -167,10 +195,8 @@ export class UsersService extends CrudService<User> {
   ): Promise<IMessageResponse & { success: true }> {
     const { currentPassword, password } = resetPasswordDto;
 
-    const user = await this.userRepo.findOne({
-      where: { id },
-      select: ['id', 'email', 'password', 'passwordHistory'],
-      relations: ['profile'],
+    const user = await this.systemUsersService.getSingle({
+      id,
     });
 
     if (!user) {
@@ -204,12 +230,12 @@ export class UsersService extends CrudService<User> {
 
     user.password = password;
 
-    const savedUser = await this.userRepo.save(user);
+    const savedUser = await this.systemUsersService.update(user.id, user);
 
     await this.tokenService.invalidateAllTokens(user.id);
 
     // Emit password reset event for email sending
-    this.eventService.emit('user.password.reset', {
+    this.systemUsersService.eventService.emit('user.password.reset', {
       entity: savedUser,
       entityId: user.id,
       operation: 'resetPassword',

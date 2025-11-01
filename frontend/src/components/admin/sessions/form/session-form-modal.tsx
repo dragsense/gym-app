@@ -15,9 +15,10 @@ import { ModalForm } from "@/components/form-ui/modal-form";
 import type { THandlerComponentProps } from "@/@types/handler-types";
 import { SearchableInputWrapper } from "@/components/shared-ui/searchable-input-wrapper";
 import type { TCustomInputWrapper, TFieldConfigObject } from "@/@types/form/field-config.type";
-import type { UserDto } from "@shared/dtos";
+import type { ClientDto, TrainerDto } from "@shared/dtos";
 import type { ReminderDto } from "@shared/dtos/reminder-dtos";
-import { useSearchableUsers } from "@/hooks/use-searchable";
+import { useSearchableClients, useSearchableTrainers } from "@/hooks/use-searchable";
+import { useAuthUser } from "@/hooks/use-auth-user";
 import { EUserLevels } from "@shared/enums";
 
 export interface ISessionFormModalExtraProps {
@@ -36,6 +37,8 @@ const SessionFormModal = React.memo(function SessionFormModal({
   const componentId = useId();
   const [, startTransition] = useTransition();
 
+  const { user } = useAuthUser()
+
   if (!store) {
     return `Form store "${storeKey}" not found. Did you forget to register it?`;
   }
@@ -50,16 +53,16 @@ const SessionFormModal = React.memo(function SessionFormModal({
 
   const TrainerSelect = React.memo(
     (props: TCustomInputWrapper) => {
-      return <SearchableInputWrapper<UserDto>
+      return <SearchableInputWrapper<TrainerDto>
         {...props}
         modal={true}
-        useSearchable={() => useSearchableUsers({ level: EUserLevels.TRAINER })}
+        useSearchable={() => useSearchableTrainers({})}
         getLabel={(item) => {
-          if (!item?.profile) return 'Select Trainer'
-          return `${item.id} - ${item.profile?.firstName} ${item.profile?.lastName}`
+          if (!item?.user?.profile) return 'Select Trainer'
+          return `${item.user?.profile?.firstName} ${item.user?.profile?.lastName} (${item.user?.email})`
         }}
         getKey={(item) => item.id.toString()}
-        getValue={(item) => { return { id: item.id, profile: item.profile } }}
+        getValue={(item) => { return { id: item.id, user: item.user } }}
         shouldFilter={false}
       />
     }
@@ -67,17 +70,17 @@ const SessionFormModal = React.memo(function SessionFormModal({
 
   const ClientsSelect = React.memo(
     (props: TCustomInputWrapper) => (
-      <SearchableInputWrapper<UserDto>
+      <SearchableInputWrapper<ClientDto>
         {...props}
         modal={true}
-        useSearchable={() => useSearchableUsers({ level: EUserLevels.CLIENT })}
+        useSearchable={() => useSearchableClients({})}
         getLabel={(item) => {
-          if (!item?.profile) return 'Select Clients'
+          if (!item?.user?.profile) return 'Select Clients'
 
-          return `${item.id} - ${item.profile?.firstName} ${item.profile?.lastName}`
+          return `${item.user?.profile?.firstName} ${item.user?.profile?.lastName} (${item.user?.email})`
         }}
         getKey={(item) => item.id.toString()}
-        getValue={(item) => { return { id: item.id, profile: item.profile } }}
+        getValue={(item) => { return { id: item.id, user: item.user } }}
         shouldFilter={false}
         multiple={true}
       />
@@ -87,13 +90,14 @@ const SessionFormModal = React.memo(function SessionFormModal({
   // React 19: Memoized fields for better performance
   const fields = useMemo(() => ({
     ...storeFields,
-    trainerUser: {
-      ...storeFields.trainerUser,
+    trainer: {
+      ...storeFields.trainer,
       type: 'custom' as const,
-      Component: TrainerSelect
+      Component: TrainerSelect,
+      visible: () => user?.level !== EUserLevels.TRAINER
     },
-    clientsUsers: {
-      ...storeFields.clientsUsers,
+    clients: {
+      ...storeFields.clients,
       type: 'custom' as const,
       Component: ClientsSelect
     },
@@ -183,8 +187,8 @@ const SessionFormModal = React.memo(function SessionFormModal({
         <div>
           <h3 className="text-sm font-semibold mb-3">Participants</h3>
           <div className="grid grid-cols-2 gap-6 items-start">
-            {inputs.trainerUser as ReactNode}
-            {inputs.clientsUsers as ReactNode}
+            {inputs.trainer as ReactNode}
+            {inputs.clients as ReactNode}
           </div>
         </div>
 

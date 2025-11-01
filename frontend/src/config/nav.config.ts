@@ -16,98 +16,167 @@ import {
   Link,
   Home,
 } from "lucide-react";
-import { ADMIN_ROUTES } from "./routes.config";
+import {
+  ADMIN_ROUTES,
+  ADMIN_SEGMENT,
+  CLIENT_SEGMENT,
+  SUPER_ADMIN_SEGMENT,
+  TRAINER_SEGMENT,
+} from "./routes.config";
+import { EUserLevels } from "@shared/enums";
 
-// Separate settings configuration object
-
-export const navItems: {
+// Navigation items type
+export type NavItem = {
   title: string;
   icon?: LucideIcon;
-  urls: string[];
+  url: string;
   children?: {
     title: string;
     icon?: LucideIcon;
     url: string;
   }[];
-}[] = [
+};
+
+// Common navigation items (shared across ALL user levels)
+const commonNavItems: NavItem[] = [
   {
     title: "Dashboard",
-    urls: [ADMIN_ROUTES.DASHBOARD],
+    url: ADMIN_ROUTES.DASHBOARD,
     icon: Home,
   },
   {
-    title: "Users",
-    urls: [ADMIN_ROUTES.USERS],
-    icon: UserCheck,
-  },
-  {
-    title: "Trainers",
-    urls: [ADMIN_ROUTES.TRAINERS],
-    icon: Users,
-  },
-  {
-    title: "Clients",
-    urls: [ADMIN_ROUTES.CLIENTS],
-    icon: UserPlus,
-  },
-  {
-    title: "Trainer-Clients",
-    urls: [ADMIN_ROUTES.TRAINER_CLIENTS],
-    icon: UserCog,
-  },
-  {
     title: "Sessions",
-    urls: [ADMIN_ROUTES.SESSIONS],
+    url: ADMIN_ROUTES.SESSIONS,
     icon: Calendar,
   },
   {
     title: "Billings",
-    urls: [ADMIN_ROUTES.BILLINGS],
+    url: ADMIN_ROUTES.BILLINGS,
     icon: DollarSign,
   },
   {
     title: "Referral Links",
-    urls: [ADMIN_ROUTES.REFERRAL_LINKS],
+    url: ADMIN_ROUTES.REFERRAL_LINKS,
     icon: Link,
   },
   {
-    title: "Activit Logs",
-    urls: [ADMIN_ROUTES.ACTIVITY_LOGS],
-    icon: Activity,
-  },
-  {
-    title: "Files",
-    urls: [ADMIN_ROUTES.FILES],
-    icon: FileText,
-  },
-  {
-    title: "Schedules",
-    urls: [ADMIN_ROUTES.SCHEDULES],
-    icon: CalendarClock,
-  },
-  {
-    title: "Roles",
-    urls: [ADMIN_ROUTES.ROLES],
-    icon: Shield,
-  },
-  {
-    title: "Queue Board",
-    urls: [ADMIN_ROUTES.QUEUE_BOARD],
-    icon: BarChart3,
-  },
-  {
-    title: "Cache",
-    urls: [ADMIN_ROUTES.CACHE],
-    icon: Database,
-  },
-  {
     title: "Settings",
-    urls: [ADMIN_ROUTES.SETTINGS],
+    url: ADMIN_ROUTES.SETTINGS,
     icon: Settings,
   },
   {
     title: "User Availability",
-    urls: [ADMIN_ROUTES.USER_AVAILABILITY],
+    url: ADMIN_ROUTES.USER_AVAILABILITY,
     icon: Calendar,
   },
 ];
+
+const adminAndTrainerSharedNavItems: NavItem[] = [
+  {
+    title: "Clients",
+    url: ADMIN_ROUTES.CLIENTS,
+    icon: UserPlus,
+  },
+  {
+    title: "Activity Logs",
+    url: ADMIN_ROUTES.ACTIVITY_LOGS,
+    icon: Activity,
+  },
+];
+
+// Shared navigation items (Admin & Trainer)
+const superAdminAndAdminShared: NavItem[] = [
+  ...adminAndTrainerSharedNavItems,
+  {
+    title: "Users",
+    url: ADMIN_ROUTES.USERS,
+    icon: UserCheck,
+  },
+  {
+    title: "Trainers",
+    url: ADMIN_ROUTES.TRAINERS,
+    icon: Users,
+  },
+  {
+    title: "Trainer-Clients",
+    url: ADMIN_ROUTES.TRAINER_CLIENTS,
+    icon: UserCog,
+  },
+  {
+    title: "Roles",
+    url: ADMIN_ROUTES.ROLES,
+    icon: Shield,
+  },
+];
+
+// Super Admin-only navigation items
+const superAdminNavItems: NavItem[] = [
+  {
+    title: "System Dashboard",
+    url: ADMIN_ROUTES.SYSTEM_DASHBOARD,
+    icon: Home,
+  },
+  ...commonNavItems,
+  ...superAdminAndAdminShared,
+  {
+    title: "Files",
+    url: ADMIN_ROUTES.FILES,
+    icon: FileText,
+  },
+  {
+    title: "Schedules",
+    url: ADMIN_ROUTES.SCHEDULES,
+    icon: CalendarClock,
+  },
+  {
+    title: "Queue Board",
+    url: ADMIN_ROUTES.QUEUE_BOARD,
+    icon: BarChart3,
+  },
+  {
+    title: "Cache",
+    url: ADMIN_ROUTES.CACHE,
+    icon: Database,
+  },
+];
+
+// Admin-only navigation items (Super Admin & Admin)
+const adminNavItems: NavItem[] = [
+  ...commonNavItems,
+  ...superAdminAndAdminShared,
+];
+
+// Build navigation items by user level
+const clientNavItems: NavItem[] = [...commonNavItems];
+
+const trainerNavItems: NavItem[] = [
+  ...commonNavItems,
+  ...adminAndTrainerSharedNavItems,
+];
+
+// Export nav items organized by user level
+export const navItemsByLevel = {
+  [EUserLevels.SUPER_ADMIN]: () =>
+    superAdminNavItems.map((item) => ({
+      ...item,
+      url: SUPER_ADMIN_SEGMENT + "/" + item.url,
+    })),
+  [EUserLevels.ADMIN]: () =>
+    adminNavItems.map((item) => ({
+      ...item,
+      url: ADMIN_SEGMENT + "/" + item.url,
+    })),
+  [EUserLevels.TRAINER]: () =>
+    trainerNavItems.map((item) => ({
+      ...item,
+      url: TRAINER_SEGMENT + "/" + item.url,
+    })),
+  [EUserLevels.CLIENT]: () =>
+    clientNavItems.map((item) => ({
+      ...item,
+      url: CLIENT_SEGMENT + "/" + item.url,
+    })),
+};
+
+// Legacy export for backward compatibility (defaults to superAdmin)
+export const navItems = superAdminNavItems;

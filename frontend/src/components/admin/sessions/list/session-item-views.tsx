@@ -34,19 +34,19 @@ export function sessionItemViews({ handleEdit, handleDelete, handleView }: ISess
       ),
     },
     {
-      accessorKey: 'trainerUser',
+      accessorKey: 'trainer',
       header: 'Trainer',
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <User className="h-4 w-4 text-muted-foreground" />
-          <span>{row.original.trainerUser?.profile?.firstName} {row.original.trainerUser?.profile?.lastName}</span>
+          <span>{row.original.trainer?.user?.profile?.firstName} {row.original.trainer?.user?.profile?.lastName}</span>
         </div>
       ),
     },
     {
-      id: 'clientsUsersCount',
+      id: 'clientsCount',
       header: 'Clients',
-      cell: ({ row }) => <span>{row.original.clientsUsersCount}</span>,
+      cell: ({ row }) => <span>{row.original.clientsCount}</span>,
     },
     {
       id: 'startDateTime',

@@ -10,6 +10,10 @@ import {
   IsEmail,
   IsOptional,
   IsIn,
+  IsNumber,
+  ValidateIf,
+  Min,
+  ValidateNested,
 } from "class-validator";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { FieldOptions, FieldType } from "../../decorators/field.decorator";
@@ -26,6 +30,25 @@ class PasswordMatchConstraint implements ValidatorConstraintInterface {
   defaultMessage(args: ValidationArguments) {
     return "Passwords do not match";
   }
+}
+
+export class SignupTrainerDto {
+  @ApiProperty({ example: 5, description: "Years of experience" })
+  @IsNumber()
+  @IsNotEmpty()
+  @Min(0)
+  @Type(() => Number)
+  @FieldType("number", true)
+  experience: number;
+
+  @ApiProperty({
+    example: "Fitness Training",
+    description: "Trainer specialization",
+  })
+  @IsString()
+  @IsNotEmpty()
+  @FieldType("text", true)
+  specialization: string;
 }
 
 export class SignupDto {
@@ -94,4 +117,11 @@ export class SignupDto {
   )
   @Type(() => Number)
   level: SignupUserLevel;
+
+  @ApiProperty({ type: SignupTrainerDto })
+  @ValidateNested()
+  @Type(() => SignupTrainerDto)
+  @FieldType("nested", true, SignupTrainerDto)
+  @ValidateIf((object, value) => object.level === SignupUserLevel.TRAINER)
+  trainer?: SignupTrainerDto;
 }

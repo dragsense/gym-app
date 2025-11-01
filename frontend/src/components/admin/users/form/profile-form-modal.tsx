@@ -53,12 +53,12 @@ const ProfileFormModal = React.memo(function ProfileFormModal({
     image: {
       ...storeFields.image,
       type: 'custom' as const,
-      Component: ({value, onChange}: {value: File | IFileUpload | null, onChange: (file: File | null) => void}) => <FileUpload value={value} onChange={onChange} />
+      Component: ({ value, onChange }: { value: File | IFileUpload | null, onChange: (file: File | null) => void }) => <FileUpload value={value} onChange={onChange} />
     },
     documents: {
       ...storeFields.documents,
       type: 'custom' as const,
-      Component: ({value, onChange}: {value: File[] | IFileUpload[] | undefined, onChange: (file: File[] | null) => void}) => <MultiFileUpload value={value} onChange={onChange} />
+      Component: ({ value, onChange }: { value: File[] | IFileUpload[] | undefined, onChange: (file: File[] | null) => void }) => <MultiFileUpload value={value} onChange={onChange} />
     }
   } as TFieldConfigObject<TUpdateProfileData>), [storeFields]);
 
@@ -143,13 +143,6 @@ const ProfileFormModal = React.memo(function ProfileFormModal({
           </div>
         </div>
 
-        {/* Skills */}
-        <div>
-          <h3 className="text-sm font-semibold mb-3">Skills</h3>
-          <div className="grid grid-cols-1 gap-6 items-start">
-            {inputs.skills as React.ReactNode}
-          </div>
-        </div>
 
       </div>
     </ModalForm>

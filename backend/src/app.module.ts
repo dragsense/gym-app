@@ -29,6 +29,7 @@ import { AppService } from './app.service';
 
 // Feature modules
 import { UsersModule } from './modules/v1/users/users.module';
+import { SystemUserModule } from './common/system-user/system-users.module';
 import { AuthModule } from './modules/v1/auth/auth.module';
 
 import { FileUploadModule } from './common/file-upload/file-upload.module';
@@ -64,9 +65,9 @@ import { getBullQueueConfig } from './config/bull-queue.config';
 import { CacheModule } from './common/cache/cache.module';
 import { RolesModule } from './common/roles/roles.module';
 import { JwtModule } from '@nestjs/jwt';
-import { JwtStrategy } from './modules/v1/auth/strategies/jwt.strategy';
 import { JwtAuthGuard } from './guards/auth.gaurd';
 import { HealthModule } from './common/health/health.module';
+import { UserLevelGuard } from './common/gaurds/level.guard';
 
 @Module({
   imports: [
@@ -134,6 +135,7 @@ import { HealthModule } from './common/health/health.module';
     }),
 
     // Common modules
+    SystemUserModule,
     LoggerModule,
     ServerGatewayModule,
     FileUploadModule,
@@ -168,7 +170,6 @@ import { HealthModule } from './common/health/health.module';
     ResponseEncryptionInterceptor,
     RequestContextMiddleware,
     RequestContextInterceptor,
-    JwtStrategy,
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
@@ -176,6 +177,10 @@ import { HealthModule } from './common/health/health.module';
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: UserLevelGuard,
     },
   ],
 })

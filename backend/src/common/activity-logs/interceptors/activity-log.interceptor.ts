@@ -71,17 +71,6 @@ export class ActivityLogInterceptor implements NestInterceptor {
         // Fire and forget - don't await the async operation
         const duration = Date.now() - startTime;
 
-        // Check if activity should be logged based on configuration
-        const shouldLog = this.activityLogsService.shouldLogActivity(
-          url,
-          method,
-          activityType,
-        );
-
-        if (!shouldLog) {
-          return;
-        }
-
         // Safely get response size without circular reference errors
         let responseSize = 0;
         try {
@@ -119,40 +108,30 @@ export class ActivityLogInterceptor implements NestInterceptor {
       catchError((error) => {
         // Fire and forget - don't await the async operation
         const duration = Date.now() - startTime;
+        // Get all nested keys from request body (not values for privacy)
+        const bodyKeys = request.body ? this.getNestedKeys(request.body) : [];
 
-        // Check if activity should be logged based on configuration
-        const shouldLog = this.activityLogsService.shouldLogActivity(
-          url,
-          method,
-          activityType,
-        );
-
-        if (shouldLog) {
-          // Get all nested keys from request body (not values for privacy)
-          const bodyKeys = request.body ? this.getNestedKeys(request.body) : [];
-
-          // Fire and forget the activity log
-          this.activityLogsService
-            .createActivityLog({
-              description,
-              type: activityType,
-              status: EActivityStatus.FAILED,
-              ipAddress: ip,
-              userAgent,
-              endpoint: url,
-              method,
-              statusCode: error.status || 500,
-              metadata: {
-                duration,
-                timestamp: new Date().toISOString(),
-                bodyKeys,
-              },
-              errorMessage: error.message,
-            })
-            .catch((logError) => {
-              this.logger.error('Failed to log activity error', logError);
-            });
-        }
+        // Fire and forget the activity log
+        this.activityLogsService
+          .createActivityLog({
+            description,
+            type: activityType,
+            status: EActivityStatus.FAILED,
+            ipAddress: ip,
+            userAgent,
+            endpoint: url,
+            method,
+            statusCode: error.status || 500,
+            metadata: {
+              duration,
+              timestamp: new Date().toISOString(),
+              bodyKeys,
+            },
+            errorMessage: error.message,
+          })
+          .catch((logError) => {
+            this.logger.error('Failed to log activity error', logError);
+          });
 
         throw error;
       }),
