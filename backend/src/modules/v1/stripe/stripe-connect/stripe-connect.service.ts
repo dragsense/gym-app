@@ -11,7 +11,7 @@ import {
   StripeConnectCreateResponseDto,
   StripeConnectStatusDto,
 } from '@shared/dtos';
-import { User } from '@/common/system-user/entities/user.entity';
+import { User } from '@/common/base-user/entities/user.entity';
 import { BaseStripeService } from '../services/base-stripe.service';
 
 @Injectable()

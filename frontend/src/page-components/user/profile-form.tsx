@@ -67,14 +67,8 @@ export default function ProfileForm({
 
 
     const INITIAL_VALUES: TUpdateProfileData = {
-        firstName: "",
-        lastName: "",
         phoneNumber: "",
-        dateOfBirth: new Date(
-            new Date().setFullYear(new Date().getFullYear() - 12)
-        ).toISOString(),
         address: "",
-        gender: EUserGender.MALE,
         image: undefined,
         documents: undefined
     };

@@ -32,7 +32,7 @@ import {
 } from '@shared/dtos';
 import { Session } from './entities/session.entity';
 import { AuthUser } from '@/decorators/user.decorator';
-import { User } from '@/common/system-user/entities/user.entity';
+import { User } from '@/common/base-user/entities/user.entity';
 import { EUserLevels } from '@shared/enums';
 import { Brackets, SelectQueryBuilder } from 'typeorm';
 import { MinUserLevel } from '@/common/decorators/level.decorator';

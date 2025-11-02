@@ -6,7 +6,7 @@ import {
 import { EntityManager, SelectQueryBuilder } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 
-import { User } from '@/common/system-user/entities/user.entity';
+import { User } from '@/common/base-user/entities/user.entity';
 import {
   CreateUserDto,
   SingleQueryDto,
@@ -20,16 +20,15 @@ import { TokenService } from '../auth/services/tokens.service';
 import { UserEmailService } from './services/user-email.service';
 import { LoggerService } from '@/common/logger/logger.service';
 import { ProfilesService } from './profiles/profiles.service';
-import { SystemUsersService } from '@/common/system-user/system-users.service';
+import { BaseUsersService } from '@/common/base-user/base-users.service';
 import { EUserLevels } from '@shared/enums/user.enum';
-import { Profile } from './profiles/entities/profile.entity';
 
 @Injectable()
 export class UsersService {
   private readonly customLogger = new LoggerService(UsersService.name);
 
   constructor(
-    private readonly systemUsersService: SystemUsersService,
+    private readonly baseUsersService: BaseUsersService,
     private readonly profielService: ProfilesService,
     private readonly passwordService: PasswordService,
     private readonly userEmailService: UserEmailService,
@@ -69,24 +68,24 @@ export class UsersService {
   }
 
   async getSuperAdmin(): Promise<User> {
-    return this.systemUsersService.getSingle({
+    return this.baseUsersService.getSingle({
       level: EUserLevels.SUPER_ADMIN,
     });
   }
 
   async getUserByEmail(email: string): Promise<User | null> {
-    return this.systemUsersService.getUserByEmailWithPassword(email);
+    return this.baseUsersService.getUserByEmailWithPassword(email);
   }
 
   async getUser(id: string, query?: SingleQueryDto<User>): Promise<User> {
-    return this.systemUsersService.getSingle({ id }, query);
+    return this.baseUsersService.getSingle(id, query);
   }
 
   async getUsers(
     query: UserListDto,
     currentUser: User,
   ): Promise<IPaginatedResponse<User>> {
-    return this.systemUsersService.get(query, {
+    return this.baseUsersService.get(query, UserListDto, {
       beforeQuery: (query: SelectQueryBuilder<User>) => {
         if (currentUser.level !== EUserLevels.SUPER_ADMIN) {
           query.andWhere('entity.createdByUserId = :createdByUserId', {
@@ -100,39 +99,36 @@ export class UsersService {
   async createUser(
     createUserDto: CreateUserDto,
   ): Promise<IMessageResponse & { user: User }> {
-    const { profile, ...userData } = createUserDto;
-
     // Check if email exists
-    const existingUser = await this.systemUsersService.getSingle({
-      email: userData.email,
-    });
-
-    if (existingUser) {
-      throw new ConflictException('Email already exists');
-    }
 
     let tempPassword: string | undefined;
 
-    if (!userData.password) {
+    if (!createUserDto.password) {
       tempPassword = this.generateStrongPassword(12);
-      userData.password = tempPassword;
+      createUserDto.password = tempPassword;
     }
 
     // Use CRUD service create method
-    const user = await this.systemUsersService.create(
-      {
-        ...userData,
-        tempPassword,
+    const user = await this.baseUsersService.create(createUserDto, {
+      beforeCreate: async (
+        processedData: CreateUserDto,
+        manager: EntityManager,
+      ) => {
+        const existingUser = await manager.findOne(User, {
+          where: {
+            email: processedData.email,
+          },
+        });
+
+        if (existingUser) {
+          throw new ConflictException('Email already exists');
+        }
+        return {
+          ...processedData,
+          tempPassword,
+        };
       },
-      {
-        afterCreate: async (savedEntity: User, manager: EntityManager) => {
-          await this.profielService.create({
-            ...profile,
-            user: savedEntity,
-          });
-        },
-      },
-    );
+    });
 
     user.password = tempPassword as string;
     user.passwordHistory = [];
@@ -144,26 +140,23 @@ export class UsersService {
     id: string,
     updateUserDto: UpdateUserDto,
   ): Promise<IMessageResponse> {
-    const { profile, ...userData } = updateUserDto;
-
     // Update user data with callbacks
 
-    await this.systemUsersService.update(id, userData, {
+    await this.baseUsersService.update(id, updateUserDto, {
       beforeUpdate: async (existingEntity: User, manager: EntityManager) => {
         // Check if email is being changed and if it already exists
-        if (userData.email && userData.email !== existingEntity.email) {
-          const emailExists = await this.systemUsersService.getSingle({
-            where: { email: userData.email },
+        if (
+          updateUserDto.email &&
+          updateUserDto.email !== existingEntity.email
+        ) {
+          const emailExists = await this.baseUsersService.getSingle({
+            where: { email: updateUserDto.email },
           });
 
           if (emailExists) {
             throw new ConflictException('Email already exists');
           }
         }
-      },
-      afterUpdate: async (updatedEntity: User, manager: EntityManager) => {
-        if (profile)
-          await this.profielService.update(updatedEntity.id, profile);
       },
     });
 
@@ -173,7 +166,7 @@ export class UsersService {
   }
 
   async deleteUser(id: string): Promise<IMessageResponse> {
-    await this.systemUsersService.delete(id, {
+    await this.baseUsersService.delete(id, {
       afterDelete: async (entity: User, manager: EntityManager) => {
         const profile = await this.profielService.getSingle({
           userId: entity.id,
@@ -195,7 +188,7 @@ export class UsersService {
   ): Promise<IMessageResponse & { success: true }> {
     const { currentPassword, password } = resetPasswordDto;
 
-    const user = await this.systemUsersService.getSingle({
+    const user = await this.baseUsersService.getSingle({
       id,
     });
 
@@ -230,12 +223,12 @@ export class UsersService {
 
     user.password = password;
 
-    const savedUser = await this.systemUsersService.update(user.id, user);
+    const savedUser = await this.baseUsersService.update(user.id, user);
 
     await this.tokenService.invalidateAllTokens(user.id);
 
     // Emit password reset event for email sending
-    this.systemUsersService.eventService.emit('user.password.reset', {
+    this.baseUsersService.eventService.emit('user.password.reset', {
       entity: savedUser,
       entityId: user.id,
       operation: 'resetPassword',

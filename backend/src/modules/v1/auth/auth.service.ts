@@ -28,8 +28,7 @@ import {
 import { RewardsService } from '@/modules/v1/rewards/rewards.service';
 import { TrainersService } from '../trainers/trainers.service';
 import { SignupUserLevel } from '@shared/enums/user.enum';
-import { User } from '@/common/system-user/entities/user.entity';
-import { ProfilesService } from '../users/profiles/profiles.service';
+import { User } from '@/common/base-user/entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -40,7 +39,6 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly mailerService: MailerService,
     private readonly userService: UsersService,
-    private readonly profileService: ProfilesService,
     private readonly trainerService: TrainersService,
 
     private readonly activityLogsService: ActivityLogsService,
@@ -49,8 +47,7 @@ export class AuthService {
 
   async signup(signupDto: SignupDto): Promise<IMessageResponse> {
     try {
-      const { firstName, lastName, trainer, referralCode, ...userData } =
-        signupDto;
+      const { trainer, referralCode, ...userData } = signupDto;
 
       let user: User;
 
@@ -66,10 +63,8 @@ export class AuthService {
             email: userData.email,
             password: userData.password,
             isActive: true,
-            profile: {
-              firstName,
-              lastName,
-            },
+            firstName: userData.firstName,
+            lastName: userData.lastName,
           },
         };
 
@@ -79,10 +74,6 @@ export class AuthService {
         const res = await this.userService.createUser({
           ...userData,
           isActive: true,
-          profile: {
-            firstName,
-            lastName,
-          },
         });
         user = res.user;
       }
@@ -101,8 +92,8 @@ export class AuthService {
         statusCode: 201,
         metadata: {
           email: signupDto.email,
-          firstName,
-          lastName,
+          firstName: signupDto.firstName,
+          lastName: signupDto.lastName,
           referralCode: referralCode || null,
           timestamp: new Date().toISOString(),
         },
@@ -254,16 +245,13 @@ export class AuthService {
 
   async sendResetLink(email: string): Promise<{ message: string }> {
     try {
-      const profile = await this.profileService.getSingle(
-        { user: { email } },
-        { _relations: ['user'] },
-      );
+      const user = await this.userService.getUserByEmail(email);
 
-      if (profile) {
+      if (user) {
         const appConfig = this.configService.get('app');
 
         const token = this.jwtService.sign({
-          id: profile.user.id,
+          id: user.id,
           purpose: 'password_reset',
         });
 
@@ -276,9 +264,9 @@ export class AuthService {
         <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #2c3e50;">Password Reset Request</h2>
           
-          <p>Dear ${profile.firstName || 'User'},</p>
+          <p>Dear ${user.firstName || 'User'},</p>
           
-          <p>We received a request to reset your password for account <strong>${profile.user.email}</strong>.</p>
+          <p>We received a request to reset your password for account <strong>${user.email}</strong>.</p>
           
           <p style="text-align: center; margin: 25px 0;">
             <a href="${resetUrl}" 
@@ -307,7 +295,7 @@ export class AuthService {
 
         try {
           await this.mailerService.sendMail({
-            to: profile.user.email,
+            to: user.email,
             from: mailerConfig.from,
             subject: appName + ' - Your Password Reset Instructions',
             html: emailContent,
@@ -324,7 +312,7 @@ export class AuthService {
             statusCode: 200,
             metadata: {
               email,
-              userId: profile.user.id,
+              userId: user.id,
               timestamp: new Date().toISOString(),
             },
           });
@@ -344,7 +332,7 @@ export class AuthService {
             statusCode: 500,
             metadata: {
               email,
-              userId: profile.user.id,
+              userId: user.id,
               timestamp: new Date().toISOString(),
             },
             errorMessage:

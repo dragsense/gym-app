@@ -5,9 +5,10 @@ import {
   ManyToOne,
   ManyToMany,
   JoinTable,
+  JoinColumn,
 } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { User } from '@/common/system-user/entities/user.entity';
+import { User } from '@/common/base-user/entities/user.entity';
 import { FileUpload } from '@/common/file-upload/entities/file-upload.entity';
 import { GeneralBaseEntity } from '@/common/entities';
 import { EUserGender } from '@shared/enums/user.enum';
@@ -17,36 +18,12 @@ import { StripeConnectAccount } from '@/modules/v1/stripe/entities/stripe-connec
 export class Profile extends GeneralBaseEntity {
   // ─── Shared Fields ─────────────────────
 
-  @ApiProperty({ example: 'John', description: 'First name of the user' })
-  @Column({ type: 'varchar', length: 100 })
-  firstName: string;
-
-  @ApiProperty({ example: 'Doe', description: 'Last name of the user' })
-  @Column({ type: 'varchar', length: 100 })
-  lastName: string;
-
   @ApiPropertyOptional({
     example: '+1234567890',
     description: 'Phone number with country code',
   })
   @Column({ type: 'varchar', length: 20, nullable: true })
   phoneNumber?: string;
-
-  @ApiPropertyOptional({ example: '1990-01-01', description: 'Date of birth' })
-  @Column({ type: 'date', nullable: true })
-  dateOfBirth?: string;
-
-  @ApiPropertyOptional({
-    enum: EUserGender,
-    example: EUserGender.MALE,
-    description: 'User gender',
-  })
-  @Column({
-    type: 'enum',
-    enum: EUserGender,
-    nullable: true,
-  })
-  gender?: EUserGender;
 
   @ApiPropertyOptional({
     example: '123 Main St, City, Country',
@@ -57,6 +34,7 @@ export class Profile extends GeneralBaseEntity {
 
   @ApiProperty({ type: () => User, description: 'Associated user' })
   @OneToOne(() => User, { onDelete: 'CASCADE' })
+  @JoinColumn()
   user: User;
 
   @ApiPropertyOptional({
@@ -87,7 +65,7 @@ export class Profile extends GeneralBaseEntity {
   documents?: FileUpload[];
 
   @Column({ type: 'varchar', nullable: true })
-  stripeCustomerId: string;
+  stripeCustomerId?: string;
 
   @ApiProperty({
     type: () => StripeConnectAccount,
@@ -96,6 +74,7 @@ export class Profile extends GeneralBaseEntity {
   })
   @OneToOne(() => StripeConnectAccount, (stripeConnect) => stripeConnect.user, {
     cascade: true,
+    nullable: true,
   })
-  stripeConnectAccount: StripeConnectAccount;
+  stripeConnectAccount?: StripeConnectAccount;
 }

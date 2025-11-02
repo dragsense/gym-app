@@ -64,16 +64,13 @@ export function TrainerForm({
         user: {
             email: "",
             isActive: true,
-            profile: {
-                firstName: "",
-                lastName: "",
-                phoneNumber: "",
-                dateOfBirth: new Date(
-                    new Date().setFullYear(new Date().getFullYear() - 12)
-                ).toISOString(),
-                address: "",
-                gender: EUserGender.MALE
-            }
+            firstName: "",
+            lastName: "",
+            gender: EUserGender.MALE,
+            dateOfBirth: new Date(
+                new Date().setFullYear(new Date().getFullYear() - 12)
+            ).toISOString(),
+
         },
         specialization: "",
         experience: 0,

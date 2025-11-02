@@ -1,5 +1,5 @@
 import { Entity, Column, ManyToOne } from 'typeorm';
-import { User } from '@/common/system-user/entities/user.entity';
+import { User } from '@/common/base-user/entities/user.entity';
 import { GeneralBaseEntity } from '../../../../common/entities';
 
 @Entity('refresh_tokens')

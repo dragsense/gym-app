@@ -28,7 +28,7 @@ import {
   SingleQueryDto,
 } from '@shared/dtos';
 import { Trainer } from './entities/trainer.entity';
-import { User } from '@/common/system-user/entities/user.entity';
+import { User } from '@/common/base-user/entities/user.entity';
 import { AuthUser } from '@/decorators/user.decorator';
 import { SelectQueryBuilder } from 'typeorm';
 import { EUserLevels } from '@shared/enums';

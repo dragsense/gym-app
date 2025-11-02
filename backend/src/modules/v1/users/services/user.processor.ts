@@ -1,12 +1,7 @@
 import { Process, Processor } from '@nestjs/bull';
 import { Job } from 'bull';
 import { Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { UserEmailService } from './user-email.service';
-import { User } from '@/common/system-user/entities/user.entity';
-import { EUserLevels } from '@shared/enums/user.enum';
-import { ProfilesService } from '../profiles/profiles.service';
 import { UsersService } from '../users.service';
 
 @Processor('user')
@@ -14,7 +9,6 @@ export class UserProcessor {
   private readonly logger = new Logger(UserProcessor.name);
 
   constructor(
-    private readonly profilesService: ProfilesService,
     private readonly userEmailService: UserEmailService,
     private readonly usersService: UsersService,
   ) {
@@ -34,17 +28,14 @@ export class UserProcessor {
     this.logger.log(`Processing welcome email for user ${userId}`);
 
     try {
-      const profile = await this.profilesService.getSingle(
-        { user: { id: userId } },
-        { _relations: ['user'] },
-      );
+      const user = await this.usersService.getUser(userId);
 
-      if (!profile) {
+      if (!user) {
         throw new Error(`User ${userId} not found`);
       }
 
       await this.userEmailService.sendWelcomeEmail({
-        profile,
+        user,
         tempPassword,
       });
 

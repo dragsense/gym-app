@@ -52,24 +52,21 @@ export const ClientFormModal = React.memo(function ClientFormModal({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {user.email as ReactNode}
             {user.isActive as ReactNode}
+            {user.firstName as ReactNode}
+            {user.lastName as ReactNode}
+            {user.dateOfBirth as ReactNode}
+            {user.gender as ReactNode}
           </div>
 
-          {user.profile as ReactNode}
+
         </div>
       ),
-      profile: (profile: FormInputs<TProfileData>) => (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {profile.firstName as ReactNode}
-          {profile.lastName as ReactNode}
-          {profile.address as ReactNode}
-          {profile.phoneNumber as ReactNode}
-        </div>
-      ),
+
     };
 
     return addRenderItem(storeFields, renderers) as TFieldConfigObject<TClientData | TUpdateClientData>;
   }, [storeFields]);
-  
+
   const inputs = useInput<TClientData | TUpdateClientData>({
     fields,
     showRequiredAsterisk: true,
@@ -121,10 +118,10 @@ export const ClientFormModal = React.memo(function ClientFormModal({
       width="3xl"
     >
       <div className="space-y-8">
-          {/* Basic Info */}
-          <div>
+        {/* Basic Info */}
+        <div>
           <h3 className="text-sm font-semibold mb-3">Basic Info</h3>
-           {userInputs as ReactNode}
+          {userInputs as ReactNode}
         </div>
         {/* Trainer Details */}
         <div>

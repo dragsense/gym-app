@@ -20,6 +20,8 @@ export const login = (data: TLoginData) =>
 export const signup = (data: TSignupData) =>
   authService.post(data, undefined, "/signup");
 
+export const me = () => authService.getSingle(null, undefined, "/me");
+
 export const verifyOtp = (data: TVerifyOtpData) =>
   authService.post(data, undefined, "/verify-otp");
 
@@ -32,10 +34,6 @@ export const forgotPassword = (data: TForgotPasswordData) =>
 export const resetPassword = (data: TAuthResetPasswordData) =>
   authService.post(data, undefined, "/reset-password");
 
-export const logout = () =>
-  authService.post({}, undefined, "/logout");
+export const logout = () => authService.post({}, undefined, "/logout");
 
-export const logoutAll = () =>
-  authService.post({}, undefined, "/logout-all");
-
-
+export const logoutAll = () => authService.post({}, undefined, "/logout-all");

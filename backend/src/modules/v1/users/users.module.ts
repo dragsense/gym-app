@@ -13,16 +13,19 @@ import { UsersWebSocketService } from './services/users-websocket.service';
 import { UserEmailService } from './services/user-email.service';
 import { UserEventListenerService } from './services/user-event-listener.service';
 import { UserProcessor } from './services/user.processor';
-import { SystemUserModule } from '@/common/system-user/system-users.module';
+import { BaseUserModule } from '@/common/base-user/base-users.module';
 import { TokenService } from '../auth/services/tokens.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RefreshToken } from '../auth/entities/tokens.entity';
+import { UserSubscriber } from './subscribers/user.subscriber';
+import { UserAvailabilityModule } from '../user-availability/user-availability.module';
 
 @Module({
   imports: [
     ProfilesModule,
+    UserAvailabilityModule,
     ActionModule,
-    SystemUserModule,
+    BaseUserModule,
     BullModule.registerQueue({ name: 'user' }),
     JwtModule.registerAsync({
       useFactory: getJwtConfig,
@@ -40,6 +43,7 @@ import { RefreshToken } from '../auth/entities/tokens.entity';
     UserProcessor,
     PasswordService,
     UsersWebSocketService,
+    UserSubscriber,
   ],
 })
 export class UsersModule {}

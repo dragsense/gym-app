@@ -3,7 +3,7 @@ import { Job } from 'bull';
 import { Injectable, Logger } from '@nestjs/common';
 import { SessionEmailService } from '@/modules/v1/sessions/services/session-email.service';
 import { SessionsService } from '../sessions.service';
-import { ProfilesService } from '@/modules/v1/users/profiles/profiles.service';
+import { UsersService } from '@/modules/v1/users/users.service';
 
 @Processor('session')
 @Injectable()
@@ -13,7 +13,7 @@ export class SessionProcessor {
   constructor(
     private readonly sessionEmailService: SessionEmailService,
     private readonly sessionsService: SessionsService,
-    private readonly profilesService: ProfilesService,
+    private readonly usersService: UsersService,
   ) {}
 
   /**
@@ -27,21 +27,12 @@ export class SessionProcessor {
 
     try {
       const session = await this.sessionsService.getSingle(sessionId);
-      const profile = await this.profilesService.getSingle(
-        { user: { id: recipientId } },
-        { _relations: ['user'] },
-      );
-
-      const recipientName =
-        `${profile?.firstName || ''} ${profile?.lastName || ''}`.trim();
-      if (!recipientName) {
-        throw new Error('Recipient name not found');
-      }
+      const user = await this.usersService.getUser(recipientId);
 
       await this.sessionEmailService.sendSessionConfirmation(
         session,
-        profile.user.email,
-        recipientName,
+        user.email,
+        user.firstName + ' ' + user.lastName,
       );
 
       this.logger.log(
@@ -69,21 +60,11 @@ export class SessionProcessor {
 
     try {
       const session = await this.sessionsService.getSingle(sessionId);
-      const profile = await this.profilesService.getSingle(
-        { user: { id: recipientId } },
-        { _relations: ['user'] },
-      );
-
-      const recipientName =
-        `${profile?.firstName || ''} ${profile?.lastName || ''}`.trim();
-      if (!recipientName) {
-        throw new Error('Recipient name not found');
-      }
-
+      const user = await this.usersService.getUser(recipientId as string);
       await this.sessionEmailService.sendSessionStatusUpdate(
         session,
-        profile.user.email,
-        recipientName,
+        user.email,
+        user.firstName + ' ' + user.lastName,
       );
 
       this.logger.log(
@@ -111,21 +92,12 @@ export class SessionProcessor {
 
     try {
       const session = await this.sessionsService.getSingle(sessionId);
-      const profile = await this.profilesService.getSingle(
-        { user: { id: recipientId } },
-        { _relations: ['user'] },
-      );
-
-      const recipientName =
-        `${profile?.firstName || ''} ${profile?.lastName || ''}`.trim();
-      if (!recipientName) {
-        throw new Error('Recipient name not found');
-      }
+      const user = await this.usersService.getUser(recipientId as string);
 
       await this.sessionEmailService.sendSessionDeleted(
         session,
-        profile.user.email,
-        recipientName,
+        user.email,
+        user.firstName + ' ' + user.lastName,
       );
 
       this.logger.log(
@@ -151,21 +123,12 @@ export class SessionProcessor {
 
     try {
       const session = await this.sessionsService.getSingle(sessionId);
-      const profile = await this.profilesService.getSingle(
-        { user: { id: recipientId } },
-        { _relations: ['user'] },
-      );
-
-      const recipientName =
-        `${profile?.firstName || ''} ${profile?.lastName || ''}`.trim();
-      if (!recipientName) {
-        throw new Error('Recipient name not found');
-      }
+      const user = await this.usersService.getUser(recipientId);
 
       await this.sessionEmailService.sendSessionReminder(
         session,
-        profile.user.email,
-        recipientName,
+        user.email,
+        user.firstName + ' ' + user.lastName,
       );
 
       this.logger.log(

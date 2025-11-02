@@ -25,7 +25,7 @@ import {
 import { SingleQueryDto } from '@shared/dtos';
 import { TrainerClient } from './entities/trainer-client.entity';
 import { AuthUser } from '@/decorators/user.decorator';
-import { User } from '@/common/system-user/entities/user.entity';
+import { User } from '@/common/base-user/entities/user.entity';
 import { EUserLevels } from '@shared/enums';
 import { Brackets, SelectQueryBuilder } from 'typeorm';
 

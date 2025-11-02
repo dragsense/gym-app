@@ -217,7 +217,7 @@ function SessionDetailContent({ session }: ISessionDetailContentProps) {
                             <div className="flex-1">
                                 <span className="text-sm text-muted-foreground">Name:</span>
                                 <p className="font-medium">
-                                    {trainer?.profile?.firstName} {trainer?.profile?.lastName}
+                                    {trainer?.firstName} {trainer?.lastName}
                                 </p>
                             </div>
                         </div>
@@ -232,7 +232,7 @@ function SessionDetailContent({ session }: ISessionDetailContentProps) {
                             <div className="text-muted-foreground"><Target className="w-4 h-4" /></div>
                             <div className="flex-1">
                                 <span className="text-sm text-muted-foreground">Specialization:</span>
-                                <p className="font-medium">{trainer?.profile?.specialization || 'Not specified'}</p>
+                                <p className="font-medium">{trainer?.specialization || 'Not specified'}</p>
                             </div>
                         </div>
                     </div>
@@ -260,7 +260,7 @@ function SessionDetailContent({ session }: ISessionDetailContentProps) {
                                                 <div className="text-muted-foreground"><User className="w-4 h-4" /></div>
                                                 <div className="flex-1">
                                                     <p className="font-medium">
-                                                        {client.profile?.firstName} {client.profile?.lastName}
+                                                        {client.firstName} {client.lastName}
                                                     </p>
                                                 </div>
                                             </div>

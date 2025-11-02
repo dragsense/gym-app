@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Column, Entity, Index, ManyToOne } from 'typeorm';
-import { User } from '@/common/system-user/entities/user.entity';
+import { User } from '@/common/base-user/entities/user.entity';
 import { GeneralBaseEntity } from '@/common/entities';
 
 @Entity('auth_otp_codes')

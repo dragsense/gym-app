@@ -5,10 +5,11 @@ import {
   DataSource,
 } from 'typeorm';
 import { Injectable } from '@nestjs/common';
-import { User } from '@/common/system-user/entities/user.entity';
+import { User } from '@/common/base-user/entities/user.entity';
 import { LoggerService } from '@/common/logger/logger.service';
 import { UserAvailabilityService } from '../../user-availability/user-availability.service';
 import { WeeklyScheduleDto } from '@shared/dtos/user-availability-dtos/user-availability.dto';
+import { Profile } from '../profiles/entities/profile.entity';
 
 @EventSubscriber()
 @Injectable()
@@ -83,6 +84,17 @@ export class UserSubscriber implements EntitySubscriberInterface<User> {
       })().catch((err) => {
         this.logger.error(
           `Unhandled error creating user availability for user ${user.id}:`,
+          err instanceof Error ? err.message : String(err),
+        );
+      });
+
+      (async () => {
+        await this.dataSource
+          .getRepository(Profile)
+          .upsert([{ user: { id: user.id } }], ['user']);
+      })().catch((err) => {
+        this.logger.error(
+          `Unhandled error creating profile for user ${user.id}:`,
           err instanceof Error ? err.message : String(err),
         );
       });

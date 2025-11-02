@@ -34,7 +34,7 @@ export default function TrainersPage() {
             <SingleHandler<ITrainer>
                 queryFn={fetchTrainer}
                 initialParams={{
-                    _relations: 'user.profile',
+                    _relations: 'user',
                 }}
                 deleteFn={deleteTrainer}
                 storeKey={TRAINERS_STORE_KEY}
@@ -55,8 +55,8 @@ export default function TrainersPage() {
             <ListHandler<ITrainer, TTrainerListData, ITrainerListExtraProps, ITrainer, TTrainerViewExtraProps>
                 queryFn={fetchTrainers}
                 initialParams={{
-                    _relations: 'user.profile',
-                    _select: 'user.email, user.isActive, user.profile.firstName, user.profile.lastName, user.profile.phoneNumber',
+                    _relations: 'user',
+                    _select: 'user.email, user.isActive, user.firstName, user.lastName',
                 }}
                 ListComponent={TrainerList}
                 dto={TrainerListDto}

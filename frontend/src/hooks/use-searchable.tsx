@@ -54,7 +54,7 @@ export function useSearchableUsers({ level, initialParams }: { level?: number, i
   return useSearchableResource<IUser>(
     memoizedKey,
     memoizedFetcher,
-    { ...initialParams, _relations: 'profile' }
+    { ...initialParams }
   );
 }
 
@@ -67,8 +67,8 @@ export function useSearchableTrainers({ initialParams }: { initialParams?: IList
   const memoizedFetcher = useMemo(() =>
     (params: IListQueryParams) => fetchTrainers({
       ...params,
-      _relations: 'user.profile',
-      _select: 'id, user.email, user.profile.firstName, user.profile.lastName',
+      _relations: 'user',
+      _select: 'id, user.email, user.firstName, user.lastName',
     }),
     []);
 
@@ -89,8 +89,8 @@ export function useSearchableClients({ initialParams }: { initialParams?: IListQ
   const memoizedFetcher = useMemo(() =>
     (params: IListQueryParams) => fetchClients({
       ...params,
-      _relations: 'user.profile',
-      _select: 'id, user.email, user.profile.firstName, user.profile.lastName',
+      _relations: 'user',
+      _select: 'id, user.email, user.firstName, user.lastName',
     }),
     []);
 

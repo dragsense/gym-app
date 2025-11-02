@@ -45,9 +45,14 @@ export class BillingEmailService {
         },
       });
 
-      this.logger.log(`Billing confirmation email sent to ${context.recipientEmail}`);
+      this.logger.log(
+        `Billing confirmation email sent to ${context.recipientEmail}`,
+      );
     } catch (error) {
-      this.logger.error(`Failed to send billing confirmation email to ${context.recipientEmail}:`, error);
+      this.logger.error(
+        `Failed to send billing confirmation email to ${context.recipientEmail}:`,
+        error,
+      );
       throw error;
     }
   }
@@ -67,9 +72,14 @@ export class BillingEmailService {
         },
       });
 
-      this.logger.log(`Billing reminder email sent to ${context.recipientEmail}`);
+      this.logger.log(
+        `Billing reminder email sent to ${context.recipientEmail}`,
+      );
     } catch (error) {
-      this.logger.error(`Failed to send billing reminder email to ${context.recipientEmail}:`, error);
+      this.logger.error(
+        `Failed to send billing reminder email to ${context.recipientEmail}:`,
+        error,
+      );
       throw error;
     }
   }
@@ -89,9 +99,14 @@ export class BillingEmailService {
         },
       });
 
-      this.logger.log(`Billing overdue email sent to ${context.recipientEmail}`);
+      this.logger.log(
+        `Billing overdue email sent to ${context.recipientEmail}`,
+      );
     } catch (error) {
-      this.logger.error(`Failed to send billing overdue email to ${context.recipientEmail}:`, error);
+      this.logger.error(
+        `Failed to send billing overdue email to ${context.recipientEmail}:`,
+        error,
+      );
       throw error;
     }
   }
@@ -111,9 +126,14 @@ export class BillingEmailService {
         },
       });
 
-      this.logger.log(`Billing paid confirmation email sent to ${context.recipientEmail}`);
+      this.logger.log(
+        `Billing paid confirmation email sent to ${context.recipientEmail}`,
+      );
     } catch (error) {
-      this.logger.error(`Failed to send billing paid confirmation email to ${context.recipientEmail}:`, error);
+      this.logger.error(
+        `Failed to send billing paid confirmation email to ${context.recipientEmail}:`,
+        error,
+      );
       throw error;
     }
   }

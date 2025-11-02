@@ -29,7 +29,7 @@ import { AppService } from './app.service';
 
 // Feature modules
 import { UsersModule } from './modules/v1/users/users.module';
-import { SystemUserModule } from './common/system-user/system-users.module';
+import { BaseUserModule } from './common/base-user/base-users.module';
 import { AuthModule } from './modules/v1/auth/auth.module';
 
 import { FileUploadModule } from './common/file-upload/file-upload.module';
@@ -135,7 +135,7 @@ import { UserLevelGuard } from './common/gaurds/level.guard';
     }),
 
     // Common modules
-    SystemUserModule,
+    BaseUserModule,
     LoggerModule,
     ServerGatewayModule,
     FileUploadModule,

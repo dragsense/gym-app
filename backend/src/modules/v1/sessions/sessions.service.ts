@@ -20,7 +20,7 @@ import { CrudOptions } from '@/common/crud/interfaces/crud.interface';
 import { EUserLevels } from '@shared/enums';
 import { TrainersService } from '../trainers/trainers.service';
 import { ClientsService } from '../clients/clients.service';
-import { User } from '@/common/system-user/entities/user.entity';
+import { User } from '@/common/base-user/entities/user.entity';
 import { Client } from '../clients/entities/client.entity';
 
 @Injectable()

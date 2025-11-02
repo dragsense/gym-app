@@ -31,8 +31,8 @@ export default function TrainerClientsPage() {
             <SingleHandler<ITrainerClient, any>
                 queryFn={fetchTrainerClient}
                 initialParams={{
-                    _relations: 'trainer.user, client.user, trainer.user.profile, client.user.profile',
-                    _select: 'trainer.id, client.id, trainer.user.email, client.user.email, trainer.user.profile.firstName, client.user.profile.firstName, trainer.user.profile.lastName, client.user.profile.lastName, status, notes, createdAt',
+                    _relations: 'trainer.user, client.user',
+                    _select: 'trainer.id, client.id, trainer.user.email, client.user.email, trainer.user.firstName, client.user.firstName, trainer.user.lastName, client.user.lastName, status, notes, createdAt',
                 }}
                 deleteFn={deleteTrainerClient}
                 storeKey={TRAINER_CLIENTS_STORE_KEY}
@@ -50,7 +50,7 @@ export default function TrainerClientsPage() {
                 queryFn={fetchTrainerClients}
                 initialParams={{
                     _relations: 'trainer.user, client.user',
-                    _select: 'trainer.user.email, client.user.email, status, notes, createdAt',
+                    _select: 'trainer.user.email, client.user.email, trainer.user.firstName, client.user.firstName, trainer.user.lastName, client.user.lastName, status, notes, createdAt',
                     sortBy: 'createdAt',
                     sortOrder: 'DESC',
                 }}

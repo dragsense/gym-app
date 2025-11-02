@@ -8,6 +8,7 @@ import {
   Param,
   Query,
   Patch,
+  Req,
 } from '@nestjs/common';
 
 import {
@@ -33,10 +34,11 @@ import {
   UserPaginatedDto,
   UserWithProfileSafeDto,
 } from '@shared/dtos';
-import { User } from '@/common/system-user/entities/user.entity';
+import { User } from '@/common/base-user/entities/user.entity';
 import { CacheService } from '@/common/cache/cache.service';
 import { EUserLevels } from '@shared/enums';
 import { MinUserLevel } from '@/common/decorators/level.decorator';
+import { Profile } from './profiles/entities/profile.entity';
 
 @ApiBearerAuth('access-token')
 @ApiTags('Users')

@@ -86,7 +86,7 @@ export class StripeBillingService extends BaseStripeService {
 
     try {
       const customer = await stripe.customers.create({
-        name: `${profile?.firstName ?? 'User'} ${profile?.lastName ?? ''}`,
+        name: `${profile.user.firstName ?? 'User'} ${profile.user.lastName ?? ''}`,
         email: profile.user.email,
         metadata: {
           userId: profile.user.id.toString(),
@@ -100,10 +100,10 @@ export class StripeBillingService extends BaseStripeService {
     } catch (error) {
       this.logger.error(
         `Failed to create Stripe customer for user ${profile.user.id}:`,
-        error.message,
+        error.message as string,
       );
       throw new BadRequestException(
-        `Failed to create Stripe customer: ${error.message}`,
+        `Failed to create Stripe customer: ${error.message as string}`,
       );
     }
   }

@@ -14,7 +14,7 @@ import {
 } from '@/decorators';
 import { EPermissionAction } from '@shared/enums';
 import { InjectEntity } from '@/decorators/inject-entity.decorator';
-import { User } from '@/common/system-user/entities/user.entity';
+import { User } from '@/common/base-user/entities/user.entity';
 
 @Injectable()
 export class PermissionGuard implements CanActivate {

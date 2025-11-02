@@ -33,7 +33,7 @@ import {
 } from '@shared/dtos';
 import { Billing } from './entities/billing.entity';
 import { AuthUser } from '@/decorators/user.decorator';
-import { User } from '@/common/system-user/entities/user.entity';
+import { User } from '@/common/base-user/entities/user.entity';
 import { StripeBillingService } from '../stripe/services/stripe-billing.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';

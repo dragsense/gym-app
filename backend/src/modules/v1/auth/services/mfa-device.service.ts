@@ -11,7 +11,7 @@ import { JwtService } from '@nestjs/jwt';
 import { TrustedDevice } from '@/modules/v1/auth/entities/trusted-device.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from '@/common/system-user/entities/user.entity';
+import { User } from '@/common/base-user/entities/user.entity';
 import { LoggerService } from '@/common/logger/logger.service';
 
 @Injectable()

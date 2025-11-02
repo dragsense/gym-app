@@ -37,8 +37,8 @@ export default function BillingsPage() {
             <SingleHandler<IBilling, any>
                 queryFn={fetchBilling}
                 initialParams={{
-                    _relations: 'recipientUser, recipientUser.profile',
-                    _select: 'recipientUser.email, recipientUser.profile.firstName, recipientUser.profile.lastName',
+                    _relations: 'recipientUser',
+                    _select: 'recipientUser.email, recipientUser.firstName, recipientUser.lastName',
                 }}
                 deleteFn={deleteBilling}
                 storeKey={BILLINGS_STORE_KEY}
@@ -55,8 +55,8 @@ export default function BillingsPage() {
             <ListHandler<IBilling, TBillingListData, IBillingListExtraProps, IBilling, TBillingViewExtraProps>
                 queryFn={fetchBillings}
                 initialParams={{
-                    _relations: 'recipientUser, recipientUser.profile',
-                    _select: 'recipientUser.email, recipientUser.profile.firstName, recipientUser.profile.lastName',
+                    _relations: 'recipientUser',
+                    _select: 'recipientUser.email, recipientUser.firstName, recipientUser.lastName',
                 }}
                 ListComponent={BillingList}
                 dto={BillingListDto}

@@ -11,6 +11,7 @@ import {
   Min,
   IsDateString,
   IsArray,
+  IsEnum,
 } from "class-validator";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { PartialType } from "../../lib/dto-type-adapter";
@@ -19,7 +20,7 @@ import { Type, Transform } from "class-transformer";
 import { PaginationMetaDto } from "../common/pagination.dto";
 import { ListQueryDto, SingleQueryDto } from "../common/list-query.dto";
 import { IUser } from "../../interfaces/user.interface";
-import { FieldType } from "../../decorators/field.decorator";
+import { FieldOptions, FieldType } from "../../decorators/field.decorator";
 import { OmitType } from "../../lib/dto-type-adapter";
 import {
   Between,
@@ -39,6 +40,7 @@ import {
   TransformToDate,
   RelationFilter,
 } from "../../decorators/crud.dto.decorators";
+import { EUserGender } from "../../enums/user.enum";
 
 export class CreateUserDto {
   @ApiProperty({ example: "email@example.com", description: "User email" })
@@ -47,6 +49,36 @@ export class CreateUserDto {
   @IsEmail()
   @FieldType("email", true)
   email: string;
+
+  @ApiProperty({ example: "John" })
+  @IsString()
+  @IsNotEmpty()
+  @FieldType("text", true)
+  firstName: string;
+
+  @ApiProperty({ example: "Doe" })
+  @IsString()
+  @IsNotEmpty()
+  @FieldType("text", true)
+  lastName: string;
+
+  @ApiProperty({ example: "1990-01-01" })
+  @IsOptional()
+  @IsDateString()
+  @FieldType("date")
+  dateOfBirth?: string;
+
+  @ApiProperty({ enum: EUserGender, example: EUserGender.MALE })
+  @IsOptional()
+  @IsEnum(EUserGender)
+  @FieldType("select")
+  @FieldOptions(
+    Object.values(EUserGender).map((v) => ({
+      value: v,
+      label: v.charAt(0) + v.slice(1).toLowerCase(),
+    }))
+  )
+  gender?: string;
 
   @ApiPropertyOptional({
     example: "securePass123",
@@ -73,24 +105,9 @@ export class CreateUserDto {
   @IsBoolean()
   @FieldType("switch")
   isActive?: boolean;
-
-  @ApiProperty({ type: CreateProfileDto })
-  @ValidateNested()
-  @Type(() => CreateProfileDto)
-  @FieldType("nested", true, CreateProfileDto)
-  profile: CreateProfileDto;
 }
 
-export class UpdateUserDto extends PartialType(
-  OmitType(CreateUserDto, ["profile"])
-) {
-  @ApiProperty({ type: UpdateProfileDto })
-  @ValidateNested()
-  @Type(() => UpdateProfileDto)
-  @FieldType("nested", true, UpdateProfileDto)
-  @IsOptional()
-  profile?: UpdateProfileDto;
-}
+export class UpdateUserDto extends PartialType(CreateUserDto) {}
 
 export class UserSafeDto {
   @ApiProperty({

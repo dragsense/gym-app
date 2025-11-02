@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { OtpCode } from '@/modules/v1/auth/entities/otp-code.entity';
 import { LessThan, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from '@/common/system-user/entities/user.entity';
+import { User } from '@/common/base-user/entities/user.entity';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { LoggerService } from '@/common/logger/logger.service';
 

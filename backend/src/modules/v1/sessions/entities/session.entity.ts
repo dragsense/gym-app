@@ -11,7 +11,7 @@ import { GeneralBaseEntity } from '@/common/entities';
 import { ESessionStatus, ESessionType } from '@shared/enums/session.enum';
 import { BeforeInsert, BeforeUpdate } from 'typeorm';
 import { ReminderDto } from '@shared/dtos/reminder-dtos';
-import { User } from '@/common/system-user/entities/user.entity';
+import { User } from '@/common/base-user/entities/user.entity';
 import { EScheduleFrequency } from '@shared/enums/schedule.enum';
 import { Client } from '../../clients/entities/client.entity';
 import { Trainer } from '../../trainers/entities/trainer.entity';

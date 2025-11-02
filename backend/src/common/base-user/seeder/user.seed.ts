@@ -1,13 +1,14 @@
 import { LoggerService } from '@/common/logger/logger.service';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { SystemUsersService } from '../system-users.service';
+import { BaseUsersService } from '../base-users.service';
+import { User } from '../entities/user.entity';
 
 @Injectable()
 export class UserSeed {
   private readonly logger = new LoggerService(UserSeed.name);
   constructor(
-    private readonly systemUsersService: SystemUsersService,
+    private readonly baseUsersService: BaseUsersService,
     private configService: ConfigService,
   ) {}
 
@@ -28,7 +29,7 @@ export class UserSeed {
 
     try {
       // Check if admin user already exists
-      const existingAdmin = await this.systemUsersService.getSingle({
+      const existingAdmin = await this.baseUsersService.getSingle({
         level: 0,
       });
 
@@ -50,13 +51,15 @@ export class UserSeed {
         password: adminConfig.password,
         isActive: true,
         level: 0,
+        firstName: adminConfig.firstName || 'Super Admin',
+        lastName: adminConfig.lastName || 'User',
       };
 
       this.logger.log(
         `Creating super admin user with email: ${adminConfig.email}`,
       );
 
-      const user = await this.systemUsersService.create(createUserDto);
+      const user = await this.baseUsersService.create(createUserDto);
 
       this.logger.log(
         `Super Admin user seeded successfully: ${adminConfig.email}`,

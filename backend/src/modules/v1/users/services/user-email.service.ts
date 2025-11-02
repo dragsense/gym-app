@@ -1,19 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MailerService } from '@nestjs-modules/mailer';
-import { User } from '@/common/system-user/entities/user.entity';
+import { User } from '@/common/base-user/entities/user.entity';
 import { LoggerService } from '@/common/logger/logger.service';
-import { Profile } from '../profiles/entities/profile.entity';
 
 export interface OnboardingEmailContext {
-  profile: Profile;
+  user: User;
   tempPassword?: string;
   welcomeMessage?: string;
   additionalInstructions?: string;
 }
 
 interface EmailTemplateData {
-  profile: Profile;
+  user: User;
   appName: string;
   loginUrl: string;
   tempPassword?: string;
@@ -36,14 +35,12 @@ export class UserEmailService {
    */
   async sendOnboardingEmail(context: OnboardingEmailContext): Promise<void> {
     try {
-      const { profile } = context;
+      const { user } = context;
       await this.sendWelcomeEmail(context);
-      this.logger.log(
-        `Onboarding email sent successfully to ${profile.user.email}`,
-      );
+      this.logger.log(`Onboarding email sent successfully to ${user.email}`);
     } catch (error) {
       this.logger.error(
-        `Failed to send onboarding email to ${context.profile.user.email}:`,
+        `Failed to send onboarding email to ${context.user.email}:`,
         error,
       );
       throw error;
@@ -54,18 +51,18 @@ export class UserEmailService {
    * Admin self-registration welcome email
    */
   async sendWelcomeEmail(context: OnboardingEmailContext): Promise<void> {
-    const { profile, tempPassword } = context;
+    const { user, tempPassword } = context;
     const loginUrl = `${this.appConfig.appUrl}/${this.appConfig.loginPath}`;
 
     const templateData: EmailTemplateData = {
-      profile,
+      user,
       appName: this.appConfig.name,
       loginUrl,
       tempPassword,
     };
 
     await this.mailerService.sendMail({
-      to: profile.user.email,
+      to: user.email,
       from: this.configService.get('MAIL_FROM'),
       subject: `Welcome to ${this.appConfig.name} - Account Created`,
       html: this.generateWelcomeEmailHTML(templateData),
@@ -74,8 +71,8 @@ export class UserEmailService {
   }
 
   private generateWelcomeEmailHTML(data: EmailTemplateData): string {
-    const { profile, appName, loginUrl, tempPassword } = data;
-    const userName = profile.firstName || 'Valued Customer';
+    const { user, appName, loginUrl, tempPassword } = data;
+    const userName = user.firstName || 'Valued Customer';
 
     return `
 <!DOCTYPE html>
@@ -179,8 +176,8 @@ export class UserEmailService {
 
         <div class="section">
             <h3 class="section-title">📋 Account Information</h3>
-            <div class="info-item"><strong>Email:</strong> ${profile.user.email}</div>
-            <div class="info-item"><strong>Name:</strong> ${profile.firstName || 'Customer'} ${profile.lastName || ''}</div>
+            <div class="info-item"><strong>Email:</strong> ${user.email}</div>
+            <div class="info-item"><strong>Name:</strong> ${user.firstName || 'Customer'} ${user.lastName || ''}</div>
             <div class="info-item"><strong>Role:</strong> Personal Customer</div>
         </div>
 
@@ -216,8 +213,8 @@ export class UserEmailService {
   }
 
   private generateWelcomeEmailText(data: EmailTemplateData): string {
-    const { profile, appName, loginUrl, tempPassword } = data;
-    const userName = profile.firstName || 'Valued Customer';
+    const { user, appName, loginUrl, tempPassword } = data;
+    const userName = user.firstName || 'Valued Customer';
 
     return `
 Welcome to ${appName}!
@@ -227,8 +224,8 @@ Dear ${userName},
 Your account has been successfully created with ${appName}.
 
 Account Details:
-- Email: ${profile.user.email}
-- Name: ${profile.firstName || 'Customer'} ${profile.lastName || ''}
+- Email: ${user.email}
+- Name: ${user.firstName || 'Customer'} ${user.lastName || ''}
 - Role: Personal Customer
 
 ${

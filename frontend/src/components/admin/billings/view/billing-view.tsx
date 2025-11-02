@@ -213,7 +213,7 @@ function BillingDetailContent({ billing }: IBillingDetailContentProps) {
                             <div className="flex-1">
                                 <span className="text-sm text-muted-foreground">Name:</span>
                                 <p className="font-medium">
-                                    {billing?.recipientUser?.profile?.firstName} {billing?.recipientUser?.profile?.lastName}
+                                    {billing?.recipientUser?.firstName} {billing?.recipientUser?.lastName}
                                 </p>
                             </div>
                         </div>

@@ -58,8 +58,8 @@ const SessionFormModal = React.memo(function SessionFormModal({
         modal={true}
         useSearchable={() => useSearchableTrainers({})}
         getLabel={(item) => {
-          if (!item?.user?.profile) return 'Select Trainer'
-          return `${item.user?.profile?.firstName} ${item.user?.profile?.lastName} (${item.user?.email})`
+          if (!item?.user?.firstName) return 'Select Trainer'
+          return `${item.user?.firstName} ${item.user?.lastName} (${item.user?.email})`
         }}
         getKey={(item) => item.id.toString()}
         getValue={(item) => { return { id: item.id, user: item.user } }}
@@ -75,9 +75,9 @@ const SessionFormModal = React.memo(function SessionFormModal({
         modal={true}
         useSearchable={() => useSearchableClients({})}
         getLabel={(item) => {
-          if (!item?.user?.profile) return 'Select Clients'
+          if (!item?.user?.firstName) return 'Select Clients'
 
-          return `${item.user?.profile?.firstName} ${item.user?.profile?.lastName} (${item.user?.email})`
+          return `${item.user?.firstName} ${item.user?.lastName} (${item.user?.email})`
         }}
         getKey={(item) => item.id.toString()}
         getValue={(item) => { return { id: item.id, user: item.user } }}

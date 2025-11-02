@@ -1,6 +1,6 @@
 import { GeneralBaseEntity } from '@/common/entities';
 import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
-import { User } from '@/common/system-user/entities/user.entity';
+import { User } from '@/common/base-user/entities/user.entity';
 
 @Entity('stripe_connect_accounts')
 export class StripeConnectAccount extends GeneralBaseEntity {

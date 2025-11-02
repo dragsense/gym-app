@@ -36,9 +36,7 @@ export default function UsersPage() {
     <PageInnerLayout Header={<Header />}>
       <SingleHandler<IUser, TUserViewExtraProps>
         queryFn={fetchUser}
-        initialParams={{
-          _relations: 'profile',
-        }}
+
         deleteFn={deleteUser}
         storeKey={STORE_KEY}
         onDeleteSuccess={() => queryClient.invalidateQueries({ queryKey: [STORE_KEY + "-list"] })}
@@ -62,12 +60,7 @@ export default function UsersPage() {
         queryFn={(params) => fetchUsers(params)}
         ListComponent={UserList}
         dto={UserListDto}
-        initialParams={{
-          _relations: 'profile',
-          _select: 'email, level, isActive, profile.firstName,profile.lastName,profile.phoneNumber, createdAt',
-          sortBy: 'createdAt',
-          sortOrder: 'ASC',
-        }}
+
         storeKey={STORE_KEY}
         listProps={{
           level: EUserLevels.USER,

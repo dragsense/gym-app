@@ -39,8 +39,8 @@ export default function SessionsPage() {
             <SingleHandler<ISession>
                 queryFn={fetchSession}
                 initialParams={{
-                    _relations: 'clients.user.profile, trainer.user.profile',
-                    _select: 'trainer.user.email, trainer.user.profile.firstName, trainer.user.profile.lastName,  clients.user.email, clients.user.profile.firstName, clients.user.profile.lastName',
+                    _relations: 'clients.user, trainer.user',
+                    _select: 'trainer.user.email, trainer.user.firstName, trainer.user.lastName,  clients.user.email, clients.user.firstName, clients.user.lastName',
 
                 }}
                 deleteFn={deleteSession}
@@ -71,8 +71,8 @@ export default function SessionsPage() {
                     <ListHandler<ISession, TSessionListData, ISessionListExtraProps, ISession, TSessionViewExtraProps>
                         queryFn={fetchSessions}
                         initialParams={{
-                            _relations: 'clients, trainer.user.profile',
-                            _select: 'trainer.user.email, trainer.user.profile.firstName, trainer.user.profile.lastName',
+                            _relations: 'clients, trainer.user',
+                            _select: 'trainer.user.email, trainer.user.firstName, trainer.user.lastName',
                             _countable: 'clients',
                         }}
                         ListComponent={SessionList}

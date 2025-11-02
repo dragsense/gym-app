@@ -19,7 +19,7 @@ import { type THandlerComponentProps } from "@/@types/handler-types";
 import { ETrainerClientStatus } from '@shared/enums/trainer-client.enum';
 
 export type TTrainerClientViewExtraProps = {
-   level: number;
+    level: number;
 }
 
 interface ITrainerClientViewProps extends THandlerComponentProps<TSingleHandlerStore<ITrainerClient, TTrainerClientViewExtraProps>> {
@@ -69,7 +69,7 @@ interface ITrainerClientDetailContentProps {
 function TrainerClientDetailContent({ trainerClient }: ITrainerClientDetailContentProps) {
     // React 19: Essential IDs
     const componentId = useId();
-    
+
     const trainer = trainerClient.trainer;
     const client = trainerClient.client;
 
@@ -84,14 +84,14 @@ function TrainerClientDetailContent({ trainerClient }: ITrainerClientDetailConte
                     </div>
                     <div className="flex-1">
                         <h2 className="text-2xl font-bold text-gray-900">
-                            {trainer?.user?.profile?.firstName} {trainer?.user?.profile?.lastName} - {client?.user?.profile?.firstName} {client?.user?.profile?.lastName}
+                            {trainer?.user?.firstName} {trainer?.user?.lastName} - {client?.user?.firstName} {client?.user?.lastName}
                         </h2>
                         <p className="text-purple-600 font-medium">Trainer-Client Relationship</p>
                         <div className="flex items-center gap-2 mt-1">
                             <Badge variant={trainerClient.status === ETrainerClientStatus.ACTIVE ? "default" : "secondary"}>
                                 {trainerClient.status}
                             </Badge>
-                         
+
                         </div>
                     </div>
                 </div>
@@ -115,7 +115,7 @@ function TrainerClientDetailContent({ trainerClient }: ITrainerClientDetailConte
                             <div className="text-muted-foreground"><User className="w-4 h-4" /></div>
                             <div className="flex-1">
                                 <span className="text-sm text-muted-foreground">Name:</span>
-                                <p className="font-medium">{trainer?.user?.profile?.firstName} {trainer?.user?.profile?.lastName}</p>
+                                <p className="font-medium">{trainer?.user?.firstName} {trainer?.user?.lastName}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
@@ -125,13 +125,7 @@ function TrainerClientDetailContent({ trainerClient }: ITrainerClientDetailConte
                                 <p className="font-medium">{trainer?.user?.email || 'Not specified'}</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <div className="text-muted-foreground"><User className="w-4 h-4" /></div>
-                            <div className="flex-1">
-                                <span className="text-sm text-muted-foreground">Phone:</span>
-                                <p className="font-medium">{trainer?.user?.profile?.phoneNumber || 'Not specified'}</p>
-                            </div>
-                        </div>
+
                     </div>
                 </AppCard>
 
@@ -152,7 +146,7 @@ function TrainerClientDetailContent({ trainerClient }: ITrainerClientDetailConte
                             <div className="text-muted-foreground"><User className="w-4 h-4" /></div>
                             <div className="flex-1">
                                 <span className="text-sm text-muted-foreground">Name:</span>
-                                <p className="font-medium">{client?.user?.profile?.firstName} {client?.user?.profile?.lastName}</p>
+                                <p className="font-medium">{client?.user?.firstName} {client?.user?.lastName}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
@@ -162,13 +156,7 @@ function TrainerClientDetailContent({ trainerClient }: ITrainerClientDetailConte
                                 <p className="font-medium">{client?.user?.email || 'Not specified'}</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <div className="text-muted-foreground"><User className="w-4 h-4" /></div>
-                            <div className="flex-1">
-                                <span className="text-sm text-muted-foreground">Phone:</span>
-                                <p className="font-medium">{client?.user?.profile?.phoneNumber || 'Not specified'}</p>
-                            </div>
-                        </div>
+
                     </div>
                 </AppCard>
             </div>
@@ -193,7 +181,7 @@ function TrainerClientDetailContent({ trainerClient }: ITrainerClientDetailConte
                             <p className="font-medium">{trainerClient.notes || 'Not specified'}</p>
                         </div>
                     </div>
-               
+
                     <div className="flex items-center gap-3">
                         <div className="text-muted-foreground"><Users className="w-4 h-4" /></div>
                         <div className="flex-1">

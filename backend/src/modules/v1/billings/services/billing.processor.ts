@@ -1,10 +1,12 @@
 import { Process, Processor } from '@nestjs/bull';
 import { Job } from 'bull';
 import { Injectable, Logger } from '@nestjs/common';
-import { BillingEmailService } from '@/modules/v1/billings/services/billing-email.service';
+import {
+  BillingEmailService,
+  BillingReminderType,
+} from '@/modules/v1/billings/services/billing-email.service';
 import { BillingsService } from '../billings.service';
 import { UsersService } from '@/modules/v1/users/users.service';
-import { ProfilesService } from '@/modules/v1/users/profiles/profiles.service';
 
 @Processor('billing')
 @Injectable()
@@ -14,8 +16,7 @@ export class BillingProcessor {
   constructor(
     private readonly billingEmailService: BillingEmailService,
     private readonly billingsService: BillingsService,
-    private readonly userService: UsersService,
-    private readonly profilesService: ProfilesService,
+    private readonly usersService: UsersService,
   ) {}
 
   /**
@@ -32,17 +33,12 @@ export class BillingProcessor {
         _relations: ['recipientUser'],
       });
 
-      const profile = await this.profilesService.getSingle(
-        { user: { id: recipientId } },
-        { _relations: ['user'] },
-      );
-
+      const user = await this.usersService.getUser(recipientId as string);
       await this.billingEmailService.sendBillingConfirmation({
         billing,
-        recipientName:
-          `${profile?.firstName || ''} ${profile?.lastName || ''}`.trim(),
-        recipientEmail: profile.user.email,
-        reminderType: 'confirmation' as any,
+        recipientName: user.firstName + ' ' + user.lastName,
+        recipientEmail: user.email,
+        reminderType: BillingReminderType.CONFIRMATION,
         dueDate: billing.dueDate,
         amount: billing.amount,
       });
@@ -73,17 +69,12 @@ export class BillingProcessor {
         _relations: ['recipientUser'],
       });
 
-      const profile = await this.profilesService.getSingle(
-        { user: { id: recipientId } },
-        { _relations: ['user'] },
-      );
-
+      const user = await this.usersService.getUser(recipientId as string);
       await this.billingEmailService.sendBillingReminder({
         billing,
-        recipientName:
-          `${profile?.firstName || ''} ${profile?.lastName || ''}`.trim(),
-        recipientEmail: profile.user.email,
-        reminderType: 'reminder' as any,
+        recipientName: user.firstName + ' ' + user.lastName,
+        recipientEmail: user.email,
+        reminderType: BillingReminderType.REMINDER,
         dueDate: billing.dueDate,
         amount: billing.amount,
       });
@@ -114,17 +105,12 @@ export class BillingProcessor {
         _relations: ['recipientUser'],
       });
 
-      const profile = await this.profilesService.getSingle(
-        { user: { id: recipientId } },
-        { _relations: ['user'] },
-      );
-
+      const user = await this.usersService.getUser(recipientId as string);
       await this.billingEmailService.sendBillingOverdue({
         billing,
-        recipientName:
-          `${profile?.firstName || ''} ${profile?.lastName || ''}`.trim(),
-        recipientEmail: profile.user.email,
-        reminderType: 'overdue' as any,
+        recipientName: user.firstName + ' ' + user.lastName,
+        recipientEmail: user.email,
+        reminderType: BillingReminderType.OVERDUE,
         dueDate: billing.dueDate,
         amount: billing.amount,
       });
@@ -157,16 +143,13 @@ export class BillingProcessor {
         _relations: ['recipientUser'],
       });
 
-      const profile = await this.profilesService.getSingle(
-        { user: { id: recipientId } },
-        { _relations: ['user'] },
-      );
+      const user = await this.usersService.getUser(recipientId as string);
 
       await this.billingEmailService.sendBillingPaid({
         billing,
         recipientName:
-          `${profile?.firstName || ''} ${profile?.lastName || ''}`.trim(),
-        recipientEmail: profile.user.email,
+          `${user?.firstName || ''} ${user?.lastName || ''}`.trim(),
+        recipientEmail: user.email,
         reminderType: 'paid' as any,
         dueDate: billing.dueDate,
         amount: billing.amount,

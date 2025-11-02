@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { type IAuthUser } from '@shared/interfaces/auth.interface';
 
 // Services
-import { fetchProfile } from "@/services/user.api";
+import { me } from "@/services/auth.api";
 import { ensureConnected, socketEmitter } from "@/utils/socket";
 
 interface IAuthUserContextType {
@@ -30,20 +30,14 @@ export function AuthUserProvider({ children }: { children: React.ReactNode }) {
     error,
   } = useQuery<IAuthUser>({
     queryKey: ["me"],
-    queryFn: fetchProfile,
+    queryFn: me,
     retry: false,
     staleTime: 1000 * 60 * 5,
   });
 
 
   // React 19: Deferred user data for better performance
-  const deferredUser = useDeferredValue({
-    user: data?.user,
-    profile: {
-      ...data,
-      user: undefined,
-    },
-  });
+  const deferredUser = useDeferredValue(data);
 
   // Join user's websocket room once and leave on unmount
   useEffect(() => {

@@ -28,7 +28,7 @@ import {
 } from '@shared/dtos';
 import { Client } from './entities/client.entity';
 import { AuthUser } from '@/decorators/user.decorator';
-import { User } from '@/common/system-user/entities/user.entity';
+import { User } from '@/common/base-user/entities/user.entity';
 import { Brackets, SelectQueryBuilder } from 'typeorm';
 import { EUserLevels } from '@shared/enums';
 import { MinUserLevel } from '@/common/decorators/level.decorator';

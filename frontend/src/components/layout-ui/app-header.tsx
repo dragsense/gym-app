@@ -61,8 +61,8 @@ export function AppHeader() {
 
   // React 19: Memoized user data for better performance
   const memoizedUserData = useMemo(() => {
-    const firstName = deferredUser?.profile?.firstName || "Unknown";
-    const fullName = deferredUser ? `${deferredUser?.profile?.firstName} ${deferredUser?.profile?.lastName}` : "Unknown";
+    const firstName = deferredUser?.firstName || "Unknown";
+    const fullName = deferredUser ? `${deferredUser.firstName} ${deferredUser.lastName}` : "Unknown";
     const email = deferredUser?.email || "Unknown";
     return { firstName, fullName, email };
   }, [deferredUser]);

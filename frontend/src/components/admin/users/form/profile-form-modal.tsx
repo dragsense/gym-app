@@ -111,18 +111,7 @@ const ProfileFormModal = React.memo(function ProfileFormModal({
         <div>
           <h3 className="text-sm font-semibold mb-3">Basic Info</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-            {inputs.firstName}
-            {inputs.lastName}
             {inputs.phoneNumber}
-          </div>
-        </div>
-
-        {/* Personal Details */}
-        <div>
-          <h3 className="text-sm font-semibold mb-3">Personal Details</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-            {inputs.gender}
-            {inputs.dateOfBirth}
             {inputs.address}
           </div>
         </div>

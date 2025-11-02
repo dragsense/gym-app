@@ -67,16 +67,12 @@ export default function UserForm({
     const INITIAL_VALUES: TUserData = {
         email: "",
         isActive: true,
-        profile: {
-            firstName: "",
-            lastName: "",
-            phoneNumber: "",
-            dateOfBirth: new Date(
-                new Date().setFullYear(new Date().getFullYear() - 12)
-            ).toISOString(),
-            address: "",
-            gender: EUserGender.MALE
-        }
+        firstName: "",
+        lastName: "",
+        dateOfBirth: new Date(
+            new Date().setFullYear(new Date().getFullYear() - 12)
+        ).toISOString(),
+        gender: EUserGender.MALE
     };
 
     // React 19: Memoized initial values with deferred processing

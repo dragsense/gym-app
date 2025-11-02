@@ -54,19 +54,15 @@ export const TrainerFormModal = React.memo(function TrainerFormModal({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {user.email as ReactNode}
             {user.isActive as ReactNode}
+            {user.firstName as ReactNode}
+            {user.lastName as ReactNode}
+            {user.dateOfBirth as ReactNode}
+            {user.gender as ReactNode}
           </div>
 
-          {user.profile as ReactNode}
         </div>
       ),
-      profile: (profile: FormInputs<TProfileData>) => (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {profile.firstName as ReactNode}
-          {profile.lastName as ReactNode}
-          {profile.address as ReactNode}
-          {profile.phoneNumber as ReactNode}
-        </div>
-      ),
+
     };
 
     return addRenderItem(storeFields, renderers) as TFieldConfigObject<TTrainerData | TUpdateTrainerData>;

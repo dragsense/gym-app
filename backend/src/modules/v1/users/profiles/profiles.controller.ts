@@ -26,7 +26,7 @@ import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { OmitType } from '@shared/lib/type-utils';
 import { LoggerService } from '@/common/logger/logger.service';
 import { AuthUser } from '@/decorators/user.decorator';
-import { User } from '@/common/system-user/entities/user.entity';
+import { User } from '@/common/base-user/entities/user.entity';
 
 @ApiBearerAuth('access-token')
 @ApiTags('Profiles')

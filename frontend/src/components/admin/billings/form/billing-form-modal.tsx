@@ -55,11 +55,11 @@ const BillingFormModal = React.memo(function BillingFormModal({
         modal={true}
         useSearchable={() => useSearchableUsers({})}
         getLabel={(item) => {
-          if (!item?.profile) return 'Select Recipient'
-          return `${item.profile?.firstName} ${item.profile?.lastName} (${item.email})`
+          if (!item) return 'Select Recipient'
+          return `${item.firstName} ${item.lastName} (${item.email})`
         }}
         getKey={(item) => item.id.toString()}
-        getValue={(item) => { return { id: item.id, profile: item.profile, email: item.email } }}
+        getValue={(item) => { return item }}
         shouldFilter={false}
       />
     }

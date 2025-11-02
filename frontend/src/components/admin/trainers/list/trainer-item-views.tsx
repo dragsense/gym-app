@@ -118,12 +118,12 @@ export const trainerItemViews = ({
 } => {
   const columns: ColumnDef<ITrainer>[] = [
     {
-      accessorKey: "user.profile.image",
+      accessorKey: "user.firstName",
       header: "Profile",
       cell: ({ row }) => {
-        const profile = row.original.user?.profile;
-        const name = profile ? `${profile.firstName} ${profile.lastName}` : '-';
-        const imagePath = profile?.image?.url;
+        const firstName = row.original.user?.firstName;
+        const lastName = row.original.user?.lastName;
+        const name = `${firstName} ${lastName}`;
         return (
           <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-white font-bold">
             {imagePath ? (
@@ -143,22 +143,6 @@ export const trainerItemViews = ({
     {
       accessorKey: "user.email",
       header: "Email",
-    },
-    {
-      accessorKey: "user.profile",
-      header: "Name",
-      cell: ({ row }) => {
-        const profile = row.original.user?.profile;
-        return profile ? `${profile.firstName} ${profile.lastName}` : '-';
-      },
-    },
-    {
-      accessorKey: "user.profile.phoneNumber",
-      header: "Phone",
-      cell: ({ row }) => {
-        const profile = row.original.user?.profile;
-        return profile?.phoneNumber || '-';
-      },
     },
     {
       accessorKey: "user.isActive",
@@ -194,10 +178,9 @@ export const trainerItemViews = ({
     // React 19: Essential IDs
     const componentId = useId();
 
-    const profile = item.user?.profile;
-    const name = profile ? `${profile.firstName} ${profile.lastName}` : 'Unknown Trainer';
-    const imagePath = profile?.image?.url;
-    const phoneNumber = profile?.phoneNumber || '-';
+    const firstName = item.user?.firstName;
+    const lastName = item.user?.lastName;
+    const email = item.user?.email;
 
     // React 19: Memoized badge class for better performance
     const badgeClass = useMemo(() =>
@@ -226,30 +209,24 @@ export const trainerItemViews = ({
                 {imagePath ? (
                   <img
                     src={encodeURI(`${API_URL}/${imagePath}`)}
-                    alt={name}
+                    alt={firstName}
                     className="w-8 h-8 rounded object-cover"
                     crossOrigin="anonymous"
                   />
                 ) : (
-                  name.charAt(0).toUpperCase()
+                  firstName.charAt(0).toUpperCase()
                 )}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <User className="h-3 w-3 flex-shrink-0" />
-                    <span className="truncate">{name}</span>
+                    <span className="truncate">{firstName} {lastName}</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Mail className="h-3 w-3 flex-shrink-0" />
-                    <span className="truncate">{item.user?.email}</span>
+                    <span className="truncate">{email}</span>
                   </div>
-                  {phoneNumber !== '-' && (
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Phone className="h-3 w-3 flex-shrink-0" />
-                      <span>{phoneNumber}</span>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>

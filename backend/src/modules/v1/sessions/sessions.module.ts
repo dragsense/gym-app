@@ -13,7 +13,6 @@ import { ScheduleModule } from '@/common/schedule/schedule.module';
 import { TrainersModule } from '../trainers/trainers.module';
 import { ClientsModule } from '../clients/clients.module';
 import { UsersModule } from '../users/users.module';
-import { ProfilesModule } from '../users/profiles/profiles.module';
 
 @Module({
   imports: [
@@ -24,7 +23,6 @@ import { ProfilesModule } from '../users/profiles/profiles.module';
     TrainersModule,
     ClientsModule,
     UsersModule,
-    ProfilesModule,
   ],
   exports: [SessionsService, SessionEmailService],
   controllers: [SessionsController],

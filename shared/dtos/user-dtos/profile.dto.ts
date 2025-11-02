@@ -18,41 +18,11 @@ import { FieldOptions, FieldType } from "../../decorators/field.decorator";
 import { FileUploadDto } from "../file-upload-dtos";
 
 export class CreateProfileDto {
-  @ApiProperty({ example: "John" })
-  @IsString()
-  @IsNotEmpty()
-  @FieldType("text", true)
-  firstName: string;
-
-  @ApiProperty({ example: "Doe" })
-  @IsString()
-  @IsNotEmpty()
-  @FieldType("text", true)
-  lastName: string;
-
   @ApiProperty({ example: "+1234567890" })
   @IsNotEmpty()
   @IsString()
   @FieldType("text", true)
   phoneNumber?: string;
-
-  @ApiProperty({ example: "1990-01-01" })
-  @IsOptional()
-  @IsDateString()
-  @FieldType("date")
-  dateOfBirth?: string;
-
-  @ApiProperty({ enum: EUserGender, example: EUserGender.MALE })
-  @IsOptional()
-  @IsEnum(EUserGender)
-  @FieldType("select")
-  @FieldOptions(
-    Object.values(EUserGender).map((v) => ({
-      value: v,
-      label: v.charAt(0) + v.slice(1).toLowerCase(),
-    }))
-  )
-  gender?: EUserGender;
 
   @ApiProperty({ example: "123 Main Street, New York" })
   @IsOptional()

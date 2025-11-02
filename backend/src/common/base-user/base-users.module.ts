@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common';
 
-import { SystemUsersService } from './system-users.service';
+import { BaseUsersService } from './base-users.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from '@/common/system-user/entities/user.entity';
+import { User } from '@/common/base-user/entities/user.entity';
 import { CrudModule } from '../crud/crud.module';
 import { UserSeed } from './seeder/user.seed';
 
 @Module({
   imports: [TypeOrmModule.forFeature([User]), CrudModule],
-  providers: [SystemUsersService, UserSeed],
-  exports: [SystemUsersService, UserSeed],
+  providers: [BaseUsersService, UserSeed],
+  exports: [BaseUsersService, UserSeed],
 })
-export class SystemUserModule {}
+export class BaseUserModule {}

@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { PaymentMethodsSeed } from '../common/payment-methods/seeder/payment-methods.seed';
-import { UserSeed } from '../common/system-user/seeder/user.seed';
+import { UserSeed } from '../common/base-user/seeder/user.seed';
 import { ResourceSeed } from '../common/roles/seeder/resource.seed';
 import { LoggerService } from '../common/logger/logger.service';
 

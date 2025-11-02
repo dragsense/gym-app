@@ -21,8 +21,7 @@ export class SessionEventListenerService implements OnModuleInit {
     private readonly scheduleService: ScheduleService,
     @InjectQueue('session') private sessionQueue: Queue,
     private readonly sessionEmailService: SessionEmailService,
-    private readonly userService: UsersService,
-    private readonly profilesService: ProfilesService,
+    private readonly usersService: UsersService,
     private readonly actionRegistryService: ActionRegistryService,
   ) {}
 
@@ -189,21 +188,11 @@ export class SessionEventListenerService implements OnModuleInit {
 
     try {
       const session = await this.sessionsService.getSingle(sessionId);
-      const profile = await this.profilesService.getSingle(
-        { user: { id: recipientId } },
-        { _relations: ['user'] },
-      );
-
-      const recipientName =
-        `${profile?.firstName || ''} ${profile?.lastName || ''}`.trim();
-      if (!recipientName) {
-        throw new Error('Recipient name not found');
-      }
-
+      const user = await this.usersService.getUser(recipientId as string);
       await this.sessionEmailService.sendSessionReminder(
         session,
-        profile.user.email,
-        recipientName,
+        user.email,
+        user.firstName + ' ' + user.lastName,
       );
     } catch (error) {
       this.logger.error(`Failed to send session reminder:`, error);

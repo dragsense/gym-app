@@ -3,7 +3,7 @@ import {
   ExecutionContext,
   BadRequestException,
 } from '@nestjs/common';
-import { User } from '@/common/system-user/entities/user.entity';
+import { User } from '@/common/base-user/entities/user.entity';
 
 export const AuthUser = createParamDecorator<User>(
   (_data: unknown, ctx: ExecutionContext): User => {

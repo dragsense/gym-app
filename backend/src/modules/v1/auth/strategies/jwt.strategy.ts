@@ -4,15 +4,14 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
 import { TokenService } from '../services/tokens.service';
-import { Profile } from '../../users/profiles/entities/profile.entity';
-import { ProfilesService } from '../../users/profiles/profiles.service';
+import { UsersService } from '@/modules/v1/users/users.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(
     readonly configService: ConfigService,
     private tokenService: TokenService,
-    private profileService: ProfilesService,
+    private usersService: UsersService,
   ) {
     const secret = configService.get('jwt').secret;
 
@@ -35,16 +34,13 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       throw new UnauthorizedException('Token revoked');
     }
 
-    const profile = await this.profileService.getSingle(
-      { user: { id: payload.id } },
-      { _relations: ['user'] },
-    );
-    if (!profile) {
+    const user = await this.usersService.getUser(payload.id);
+    if (!user) {
       throw new UnauthorizedException('User not found');
     }
 
     return {
-      ...profile,
+      ...user,
       token,
     };
   }

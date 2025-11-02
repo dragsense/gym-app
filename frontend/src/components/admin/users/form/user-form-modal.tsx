@@ -49,22 +49,6 @@ const UserFormModal = React.memo(function UserFormModal({
   // React 19: Memoized fields for better performance
   const fields = useMemo(() => ({
     ...storeFields,
-    profile: {
-      ...storeFields.profile,
-      renderItem: (item: TProfileData) => (
-        <div className="">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-            {item.firstName}
-            {item.lastName}
-            {item.phoneNumber}
-            {item.gender}
-            {item.dateOfBirth}
-            {item.address}
-          </div>
-        </div>
-      )
-    },
-
   } as TFieldConfigObject<TUserData>), [storeFields]);
 
   const inputs = useInput<TUserData | TUpdateUserData>({
@@ -122,10 +106,12 @@ const UserFormModal = React.memo(function UserFormModal({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
             {inputs.email}
             {inputs.isActive}
+            {inputs.firstName}
+            {inputs.lastName}
+            {inputs.dateOfBirth}
+            {inputs.gender}
           </div>
-          <div className="w-full">
-            {inputs.profile as React.ReactNode}
-          </div>
+
         </div>
       </div>
     </ModalForm>

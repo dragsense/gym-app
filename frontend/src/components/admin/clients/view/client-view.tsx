@@ -17,7 +17,7 @@ import { type TSingleHandlerStore } from "@/stores";
 import { type THandlerComponentProps } from "@/@types/handler-types";
 
 export type TClientViewExtraProps = {
-   level: number;
+    level: number;
 }
 
 interface IClientViewProps extends THandlerComponentProps<TSingleHandlerStore<IClient, TClientViewExtraProps>> {
@@ -67,12 +67,12 @@ interface IClientDetailContentProps {
 function ClientDetailContent({ client }: IClientDetailContentProps) {
     // React 19: Essential IDs
     const componentId = useId();
-    
+
     const profile = client.user?.profile;
 
     // React 19: Memoized client creation date for better performance
-    const clientCreationDate = useMemo(() => 
-        client.createdAt ? new Date(client.createdAt).toLocaleDateString() : '', 
+    const clientCreationDate = useMemo(() =>
+        client.createdAt ? new Date(client.createdAt).toLocaleDateString() : '',
         [client.createdAt]
     );
 
@@ -152,7 +152,7 @@ function ClientDetailContent({ client }: IClientDetailContentProps) {
                     }
                 >
                     <div className="space-y-4">
-                    <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3">
                             <div className="text-muted-foreground"><Phone className="w-4 h-4" /></div>
                             <div className="flex-1">
                                 <span className="text-sm text-muted-foreground">Phone:</span>
@@ -176,8 +176,8 @@ function ClientDetailContent({ client }: IClientDetailContentProps) {
                     </div>
                 </AppCard>
             </div>
-         
-    
+
+
         </div>
     );
 }

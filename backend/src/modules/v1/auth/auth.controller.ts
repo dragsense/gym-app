@@ -43,7 +43,9 @@ import {
   EActivityStatus,
 } from '@shared/enums/activity-log.enum';
 import { Private, Public } from '@/decorators/access.decorator';
-import { SystemUsersService } from '@/common/system-user/system-users.service';
+import { BaseUsersService } from '@/common/base-user/base-users.service';
+import { User } from '@/common/base-user/entities/user.entity';
+import { AuthUser } from '@/decorators/user.decorator';
 
 @Public()
 @ApiTags('Auth')
@@ -53,7 +55,7 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly tokenService: TokenService,
     private readonly mfaService: MfaService,
-    private readonly systemUsersService: SystemUsersService,
+    private readonly baseUsersService: BaseUsersService,
     private readonly activityLogsService: ActivityLogsService,
   ) {}
 
@@ -172,6 +174,15 @@ export class AuthController {
   @Post('signup')
   signup(@Body() signupDto: SignupDto) {
     return this.authService.signup(signupDto);
+  }
+
+  @Get('me')
+  @Private()
+  @ApiOperation({ summary: 'Get user of the authenticated user' })
+  @ApiResponse({ status: 200, description: 'User found', type: User })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  findMe(@AuthUser() currentUser: User) {
+    return this.baseUsersService.getSingle(currentUser.id);
   }
 
   @ApiOperation({
@@ -312,7 +323,7 @@ export class AuthController {
       throw new HttpException('Invalid OTP', HttpStatus.UNAUTHORIZED);
     }
 
-    const user = await this.systemUsersService.getSingle({ email: email });
+    const user = await this.baseUsersService.getSingle({ email: email });
 
     const { accessToken, refreshToken } =
       await this.tokenService.generateTokens({

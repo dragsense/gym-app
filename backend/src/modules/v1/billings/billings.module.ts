@@ -22,10 +22,10 @@ import { ProfilesModule } from '../users/profiles/profiles.module';
     TypeOrmModule.forFeature([Billing]),
     CrudModule,
     ScheduleModule,
+    ProfilesModule,
     BullModule.registerQueue({ name: 'billing' }),
     UsersModule,
     StripeModule,
-    ProfilesModule,
     JwtModule.registerAsync({
       useFactory: getJwtConfig,
       inject: [ConfigService],
