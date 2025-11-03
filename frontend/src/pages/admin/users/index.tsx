@@ -45,10 +45,6 @@ export default function UsersPage() {
           {
             action: 'createOrUpdate',
             comp: UserForm
-          },
-          {
-            action: 'updateProfile',
-            comp: ProfileForm
           }
         ]}
         singleProps={{
@@ -65,6 +61,12 @@ export default function UsersPage() {
         listProps={{
           level: EUserLevels.USER,
         }}
+        actionComponents={[
+          {
+            action: 'updateProfile',
+            comp: ProfileForm
+          }
+        ]}
       />
     </PageInnerLayout>
   );

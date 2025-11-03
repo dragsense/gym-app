@@ -8,8 +8,8 @@ import { Injectable } from '@nestjs/common';
 import { User } from '@/common/base-user/entities/user.entity';
 import { LoggerService } from '@/common/logger/logger.service';
 import { UserAvailabilityService } from '../../user-availability/user-availability.service';
-import { WeeklyScheduleDto } from '@shared/dtos/user-availability-dtos/user-availability.dto';
 import { Profile } from '../profiles/entities/profile.entity';
+import { DEFAULT_WEEKLY_SCHEDULE } from '../../user-availability/constants';
 
 @EventSubscriber()
 @Injectable()
@@ -39,35 +39,9 @@ export class UserSubscriber implements EntitySubscriberInterface<User> {
     setTimeout(() => {
       (async () => {
         try {
-          // Create default user availability with office hours (9 AM - 5 PM, Mon-Fri)
-          const defaultWeeklySchedule: WeeklyScheduleDto = {
-            monday: {
-              enabled: true,
-              timeSlots: [{ start: '09:00', end: '17:00' }],
-            },
-            tuesday: {
-              enabled: true,
-              timeSlots: [{ start: '09:00', end: '17:00' }],
-            },
-            wednesday: {
-              enabled: true,
-              timeSlots: [{ start: '09:00', end: '17:00' }],
-            },
-            thursday: {
-              enabled: true,
-              timeSlots: [{ start: '09:00', end: '17:00' }],
-            },
-            friday: {
-              enabled: true,
-              timeSlots: [{ start: '09:00', end: '17:00' }],
-            },
-            saturday: { enabled: false, timeSlots: [] },
-            sunday: { enabled: false, timeSlots: [] },
-          };
-
           await this.userAvailabilityService.create({
             user: { id: user.id },
-            weeklySchedule: defaultWeeklySchedule,
+            weeklySchedule: DEFAULT_WEEKLY_SCHEDULE,
             unavailablePeriods: [],
           });
 

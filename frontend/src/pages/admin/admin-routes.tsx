@@ -27,6 +27,7 @@ const QueuesPage = lazy(() => import("./queues"));
 const SettingsPage = lazy(() => import("./settings"));
 const CachePage = lazy(() => import("./cache"));
 const UserAvailabilityPage = lazy(() => import("./user-availability"));
+const AccountPage = lazy(() => import("./account"));
 
 // Helper to create route with component and user level
 const createRoute = (
@@ -47,6 +48,7 @@ const commonRoutes = (userLevel: string): RouteDefinition[] => [
   createRoute(ADMIN_ROUTES.REFERRAL_LINKS, ReferralLinksPage, userLevel, "Loading referral links..."),
   createRoute(ADMIN_ROUTES.SETTINGS, SettingsPage, userLevel, "Loading settings..."),
   createRoute(ADMIN_ROUTES.USER_AVAILABILITY, UserAvailabilityPage, userLevel, "Loading user availability..."),
+  createRoute(ADMIN_ROUTES.ACCOUNT, AccountPage, userLevel, "Loading account..."),
 ];
 
 // Routes shared by Admin and Trainer

@@ -1,3 +1,4 @@
+import { CONTAINS } from "class-validator";
 import {
   FIELD_UI_TYPE,
   FIELD_OPTIONS,
@@ -73,14 +74,10 @@ export function createOmitType<
 export function createPartialType<T extends Constructor>(
   BaseClass: T
 ): new () => Partial<InstanceType<T>> {
-  abstract class PartialClass {
-    constructor() {
-      const baseInstance = new BaseClass();
-      for (const key of Object.keys(
-        baseInstance
-      ) as (keyof InstanceType<T>)[]) {
-        (this as any)[key] = (baseInstance as any)[key];
-      }
+  // Create class that extends BaseClass to preserve prototype chain for class-validator
+  class PartialClass extends (BaseClass as any) {
+    constructor(...args: any[]) {
+      super(...args);
     }
   }
 
@@ -94,39 +91,41 @@ export function createPartialType<T extends Constructor>(
   ].filter((k) => k !== "constructor");
 
   for (const key of allKeys) {
-    const uiType = Reflect.getMetadata(FIELD_UI_TYPE, prototype, key);
-    const options = Reflect.getMetadata(FIELD_OPTIONS, prototype, key);
-    const required = Reflect.getMetadata(FIELD_REQUIRED, prototype, key);
-    const dtoType = Reflect.getMetadata(FIELD_DTO_TYPE, prototype, key);
+    // Copy ALL metadata keys from the base class (including class-validator decorators)
+    const metadataKeys = Reflect.getMetadataKeys(prototype, key);
 
-    if (uiType !== undefined)
+    for (const metadataKey of metadataKeys) {
+      // Skip IsNotEmpty for Partial types since all fields should be optional
+
+      const metadata = Reflect.getMetadata(metadataKey, prototype, key);
+      if (metadata !== undefined) {
+        Reflect.defineMetadata(
+          metadataKey,
+          metadata,
+          PartialClass.prototype,
+          key
+        );
+      }
+    }
+
+    // For Partial types, ensure all fields are marked as optional
+    // Override FIELD_REQUIRED to false even if it wasn't set before
+    Reflect.defineMetadata(FIELD_REQUIRED, false, PartialClass.prototype, key);
+
+    // Ensure IsOptional is present for all fields in Partial types
+    const isOptionalMeta = Reflect.getMetadata(
+      "__isOptional__",
+      prototype,
+      key
+    );
+    if (!isOptionalMeta) {
       Reflect.defineMetadata(
-        FIELD_UI_TYPE,
-        uiType,
+        "__isOptional__",
+        true,
         PartialClass.prototype,
         key
       );
-    if (options !== undefined)
-      Reflect.defineMetadata(
-        FIELD_OPTIONS,
-        options,
-        PartialClass.prototype,
-        key
-      );
-    if (required !== undefined)
-      Reflect.defineMetadata(
-        FIELD_REQUIRED,
-        required,
-        PartialClass.prototype,
-        key
-      );
-    if (dtoType !== undefined)
-      Reflect.defineMetadata(
-        FIELD_DTO_TYPE,
-        dtoType,
-        PartialClass.prototype,
-        key
-      );
+    }
   }
 
   Object.defineProperty(PartialClass, "name", {

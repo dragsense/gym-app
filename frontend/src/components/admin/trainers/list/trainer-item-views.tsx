@@ -46,7 +46,7 @@ const TrainerActions = ({
 
   const handleUpdateProfileClick = () => {
     if (handleUpdateProfile) {
-      startTransition(() => handleUpdateProfile(trainer.id));
+      startTransition(() => handleUpdateProfile(trainer.user?.id ?? ""));
     }
   };
 

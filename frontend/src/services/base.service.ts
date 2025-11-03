@@ -87,7 +87,7 @@ export class BaseService<
    * Create new entity with optional query params and custom path
    */
   post<TResponse = IMessageResponse>(
-    data: TCreateData,
+    data: TCreateData | TUpdateData,
     queryParams?: Record<string, any>,
     customPath?: string
   ) {

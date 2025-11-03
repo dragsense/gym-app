@@ -7,6 +7,8 @@ import {
   Req,
   UseInterceptors,
   UploadedFiles,
+  Post,
+  NotFoundException,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -35,15 +37,27 @@ export class ProfilesController {
   private readonly logger = new LoggerService(ProfilesController.name);
   constructor(private readonly profilesService: ProfilesService) {}
 
-  @Get('profile/me')
+  @Get()
   @ApiOperation({ summary: 'Get profile of the authenticated user' })
   @ApiResponse({ status: 200, description: 'Profile found', type: Profile })
   @ApiResponse({ status: 404, description: 'Profile not found' })
-  findMe(@Req() req: any) {
-    return this.profilesService.getSingle(
-      { userId: req.user.id },
-      { _relations: ['user'] },
-    );
+  async findMe(@AuthUser() currentUser: User) {
+    let profile: Profile | null = null;
+    try {
+      profile = await this.profilesService.getSingle({
+        userId: currentUser.id,
+      });
+    } catch (error) {
+      this.logger.error(error instanceof Error ? error.message : String(error));
+      if (error instanceof NotFoundException) {
+        profile = await this.profilesService.create({
+          userId: currentUser.id,
+        });
+      } else {
+        throw error;
+      }
+    }
+    return profile;
   }
 
   @UseInterceptors(
@@ -53,7 +67,7 @@ export class ProfilesController {
     ]),
   )
   @ApiConsumes('multipart/form-data')
-  @Patch('profile/me')
+  @Post()
   @ApiOperation({ summary: 'Update profile of the authenticated user' })
   @ApiResponse({ status: 200, description: 'Profile updated', type: Profile })
   @ApiResponse({ status: 404, description: 'Profile not found' })
@@ -88,15 +102,6 @@ export class ProfilesController {
     );
   }
 
-  @Get(':id')
-  @ApiOperation({ summary: 'Get profile by user ID' })
-  @ApiParam({ name: 'id', type: Number, description: 'User ID' })
-  @ApiResponse({ status: 200, description: 'Profile found', type: Profile })
-  @ApiResponse({ status: 404, description: 'Profile not found' })
-  findOne(@Param('id') id: string) {
-    return this.profilesService.getSingle({ userId: id });
-  }
-
   @UseInterceptors(
     FileFieldsInterceptor([
       { name: 'image', maxCount: 1 },
@@ -109,20 +114,53 @@ export class ProfilesController {
   @ApiParam({ name: 'id', type: Number, description: 'Profile ID' })
   @ApiResponse({ status: 200, description: 'Profile updated', type: Profile })
   @ApiResponse({ status: 404, description: 'Profile not found' })
-  update(
+  async update(
     @Param('id') id: string,
     @UploadedFiles()
     files: { image?: Express.Multer.File[]; documents?: Express.Multer.File[] },
     @Body() updateProfileDto: OmitType<UpdateProfileDto, 'image' | 'documents'>,
   ) {
+    let profile: Profile | null = null;
+    try {
+      profile = await this.profilesService.getSingle(id);
+    } catch (error) {
+      this.logger.error(error instanceof Error ? error.message : String(error));
+      if (error instanceof NotFoundException) {
+        profile = await this.profilesService.create({ userId: id });
+      } else {
+        throw error;
+      }
+    }
+
     const image = files?.image?.[0];
     const documents = files?.documents;
 
     return this.profilesService.updateProfile(
-      id,
+      profile.id,
       updateProfileDto,
       image,
       documents,
     );
+  }
+
+  @Get(':userId/profile')
+  @ApiOperation({ summary: 'Get profile by user ID' })
+  @ApiParam({ name: 'userId', type: Number, description: 'User ID' })
+  @ApiResponse({ status: 200, description: 'Profile found', type: Profile })
+  @ApiResponse({ status: 404, description: 'Profile not found' })
+  async findOne(@Param('userId') userId: string) {
+    let profile: Profile | null = null;
+    try {
+      profile = await this.profilesService.getSingle({ userId });
+    } catch (error) {
+      this.logger.error(error instanceof Error ? error.message : String(error));
+
+      if (error instanceof NotFoundException) {
+        profile = await this.profilesService.create({ userId });
+      } else {
+        throw error;
+      }
+    }
+    return profile;
   }
 }

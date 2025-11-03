@@ -61,6 +61,7 @@ export default function UserList({
     return `Single store "${singleStore}" not found. Did you forget to register it?`;
   }
 
+  const setListAction = store(state => state.setAction);
   const setAction = singleStore(state => state.setAction);
 
   // React 19: Smooth action transitions
@@ -78,7 +79,7 @@ export default function UserList({
 
   const handleUpdateProfile = (id: string) => {
     startTransition(() => {
-      setAction('updateProfile', id);
+      setListAction('updateProfile', id);
     });
   }
 

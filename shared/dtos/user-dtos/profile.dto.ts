@@ -22,7 +22,7 @@ export class CreateProfileDto {
   @IsNotEmpty()
   @IsString()
   @FieldType("text", true)
-  phoneNumber?: string;
+  phoneNumber: string;
 
   @ApiProperty({ example: "123 Main Street, New York" })
   @IsOptional()

@@ -1,4 +1,4 @@
-import { Controller, Get, Body, Post } from '@nestjs/common';
+import { Controller, Get, Body, Post, NotFoundException } from '@nestjs/common';
 
 import {
   ApiOperation,
@@ -16,11 +16,14 @@ import {
 import { UserAvailability } from './entities/user-availability.entity';
 import { AuthUser } from '@/decorators/user.decorator';
 import { User } from '@/common/base-user/entities/user.entity';
+import { LoggerService } from '@/common/logger/logger.service';
+import { DEFAULT_WEEKLY_SCHEDULE } from './constants';
 
 @ApiBearerAuth('access-token')
 @ApiTags('User Availability')
 @Controller('user-availability')
 export class UserAvailabilityController {
+  private readonly logger = new LoggerService(UserAvailabilityController.name);
   constructor(
     private readonly userAvailabilityService: UserAvailabilityService,
   ) {}
@@ -33,10 +36,25 @@ export class UserAvailabilityController {
   })
   @ApiResponse({ status: 404, description: 'User availability not found' })
   @Get()
-  getMyAvailability(@AuthUser() user: User): Promise<UserAvailability> {
-    return this.userAvailabilityService.getSingle({
-      userId: user.id,
-    });
+  async getMyAvailability(@AuthUser() user: User): Promise<UserAvailability> {
+    let availability: UserAvailability | null = null;
+    try {
+      availability = await this.userAvailabilityService.getSingle({
+        userId: user.id,
+      });
+    } catch (error) {
+      this.logger.error(error instanceof Error ? error.message : String(error));
+      if (error instanceof NotFoundException) {
+        availability = await this.userAvailabilityService.create({
+          userId: user.id,
+          weeklySchedule: DEFAULT_WEEKLY_SCHEDULE,
+          unavailablePeriods: [],
+        });
+      } else {
+        throw error;
+      }
+    }
+    return availability;
   }
 
   @ApiOperation({ summary: 'Create or update user availability' })

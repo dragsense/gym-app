@@ -15,6 +15,7 @@ import {
   Settings,
   Link,
   Home,
+  User,
 } from "lucide-react";
 import {
   ADMIN_ROUTES,
@@ -68,6 +69,11 @@ const commonNavItems: NavItem[] = [
     title: "User Availability",
     url: ADMIN_ROUTES.USER_AVAILABILITY,
     icon: Calendar,
+  },
+  {
+    title: "Account",
+    url: ADMIN_ROUTES.ACCOUNT,
+    icon: User,
   },
 ];
 

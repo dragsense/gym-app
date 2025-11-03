@@ -45,10 +45,7 @@ export default function ClientsPage() {
                         action: 'createOrUpdate',
                         comp: ClientForm
                     },
-                    {
-                        action: 'updateProfile',
-                        comp: ProfileForm
-                    }
+
                 ]}
             />
 
@@ -66,6 +63,12 @@ export default function ClientsPage() {
                 listProps={{
                     level: EUserLevels.CLIENT
                 }}
+                actionComponents={[
+                    {
+                        action: 'updateProfile',
+                        comp: ProfileForm
+                    }
+                ]}
             />
         </PageInnerLayout>
     );

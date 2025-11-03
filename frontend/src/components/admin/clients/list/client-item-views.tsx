@@ -46,7 +46,7 @@ const ClientActions = ({
 
   const handleUpdateProfileClick = () => {
     if (handleUpdateProfile) {
-      startTransition(() => handleUpdateProfile(client.id));
+      startTransition(() => handleUpdateProfile(client.user?.id ?? ""));
     }
   };
 

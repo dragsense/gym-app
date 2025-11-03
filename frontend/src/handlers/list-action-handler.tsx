@@ -47,11 +47,11 @@ export const ListActionComponentHandler = <
   const actionId = useId();
   const componentId = useId();
   const [isPending, startTransition] = useTransition();
-  
+
   // React 19: Deferred action components for better performance
   const actionComponentsMap = useActionComponentsMap<IData, TActionProps, TSingleData, TSingleExtraProps>(actionComponents);
   const deferredActionComponents = useDeferredValue(actionComponentsMap);
-  
+
 
   if (!store) {
     return <div>List store "{storeKey}" not found. Did you forget to register it?</div>;
@@ -67,8 +67,7 @@ export const ListActionComponentHandler = <
     if (!ActionComp) return null;
 
     return (
-      <div 
-        ref={componentRef}
+      <div
         data-pending={isPending}
         data-action={action}
         data-store-key={storeKey}

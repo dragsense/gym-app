@@ -103,6 +103,21 @@ export class UsersController {
     return this.usersService.updateUser(id, updateUserDto);
   }
 
+  @ApiOperation({ summary: 'Update authenticated user' })
+  @ApiBody({
+    type: UpdateUserDto,
+    description: 'Update authenticated user information',
+  })
+  @ApiResponse({ status: 200, description: 'User updated successfully' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  @Post('me')
+  updateMe(
+    @AuthUser() currentUser: User,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    return this.usersService.updateUser(currentUser.id, updateUserDto);
+  }
+
   @ApiOperation({ summary: 'Delete user by ID' })
   @ApiParam({ name: 'id', description: 'User ID' })
   @ApiResponse({ status: 200, description: 'User deleted successfully' })

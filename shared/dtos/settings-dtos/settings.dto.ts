@@ -41,7 +41,9 @@ export class CurrencySettingsDto {
   @IsOptional()
   @FieldType("text", false)
   currencySymbol?: string;
+}
 
+export class TimeSettingsDto {
   @ApiProperty({
     example: "MM/DD/YYYY",
     description: "Date format",
@@ -86,6 +88,15 @@ export class LimitSettingsDto {
   @FieldType("number", false)
   @Type(() => Number)
   maxSessionsPerDay?: number;
+
+  @ApiProperty({ example: 20, description: "Maximum clients per trainer" })
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  @Max(100)
+  @FieldType("number", false)
+  @Type(() => Number)
+  maxClientsPerSession?: number;
 
   @ApiProperty({ example: 20, description: "Maximum clients per trainer" })
   @IsOptional()
@@ -195,62 +206,6 @@ export class NotificationSettingsDto {
   @IsBoolean()
   @FieldType("switch", false)
   inAppEnabled?: boolean;
-
-  @ApiProperty({
-    example: "immediate",
-    description: "Session reminder frequency",
-    enum: ENotificationFrequency,
-  })
-  @IsOptional()
-  @IsEnum(ENotificationFrequency)
-  @FieldType("select", false)
-  @FieldOptions(
-    Object.values(ENotificationFrequency).map((v) => ({
-      value: v,
-      label: v.charAt(0).toUpperCase() + v.slice(1),
-    }))
-  )
-  sessionReminderFrequency?: ENotificationFrequency;
-
-  @ApiProperty({
-    example: "daily",
-    description: "Billing notification frequency",
-    enum: ENotificationFrequency,
-  })
-  @IsOptional()
-  @IsEnum(ENotificationFrequency)
-  @FieldType("select", false)
-  @FieldOptions(
-    Object.values(ENotificationFrequency).map((v) => ({
-      value: v,
-      label: v.charAt(0).toUpperCase() + v.slice(1),
-    }))
-  )
-  billingNotificationFrequency?: ENotificationFrequency;
-
-  @ApiProperty({ example: true, description: "Enable marketing notifications" })
-  @IsOptional()
-  @IsBoolean()
-  @FieldType("switch", false)
-  marketingEnabled?: boolean;
-
-  @ApiProperty({
-    example: true,
-    description: "Enable system update notifications",
-  })
-  @IsOptional()
-  @IsBoolean()
-  @FieldType("switch", false)
-  systemUpdateEnabled?: boolean;
-
-  @ApiProperty({
-    example: true,
-    description: "Enable security alert notifications",
-  })
-  @IsOptional()
-  @IsBoolean()
-  @FieldType("switch", false)
-  securityAlertEnabled?: boolean;
 }
 
 // Main User Settings DTO
@@ -261,6 +216,13 @@ export class CreateOrUpdateUserSettingsDto {
   @Type(() => CurrencySettingsDto)
   @FieldType("nested", false, CurrencySettingsDto)
   currency?: CurrencySettingsDto;
+
+  @ApiProperty({ type: TimeSettingsDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => TimeSettingsDto)
+  @FieldType("nested", false, TimeSettingsDto)
+  time?: TimeSettingsDto;
 
   @ApiProperty({ type: LimitSettingsDto })
   @IsOptional()

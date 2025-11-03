@@ -7,7 +7,7 @@ import { Form } from "@/components/form-ui/form";
 import { AppCard } from "@/components/layout-ui/app-card";
 
 // Icons
-import { DollarSign, Shield, Building, CreditCard, Bell, Loader2 } from "lucide-react";
+import { DollarSign, Shield, Building, CreditCard, Bell, Loader2, Clock } from "lucide-react";
 
 // Types
 import { type TUserSettingsData } from "@shared/types/settings.type";
@@ -18,7 +18,7 @@ import { type FormInputs } from "@/hooks/use-input";
 
 // Hooks
 import { useInput } from "@/hooks/use-input";
-import type { BillingSettingsDto, BusinessSettingsDto, LimitSettingsDto, CurrencySettingsDto, NotificationSettingsDto } from "@shared/dtos";
+import type { BillingSettingsDto, BusinessSettingsDto, LimitSettingsDto, CurrencySettingsDto, NotificationSettingsDto, TimeSettingsDto } from "@shared/dtos";
 import { FormErrors } from "@/components/shared-ui/form-errors";
 
 interface IUserSettingsFormProps extends THandlerComponentProps<TFormHandlerStore<TUserSettingsData, any, any>> { }
@@ -43,15 +43,23 @@ export default function UserSettingsForm({
     // React 19: Memoized fields for better performance
     const fields = useMemo(() => ({
         ...originalFields,
+        time: {
+            ...originalFields.time,
+            renderItem: (item: TimeSettingsDto) => {
+                return <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {item.dateFormat}
+                    {item.timeFormat}
+                    {item.timezone}
+                </div>;
+            }
+        },
         currency: {
             ...originalFields.currency,
             renderItem: (item: CurrencySettingsDto) => {
                 return <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {item.defaultCurrency}
                     {item.currencySymbol}
-                    {item.dateFormat}
-                    {item.timeFormat}
-                    {item.timezone}
+
                 </div>;
             }
         },
@@ -81,7 +89,6 @@ export default function UserSettingsForm({
             ...originalFields.billing,
             renderItem: (item: BillingSettingsDto) => {
                 return <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {item.defaultCommissionRate}
                     {item.taxRate}
                     {item.invoicePrefix}
                 </div>;
@@ -95,11 +102,6 @@ export default function UserSettingsForm({
                     {item.smsEnabled}
                     {item.pushEnabled}
                     {item.inAppEnabled}
-                    {item.sessionReminderFrequency}
-                    {item.billingNotificationFrequency}
-                    {item.marketingEnabled}
-                    {item.systemUpdateEnabled}
-                    {item.securityAlertEnabled}
                 </div>;
             }
         }
@@ -111,6 +113,12 @@ export default function UserSettingsForm({
     }) as FormInputs<TUserSettingsData>;
 
     const settingsTabs = [
+        {
+            id: "time",
+            label: "Time",
+            icon: Clock,
+            description: "Time settings"
+        },
         {
             id: "currency",
             label: "Currency",
@@ -163,6 +171,7 @@ export default function UserSettingsForm({
                 }
             >
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+
                     <TabsList className="flex justify-between gap-5">
                         {settingsTabs.map((tab) => {
                             const Icon = tab.icon;
@@ -184,6 +193,10 @@ export default function UserSettingsForm({
                                         <Icon className="h-6 w-6 text-primary" />
 
                                     </div>
+
+                                    {tab.id === "time" && (
+                                        inputs.time
+                                    )}
 
                                     {tab.id === "currency" && (
                                         inputs.currency

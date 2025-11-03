@@ -2,38 +2,35 @@
 // External Libraries
 import { useShallow } from 'zustand/shallow';
 import { Loader2 } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
-import { useMemo, useCallback, useId, useTransition, useDeferredValue } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo, useCallback, useId, useTransition } from "react";
 
 // Handlers
 import { FormHandler } from "@/handlers";
 
 // Types
 import { EVALIDATION_MODES } from "@/enums/form.enums";
-import { type THandlerComponentProps } from "@/@types/handler-types";
+import { type TListHandlerComponentProps } from "@/@types/handler-types";
 import { type TUpdateProfileData } from "@shared/types/user.type";
-import { type IUser } from "@shared/interfaces/user.interface";
-import { type ITrainer } from "@shared/interfaces/trainer.interface";
-import { type IClient } from "@shared/interfaces/client.interface";
+import type { IUser, IClient, ITrainer } from "@shared/interfaces";
 import { type IMessageResponse } from "@shared/interfaces/api/response.interface";
 
 
 // Store
-import { type TSingleHandlerStore } from "@/stores";
+import { type TListHandlerStore } from "@/stores";
 
 // Components
 import { ProfileFormModal, type IProfileFormModalExtraProps } from "@/components/admin";
 
 // Services
-import { updateProfile } from "@/services/user.api";
+import { fetchUserProfile, updateProfile } from "@/services/user.api";
 import { strictDeepMerge } from "@/utils";
-import { EUserGender } from "@shared/enums";
 import { UpdateProfileDto } from "@shared/dtos";
 
 
 
 
-interface IProfileFormProps extends THandlerComponentProps<TSingleHandlerStore<IUser | ITrainer | IClient, any>> {
+interface IProfileFormProps extends TListHandlerComponentProps<TListHandlerStore<IUser | IClient | ITrainer, any, any>> {
 }
 
 export default function ProfileForm({
@@ -52,25 +49,31 @@ export default function ProfileForm({
     }
 
 
-    const { action, response, isLoading, setAction, reset } = store(useShallow(state => ({
+
+    const { action, payload, setAction } = store(useShallow(state => ({
         action: state.action,
-        response: state.response,
-        isLoading: state.isLoading,
+        payload: state.payload,
         setAction: state.setAction,
-        reset: state.reset
     })));
 
-    const userProfile = response as IUser;
-    const trainerProfile = response as ITrainer;
-    const clientProfile = response as IClient;
-    const profile = userProfile?.profile ?? trainerProfile?.user?.profile ?? clientProfile?.user?.profile;
+    // Check if action is 'updateProfile' and id exists in payload
+    const isUpdateProfileAction = action === 'updateProfile';
+    const userId = payload;
 
+    const { data, isLoading } = useQuery({
+        queryKey: [storeKey + "-profile"],
+        queryFn: () => fetchUserProfile(userId),
+        enabled: isUpdateProfileAction && !!userId,
+    });
+
+
+    const profile = data
 
     const INITIAL_VALUES: TUpdateProfileData = {
         phoneNumber: "",
         address: "",
         image: undefined,
-        documents: undefined
+        documents: []
     };
 
     const initialValues = useMemo(() => {
@@ -83,15 +86,14 @@ export default function ProfileForm({
 
     const handleClose = useCallback(() => {
         startTransition(() => {
-            reset();
             setAction('none');
         });
-    }, [reset, setAction, startTransition]);
+    }, [setAction, startTransition]);
 
 
 
     const isEditing = true;
-    const mutationFn = updateProfile;
+    const mutationFn = profile?.id ? updateProfile(profile.id) : new Promise((resolve) => resolve({ message: "Profile not found" } as IMessageResponse));
     const dto = UpdateProfileDto;
 
 
@@ -121,7 +123,7 @@ export default function ProfileForm({
                 isEditing={isEditing}
                 onSuccess={() => {
                     startTransition(() => {
-                        queryClient.invalidateQueries({ queryKey: [storeKey + "-list"] });
+                        queryClient.invalidateQueries({ queryKey: [storeKey + "-profile"] });
                         handleClose();
                     });
                 }}

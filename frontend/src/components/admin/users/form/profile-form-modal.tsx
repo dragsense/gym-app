@@ -19,6 +19,7 @@ import FileUpload from "@/components/shared-ui/file-upload";
 import type { IFileUpload } from "@shared/interfaces/file-upload.interface";
 import MultiFileUpload from "@/components/shared-ui/multi-file-upload";
 import type { TFieldConfigObject } from "@/@types/form/field-config.type";
+import { FormErrors } from "@/components/shared-ui/form-errors";
 
 
 
@@ -131,7 +132,6 @@ const ProfileFormModal = React.memo(function ProfileFormModal({
             {inputs.documents as React.ReactNode}
           </div>
         </div>
-
 
       </div>
     </ModalForm>

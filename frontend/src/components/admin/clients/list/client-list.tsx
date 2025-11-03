@@ -58,6 +58,7 @@ export default function ClientList({
     return `Single store "${singleStore}" not found. Did you forget to register it?`;
   }
 
+  const setListAction = store(state => state.setAction);
   const setAction = singleStore(state => state.setAction);
 
   const [currentView, setCurrentView] = useState<ViewType>("table");
@@ -77,7 +78,8 @@ export default function ClientList({
 
   const handleUpdateProfile = (id: string) => {
     startTransition(() => {
-      setAction('updateProfile', id);
+      console.log('updateProfile', id);
+      setListAction('updateProfile', id);
     });
   }
 

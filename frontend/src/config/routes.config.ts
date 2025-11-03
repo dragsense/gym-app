@@ -40,6 +40,7 @@ export const ADMIN_ROUTES = {
   ROLES: "roles",
   SETTINGS: "settings",
   USER_AVAILABILITY: "user-availability",
+  ACCOUNT: "account",
 } as const;
 export type AdminRoute = keyof typeof ADMIN_ROUTES;
 
@@ -68,6 +69,7 @@ export const ROUTE_TITLES: Record<string, string> = {
   [ADMIN_ROUTES.ROLES]: "Roles",
   [ADMIN_ROUTES.SETTINGS]: "Settings",
   [ADMIN_ROUTES.USER_AVAILABILITY]: "User Availability",
+  [ADMIN_ROUTES.ACCOUNT]: "Account",
   [ADMIN_ROUTES.CACHE]: "Cache",
   [ADMIN_ROUTES.SYSTEM_DASHBOARD]: "System Dashboard",
 };

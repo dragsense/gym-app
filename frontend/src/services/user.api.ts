@@ -8,6 +8,7 @@ import type {
   TUserData,
   TUpdateProfileData,
   TUserResetPasswordData,
+  TUpdateUserData,
 } from "@shared/types/user.type";
 
 // Constants
@@ -22,7 +23,7 @@ const profileService = new BaseService<
   IProfile,
   TUpdateProfileData,
   TUpdateProfileData
->(`${PROFILES_API_PATH}/profile/me`);
+>(`${PROFILES_API_PATH}`);
 
 // Re-export common CRUD operations
 export const fetchUsers = (params: IListQueryParams, level?: number) => {
@@ -34,12 +35,17 @@ export const fetchUser = (id: string, params: IListQueryParams) =>
   userService.getSingle(id, params);
 export const createUser = (data: TUserData) => userService.post(data);
 export const updateUser = (id: string) => userService.patch(id);
+export const updateMe = (data: TUpdateUserData) =>
+  userService.post(data, undefined, "/me");
 export const deleteUser = (id: string) => userService.delete(id);
 
-export const fetchProfile = () =>
-  profileService.getSingle(null, undefined, "/me");
-export const updateProfile = (data: TUpdateProfileData) =>
-  profileService.patchFormData(0)(data, undefined, "/me");
+export const fetchUserProfile = (id: string) =>
+  profileService.getSingle(null, undefined, `/${id}/profile`);
+
+export const fetchMyProfile = () => profileService.getSingle();
+export const updateMyProfile = (data: TUpdateProfileData) =>
+  profileService.post(data);
+export const updateProfile = (id: string) => profileService.patchFormData(id);
 
 export const changePassword = (data: TUserResetPasswordData) =>
   userService.patch(null)(data, undefined, "/me/reset-password");

@@ -45,10 +45,7 @@ export default function TrainersPage() {
                         action: 'createOrUpdate',
                         comp: TrainerForm
                     },
-                    {
-                        action: 'updateProfile',
-                        comp: ProfileForm
-                    }
+
                 ]}
             />
 
@@ -64,6 +61,12 @@ export default function TrainersPage() {
                 listProps={{
                     level: EUserLevels.TRAINER
                 }}
+                actionComponents={[
+                    {
+                        action: 'updateProfile',
+                        comp: ProfileForm
+                    }
+                ]}
             />
         </PageInnerLayout>
     );
