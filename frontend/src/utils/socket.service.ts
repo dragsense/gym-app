@@ -1,6 +1,7 @@
 import { config } from "@/config";
 import type { Socket } from "socket.io-client";
 import { io } from "socket.io-client";
+import type { NotificationData, ChatMessage } from "@/@types/socket.types";
 
 export const SOCKET_API_URL = config.baseUrl || "http://localhost:5000";
 
@@ -8,6 +9,17 @@ interface ServerToClientEvents {
   connect_error: (error: Error) => void;
   disconnect: (reason: string) => void;
   rewardsUpdated?: () => void;
+  // Real-time notifications
+  newNotification: (data: NotificationData) => void;
+  notificationRead: (notificationId: string) => void;
+  // Real-time chat
+  newMessage: (data: ChatMessage) => void;
+  messageRead: (messageId: string) => void;
+  userTyping: (data: {
+    userId: string;
+    conversationId: string;
+    isTyping: boolean;
+  }) => void;
 }
 
 interface ClientToServerEvents {
@@ -27,6 +39,35 @@ interface ClientToServerEvents {
         | { error: { message: string } }
     ) => void
   ) => void;
+  // Notification events
+  markNotificationRead?: (
+    data: { notificationId: string },
+    callback: (
+      response: { success: boolean } | { error: { message: string } }
+    ) => void
+  ) => void;
+  // Chat events
+  sendMessage?: (
+    data: { conversationId: string; message: string; recipientId?: string },
+    callback: (
+      response:
+        | { success: boolean; message?: ChatMessage }
+        | { error: { message: string } }
+    ) => void
+  ) => void;
+  joinConversation?: (
+    data: { conversationId: string },
+    callback: (
+      response: { success: boolean } | { error: { message: string } }
+    ) => void
+  ) => void;
+  leaveConversation?: (
+    data: { conversationId: string },
+    callback: (
+      response: { success: boolean } | { error: { message: string } }
+    ) => void
+  ) => void;
+  typing?: (data: { conversationId: string; isTyping: boolean }) => void;
 }
 
 // Single optimized socket: connect to users namespace for all app realtime
@@ -93,3 +134,5 @@ export const socketEmitter = <TResponse>(
 };
 
 export default socket;
+
+

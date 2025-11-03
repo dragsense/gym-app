@@ -29,7 +29,7 @@ export default function UserSettingsForm({
 }: IUserSettingsFormProps) {
     // React 19: Essential IDs and transitions
     const componentId = useId();
-    const [activeTab, setActiveTab] = useState("currency");
+    const [activeTab, setActiveTab] = useState("time");
 
     if (!store) {
         return <div>Form store "{storeKey}" not found. Did you forget to register it?</div>;

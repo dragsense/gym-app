@@ -42,12 +42,14 @@ export default function UserSettingsFormHandler({
     })));
 
     const INITIAL_VALUES: TUserSettingsData = {
+        time: {
+            timezone: undefined,
+            timeFormat: undefined,
+            dateFormat: undefined,
+        },
         currency: {
             defaultCurrency: undefined,
             currencySymbol: undefined,
-            dateFormat: undefined,
-            timeFormat: undefined,
-            timezone: undefined,
         },
         limits: {
             maxSessionsPerDay: undefined,
@@ -69,12 +71,7 @@ export default function UserSettingsFormHandler({
             emailEnabled: undefined,
             smsEnabled: undefined,
             pushEnabled: undefined,
-            inAppEnabled: undefined,
-            sessionReminderFrequency: undefined,
-            billingNotificationFrequency: undefined,
-            marketingEnabled: undefined,
-            systemUpdateEnabled: undefined,
-            securityAlertEnabled: undefined,
+            inAppEnabled: undefined
         },
     };
 

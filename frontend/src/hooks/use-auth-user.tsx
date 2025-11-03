@@ -7,7 +7,7 @@ import { type IAuthUser } from '@shared/interfaces/auth.interface';
 
 // Services
 import { me } from "@/services/auth.api";
-import { ensureConnected, socketEmitter } from "@/utils/socket";
+import { ensureConnected, socketEmitter } from "@/utils/socket.service";
 
 interface IAuthUserContextType {
   user?: IAuthUser;

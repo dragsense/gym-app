@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { SettingsService } from '@/common/settings/settings.service';
 import { CreateOrUpdateUserSettingsDto } from '@shared/dtos/settings-dtos';
 import { IUserSettings } from '@shared/interfaces/settings.interface';
+import { User } from '@/common/base-user/entities/user.entity';
+import { EUserLevels } from '@shared/enums/user.enum';
 
 @Injectable()
 export class UserSettingsService {
@@ -12,13 +14,24 @@ export class UserSettingsService {
   }
 
   async createOrUpdateUserSettings(
-    userId: string,
+    currentUser: User,
     createUserSettingsDto: CreateOrUpdateUserSettingsDto,
   ): Promise<void> {
-    // Save settings - automatically detects types and creates appropriate settings
-    await this.settingsService.saveSettings(
-      userId,
-      createUserSettingsDto as Record<string, unknown>,
-    );
+    const settings = createUserSettingsDto;
+
+    switch (currentUser.level) {
+      case EUserLevels.TRAINER:
+        settings.business = undefined;
+        settings.limits = undefined;
+        break;
+      case EUserLevels.CLIENT:
+        settings.business = undefined;
+        settings.limits = undefined;
+        settings.currency = undefined;
+        settings.billing = undefined;
+        break;
+    }
+
+    await this.settingsService.saveSettings(currentUser.id, settings);
   }
 }

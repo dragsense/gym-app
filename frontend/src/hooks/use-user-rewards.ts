@@ -5,8 +5,7 @@ import {
   getMyRewardPoints,
   type IUserRewardPointsResponse,
 } from "@/services/rewards.api";
-import socket from "@/utils/socket";
-import { toast } from "sonner";
+import { rewardsService } from "@/services/socket-services/rewards.service";
 
 const QUERY_KEYS = {
   points: ["rewards", "points"],
@@ -22,16 +21,11 @@ export function useUserRewardPoints() {
 
   // Listen for live reward updates and invalidate cache
   useEffect(() => {
-    const handler = (data: unknown) => {
-      if (typeof data === "object" && data !== null && "message" in data) {
-        toast.success(data.message);
-      }
+    const handler = () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.points });
     };
-    socket.on("rewardsUpdated", handler);
-    return () => {
-      socket.off("rewardsUpdated", handler);
-    };
+    const unsubscribe = rewardsService.onRewardsUpdated(handler);
+    return unsubscribe;
   }, [queryClient]);
 
   return query;

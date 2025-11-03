@@ -21,6 +21,9 @@ import { useAuthUser } from "@/hooks/use-auth-user";
 import { useLogout } from "@/hooks/use-logout";
 import { useUserRewardPoints } from "@/hooks/use-user-rewards";
 
+// Components
+import { NotificationBell } from "@/components/shared-ui/notification-bell";
+
 
 
 import { AppBreadcrumb } from "./app-breadcrumb";
@@ -94,6 +97,9 @@ export function AppHeader() {
           <div className="flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
             Points: {!isLoadingRewards ? userPoints : "--"}
           </div>
+          {/* Notifications */}
+          <NotificationBell />
+          {/* Chat */}
           {/* Language Switcher */}
           <LanguageSwitcher />
           {/* Theme Toggle */}

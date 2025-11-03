@@ -17,6 +17,8 @@ import {
 import { UserSettingsService } from './user-settings.service';
 import { CreateOrUpdateUserSettingsDto } from '@shared/dtos/settings-dtos';
 import { IUserSettings } from '@shared/interfaces/settings.interface';
+import { AuthUser } from '@/decorators/user.decorator';
+import { User } from '@/common/base-user/entities/user.entity';
 
 @ApiTags('User Settings')
 @ApiBearerAuth('access-token')
@@ -32,11 +34,11 @@ export class UserSettingsController {
   })
   @ApiResponse({ status: 400, description: 'Bad request' })
   async createOrUpdate(
-    @Request() req: any,
+    @AuthUser() currentUser: User,
     @Body() createUserSettingsDto: CreateOrUpdateUserSettingsDto,
   ): Promise<{ message: string }> {
     await this.userSettingsService.createOrUpdateUserSettings(
-      req.user.id,
+      currentUser,
       createUserSettingsDto,
     );
 

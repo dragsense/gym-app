@@ -97,7 +97,10 @@ export class DatabaseManager implements OnModuleInit {
     const options: DataSourceOptions = {
       ...config,
       entities: [join(__dirname, '../../**/*.entity{.ts,.js}')],
-      migrations: [join(__dirname, '../../migrations/*{.ts,.js}')],
+      migrations: [
+        join(__dirname, '../../migrations/common/**/*{.ts,.js}'),
+        join(__dirname, '../../migrations/modules/**/*{.ts,.js}'),
+      ],
     };
 
     const dataSource = new DataSource(options);

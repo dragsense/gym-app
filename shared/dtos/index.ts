@@ -18,3 +18,4 @@ export * from "./referral-link-dtos";
 export * from "./settings-dtos";
 export * from "./payment-methods-dtos";
 export * from "./stripe-dtos";
+export * from "./chat-dtos";

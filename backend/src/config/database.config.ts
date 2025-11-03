@@ -139,7 +139,10 @@ export const getTypeOrmConfig = (
   return {
     ...defaultConnection,
     entities: [join(__dirname, '../**/*.entity{.ts,.js}')],
-    migrations: [join(__dirname, '../migrations/*{.ts,.js}')],
+    migrations: [
+      join(__dirname, '../migrations/common/**/*{.ts,.js}'),
+      join(__dirname, '../migrations/modules/**/*{.ts,.js}'),
+    ],
     autoLoadEntities: true,
   };
 };

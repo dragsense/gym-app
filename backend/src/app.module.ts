@@ -40,6 +40,7 @@ import { WorkerModule } from './common/worker/worker.module';
 import { LoggerModule } from './common/logger/logger.module';
 import { DatabaseModule } from './common/database/database.module';
 import { ServerGatewayModule } from './common/gateways/server-gateway.module';
+import { ChatModule } from './modules/v1/chat/chat.module';
 
 import { join } from 'path';
 import { ResponseEncryptionInterceptor } from './interceptors/response-encryption-interceptor';
@@ -144,6 +145,7 @@ import { UserLevelGuard } from './common/gaurds/level.guard';
     WorkerModule,
     HealthModule,
     RolesModule,
+    ChatModule,
 
     // Feature modules
     TrainersModule,
