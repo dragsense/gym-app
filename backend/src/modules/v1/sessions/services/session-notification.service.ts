@@ -23,7 +23,10 @@ export class SessionNotificationService {
   /**
    * Send notification to trainer when session is created
    */
-  async notifyTrainerSessionCreated(session: Session, createdBy?: string): Promise<void> {
+  async notifyTrainerSessionCreated(
+    session: Session,
+    createdBy?: string,
+  ): Promise<void> {
     try {
       const trainerUserId = session.trainer.user?.id;
       if (!trainerUserId) return;
@@ -59,7 +62,10 @@ export class SessionNotificationService {
   /**
    * Send notification to clients when session is created
    */
-  async notifyClientsSessionCreated(session: Session, createdBy?: string): Promise<void> {
+  async notifyClientsSessionCreated(
+    session: Session,
+    createdBy?: string,
+  ): Promise<void> {
     try {
       const clientNotifications = session.clients.map((client) => {
         const clientUserId = client.user?.id;
@@ -101,7 +107,10 @@ export class SessionNotificationService {
   /**
    * Send notification when session is updated
    */
-  async notifySessionUpdated(session: Session, updatedBy?: string): Promise<void> {
+  async notifySessionUpdated(
+    session: Session,
+    updatedBy?: string,
+  ): Promise<void> {
     try {
       const trainerUserId = session.trainer.user?.id;
       const notifications: Promise<void>[] = [];
@@ -170,11 +179,14 @@ export class SessionNotificationService {
   /**
    * Send notification to admins when session is created
    */
-  async notifyAdminsSessionCreated(session: Session, createdBy?: string): Promise<void> {
+  async notifyAdminsSessionCreated(
+    session: Session,
+    createdBy?: string,
+  ): Promise<void> {
     try {
       const adminUsers = await this.userRepository.find({
         where: {
-          level: In([EUserLevels.SUPER_ADMIN, EUserLevels.ADMIN]),
+          level: In([EUserLevels.SUPER_ADMIN]),
           isActive: true,
         },
         select: ['id', 'email', 'firstName', 'lastName'],
@@ -215,4 +227,3 @@ export class SessionNotificationService {
     }
   }
 }
-

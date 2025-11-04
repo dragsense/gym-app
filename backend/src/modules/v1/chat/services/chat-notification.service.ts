@@ -5,7 +5,7 @@ import {
   ENotificationType,
 } from '@shared/enums/notification.enum';
 import { ChatMessage } from '@/common/base-chat/entities/chat-message.entity';
-import { Conversation } from '@/common/base-chat/entities/conversation.entity';
+import { Chat } from '@/common/base-chat/entities/chat.entity';
 
 @Injectable()
 export class ChatNotificationService {
@@ -20,7 +20,7 @@ export class ChatNotificationService {
    */
   async notifyNewMessage(
     message: ChatMessage,
-    conversation: Conversation,
+    chat: Chat,
     recipientId: string,
   ): Promise<void> {
     try {
@@ -37,7 +37,7 @@ export class ChatNotificationService {
         metadata: {
           action: 'new_message',
           messageId: message.id,
-          conversationId: conversation.id,
+          chatId: chat.id,
           senderId: message.senderId,
         },
       });

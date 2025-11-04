@@ -24,7 +24,10 @@ export class BillingNotificationService {
   /**
    * Send notification to recipient when billing is created
    */
-  async notifyBillingCreated(billing: Billing, createdBy?: string): Promise<void> {
+  async notifyBillingCreated(
+    billing: Billing,
+    createdBy?: string,
+  ): Promise<void> {
     try {
       await this.notificationService.createNotification({
         title: 'New Billing Created',
@@ -58,7 +61,10 @@ export class BillingNotificationService {
   /**
    * Send notification to recipient when billing is updated
    */
-  async notifyBillingUpdated(billing: Billing, updatedBy?: string): Promise<void> {
+  async notifyBillingUpdated(
+    billing: Billing,
+    updatedBy?: string,
+  ): Promise<void> {
     try {
       await this.notificationService.createNotification({
         title: 'Billing Updated',
@@ -75,9 +81,7 @@ export class BillingNotificationService {
         },
       });
 
-      this.logger.log(
-        `✅ Notification sent for updated billing ${billing.id}`,
-      );
+      this.logger.log(`✅ Notification sent for updated billing ${billing.id}`);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
@@ -108,9 +112,7 @@ export class BillingNotificationService {
         },
       });
 
-      this.logger.log(
-        `✅ Notification sent for paid billing ${billing.id}`,
-      );
+      this.logger.log(`✅ Notification sent for paid billing ${billing.id}`);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
@@ -123,11 +125,14 @@ export class BillingNotificationService {
   /**
    * Send notification to admins when billing is created
    */
-  async notifyAdminsBillingCreated(billing: Billing, createdBy?: string): Promise<void> {
+  async notifyAdminsBillingCreated(
+    billing: Billing,
+    createdBy?: string,
+  ): Promise<void> {
     try {
       const adminUsers = await this.userRepository.find({
         where: {
-          level: In([EUserLevels.SUPER_ADMIN, EUserLevels.ADMIN]),
+          level: In([EUserLevels.SUPER_ADMIN]),
           isActive: true,
         },
         select: ['id', 'email', 'firstName', 'lastName'],
@@ -168,4 +173,3 @@ export class BillingNotificationService {
     }
   }
 }
-

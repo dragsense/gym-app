@@ -28,6 +28,9 @@ import {
   PushSubscriptionsListDto,
   UnsubscribePushResponseDto,
 } from '@shared/dtos/notification-dtos';
+import { SelectQueryBuilder } from 'typeorm';
+import { EUserLevels } from '@shared/enums/user.enum';
+import { User } from '../base-user/entities/user.entity';
 
 @ApiTags('Notifications')
 @ApiBearerAuth()
@@ -48,8 +51,13 @@ export class NotificationController {
     description: 'Returns paginated list of notifications',
     type: NotificationPaginatedDto,
   })
-  async findAll(@Query() queryDto: NotificationListDto) {
-    return await this.notificationService.get(queryDto, NotificationListDto);
+  async findAll(@Query() queryDto: NotificationListDto, @Request() req: any) {
+    const entityId = req.user.id as string;
+    return await this.notificationService.get(queryDto, NotificationListDto, {
+      beforeQuery: (query: SelectQueryBuilder<Notification>) => {
+        query.andWhere('entity.entityId = :entityId', { entityId });
+      },
+    });
   }
 
   @Get('user/:userId')

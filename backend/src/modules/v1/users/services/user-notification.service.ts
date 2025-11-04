@@ -89,7 +89,7 @@ export class UserNotificationService {
       // Find all admin users (SUPER_ADMIN = 0, ADMIN = 1)
       const adminUsers = await this.userRepository.find({
         where: {
-          level: In([EUserLevels.SUPER_ADMIN, EUserLevels.ADMIN]),
+          level: In([EUserLevels.SUPER_ADMIN]),
           isActive: true,
         },
         select: ['id', 'email', 'firstName', 'lastName'],

@@ -19,12 +19,12 @@ import { UserDto } from "../user-dtos/user.dto";
 export class SendMessageDto {
   @ApiProperty({
     example: "550e8400-e29b-41d4-a716-446655440000",
-    description: "ID of the chat (conversation)",
+    description: "ID of the chat",
   })
   @IsUUID()
   @IsNotEmpty()
   @FieldType("text", true)
-  conversationId: string;
+  chatId: string;
 
   @ApiProperty({
     example: "Hello, how are you?",
@@ -79,7 +79,7 @@ export class ChatMessageDto {
     example: "550e8400-e29b-41d4-a716-446655440002",
     description: "ID of the chat",
   })
-  conversationId: string;
+  chatId: string;
 
   @ApiPropertyOptional({
     example: false,
@@ -123,24 +123,50 @@ export class ChatMessageDto {
   sender?: UserDto;
 }
 
+export class ChatUserDto {
+  @ApiProperty({
+    example: "550e8400-e29b-41d4-a716-446655440000",
+    description: "ChatUser ID",
+  })
+  id: string;
+
+  @ApiProperty({
+    example: "550e8400-e29b-41d4-a716-446655440001",
+    description: "ID of the chat",
+  })
+  chatId: string;
+
+  @ApiProperty({
+    example: "550e8400-e29b-41d4-a716-446655440002",
+    description: "ID of the user",
+  })
+  userId: string;
+
+  @ApiPropertyOptional({
+    example: false,
+    description: "Whether the user has archived the chat",
+  })
+  archived?: boolean;
+
+  @ApiPropertyOptional({
+    example: "2024-01-01T00:00:00.000Z",
+    description: "When the user joined the chat",
+  })
+  joinedAt?: string;
+
+  @ApiPropertyOptional({
+    type: () => UserDto,
+    description: "User in this chat",
+  })
+  user?: UserDto;
+}
+
 export class ChatDto {
   @ApiProperty({
     example: "550e8400-e29b-41d4-a716-446655440000",
     description: "Chat ID",
   })
   id: string;
-
-  @ApiProperty({
-    example: "550e8400-e29b-41d4-a716-446655440001",
-    description: "ID of the first participant",
-  })
-  participantOneId: string;
-
-  @ApiProperty({
-    example: "550e8400-e29b-41d4-a716-446655440002",
-    description: "ID of the second participant",
-  })
-  participantTwoId: string;
 
   @ApiPropertyOptional({
     example: "550e8400-e29b-41d4-a716-446655440003",
@@ -149,26 +175,20 @@ export class ChatDto {
   lastMessageId?: string;
 
   @ApiPropertyOptional({
-    example: false,
-    description: "Whether participant one has archived the chat",
+    example: "My Chat Group",
+    description: "Name of the chat (for group chats)",
   })
-  archivedByParticipantOne?: boolean;
-
-  @ApiPropertyOptional({
-    example: false,
-    description: "Whether participant two has archived the chat",
-  })
-  archivedByParticipantTwo?: boolean;
+  name?: string;
 
   @ApiProperty({
     example: "2024-01-01T00:00:00.000Z",
-    description: "When the conversation was created",
+    description: "When the chat was created",
   })
   createdAt: string;
 
   @ApiProperty({
     example: "2024-01-01T00:00:00.000Z",
-    description: "When the conversation was updated",
+    description: "When the chat was updated",
   })
   updatedAt: string;
 
@@ -185,16 +205,10 @@ export class ChatDto {
   messages?: ChatMessageDto[];
 
   @ApiPropertyOptional({
-    type: () => UserDto,
-    description: "First participant user",
+    type: () => [ChatUserDto],
+    description: "Users in this chat",
   })
-  participantOne?: UserDto;
-
-  @ApiPropertyOptional({
-    type: () => UserDto,
-    description: "Second participant user",
-  })
-  participantTwo?: UserDto;
+  chatUsers?: ChatUserDto[];
 }
 
 export class ChatListDto extends ListQueryDto<ChatDto> {}

@@ -10,7 +10,7 @@ import {
 } from "@/services/chat.api";
 import type { IChat } from "@shared/interfaces/chat.interface";
 
-export interface Conversation {
+export interface Chat {
   id: string;
   participantId: string;
   participantName: string;
@@ -19,25 +19,48 @@ export interface Conversation {
   unreadCount: number;
 }
 
-// Helper to convert IChat to Conversation
-const convertChatToConversation = (
-  chat: IChat,
-  currentUserId: string
-): Conversation => {
-  const otherParticipant =
-    chat.participantOne?.id === currentUserId
-      ? chat.participantTwo
-      : chat.participantOne;
+// Helper to convert IChat to Chat
+const convertChatToChat = (chat: IChat, currentUserId: string): Chat => {
+  // Get chatUsers from the chat (from chatUsers relation)
+  const chatUsers = (chat as any).chatUsers || [];
+
+  // Find the other participant(s) - exclude current user
+  const otherParticipants = chatUsers.filter(
+    (cu: any) => cu.user?.id !== currentUserId && cu.user
+  );
+
+  // For 1-on-1 chats, use the single other participant
+  // For group chats, use the first other participant or chat name
+  const otherParticipant = otherParticipants[0]?.user;
+  const isGroupChat = chatUsers.length > 2 || chat.name;
 
   const firstName = (otherParticipant as any)?.firstName;
   const lastName = (otherParticipant as any)?.lastName;
 
+  // Determine participant name
+  let participantName: string;
+  if (isGroupChat && chat.name) {
+    participantName = chat.name;
+  } else if (isGroupChat) {
+    participantName = `Group Chat (${chatUsers.length} members)`;
+  } else {
+    participantName =
+      firstName && lastName ? `${firstName} ${lastName}` : "User";
+  }
+
+  // For group chats, use first participant's avatar or null
+  // For 1-on-1, use the other participant's avatar
+  const participantAvatar = isGroupChat ? undefined : undefined;
+
+  // For 1-on-1 chats, use the other participant's ID
+  // For group chats, use the first participant's ID (or empty)
+  const participantId = isGroupChat ? "" : otherParticipant?.id || "";
+
   return {
     id: chat.id,
-    participantId: otherParticipant?.id || "",
-    participantName:
-      firstName && lastName ? `${firstName} ${lastName}` : "User",
-    participantAvatar: otherParticipant?.profile?.image?.url,
+    participantId,
+    participantName,
+    participantAvatar,
     lastMessage: chat.lastMessage
       ? {
           ...chat.lastMessage,
@@ -49,28 +72,35 @@ const convertChatToConversation = (
 };
 
 export interface UseChatReturn {
-  conversations: Conversation[];
-  currentConversation: Conversation | null;
+  chats: Chat[];
+  currentChat: Chat | null;
   messages: ChatMessage[];
   isTyping: { [userId: string]: boolean };
-  setCurrentConversation: (
-    conversationId: string | null,
-    recipientId?: string
-  ) => void;
+  setCurrentChat: (chatId: string | null, recipientId?: string) => void;
   sendMessage: (message: string, recipientId?: string) => Promise<void>;
-  markMessagesAsRead: (conversationId: string) => void;
-  startNewConversation: (recipientId: string, recipientName?: string) => void;
+  markMessagesAsRead: (chatId: string) => void;
+  startNewChat: (recipientId: string, recipientName?: string) => void;
   isConnected: boolean;
+  loadMoreMessages: (
+    scrollContainer?: HTMLDivElement,
+    previousScrollHeightRef?: React.MutableRefObject<number>
+  ) => Promise<void>;
+  isLoadingMore: boolean;
+  hasMoreMessages: boolean;
+  shouldAutoScroll: boolean;
+  setShouldAutoScroll: (value: boolean) => void;
 }
 
 export function useChat(): UseChatReturn {
   const { user } = useAuthUser();
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [currentConversation, setCurrentConversationState] =
-    useState<Conversation | null>(null);
+  const [chats, setChats] = useState<Chat[]>([]);
+  const [currentChat, setCurrentChatState] = useState<Chat | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState<{ [userId: string]: boolean }>({});
   const [isConnected, setIsConnected] = useState(chatService.isConnected);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMoreMessages, setHasMoreMessages] = useState(true);
+  const [messageOffset, setMessageOffset] = useState(0);
   const typingTimeoutRef = useRef<{
     [key: string]: ReturnType<typeof setTimeout>;
   }>({});
@@ -85,54 +115,72 @@ export function useChat(): UseChatReturn {
     if (!user?.id) return;
 
     fetchMyChats()
-      .then((chats) => {
-        const convertedChats = chats.map((chat) =>
-          convertChatToConversation(chat, user.id)
+      .then((chatsData) => {
+        const convertedChats = chatsData.map((chat) =>
+          convertChatToChat(chat, user.id)
         );
-        setConversations(convertedChats);
+        setChats(convertedChats);
       })
       .catch((error) => {
         console.error("Failed to fetch chats:", error);
       });
   }, [user?.id]);
 
-  // Save conversations to localStorage
+  // Save chats to localStorage
   useEffect(() => {
-    if (conversations.length > 0) {
-      localStorage.setItem("chat_conversations", JSON.stringify(conversations));
+    if (chats.length > 0) {
+      localStorage.setItem("chat_chats", JSON.stringify(chats));
     }
-  }, [conversations]);
+  }, [chats]);
 
   // Save messages to localStorage
   useEffect(() => {
-    if (messages.length > 0 && currentConversation) {
+    if (messages.length > 0 && currentChat) {
       const stored = localStorage.getItem("chat_messages");
       const parsed = stored ? JSON.parse(stored) : {};
-      parsed[currentConversation.id] = messages;
+      parsed[currentChat.id] = messages;
       localStorage.setItem("chat_messages", JSON.stringify(parsed));
     }
-  }, [messages, currentConversation]);
+  }, [messages, currentChat]);
 
   // Listen for real-time messages (socket only for updates, not initial fetch)
   useEffect(() => {
     if (!user?.id) return;
 
     const handleNewMessage = (data: ChatMessage) => {
-      // Only update if message not already in list (optimistic updates)
-      if (currentConversation?.id === data.conversationId) {
+      console.log("📬 New message received:", data);
+
+      // Update messages if this is the current chat
+      if (currentChat?.id === data.chatId) {
         setMessages((prev) => {
           if (prev.some((m) => m.id === data.id)) return prev;
           return [...prev, data];
         });
       }
 
-      // Refresh chats to get updated last message
+      // Update chats list to show new message
+      setChats((prev) => {
+        return prev.map((chat) => {
+          if (chat.id === data.chatId) {
+            return {
+              ...chat,
+              lastMessage: {
+                ...data,
+                timestamp: data.timestamp || data.createdAt,
+              },
+            };
+          }
+          return chat;
+        });
+      });
+
+      // Refresh chats to get updated last message from API
       fetchMyChats()
-        .then((chats) => {
-          const convertedChats = chats.map((chat) =>
-            convertChatToConversation(chat, user.id)
+        .then((chatsData) => {
+          const convertedChats = chatsData.map((chat) =>
+            convertChatToChat(chat, user.id)
           );
-          setConversations(convertedChats);
+          setChats(convertedChats);
         })
         .catch((error) => {
           console.error("Failed to refresh chats:", error);
@@ -141,10 +189,10 @@ export function useChat(): UseChatReturn {
 
     const handleUserTyping = (data: {
       userId: string;
-      conversationId: string;
+      chatId: string;
       isTyping: boolean;
     }) => {
-      if (currentConversation?.id === data.conversationId) {
+      if (currentChat?.id === data.chatId) {
         setIsTyping((prev) => ({
           ...prev,
           [data.userId]: data.isTyping,
@@ -172,65 +220,81 @@ export function useChat(): UseChatReturn {
       unsubscribeMessage();
       unsubscribeTyping();
     };
-  }, [user?.id, currentConversation]);
+  }, [user?.id, currentChat?.id]);
 
-  const setCurrentConversation = useCallback(
-    (conversationId: string | null, recipientId?: string) => {
-      if (!conversationId && !recipientId) {
-        setCurrentConversationState(null);
+  const setCurrentChat = useCallback(
+    (chatId: string | null, recipientId?: string) => {
+      // Leave previous chat room before switching
+      if (
+        currentChat?.id &&
+        chatService.isConnected &&
+        !currentChat.id.startsWith("chat_")
+      ) {
+        chatService.leaveChat(currentChat.id).catch((error) => {
+          console.error("Failed to leave chat room:", error);
+        });
+      }
+
+      if (!chatId && !recipientId) {
+        setCurrentChatState(null);
         setMessages([]);
         return;
       }
 
-      // If recipientId is provided but no conversationId, create a new conversation object
-      if (recipientId && !conversationId) {
-        const tempConversationId = `conv_${user?.id}_${recipientId}`;
-        const existingConversation = conversations.find(
-          (c) => c.participantId === recipientId || c.id === tempConversationId
+      // If recipientId is provided but no chatId, create a new chat object
+      if (recipientId && !chatId) {
+        const tempChatId = `chat_${user?.id}_${recipientId}`;
+        const existingChat = chats.find(
+          (c) => c.participantId === recipientId || c.id === tempChatId
         );
 
-        if (existingConversation) {
-          setCurrentConversationState(existingConversation);
+        if (existingChat) {
+          setCurrentChatState(existingChat);
           const stored = localStorage.getItem("chat_messages");
           if (stored) {
             try {
               const parsed = JSON.parse(stored) as {
                 [key: string]: ChatMessage[];
               };
-              setMessages(parsed[existingConversation.id] || []);
+              setMessages(parsed[existingChat.id] || []);
             } catch {
               setMessages([]);
             }
           } else {
             setMessages([]);
           }
-          chatService
-            .joinConversation(existingConversation.id)
-            .catch((error) => {
-              console.error("Failed to join conversation:", error);
+          // Join chat room for real-time updates
+          if (chatService.isConnected) {
+            chatService.joinChat(existingChat.id).catch((error) => {
+              console.error("Failed to join chat:", error);
             });
+          }
         } else {
-          // Create temporary conversation for new chat
-          const tempConversation: Conversation = {
-            id: tempConversationId,
+          // Create temporary chat for new chat
+          const tempChat: Chat = {
+            id: tempChatId,
             participantId: recipientId,
             participantName: "", // Will be filled when message is sent
             unreadCount: 0,
           };
-          setCurrentConversationState(tempConversation);
+          setCurrentChatState(tempChat);
           setMessages([]);
         }
         return;
       }
 
-      // Existing conversation logic
-      if (conversationId) {
-        const conversation = conversations.find((c) => c.id === conversationId);
-        if (conversation) {
-          setCurrentConversationState(conversation);
+      // Existing chat logic
+      if (chatId) {
+        const chat = chats.find((c) => c.id === chatId);
+        if (chat) {
+          setCurrentChatState(chat);
+
+          // Reset pagination state
+          setMessageOffset(0);
+          setHasMoreMessages(true);
 
           // Fetch messages from API
-          fetchChatMessages(conversationId)
+          fetchChatMessages(chatId, 50, 0)
             .then((apiMessages) => {
               const convertedMessages: ChatMessage[] = apiMessages.map(
                 (msg) => {
@@ -244,44 +308,45 @@ export function useChat(): UseChatReturn {
                       firstName && lastName
                         ? `${firstName} ${lastName}`
                         : undefined,
-                    senderAvatar: sender?.profile?.image?.url,
                   };
                 }
               );
               setMessages(convertedMessages);
+              setMessageOffset(apiMessages.length);
+              setHasMoreMessages(apiMessages.length === 50);
             })
             .catch((error) => {
               console.error("Failed to fetch messages:", error);
               setMessages([]);
             });
 
-          // Join conversation room for real-time updates
+          // Join chat room for real-time updates
           if (chatService.isConnected) {
-            chatService.joinConversation(conversationId).catch((error) => {
-              console.error("Failed to join conversation:", error);
+            chatService.joinChat(chatId).catch((error) => {
+              console.error("Failed to join chat room:", error);
             });
           }
 
           // Mark messages as read (local state)
-          if (conversation.unreadCount > 0) {
-            markMessagesAsRead(conversationId);
+          if (chat.unreadCount > 0) {
+            markMessagesAsRead(chatId);
           }
         }
       }
     },
-    [conversations, user?.id]
+    [chats, user?.id, currentChat?.id]
   );
 
-  const startNewConversation = useCallback(
+  const startNewChat = useCallback(
     (recipientId: string, recipientName?: string) => {
-      const tempConversationId = `conv_${user?.id}_${recipientId}`;
-      const tempConversation: Conversation = {
-        id: tempConversationId,
+      const tempChatId = `chat_${user?.id}_${recipientId}`;
+      const tempChat: Chat = {
+        id: tempChatId,
         participantId: recipientId,
         participantName: recipientName || "User",
         unreadCount: 0,
       };
-      setCurrentConversationState(tempConversation);
+      setCurrentChatState(tempChat);
       setMessages([]);
     },
     [user?.id]
@@ -291,33 +356,43 @@ export function useChat(): UseChatReturn {
     async (message: string, recipientId?: string) => {
       if (!message.trim() || !user?.id) return;
 
-      let conversationId = currentConversation?.id;
+      let chatId = currentChat?.id;
 
-      // Create or get chat if starting new conversation
-      if (!conversationId && recipientId) {
+      // Check if chatId is a temporary ID (starts with "chat_") or missing
+      const isTempChatId = chatId?.startsWith("chat_");
+
+      // Create or get chat if starting new chat or using temp ID
+      if ((!chatId || isTempChatId) && recipientId) {
         try {
           const chat = await createOrGetChat({ participantId: recipientId });
-          conversationId = chat.id;
-          const newConversation = convertChatToConversation(chat, user.id);
-          setCurrentConversationState(newConversation);
-          setConversations((prev) => {
+          chatId = chat.id;
+          const newChat = convertChatToChat(chat, user.id);
+          setCurrentChatState(newChat);
+          setChats((prev) => {
             if (prev.find((c) => c.id === chat.id)) return prev;
-            return [newConversation, ...prev];
+            return [newChat, ...prev];
           });
+
+          // Join chat room after creating/getting chat
+          if (chatService.isConnected) {
+            chatService.joinChat(chatId).catch((error) => {
+              console.error("Failed to join chat room:", error);
+            });
+          }
         } catch (error) {
           console.error("Failed to create/get chat:", error);
           throw error;
         }
       }
 
-      if (!conversationId) {
-        throw new Error("No conversation ID available");
+      if (!chatId) {
+        throw new Error("No chat ID available");
       }
 
       // Send message via API
       try {
         const sentMessage = await sendChatMessage({
-          conversationId,
+          chatId,
           message,
           recipientId,
         });
@@ -331,7 +406,6 @@ export function useChat(): UseChatReturn {
           timestamp: sentMessage.createdAt,
           senderName:
             firstName && lastName ? `${firstName} ${lastName}` : undefined,
-          senderAvatar: sender?.profile?.image?.url,
         };
 
         setMessages((prev) => {
@@ -341,11 +415,11 @@ export function useChat(): UseChatReturn {
 
         // Refresh chats to update last message
         fetchMyChats()
-          .then((chats) => {
-            const convertedChats = chats.map((chat) =>
-              convertChatToConversation(chat, user.id)
+          .then((chatsData) => {
+            const convertedChats = chatsData.map((chat) =>
+              convertChatToChat(chat, user.id)
             );
-            setConversations(convertedChats);
+            setChats(convertedChats);
           })
           .catch((error) => {
             console.error("Failed to refresh chats:", error);
@@ -355,14 +429,66 @@ export function useChat(): UseChatReturn {
         throw error;
       }
     },
-    [user, currentConversation]
+    [user, currentChat]
   );
 
-  const markMessagesAsRead = useCallback((conversationId: string) => {
-    setConversations((prev) =>
-      prev.map((c) => (c.id === conversationId ? { ...c, unreadCount: 0 } : c))
+  const markMessagesAsRead = useCallback((chatId: string) => {
+    setChats((prev) =>
+      prev.map((c) => (c.id === chatId ? { ...c, unreadCount: 0 } : c))
     );
   }, []);
+
+  // Load more messages (older messages)
+  const loadMoreMessages = useCallback(
+    async (
+      scrollContainer?: HTMLDivElement,
+      previousScrollHeightRef?: React.MutableRefObject<number>
+    ) => {
+      if (!currentChat?.id || isLoadingMore || !hasMoreMessages) return;
+
+      setIsLoadingMore(true);
+      try {
+        const olderMessages = await fetchChatMessages(
+          currentChat.id,
+          50,
+          messageOffset
+        );
+
+        if (olderMessages.length === 0) {
+          setHasMoreMessages(false);
+          setIsLoadingMore(false);
+          return;
+        }
+
+        const convertedMessages: ChatMessage[] = olderMessages.map((msg) => {
+          const sender = msg.sender as any;
+          const firstName = sender?.firstName;
+          const lastName = sender?.lastName;
+          return {
+            ...msg,
+            timestamp: msg.createdAt,
+            senderName:
+              firstName && lastName ? `${firstName} ${lastName}` : undefined,
+          };
+        });
+
+        // Store scroll position before adding messages
+        if (scrollContainer && previousScrollHeightRef) {
+          previousScrollHeightRef.current = scrollContainer.scrollHeight;
+        }
+
+        // Prepend older messages
+        setMessages((prev) => [...convertedMessages, ...prev]);
+        setMessageOffset((prev) => prev + olderMessages.length);
+        setHasMoreMessages(olderMessages.length === 50);
+      } catch (error) {
+        console.error("Failed to load more messages:", error);
+      } finally {
+        setIsLoadingMore(false);
+      }
+    },
+    [currentChat?.id, isLoadingMore, hasMoreMessages, messageOffset]
+  );
 
   // Cleanup on unmount
   useEffect(() => {
@@ -371,15 +497,31 @@ export function useChat(): UseChatReturn {
     };
   }, []);
 
+  // Auto-scroll to bottom for new messages (when user is at bottom)
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
+
+  // Update shouldAutoScroll when new messages arrive in current chat
+  useEffect(() => {
+    if (currentChat && messages.length > 0) {
+      // Auto-scroll when new message arrives (user expects to see new messages)
+      setShouldAutoScroll(true);
+    }
+  }, [messages.length, currentChat?.id]);
+
   return {
-    conversations,
-    currentConversation,
+    chats,
+    currentChat,
     messages,
     isTyping,
-    setCurrentConversation,
+    setCurrentChat,
     sendMessage,
     markMessagesAsRead,
-    startNewConversation,
+    startNewChat,
     isConnected,
+    loadMoreMessages,
+    isLoadingMore,
+    hasMoreMessages,
+    shouldAutoScroll,
+    setShouldAutoScroll,
   };
 }

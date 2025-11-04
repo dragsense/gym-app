@@ -19,7 +19,7 @@ interface ServerToClientEvents {
   messageRead: (messageId: string) => void;
   userTyping: (data: {
     userId: string;
-    conversationId: string;
+    chatId: string;
     isTyping: boolean;
   }) => void;
 }
@@ -50,26 +50,26 @@ interface ClientToServerEvents {
   ) => void;
   // Chat events
   sendMessage?: (
-    data: { conversationId: string; message: string; recipientId?: string },
+    data: { chatId: string; message: string; recipientId?: string },
     callback: (
       response:
         | { success: boolean; message?: ChatMessage }
         | { error: { message: string } }
     ) => void
   ) => void;
-  joinConversation?: (
-    data: { conversationId: string },
+  joinChat?: (
+    data: { chatId: string },
     callback: (
       response: { success: boolean } | { error: { message: string } }
     ) => void
   ) => void;
-  leaveConversation?: (
-    data: { conversationId: string },
+  leaveChat?: (
+    data: { chatId: string },
     callback: (
       response: { success: boolean } | { error: { message: string } }
     ) => void
   ) => void;
-  typing?: (data: { conversationId: string; isTyping: boolean }) => void;
+  typing?: (data: { chatId: string; isTyping: boolean }) => void;
 }
 
 // Single optimized socket: connect to users namespace for all app realtime

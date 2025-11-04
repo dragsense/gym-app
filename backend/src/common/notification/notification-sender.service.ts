@@ -3,11 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MailerService } from '@nestjs-modules/mailer';
 import { ConfigService } from '@nestjs/config';
-import { ServerGateway } from '@/common/gateways/server.gateway';
 import { SettingsService } from '@/common/settings/settings.service';
 import { Notification } from './entities/notification.entity';
 import { PushNotificationService } from './services/push-notification.service';
 import { User } from '@/common/base-user/entities/user.entity';
+import { ServerGateway } from '@/common/gateways/server.gateway';
 
 @Injectable()
 export class NotificationSenderService {
@@ -61,7 +61,7 @@ export class NotificationSenderService {
       );
       // Return defaults if settings not found
       return {
-        emailEnabled: true,
+        emailEnabled: false,
         smsEnabled: false,
         pushEnabled: false,
         inAppEnabled: true,
@@ -79,28 +79,21 @@ export class NotificationSenderService {
     try {
       const userRoom = `user_${entityId}`;
 
-      // Emit to room (all clients in the user's room)
-      if (this.serverGateway.server) {
-        this.serverGateway.server.to(userRoom).emit('notification', {
-          id: notification.id,
-          title: notification.title,
-          message: notification.message,
-          type: notification.type,
-          priority: notification.priority,
-          isRead: notification.isRead,
-          metadata: notification.metadata,
-          createdAt: notification.createdAt,
-          updatedAt: notification.updatedAt,
-        });
+      this.serverGateway.emitToClient(userRoom, 'notification', {
+        id: notification.id,
+        title: notification.title,
+        message: notification.message,
+        type: notification.type,
+        priority: notification.priority,
+        isRead: notification.isRead,
+        metadata: notification.metadata,
+        createdAt: notification.createdAt,
+        updatedAt: notification.updatedAt,
+      });
 
-        this.logger.log(
-          `✅ In-app notification sent to user ${entityId} via WebSocket room ${userRoom}`,
-        );
-      } else {
-        this.logger.warn(
-          'WebSocket server not initialized. Cannot send in-app notification.',
-        );
-      }
+      this.logger.log(
+        `✅ In-app notification sent to user ${entityId} via WebSocket room ${userRoom}`,
+      );
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';

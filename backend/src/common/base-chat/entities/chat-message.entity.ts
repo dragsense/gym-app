@@ -2,7 +2,7 @@ import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { GeneralBaseEntity } from '@/common/entities';
 import { User } from '@/common/base-user/entities/user.entity';
-import { Conversation } from './conversation.entity';
+import { Chat } from './chat.entity';
 
 @Entity('chat_messages')
 export class ChatMessage extends GeneralBaseEntity {
@@ -22,10 +22,10 @@ export class ChatMessage extends GeneralBaseEntity {
 
   @ApiProperty({
     example: '550e8400-e29b-41d4-a716-446655440001',
-    description: 'ID of the conversation',
+    description: 'ID of the chat',
   })
-  @Column({ type: 'uuid' })
-  conversationId: string;
+  @Column({ type: 'uuid', name: 'conversationId' })
+  chatId: string;
 
   @ApiPropertyOptional({
     example: false,
@@ -63,13 +63,13 @@ export class ChatMessage extends GeneralBaseEntity {
   sender?: User;
 
   @ApiProperty({
-    type: () => Conversation,
-    description: 'Conversation this message belongs to',
+    type: () => Chat,
+    description: 'Chat this message belongs to',
   })
-  @ManyToOne(() => Conversation, (conversation) => conversation.messages, {
+  @ManyToOne(() => Chat, (chat) => chat.messages, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'conversationId' })
-  conversation?: Conversation;
+  chat?: Chat;
 }
 

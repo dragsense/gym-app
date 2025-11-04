@@ -27,29 +27,6 @@ export class NotificationService extends CrudService<Notification> {
     super(notificationRepository, moduleRef);
   }
 
-  /**
-   * Check if notification should be logged based on configuration
-   */
-  shouldLogNotification(notificationType?: string): boolean {
-    const config = this.configService.get(
-      'notifications',
-    ) as NotificationConfig;
-
-    if (!config?.enabled) {
-      return false;
-    }
-
-    if (config.logNotificationTypes?.length > 0 && notificationType) {
-      const shouldLogType =
-        config.logNotificationTypes.includes(notificationType);
-      if (!shouldLogType) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
   async findOne(
     where: FindOptionsWhere<Notification>,
     options?: {
@@ -75,13 +52,6 @@ export class NotificationService extends CrudService<Notification> {
   async createNotification(
     createNotificationDto: CreateNotificationDto,
   ): Promise<Notification | null> {
-    // Check if notification should be logged based on configuration
-    const shouldLog = this.shouldLogNotification(createNotificationDto.type);
-
-    if (!shouldLog) {
-      return null;
-    }
-
     // Create the notification in database
     const notification = await this.create(createNotificationDto);
 

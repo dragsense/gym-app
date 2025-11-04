@@ -3,7 +3,7 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
-import { Conversation } from '@/common/base-chat/entities/conversation.entity';
+import { Chat } from '@/common/base-chat/entities/chat.entity';
 import { ChatMessage } from '@/common/base-chat/entities/chat-message.entity';
 import { CreateChatDto } from '@shared/dtos/chat-dtos/chat.dto';
 import { BaseChatService } from '@/common/base-chat/base-chat.service';
@@ -17,37 +17,91 @@ export class ChatService {
   ) {}
 
   /**
-   * Create or get existing conversation between two users
+   * Create or get existing chat between users
    */
-  async createOrGetConversation(
-    userId: string,
-    dto: CreateChatDto,
-  ): Promise<Conversation> {
-    // Check if conversation already exists
-    const existing = await this.baseChatService.conversationRepository.findOne({
-      where: [
-        {
-          participantOneId: userId,
-          participantTwoId: dto.participantId,
-        },
-        {
-          participantOneId: dto.participantId,
-          participantTwoId: userId,
-        },
-      ],
+  async createOrGetChat(userId: string, dto: CreateChatDto): Promise<Chat> {
+    // For 1-on-1 chats, check if chat already exists with these two users
+    // Get all chats where user is a participant
+    const userChatUsers = await this.baseChatService.chatUserRepository.find({
+      where: { userId },
+      relations: ['chat', 'chat.chatUsers', 'chat.chatUsers.user'],
     });
 
-    if (existing) {
-      return existing;
+    // Find a chat that has exactly 2 participants (1-on-1) with both users
+    for (const userChatUser of userChatUsers) {
+      if (
+        userChatUser.chat?.chatUsers &&
+        userChatUser.chat.chatUsers.length === 2
+      ) {
+        const hasOtherUser = userChatUser.chat.chatUsers.some(
+          (cu) => cu.userId === dto.participantId,
+        );
+        if (hasOtherUser) {
+          return userChatUser.chat;
+        }
+      }
     }
 
-    // Create new conversation
-    const conversation = this.baseChatService.conversationRepository.create({
-      participantOneId: userId,
-      participantTwoId: dto.participantId,
+    // Create new chat
+    const chat = this.baseChatService.chatRepository.create({});
+    const savedChat = await this.baseChatService.chatRepository.save(chat);
+
+    // Add both users to the chat
+    const chatUser1 = this.baseChatService.chatUserRepository.create({
+      chatId: savedChat.id,
+      userId,
+      joinedAt: new Date(),
     });
 
-    return await this.baseChatService.conversationRepository.save(conversation);
+    const chatUser2 = this.baseChatService.chatUserRepository.create({
+      chatId: savedChat.id,
+      userId: dto.participantId,
+      joinedAt: new Date(),
+    });
+
+    await this.baseChatService.chatUserRepository.save([chatUser1, chatUser2]);
+
+    return savedChat;
+  }
+
+  /**
+   * Add user(s) to an existing chat
+   */
+  async addUsersToChat(
+    chatId: string,
+    userIds: string[],
+    addedBy: string,
+  ): Promise<Chat> {
+    // Verify the user adding others is part of the chat
+    await this.verifyUserInChat(addedBy, chatId);
+
+    const chat = await this.baseChatService.getSingle(chatId);
+
+    // Check which users are not already in the chat
+    const existingChatUsers = await this.baseChatService.getSingle(chatId, {
+      _relations: ['chatUsers'],
+    });
+
+    const existingUserIds =
+      existingChatUsers.chatUsers?.map((cu) => cu.userId) || [];
+    const newUserIds = userIds.filter((id) => !existingUserIds.includes(id));
+
+    if (newUserIds.length === 0) {
+      return chat;
+    }
+
+    // Add new users to the chat
+    const newChatUsers = newUserIds.map((userId) =>
+      this.baseChatService.chatUserRepository.create({
+        chatId,
+        userId,
+        joinedAt: new Date(),
+      }),
+    );
+
+    await this.baseChatService.chatUserRepository.save(newChatUsers);
+
+    return chat;
   }
 
   /**
@@ -59,39 +113,40 @@ export class ChatService {
     message: string,
     initialRecipientId?: string,
   ): Promise<ChatMessage> {
-    let conversation: Conversation | null;
+    let chat: Chat | null;
 
-    // If initialRecipientId is provided, create or get conversation
+    // If initialRecipientId is provided, create or get chat
     if (initialRecipientId) {
-      conversation = await this.createOrGetConversation(senderId, {
+      chat = await this.createOrGetChat(senderId, {
         participantId: initialRecipientId,
       });
     } else {
-      // Get existing conversation
-      conversation = await this.baseChatService.conversationRepository.findOne({
+      // Get existing chat
+      chat = await this.baseChatService.chatRepository.findOne({
         where: { id: chatIdOrRecipientId },
       });
 
-      if (!conversation) {
+      if (!chat) {
         throw new NotFoundException('Chat not found');
       }
 
-      // Verify user is part of conversation
-      if (
-        conversation.participantOneId !== senderId &&
-        conversation.participantTwoId !== senderId
-      ) {
+      // Verify user is part of chat
+      const chatUser = await this.baseChatService.chatUserRepository.findOne({
+        where: { chatId: chat.id, userId: senderId },
+      });
+
+      if (!chatUser) {
         throw new ForbiddenException('You are not a participant of this chat');
       }
     }
 
-    if (!conversation) {
-      throw new NotFoundException('Conversation not found');
+    if (!chat) {
+      throw new NotFoundException('Chat not found');
     }
 
     // Create message
     const chatMessage = this.baseChatService.messageRepository.create({
-      conversationId: conversation.id,
+      chatId: chat.id,
       senderId,
       message,
       messageType: 'text',
@@ -100,37 +155,42 @@ export class ChatService {
     const savedMessage =
       await this.baseChatService.messageRepository.save(chatMessage);
 
-    // Update conversation's last message
-    conversation.lastMessageId = savedMessage.id;
-    await this.baseChatService.conversationRepository.save(conversation);
+    // Update chat's last message
+    chat.lastMessageId = savedMessage.id;
+    await this.baseChatService.chatRepository.save(chat);
 
     // Load relations for response
     const messageWithRelations =
       await this.baseChatService.messageRepository.findOne({
         where: { id: savedMessage.id },
-        relations: ['sender', 'sender.profile', 'sender.profile.image'],
+        relations: ['sender', 'chat'],
       });
 
     if (!messageWithRelations) {
       throw new NotFoundException('Message not found after creation');
     }
 
-    // Send notification to recipient (the other participant)
-    const messageRecipientId =
-      conversation.participantOneId === senderId
-        ? conversation.participantTwoId
-        : conversation.participantOneId;
+    // Send notification to all other participants
+    const chatUsers = await this.baseChatService.chatUserRepository.find({
+      where: { chatId: chat.id },
+    });
 
-    if (messageRecipientId) {
+    const otherParticipants = chatUsers.filter((cu) => cu.userId !== senderId);
+
+    // Send notifications to all other participants
+    for (const participant of otherParticipants) {
       try {
         await this.chatNotificationService.notifyNewMessage(
           messageWithRelations,
-          conversation,
-          messageRecipientId,
+          chat,
+          participant.userId,
         );
       } catch (error) {
         // Log but don't fail message sending
-        console.error('Failed to send chat notification:', error);
+        console.error(
+          `Failed to send chat notification to ${participant.userId}:`,
+          error,
+        );
       }
     }
 
@@ -138,42 +198,48 @@ export class ChatService {
   }
 
   /**
-   * Get conversations for a user
+   * Get chats for a user
    */
-  async getUserConversations(userId: string): Promise<Conversation[]> {
-    return await this.baseChatService.conversationRepository.find({
-      where: [{ participantOneId: userId }, { participantTwoId: userId }],
+  async getUserChats(userId: string): Promise<Chat[]> {
+    // Get all chat users for this user
+    const chatUsers = await this.baseChatService.chatUserRepository.find({
+      where: { userId },
+      relations: ['chat'],
+    });
+
+    const chatIds = chatUsers.map((cu) => cu.chatId);
+
+    if (chatIds.length === 0) {
+      return [];
+    }
+
+    return await this.baseChatService.chatRepository.find({
+      where: chatIds.map((id) => ({ id })),
       relations: [
         'lastMessage',
         'lastMessage.sender',
-        'lastMessage.sender.profile',
-        'lastMessage.sender.profile.image',
-        'participantOne',
-        'participantOne.profile',
-        'participantOne.profile.image',
-        'participantTwo',
-        'participantTwo.profile',
-        'participantTwo.profile.image',
+        'chatUsers',
+        'chatUsers.user',
       ],
       order: { updatedAt: 'DESC' },
     });
   }
 
   /**
-   * Get messages for a conversation
+   * Get messages for a chat
    */
-  async getConversationMessages(
-    conversationId: string,
+  async getChatMessages(
+    chatId: string,
     userId: string,
     limit = 50,
     offset = 0,
   ): Promise<ChatMessage[]> {
-    // Verify user is part of conversation
-    await this.verifyUserInConversation(userId, conversationId);
+    // Verify user is part of chat
+    await this.verifyUserInChat(userId, chatId);
 
     return await this.baseChatService.messageRepository.find({
-      where: { conversationId },
-      relations: ['sender', 'sender.profile', 'sender.profile.image'],
+      where: { chatId },
+      relations: ['sender'],
       order: { createdAt: 'DESC' },
       take: limit,
       skip: offset,
@@ -186,15 +252,15 @@ export class ChatService {
   async markMessageAsRead(messageId: string, userId: string): Promise<void> {
     const message = await this.baseChatService.messageRepository.findOne({
       where: { id: messageId },
-      relations: ['conversation'],
+      relations: ['chat'],
     });
 
     if (!message) {
       throw new NotFoundException('Message not found');
     }
 
-    // Verify user is part of conversation
-    await this.verifyUserInConversation(userId, message.conversationId);
+    // Verify user is part of chat
+    await this.verifyUserInChat(userId, message.chatId);
 
     // Only mark as read if user is not the sender
     if (message.senderId !== userId && !message.isRead) {
@@ -205,28 +271,23 @@ export class ChatService {
   }
 
   /**
-   * Verify user is part of conversation
+   * Verify user is part of chat
    */
-  async verifyUserInConversation(
-    userId: string,
-    conversationId: string,
-  ): Promise<void> {
-    const conversation =
-      await this.baseChatService.conversationRepository.findOne({
-        where: { id: conversationId },
-      });
+  async verifyUserInChat(userId: string, chatId: string): Promise<void> {
+    const chat = await this.baseChatService.chatRepository.findOne({
+      where: { id: chatId },
+    });
 
-    if (!conversation) {
-      throw new NotFoundException('Conversation not found');
+    if (!chat) {
+      throw new NotFoundException('Chat not found');
     }
 
-    if (
-      conversation.participantOneId !== userId &&
-      conversation.participantTwoId !== userId
-    ) {
-      throw new ForbiddenException(
-        'You are not a participant of this conversation',
-      );
+    const chatUser = await this.baseChatService.chatUserRepository.findOne({
+      where: { chatId, userId },
+    });
+
+    if (!chatUser) {
+      throw new ForbiddenException('You are not a participant of this chat');
     }
   }
 }

@@ -12,7 +12,7 @@ import { SendMessageDto, CreateChatDto } from '@shared/dtos/chat-dtos/chat.dto';
 import { ChatMessageDto, ChatDto } from '@shared/dtos/chat-dtos/chat.dto';
 import { AuthUser } from '@/decorators/user.decorator';
 import { User } from '@/common/base-user/entities/user.entity';
-import { ServerGateway } from '@/common/gateways/server.gateway';
+import { ChatWebSocketService } from './services/chat-websocket.service';
 
 @ApiTags('Chat')
 @ApiBearerAuth('access-token')
@@ -20,7 +20,7 @@ import { ServerGateway } from '@/common/gateways/server.gateway';
 export class ChatController {
   constructor(
     private readonly chatService: ChatService,
-    private readonly serverGateway: ServerGateway,
+    private readonly chatWebSocketService: ChatWebSocketService,
   ) {}
 
   @Post()
@@ -34,10 +34,9 @@ export class ChatController {
     @AuthUser() currentUser: User,
     @Body() dto: CreateChatDto,
   ): Promise<ChatDto> {
-    const chat = await this.chatService.createOrGetConversation(
-      currentUser.id,
-      { participantId: dto.participantId },
-    );
+    const chat = await this.chatService.createOrGetChat(currentUser.id, {
+      participantId: dto.participantId,
+    });
     return chat as unknown as ChatDto;
   }
 
@@ -49,7 +48,7 @@ export class ChatController {
     type: [ChatDto],
   })
   async getMyChats(@AuthUser() currentUser: User): Promise<ChatDto[]> {
-    const chats = await this.chatService.getUserConversations(currentUser.id);
+    const chats = await this.chatService.getUserChats(currentUser.id);
     return chats as unknown as ChatDto[];
   }
 
@@ -69,7 +68,7 @@ export class ChatController {
     @Query('limit') limit?: number,
     @Query('offset') offset?: number,
   ): Promise<ChatMessageDto[]> {
-    const messages = await this.chatService.getConversationMessages(
+    const messages = await this.chatService.getChatMessages(
       chatId,
       currentUser.id,
       limit || 50,
@@ -91,27 +90,22 @@ export class ChatController {
   ): Promise<ChatMessageDto> {
     const message = await this.chatService.sendMessage(
       currentUser.id,
-      dto.conversationId,
+      dto.chatId,
       dto.message,
       dto.recipientId,
     );
 
-    // Emit via ServerGateway for real-time updates
-    const recipientId =
-      message.conversation?.participantOneId === currentUser.id
-        ? message.conversation?.participantTwoId
-        : message.conversation?.participantOneId;
+    // Get chat with users
+    const chatWithUsers = await this.chatService.getUserChats(currentUser.id);
+    const currentChat = chatWithUsers.find((c) => c.id === message.chatId);
 
-    if (recipientId) {
-      // Get socket IDs for recipient
-      const recipientSocketIds = this.getRecipientSocketIds(recipientId);
-
+    if (currentChat?.chatUsers && currentChat.chatUsers.length > 0) {
       const sender = message.sender as any;
       const messageData = {
         id: message.id,
         senderId: message.senderId,
         message: message.message,
-        chatId: message.conversationId,
+        chatId: message.chatId,
         createdAt: message.createdAt.toISOString(),
         updatedAt: message.updatedAt.toISOString(),
         sender: sender
@@ -119,28 +113,16 @@ export class ChatController {
               id: sender.id,
               firstName: sender.firstName,
               lastName: sender.lastName,
-              profile: sender.profile
-                ? {
-                    image: sender.profile.image
-                      ? {
-                          url: sender.profile.image.url,
-                        }
-                      : undefined,
-                  }
-                : undefined,
             }
           : undefined,
       };
 
-      // Emit to recipient via socket
-      recipientSocketIds.forEach((socketId) => {
-        this.serverGateway.emitToClient(socketId, 'newMessage', messageData);
-      });
-
-      // Also emit to conversation room if exists
-      this.serverGateway.server
-        ?.to(`chat:${message.conversationId}`)
-        .emit('newMessage', messageData);
+      // Emit to chat room for all participants (most efficient way)
+      this.chatWebSocketService.emitToChatRoom(
+        message.chatId,
+        'newMessage',
+        messageData,
+      );
     }
 
     return message as unknown as ChatMessageDto;
@@ -160,21 +142,4 @@ export class ChatController {
     await this.chatService.markMessageAsRead(messageId, currentUser.id);
     return { success: true };
   }
-
-  private getRecipientSocketIds(userId: string): string[] {
-    // Get all connected sockets and find those belonging to the user
-    if (!this.serverGateway.server) return [];
-
-    const socketIds: string[] = [];
-    this.serverGateway.server.sockets.sockets.forEach((socket, socketId) => {
-      const socketUserId =
-        socket.handshake.auth?.userId || socket.handshake.query?.userId;
-      if (socketUserId === userId) {
-        socketIds.push(socketId);
-      }
-    });
-    return socketIds;
-  }
 }
-
-

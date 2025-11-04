@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { MessageSquare, X, Send, Users, UserPlus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,67 +21,129 @@ import type { IUser } from '@shared/interfaces/user.interface';
 export function ChatWindow() {
     const [open, setOpen] = useState(false);
     const [messageInput, setMessageInput] = useState('');
-    const [showConversations, setShowConversations] = useState(true);
+    const [showChats, setShowChats] = useState(true);
     const [showUserSearch, setShowUserSearch] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+    const userClosedRef = useRef(false);
     const { user } = useAuthUser();
     const {
-        conversations,
-        currentConversation,
+        chats,
+        currentChat,
         messages,
         isTyping,
-        setCurrentConversation,
+        setCurrentChat,
         sendMessage,
-        startNewConversation,
+        startNewChat,
         isConnected,
+        loadMoreMessages,
+        isLoadingMore,
+        hasMoreMessages,
+        shouldAutoScroll,
+        setShouldAutoScroll,
     } = useChat();
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const previousScrollHeightRef = useRef<number>(0);
     const { response: usersResponse, isLoading: isLoadingUsers, setFilters } = useSearchableUsers({
         initialParams: { page: 1, limit: 20 }
     });
 
-    // Auto-open chat window when a conversation is set
+    // Auto-open chat window when a chat is set (only if user didn't manually close it)
     useEffect(() => {
-        if (currentConversation && !open) {
+        if (currentChat && !open && !userClosedRef.current) {
             setOpen(true);
-            setShowConversations(false);
+            setShowChats(false);
+            userClosedRef.current = false; // Reset after auto-opening
         }
-    }, [currentConversation, open]);
+    }, [currentChat, open]);
 
-    // Scroll to bottom when new messages arrive
+    // Scroll to bottom when new messages arrive (only if user is at bottom or it's a new message)
+
     useEffect(() => {
-        if (messagesEndRef.current) {
-            messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        if (messagesEndRef.current && shouldAutoScroll) {
+            // Small delay to ensure DOM is updated
+            setTimeout(() => {
+                messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+            }, 100);
         }
-    }, [messages]);
+    }, [messages, shouldAutoScroll]);
 
-    // Focus input when conversation is selected
+    // Handle scroll to detect when user scrolls up
+    const handleScroll = useCallback((e: Event) => {
+        const target = e.currentTarget as HTMLDivElement;
+        const isNearTop = target.scrollTop < 100;
+        const isNearBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 100;
+
+        // Auto-scroll if user is near bottom
+        setShouldAutoScroll(isNearBottom);
+
+        // Load more messages when scrolling to top
+        if (isNearTop && hasMoreMessages && !isLoadingMore) {
+            loadMoreMessages(target, previousScrollHeightRef).then(() => {
+                // Restore scroll position after loading older messages
+                setTimeout(() => {
+                    if (target && previousScrollHeightRef.current) {
+                        const newScrollHeight = target.scrollHeight;
+                        const scrollDifference = newScrollHeight - previousScrollHeightRef.current;
+                        target.scrollTop = scrollDifference;
+                    }
+                }, 50);
+            });
+        }
+    }, [hasMoreMessages, isLoadingMore, loadMoreMessages]);
+
+    // Focus input when chat is selected
     useEffect(() => {
-        if (currentConversation && inputRef.current) {
+        if (currentChat && inputRef.current) {
             inputRef.current.focus();
         }
-    }, [currentConversation]);
+    }, [currentChat]);
+
+    // Cleanup scroll listener
+    useEffect(() => {
+        const viewport = scrollContainerRef.current;
+        if (viewport) {
+            viewport.addEventListener('scroll', handleScroll as any);
+            return () => {
+                viewport.removeEventListener('scroll', handleScroll as any);
+            };
+        }
+    }, [handleScroll]);
 
     const handleSendMessage = async () => {
-        if (!messageInput.trim() || !currentConversation) return;
+        if (!messageInput.trim() || !currentChat) return;
 
-        const recipientId = currentConversation.participantId;
-        await sendMessage(messageInput, recipientId);
-        setMessageInput('');
+        const recipientId = currentChat.participantId;
 
-        // Stop typing indicator
-        if (currentConversation.id && chatService.isConnected) {
-            chatService.sendTyping(currentConversation.id, false);
+        try {
+            await sendMessage(messageInput, recipientId);
+            setMessageInput('');
+
+            // Stop typing indicator - use actual chat ID after send (may have changed)
+            // Note: chat ID will be updated by sendMessage if it was a temp ID
+            setTimeout(() => {
+                const actualChatId = currentChat.id;
+                if (actualChatId && !actualChatId.startsWith('chat_') && chatService.isConnected) {
+                    chatService.sendTyping(actualChatId, false);
+                }
+            }, 100);
+        } catch (error) {
+            console.error('Failed to send message:', error);
+            // Keep message input on error so user can retry
         }
     };
 
     const handleInputChange = (value: string) => {
         setMessageInput(value);
 
-        // Send typing indicator
-        if (currentConversation && chatService.isConnected && value.trim()) {
-            chatService.sendTyping(currentConversation.id, true);
+        // Send typing indicator - only if chat ID is valid (not temp ID)
+        if (currentChat && chatService.isConnected && value.trim()) {
+            const chatId = currentChat.id;
+            // Only send typing indicator if we have a valid UUID chat ID
+            if (chatId && !chatId.startsWith('chat_')) {
+                chatService.sendTyping(chatId, true);
+            }
         }
     };
 
@@ -98,24 +160,24 @@ export function ChatWindow() {
     };
 
     const handleStartChat = (user: IUser) => {
-        // Check if conversation already exists
-        const existingConversation = conversations.find(
+        // Check if chat already exists
+        const existingChat = chats.find(
             (c) => c.participantId === user.id
         );
 
-        if (existingConversation) {
-            // Use existing conversation
-            setCurrentConversation(existingConversation.id);
-            setShowConversations(false);
+        if (existingChat) {
+            // Use existing chat
+            setCurrentChat(existingChat.id);
+            setShowChats(false);
             setShowUserSearch(false);
         } else {
-            // Start new conversation
-            startNewConversation(
+            // Start new chat
+            startNewChat(
                 user.id,
                 `${user.firstName} ${user.lastName}`
             );
-            setCurrentConversation(null, user.id);
-            setShowConversations(false);
+            setCurrentChat(null, user.id);
+            setShowChats(false);
             setShowUserSearch(false);
         }
     };
@@ -124,16 +186,35 @@ export function ChatWindow() {
         (userItem) => userItem.id !== user?.id
     ) || [];
 
-    const totalUnread = conversations.reduce((sum, c) => sum + c.unreadCount, 0);
+    const totalUnread = chats.reduce((sum, c) => sum + c.unreadCount, 0);
+
+    const handleOpenChange = (newOpen: boolean) => {
+        setOpen(newOpen);
+        if (!newOpen) {
+            // User manually closed the chat
+            userClosedRef.current = true;
+            // Reset after a short delay so auto-open can work again for new chats
+            setTimeout(() => {
+                userClosedRef.current = false;
+            }, 100);
+        }
+    };
 
     return (
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover open={open} onOpenChange={handleOpenChange} modal={true}>
             <PopoverTrigger asChild>
                 <Button
                     variant="ghost"
                     size="icon"
                     className="relative h-14 w-14 rounded-full shadow-lg"
                     aria-label="Chat"
+                    onClick={(e) => {
+                        // Toggle open state
+                        if (open) {
+                            e.preventDefault();
+                            handleOpenChange(false);
+                        }
+                    }}
                 >
                     <MessageSquare className="h-5 w-5" />
                     {totalUnread > 0 && (
@@ -149,7 +230,15 @@ export function ChatWindow() {
                     )}
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-96 h-[600px] p-0 flex flex-col" align="end">
+            <PopoverContent
+                className="w-96 h-[600px] p-0 flex flex-col"
+                align="end"
+                onEscapeKeyDown={() => handleOpenChange(false)}
+                onPointerDownOutside={() => {
+                    // Allow closing on outside click
+                    handleOpenChange(false);
+                }}
+            >
                 {showUserSearch ? (
                     // User Search View
                     <div className="flex flex-col h-full">
@@ -183,59 +272,61 @@ export function ChatWindow() {
                             </div>
                         </div>
 
-                        <ScrollArea className="flex-1">
-                            {isLoadingUsers ? (
-                                <div className="flex items-center justify-center py-8">
-                                    <p className="text-sm text-muted-foreground">Loading users...</p>
-                                </div>
-                            ) : filteredUsers.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
-                                    <UserPlus className="h-12 w-12 mb-4 opacity-50" />
-                                    <p className="text-sm">No users found</p>
-                                    {searchQuery && (
-                                        <p className="text-xs mt-1">Try a different search term</p>
-                                    )}
-                                </div>
-                            ) : (
-                                <div className="divide-y">
-                                    {filteredUsers.map((user) => (
-                                        <div
-                                            key={user.id}
-                                            className={cn(
-                                                'flex items-center gap-3 p-4 hover:bg-muted/50 transition-colors cursor-pointer'
-                                            )}
-                                            onClick={() => handleStartChat(user)}
-                                        >
-                                            <Avatar className="h-10 w-10">
-                                                <AvatarImage
-                                                    src={user.profile?.image?.url}
-                                                    alt={`${user.firstName} ${user.lastName}`}
-                                                />
-                                                <AvatarFallback>
-                                                    {user.firstName?.substring(0, 2).toUpperCase() || 'U'}
-                                                </AvatarFallback>
-                                            </Avatar>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="font-medium text-sm truncate">
-                                                    {user.firstName} {user.lastName}
-                                                </p>
-                                                <p className="text-xs text-muted-foreground truncate">
-                                                    {user.email}
-                                                </p>
+                        <ScrollArea className="flex-1 min-h-0">
+                            <div className="pr-4">
+                                {isLoadingUsers ? (
+                                    <div className="flex items-center justify-center py-8">
+                                        <p className="text-sm text-muted-foreground">Loading users...</p>
+                                    </div>
+                                ) : filteredUsers.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
+                                        <UserPlus className="h-12 w-12 mb-4 opacity-50" />
+                                        <p className="text-sm">No users found</p>
+                                        {searchQuery && (
+                                            <p className="text-xs mt-1">Try a different search term</p>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className="divide-y">
+                                        {filteredUsers.map((user) => (
+                                            <div
+                                                key={user.id}
+                                                className={cn(
+                                                    'flex items-center gap-3 p-4 hover:bg-muted/50 transition-colors cursor-pointer'
+                                                )}
+                                                onClick={() => handleStartChat(user)}
+                                            >
+                                                <Avatar className="h-10 w-10">
+                                                    <AvatarImage
+                                                        src={undefined}
+                                                        alt={`${user.firstName} ${user.lastName}`}
+                                                    />
+                                                    <AvatarFallback>
+                                                        {user.firstName?.substring(0, 2).toUpperCase() || 'U'}
+                                                    </AvatarFallback>
+                                                </Avatar>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="font-medium text-sm truncate">
+                                                        {user.firstName} {user.lastName}
+                                                    </p>
+                                                    <p className="text-xs text-muted-foreground truncate">
+                                                        {user.email}
+                                                    </p>
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         </ScrollArea>
                     </div>
-                ) : showConversations && !currentConversation ? (
-                    // Conversations List
+                ) : showChats && !currentChat ? (
+                    // Chats List
                     <div className="flex flex-col h-full">
                         <div className="flex items-center justify-between p-4 border-b">
                             <h3 className="font-semibold flex items-center gap-2">
                                 <Users className="h-4 w-4" />
-                                Conversations
+                                Chats
                             </h3>
                             <Button
                                 variant="ghost"
@@ -247,71 +338,73 @@ export function ChatWindow() {
                                 <UserPlus className="h-4 w-4" />
                             </Button>
                         </div>
-                        <ScrollArea className="flex-1">
-                            {conversations.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
-                                    <MessageSquare className="h-12 w-12 mb-4 opacity-50" />
-                                    <p className="text-sm">No conversations yet</p>
-                                </div>
-                            ) : (
-                                <div className="divide-y">
-                                    {conversations.map((conversation) => (
-                                        <div
-                                            key={conversation.id}
-                                            className={cn(
-                                                'p-4 hover:bg-muted/50 transition-colors cursor-pointer',
-                                                conversation.unreadCount > 0 && 'bg-muted/30'
-                                            )}
-                                            onClick={() => {
-                                                setCurrentConversation(conversation.id);
-                                                setShowConversations(false);
-                                            }}
-                                        >
-                                            <div className="flex items-start gap-3">
-                                                <Avatar className="h-10 w-10">
-                                                    <AvatarImage
-                                                        src={conversation.participantAvatar}
-                                                        alt={conversation.participantName}
-                                                    />
-                                                    <AvatarFallback>
-                                                        {conversation.participantName
-                                                            .substring(0, 2)
-                                                            .toUpperCase()}
-                                                    </AvatarFallback>
-                                                </Avatar>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center justify-between mb-1">
-                                                        <p className="font-medium text-sm truncate">
-                                                            {conversation.participantName}
-                                                        </p>
-                                                        {conversation.unreadCount > 0 && (
-                                                            <Badge variant="secondary" className="text-xs">
-                                                                {conversation.unreadCount}
-                                                            </Badge>
+                        <ScrollArea className="flex-1 min-h-0">
+                            <div className="pr-4">
+                                {chats.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
+                                        <MessageSquare className="h-12 w-12 mb-4 opacity-50" />
+                                        <p className="text-sm">No chats yet</p>
+                                    </div>
+                                ) : (
+                                    <div className="divide-y">
+                                        {chats.map((chat) => (
+                                            <div
+                                                key={chat.id}
+                                                className={cn(
+                                                    'p-4 hover:bg-muted/50 transition-colors cursor-pointer',
+                                                    chat.unreadCount > 0 && 'bg-muted/30'
+                                                )}
+                                                onClick={() => {
+                                                    setCurrentChat(chat.id);
+                                                    setShowChats(false);
+                                                }}
+                                            >
+                                                <div className="flex items-start gap-3">
+                                                    <Avatar className="h-10 w-10">
+                                                        <AvatarImage
+                                                            src={chat.participantAvatar}
+                                                            alt={chat.participantName}
+                                                        />
+                                                        <AvatarFallback>
+                                                            {chat.participantName
+                                                                .substring(0, 2)
+                                                                .toUpperCase()}
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center justify-between mb-1">
+                                                            <p className="font-medium text-sm truncate">
+                                                                {chat.participantName}
+                                                            </p>
+                                                            {chat.unreadCount > 0 && (
+                                                                <Badge variant="secondary" className="text-xs">
+                                                                    {chat.unreadCount}
+                                                                </Badge>
+                                                            )}
+                                                        </div>
+                                                        {chat.lastMessage && (
+                                                            <>
+                                                                <p className="text-sm text-muted-foreground truncate">
+                                                                    {chat.lastMessage.message}
+                                                                </p>
+                                                                <p className="text-xs text-muted-foreground mt-1">
+                                                                    {formatDistanceToNow(
+                                                                        new Date(chat.lastMessage.timestamp),
+                                                                        { addSuffix: true }
+                                                                    )}
+                                                                </p>
+                                                            </>
                                                         )}
                                                     </div>
-                                                    {conversation.lastMessage && (
-                                                        <>
-                                                            <p className="text-sm text-muted-foreground truncate">
-                                                                {conversation.lastMessage.message}
-                                                            </p>
-                                                            <p className="text-xs text-muted-foreground mt-1">
-                                                                {formatDistanceToNow(
-                                                                    new Date(conversation.lastMessage.timestamp),
-                                                                    { addSuffix: true }
-                                                                )}
-                                                            </p>
-                                                        </>
-                                                    )}
                                                 </div>
                                             </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         </ScrollArea>
                     </div>
-                ) : currentConversation ? (
+                ) : currentChat ? (
                     // Chat Messages
                     <div className="flex flex-col h-full">
                         <div className="flex items-center justify-between p-4 border-b">
@@ -322,10 +415,10 @@ export function ChatWindow() {
                                         size="icon"
                                         className="h-8 w-8"
                                         onClick={() => {
-                                            setCurrentConversation(null);
-                                            setShowConversations(true);
+                                            setCurrentChat(null);
+                                            setShowChats(true);
                                         }}
-                                        title="Back to conversations"
+                                        title="Back to chats"
                                     >
                                         <X className="h-4 w-4" />
                                     </Button>
@@ -341,32 +434,48 @@ export function ChatWindow() {
                                 </div>
                                 <Avatar className="h-8 w-8">
                                     <AvatarImage
-                                        src={currentConversation.participantAvatar}
-                                        alt={currentConversation.participantName}
+                                        src={currentChat.participantAvatar}
+                                        alt={currentChat.participantName}
                                     />
                                     <AvatarFallback>
-                                        {currentConversation.participantName
+                                        {currentChat.participantName
                                             .substring(0, 2)
                                             .toUpperCase()}
                                     </AvatarFallback>
                                 </Avatar>
                                 <div>
                                     <p className="font-semibold text-sm">
-                                        {currentConversation.participantName}
+                                        {currentChat.participantName}
                                     </p>
-                                    {isTyping[currentConversation.participantId] && (
+                                    {isTyping[currentChat.participantId] && (
                                         <p className="text-xs text-muted-foreground">typing...</p>
                                     )}
                                 </div>
                             </div>
                         </div>
 
-                        <ScrollArea className="flex-1 p-4">
-                            <div className="space-y-4">
+                        <ScrollArea className="flex-1 min-h-0">
+                            <div
+                                className="p-4 space-y-4"
+                                ref={(el) => {
+                                    // Access the ScrollArea viewport
+                                    if (el) {
+                                        const viewport = el.closest('[data-slot="scroll-area-viewport"]') as HTMLDivElement;
+                                        if (viewport) {
+                                            scrollContainerRef.current = viewport;
+                                        }
+                                    }
+                                }}
+                            >
+                                {isLoadingMore && (
+                                    <div className="flex justify-center py-2">
+                                        <p className="text-xs text-muted-foreground">Loading older messages...</p>
+                                    </div>
+                                )}
                                 {messages.length === 0 ? (
                                     <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
                                         <p className="text-sm">No messages yet</p>
-                                        <p className="text-xs mt-1">Start the conversation!</p>
+                                        <p className="text-xs mt-1">Start the chat!</p>
                                     </div>
                                 ) : (
                                     messages.map((message) => {
@@ -382,7 +491,7 @@ export function ChatWindow() {
                                                 {!isOwn && (
                                                     <Avatar className="h-6 w-6 mt-1">
                                                         <AvatarImage
-                                                            src={message.senderAvatar || message.sender?.profile?.image?.url}
+                                                            src={message.senderAvatar}
                                                             alt={message.senderName || `${message.sender?.firstName} ${message.sender?.lastName}`}
                                                         />
                                                         <AvatarFallback className="text-xs">

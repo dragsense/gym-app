@@ -44,6 +44,7 @@ export function AuthUserProvider({ children }: { children: React.ReactNode }) {
     const userId = deferredUser?.id;
     if (!userId) return;
 
+
     let isMounted = true;
     ensureConnected()
       .then(() => isMounted && socketEmitter<{ success: boolean; message: string }>('joinUserRoom', { userId }))

@@ -100,7 +100,9 @@ export function useNotifications(): UseNotificationsReturn {
 
   // Listen for real-time notifications
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      return;
+    }
 
     const handleNewNotification = (notification: INotification) => {
       // Update React Query cache
