@@ -7,6 +7,8 @@ import { CrudModule } from '@/common/crud/crud.module';
 import { EventService } from '@/common/helper/services/event.service';
 import { TrainersModule } from '../trainers/trainers.module';
 import { ClientsModule } from '../clients/clients.module';
+import { NotificationModule } from '@/common/notification/notification.module';
+import { TrainerClientNotificationService } from './services/trainer-client-notification.service';
 
 @Module({
   imports: [
@@ -14,9 +16,14 @@ import { ClientsModule } from '../clients/clients.module';
     TrainersModule,
     ClientsModule,
     CrudModule,
+    NotificationModule,
   ],
   controllers: [TrainerClientsController],
-  providers: [TrainerClientsService, EventService],
+  providers: [
+    TrainerClientsService,
+    EventService,
+    TrainerClientNotificationService,
+  ],
   exports: [TrainerClientsService],
 })
 export class TrainerClientsModule {}

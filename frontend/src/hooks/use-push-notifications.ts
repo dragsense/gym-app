@@ -105,11 +105,39 @@ export function usePushNotifications(): PushNotificationPermission {
       console.log("Push subscription created:", newSubscription);
 
       // Send subscription to backend
-      // await fetch('/api/push/subscribe', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(newSubscription),
-      // });
+      try {
+        const { subscribeToPush } = await import('@/services/notification.api');
+        
+        // Convert ArrayBuffer keys to base64url
+        const p256dhKey = newSubscription.getKey('p256dh');
+        const authKey = newSubscription.getKey('auth');
+        
+        const p256dhBase64 = btoa(
+          String.fromCharCode(...new Uint8Array(p256dhKey)),
+        )
+          .replace(/\+/g, '-')
+          .replace(/\//g, '_')
+          .replace(/=/g, '');
+        
+        const authBase64 = btoa(
+          String.fromCharCode(...new Uint8Array(authKey)),
+        )
+          .replace(/\+/g, '-')
+          .replace(/\//g, '_')
+          .replace(/=/g, '');
+
+        await subscribeToPush({
+          endpoint: newSubscription.endpoint,
+          keys: {
+            p256dh: p256dhBase64,
+            auth: authBase64,
+          },
+          userAgent: navigator.userAgent,
+        });
+        console.log('Push subscription sent to backend');
+      } catch (error) {
+        console.error('Failed to send subscription to backend:', error);
+      }
 
       return newSubscription;
     } catch (error) {
@@ -125,6 +153,16 @@ export function usePushNotifications(): PushNotificationPermission {
     try {
       const unsubscribed = await subscription.unsubscribe();
       if (unsubscribed) {
+        // Remove from backend
+        try {
+          const { unsubscribeFromPush } = await import(
+            '@/services/notification.api',
+          );
+          await unsubscribeFromPush(subscription.endpoint);
+        } catch (error) {
+          console.error('Failed to remove subscription from backend:', error);
+        }
+
         setSubscription(null);
         console.log("Unsubscribed from push notifications");
       }

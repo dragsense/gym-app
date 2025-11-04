@@ -13,16 +13,20 @@ import { ScheduleModule } from '@/common/schedule/schedule.module';
 import { TrainersModule } from '../trainers/trainers.module';
 import { ClientsModule } from '../clients/clients.module';
 import { UsersModule } from '../users/users.module';
+import { NotificationModule } from '@/common/notification/notification.module';
+import { SessionNotificationService } from './services/session-notification.service';
+import { User } from '@/common/base-user/entities/user.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Session]),
+    TypeOrmModule.forFeature([Session, User]),
     CrudModule,
     ScheduleModule,
     BullModule.registerQueue({ name: 'session' }),
     TrainersModule,
     ClientsModule,
     UsersModule,
+    NotificationModule,
   ],
   exports: [SessionsService, SessionEmailService],
   controllers: [SessionsController],
@@ -30,6 +34,7 @@ import { UsersModule } from '../users/users.module';
     SessionsService,
     SessionEmailService,
     SessionEventListenerService,
+    SessionNotificationService,
     SessionProcessor,
   ],
 })

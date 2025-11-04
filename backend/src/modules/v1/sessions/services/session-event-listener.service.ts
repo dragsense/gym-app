@@ -11,6 +11,7 @@ import { SessionEmailService } from './session-email.service';
 import { UsersService } from '@/modules/v1/users/users.service';
 import { ActionRegistryService } from '@/common/helper/services/action-registry.service';
 import { ProfilesService } from '@/modules/v1/users/profiles/profiles.service';
+import { SessionNotificationService } from './session-notification.service';
 
 @Injectable()
 export class SessionEventListenerService implements OnModuleInit {
@@ -23,6 +24,7 @@ export class SessionEventListenerService implements OnModuleInit {
     private readonly sessionEmailService: SessionEmailService,
     private readonly usersService: UsersService,
     private readonly actionRegistryService: ActionRegistryService,
+    private readonly sessionNotificationService: SessionNotificationService,
   ) {}
 
   onModuleInit() {
@@ -45,9 +47,26 @@ export class SessionEventListenerService implements OnModuleInit {
     try {
       const session = await this.sessionsService.getSingle(payload.entityId, {
         _relations: ['trainer.user', 'clients.user'],
-        _select: ['trainer.user.id', 'clients.user.id'],
       });
       this.logger.log(`Session created: ${session.title} (ID: ${session.id})`);
+
+      const data = payload.data as { createdBy?: string };
+
+      // Send notifications
+      await Promise.all([
+        this.sessionNotificationService.notifyTrainerSessionCreated(
+          session,
+          data?.createdBy,
+        ),
+        this.sessionNotificationService.notifyClientsSessionCreated(
+          session,
+          data?.createdBy,
+        ),
+        this.sessionNotificationService.notifyAdminsSessionCreated(
+          session,
+          data?.createdBy,
+        ),
+      ]);
 
       await this.sessionQueue.add(
         'send-session-confirmation',
@@ -90,21 +109,34 @@ export class SessionEventListenerService implements OnModuleInit {
    */
   @OnEvent('session.crud.update')
   async handleSessionUpdated(payload: EventPayload): Promise<void> {
+    if (!payload.entity) return;
+
     try {
-      const session = payload.entity as Session;
+      const session = await this.sessionsService.getSingle(payload.entityId, {
+        _relations: ['trainer.user', 'clients.user'],
+      });
       this.logger.log(`Session updated: ${session.title} (ID: ${session.id})`);
 
-      const oldSession = payload.oldEntity as Session;
+      const data = payload.data as { updatedBy?: string };
+      const oldSession = payload.oldEntity as Session | undefined;
 
-      if (oldSession.enableReminder !== session.enableReminder) {
-        if (session.enableReminder) {
-          await this.setupSessionReminders(session);
-        } else {
-          await this.removeSessionReminders(session.id);
+      // Send notification if session was updated
+      if (oldSession) {
+        await this.sessionNotificationService.notifySessionUpdated(
+          session,
+          data?.updatedBy,
+        );
+
+        if (oldSession.enableReminder !== session.enableReminder) {
+          if (session.enableReminder) {
+            await this.setupSessionReminders(session);
+          } else {
+            await this.removeSessionReminders(session.id);
+          }
         }
       }
 
-      if (oldSession.status !== session.status) {
+      if (oldSession?.status !== session.status) {
         await this.sessionQueue.add(
           'send-session-status-update',
           {

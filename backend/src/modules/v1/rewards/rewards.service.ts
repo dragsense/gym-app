@@ -8,6 +8,7 @@ import { ReferralLink } from '@/modules/v1/referral-links/entities/referral-link
 import { ERewardType, ERewardStatus } from './enums/reward.enum';
 import { EReferralLinkStatus } from '@shared/enums/referral-link.enum';
 import { ServerGateway } from '@/common/gateways/server.gateway';
+import { RewardNotificationService } from './services/reward-notification.service';
 
 @Injectable()
 export class RewardsService extends CrudService<RewardPoints> {
@@ -18,6 +19,7 @@ export class RewardsService extends CrudService<RewardPoints> {
     private readonly referralLinkRepository: Repository<ReferralLink>,
     moduleRef: ModuleRef,
     private serverGateway: ServerGateway,
+    private readonly rewardNotificationService: RewardNotificationService,
   ) {
     super(rewardPointsRepository, moduleRef);
   }
@@ -61,7 +63,7 @@ export class RewardsService extends CrudService<RewardPoints> {
 
     if (rewardPoints > 0) {
       // Create reward points record
-      await this.create(
+      const reward = await this.create(
         {
           points: rewardPoints,
           type: ERewardType.REFERRAL_BONUS,
@@ -81,6 +83,13 @@ export class RewardsService extends CrudService<RewardPoints> {
           },
         },
       );
+
+      // Send notification
+      try {
+        await this.rewardNotificationService.notifyRewardEarned(reward);
+      } catch (error) {
+        console.error('Failed to send reward notification:', error);
+      }
 
       this.serverGateway.emitToClient(`user_${referrer.id}`, 'rewardsUpdated', {
         message: `You have received ${rewardPoints} points for referring ${referralCount} user${referralCount > 1 ? 's' : ''}`,

@@ -1,4 +1,4 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
@@ -6,6 +6,7 @@ import { ModuleRef } from '@nestjs/core';
 import { Notification } from './entities/notification.entity';
 import { CreateNotificationDto } from './dtos/create-notification.dto';
 import { CrudService } from '@/common/crud/crud.service';
+import { NotificationSenderService } from './notification-sender.service';
 
 export interface NotificationConfig {
   enabled: boolean;
@@ -20,6 +21,7 @@ export class NotificationService extends CrudService<Notification> {
     @InjectRepository(Notification)
     private readonly notificationRepository: Repository<Notification>,
     private readonly configService: ConfigService,
+    private readonly notificationSenderService: NotificationSenderService,
     moduleRef: ModuleRef,
   ) {
     super(notificationRepository, moduleRef);
@@ -82,6 +84,21 @@ export class NotificationService extends CrudService<Notification> {
 
     // Create the notification in database
     const notification = await this.create(createNotificationDto);
+
+    // Send notification through enabled channels (in-app, email, SMS, push)
+    if (notification && notification.entityId) {
+      try {
+        await this.notificationSenderService.sendNotification(notification);
+      } catch (error) {
+        // Log error but don't fail the notification creation
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown error';
+        this.logger.error(
+          `Failed to send notification ${notification.id}: ${errorMessage}`,
+        );
+      }
+    }
+
     return notification;
   }
 

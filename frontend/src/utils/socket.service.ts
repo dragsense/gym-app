@@ -1,7 +1,8 @@
 import { config } from "@/config";
 import type { Socket } from "socket.io-client";
 import { io } from "socket.io-client";
-import type { NotificationData, ChatMessage } from "@/@types/socket.types";
+import type { ChatMessage } from "@/@types/socket.types";
+import type { INotification } from "@shared/interfaces/notification.interface";
 
 export const SOCKET_API_URL = config.baseUrl || "http://localhost:5000";
 
@@ -10,7 +11,8 @@ interface ServerToClientEvents {
   disconnect: (reason: string) => void;
   rewardsUpdated?: () => void;
   // Real-time notifications
-  newNotification: (data: NotificationData) => void;
+  notification: (data: INotification) => void;
+  newNotification: (data: INotification) => void;
   notificationRead: (notificationId: string) => void;
   // Real-time chat
   newMessage: (data: ChatMessage) => void;

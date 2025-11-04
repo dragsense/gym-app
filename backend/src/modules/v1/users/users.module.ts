@@ -19,6 +19,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { RefreshToken } from '../auth/entities/tokens.entity';
 import { UserSubscriber } from './subscribers/user.subscriber';
 import { UserAvailabilityModule } from '../user-availability/user-availability.module';
+import { NotificationModule } from '@/common/notification/notification.module';
+import { UserNotificationService } from './services/user-notification.service';
+import { User } from '@/common/base-user/entities/user.entity';
 
 @Module({
   imports: [
@@ -26,12 +29,13 @@ import { UserAvailabilityModule } from '../user-availability/user-availability.m
     UserAvailabilityModule,
     ActionModule,
     BaseUserModule,
+    NotificationModule,
     BullModule.registerQueue({ name: 'user' }),
     JwtModule.registerAsync({
       useFactory: getJwtConfig,
       inject: [ConfigService],
     }),
-    TypeOrmModule.forFeature([RefreshToken]),
+    TypeOrmModule.forFeature([RefreshToken, User]),
   ],
   exports: [UsersService, UserEmailService, UsersWebSocketService],
   controllers: [UsersController],
@@ -40,6 +44,7 @@ import { UserAvailabilityModule } from '../user-availability/user-availability.m
     UsersService,
     UserEmailService,
     UserEventListenerService,
+    UserNotificationService,
     UserProcessor,
     PasswordService,
     UsersWebSocketService,

@@ -1,14 +1,17 @@
 import socket from "@/utils/socket.service";
-import type { NotificationData } from "@/@types/socket.types";
+import type { INotification } from "@shared/interfaces/notification.interface";
 
 class NotificationService {
   /**
    * Listen for new notifications
    */
-  onNotification(callback: (data: NotificationData) => void) {
-    socket.on("newNotification", callback);
+  onNotification(callback: (data: INotification) => void) {
+    const handler = (data: INotification) => callback(data);
+    socket.on("notification", handler);
+    socket.on("newNotification", handler);
     return () => {
-      socket.off("newNotification", callback);
+      socket.off("notification", handler);
+      socket.off("newNotification", handler);
     };
   }
 
@@ -51,5 +54,3 @@ class NotificationService {
 }
 
 export const notificationService = new NotificationService();
-
-

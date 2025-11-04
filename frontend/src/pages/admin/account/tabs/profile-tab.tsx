@@ -1,5 +1,5 @@
 // External Libraries
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useMemo, useTransition } from "react";
 
 // Handlers
@@ -19,17 +19,20 @@ import { fetchMyProfile, updateMyProfile } from "@/services/user.api";
 import { strictDeepMerge } from "@/utils";
 import { UpdateProfileDto } from "@shared/dtos";
 
+// Hooks
+import { useApiQuery } from "@/hooks/use-api-query";
+
 export default function ProfileTab() {
     const [, startTransition] = useTransition();
     const queryClient = useQueryClient();
     const PROFILE_STORE_KEY = "account-profile";
 
     // Fetch profile data
-    const { data: profile } = useQuery<IProfile>({
-        queryKey: [PROFILE_STORE_KEY],
-        queryFn: () => fetchMyProfile(),
-        enabled: true,
-    });
+    const { data: profile } = useApiQuery<IProfile>(
+        [PROFILE_STORE_KEY],
+        fetchMyProfile,
+        {}
+    );
 
     const profileInitialValues = useMemo(() => {
         const INITIAL_PROFILE_VALUES: TUpdateProfileData = {

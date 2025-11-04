@@ -37,7 +37,7 @@ export class CreateUserAvailabilityTables1735900000000
           {
             name: 'unavailablePeriods',
             type: 'jsonb',
-            default: "'[]'',
+            default: '[]',
           },
           {
             name: 'createdByUserId',
@@ -90,9 +90,8 @@ export class CreateUserAvailabilityTables1735900000000
       'UQ_user_availability_userId',
     );
 
-    const userAvailabilityTable = await queryRunner.getTable(
-      'user_availability',
-    );
+    const userAvailabilityTable =
+      await queryRunner.getTable('user_availability');
     const foreignKeys = userAvailabilityTable?.foreignKeys || [];
     for (const fk of foreignKeys) {
       await queryRunner.dropForeignKey('user_availability', fk);
@@ -101,5 +100,3 @@ export class CreateUserAvailabilityTables1735900000000
     await queryRunner.dropTable('user_availability');
   }
 }
-
-

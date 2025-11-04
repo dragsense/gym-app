@@ -13,7 +13,7 @@ export function AppRouteLoadingFallback({
     const componentId = useId();
 
     return (
-        <div className="h-screen w-screen" data-component-id={componentId}>
+        <div className="absolute top-0 left-0 w-full h-full" data-component-id={componentId}>
             <AppLoader>
                 <div className="text-center mb-4">
                     <h3 className="text-lg font-semibold text-foreground">{title}</h3>

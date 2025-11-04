@@ -35,7 +35,7 @@ function App() {
           </AuthUserProvider>
         </ThemeProvider>
       </I18nProvider>
-      <ReactQueryDevtools initialIsOpen={false} position="top" />
+      <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
     </QueryClientProvider>
   );
 }

@@ -2,7 +2,7 @@
 // External Libraries
 import { useShallow } from 'zustand/shallow';
 import { Loader2 } from "lucide-react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useMemo, useCallback, useId, useTransition } from "react";
 
 // Handlers
@@ -12,7 +12,7 @@ import { FormHandler } from "@/handlers";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
 import { type TListHandlerComponentProps } from "@/@types/handler-types";
 import { type TUpdateProfileData } from "@shared/types/user.type";
-import type { IUser, IClient, ITrainer } from "@shared/interfaces";
+import type { IUser, IClient, ITrainer, IProfile } from "@shared/interfaces";
 import { type IMessageResponse } from "@shared/interfaces/api/response.interface";
 
 
@@ -26,6 +26,9 @@ import { ProfileFormModal, type IProfileFormModalExtraProps } from "@/components
 import { fetchUserProfile, updateProfile } from "@/services/user.api";
 import { strictDeepMerge } from "@/utils";
 import { UpdateProfileDto } from "@shared/dtos";
+
+// Hooks
+import { useApiQuery } from "@/hooks/use-api-query";
 
 
 
@@ -60,11 +63,14 @@ export default function ProfileForm({
     const isUpdateProfileAction = action === 'updateProfile';
     const userId = payload;
 
-    const { data, isLoading } = useQuery({
-        queryKey: [storeKey + "-profile"],
-        queryFn: () => fetchUserProfile(userId),
-        enabled: isUpdateProfileAction && !!userId,
-    });
+    const { data, isLoading } = useApiQuery<IProfile>(
+        [storeKey + "-profile", userId],
+        () => fetchUserProfile(userId),
+        {},
+        {
+            enabled: isUpdateProfileAction && !!userId,
+        }
+    );
 
 
     const profile = data

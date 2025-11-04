@@ -207,3 +207,73 @@ body {
     font-family: var(--font-mono); /* Poppins */
   }
 }
+
+/* Toast Description Styling - Enhanced visibility with higher specificity */
+[data-sonner-toast][data-styled="true"] [data-description],
+[data-sonner-toast] [data-description] {
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  line-height: 1.6 !important;
+  letter-spacing: 0.01em;
+  margin-top: 0.375rem;
+  color: hsl(var(--foreground)) !important;
+}
+
+[data-sonner-toast][data-type="error"] [data-description] {
+  color: hsl(var(--destructive-foreground)) !important;
+  font-weight: 600 !important;
+}
+
+[data-sonner-toast][data-type="success"] [data-description] {
+  color: hsl(var(--primary-foreground)) !important;
+  font-weight: 600 !important;
+}
+
+[data-sonner-toast][data-type="info"] [data-description] {
+  color: hsl(var(--primary-foreground)) !important;
+  font-weight: 600 !important;
+}
+
+[data-sonner-toast][data-type="warning"] [data-description] {
+  color: rgb(202 138 4) !important;
+  font-weight: 600 !important;
+}
+
+/* Dark mode overrides with higher specificity */
+[data-sonner-toaster][data-sonner-theme="dark"]
+  [data-sonner-toast][data-styled="true"]
+  [data-description],
+[data-sonner-toaster][data-sonner-theme="dark"]
+  [data-sonner-toast]
+  [data-description] {
+  color: hsl(var(--foreground)) !important;
+  font-weight: 600 !important;
+}
+
+[data-sonner-toaster][data-sonner-theme="dark"]
+  [data-sonner-toast][data-type="error"]
+  [data-description] {
+  color: hsl(var(--destructive-foreground)) !important;
+  font-weight: 600 !important;
+}
+
+[data-sonner-toaster][data-sonner-theme="dark"]
+  [data-sonner-toast][data-type="success"]
+  [data-description] {
+  color: hsl(var(--primary-foreground)) !important;
+  font-weight: 600 !important;
+}
+
+[data-sonner-toaster][data-sonner-theme="dark"]
+  [data-sonner-toast][data-type="info"]
+  [data-description] {
+  color: hsl(var(--primary-foreground)) !important;
+  font-weight: 600 !important;
+}
+
+[data-sonner-toaster][data-sonner-theme="dark"]
+  [data-sonner-toast][data-type="warning"]
+  [data-description] {
+  color: rgb(250 204 21) !important;
+  font-weight: 600 !important;
+}

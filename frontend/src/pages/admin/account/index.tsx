@@ -1,6 +1,5 @@
 // External Libraries
 import { Loader2, User, UserCircle, Lock } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import { useId, useState } from "react";
 
 // UI Components
@@ -12,6 +11,9 @@ import { AccountTab, ProfileTab, PasswordResetTab } from "./tabs";
 // Services
 import { fetchMyProfile } from "@/services/user.api";
 import { me } from "@/services/auth.api";
+
+// Hooks
+import { useApiQuery } from "@/hooks/use-api-query";
 import type { IProfile } from "@shared/interfaces/user.interface";
 import type { IAuthUser } from "@shared/interfaces/auth.interface";
 
@@ -21,18 +23,18 @@ export default function AccountPage() {
     const [activeTab, setActiveTab] = useState("account");
 
     // Fetch profile data for loading state
-    const { isLoading: isLoadingProfile } = useQuery<IProfile>({
-        queryKey: ["account-profile"],
-        queryFn: () => fetchMyProfile(),
-        enabled: true,
-    });
+    const { isLoading: isLoadingProfile } = useApiQuery<IProfile>(
+        ["account-profile"],
+        fetchMyProfile,
+        {}
+    );
 
     // Fetch user data for loading state
-    const { isLoading: isLoadingUser } = useQuery({
-        queryKey: ["me"],
-        queryFn: () => me() as Promise<IAuthUser>,
-        enabled: true,
-    });
+    const { isLoading: isLoadingUser } = useApiQuery<IAuthUser>(
+        ["me"],
+        me as () => Promise<IAuthUser>,
+        {}
+    );
 
     if (isLoadingProfile || isLoadingUser) {
         return (

@@ -16,6 +16,7 @@ import { CrudOptions } from '@/common/crud/interfaces/crud.interface';
 import { EUserLevels } from '@shared/enums';
 import { TrainersService } from '../trainers/trainers.service';
 import { ClientsService } from '../clients/clients.service';
+import { TrainerClientNotificationService } from './services/trainer-client-notification.service';
 
 @Injectable()
 export class TrainerClientsService extends CrudService<TrainerClient> {
@@ -25,6 +26,7 @@ export class TrainerClientsService extends CrudService<TrainerClient> {
     private readonly trainersService: TrainersService,
     private readonly clientsService: ClientsService,
     moduleRef: ModuleRef,
+    private readonly trainerClientNotificationService: TrainerClientNotificationService,
   ) {
     const crudOptions: CrudOptions = {
       restrictedFields: ['trainer.user.password', 'client.user.password'],
@@ -67,7 +69,28 @@ export class TrainerClientsService extends CrudService<TrainerClient> {
       throw new ConflictException('Trainer-client assignment already exists');
     }
 
-    return await this.create(createDto);
+    const assignment = await this.create(createDto);
+
+    // Load relations for notification
+    const assignmentWithRelations = await this.trainerClientRepo.findOne({
+      where: { id: assignment.id },
+      relations: ['trainer.user', 'client.user'],
+    });
+
+    // Send notifications
+    if (assignmentWithRelations) {
+      try {
+        const data = (createDto as { createdBy?: string }) || {};
+        await this.trainerClientNotificationService.handleAssignmentCreated(
+          assignmentWithRelations,
+          data.createdBy,
+        );
+      } catch (error) {
+        console.error('Failed to send trainer-client notification:', error);
+      }
+    }
+
+    return assignment;
   }
 
   async updateTrainerClient(

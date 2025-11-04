@@ -1,16 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { PageInnerLayout } from '@/layouts';
 import { fetchCacheMonitorUrl } from '@/services/cache.api';
+import { useApiQuery } from '@/hooks/use-api-query';
+import type { CacheMonitorResponse } from '@shared/types/monitor.types';
 
 export default function CachePage() {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [monitorUrl, setMonitorUrl] = useState<string>('');
 
-  const { data: monitorData, isLoading, error } = useQuery({
-    queryKey: ['cache-monitor-url'],
-    queryFn: fetchCacheMonitorUrl,
-  });
+  const { data: monitorData, isLoading, error } = useApiQuery<CacheMonitorResponse>(
+    ['cache-monitor-url'],
+    fetchCacheMonitorUrl,
+    {}
+  );
 
   useEffect(() => {
     if (monitorData?.url) {

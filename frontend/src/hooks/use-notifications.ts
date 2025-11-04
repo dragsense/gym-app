@@ -1,122 +1,191 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import { notificationService } from "@/services/socket-services/notification.service";
-import type { NotificationData } from "@/@types/socket.types";
+import {
+  fetchNotifications,
+  markNotificationAsRead,
+} from "@/services/notification.api";
+import { useApiPaginatedQuery } from "./use-api-paginated-query";
+import { useApiMutation } from "./use-api-mutation";
+import type { INotification } from "@shared/interfaces/notification.interface";
+import type { IPaginatedResponse } from "@shared/interfaces/api/response.interface";
 import { useAuthUser } from "./use-auth-user";
 
 export interface UseNotificationsReturn {
-  notifications: NotificationData[];
+  notifications: INotification[];
   unreadCount: number;
   markAsRead: (notificationId: string) => void;
   markAllAsRead: () => void;
   clearNotifications: () => void;
   isConnected: boolean;
+  isLoading: boolean;
+  loadMore: () => void;
+  hasMore: boolean;
 }
 
 export function useNotifications(): UseNotificationsReturn {
   const { user } = useAuthUser();
-  const [notifications, setNotifications] = useState<NotificationData[]>([]);
-  const [isConnected, setIsConnected] = useState(notificationService.isConnected);
+  const queryClient = useQueryClient();
+  const queryKey = useMemo(() => ["notifications", user?.id], [user?.id]);
 
-  // Load existing notifications from localStorage
+  // Use infinite mode for load more functionality
+  const { data, isLoading, pagination, setPage, error } =
+    useApiPaginatedQuery<INotification>(
+      queryKey,
+      fetchNotifications,
+      { page: 1, limit: 20 },
+      { mode: "infinite", reverseOrder: true }
+    );
+
+  // Show error toast for fetch failures
   useEffect(() => {
-    const stored = localStorage.getItem("notifications");
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored) as NotificationData[];
-        setNotifications(parsed);
-      } catch {
-        // Invalid data, ignore
+    if (error) {
+      toast.error("Failed to load notifications", {
+        description:
+          error instanceof Error ? error.message : "Please try again later",
+      });
+    }
+  }, [error]);
+
+  // Mark notification as read mutation
+  const markAsReadMutation = useApiMutation(markNotificationAsRead, {
+    onMutate: async (notificationId: string) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey });
+
+      // Snapshot previous value
+      const previousData =
+        queryClient.getQueryData<IPaginatedResponse<INotification>>(queryKey);
+
+      // Optimistically update
+      queryClient.setQueryData<IPaginatedResponse<INotification>>(
+        queryKey,
+        (old) => {
+          if (!old?.data) return old;
+          return {
+            ...old,
+            data: old.data.map((n) =>
+              n.id === notificationId ? { ...n, isRead: true } : n
+            ),
+          };
+        }
+      );
+
+      return { previousData } as {
+        previousData: IPaginatedResponse<INotification> | undefined;
+      };
+    },
+    onError: (
+      error,
+      notificationId,
+      context: { previousData?: IPaginatedResponse<INotification> }
+    ) => {
+      // Rollback on error
+      if (context?.previousData) {
+        queryClient.setQueryData(queryKey, context.previousData);
       }
-    }
-  }, []);
-
-  // Save notifications to localStorage whenever they change
-  useEffect(() => {
-    if (notifications.length > 0) {
-      localStorage.setItem("notifications", JSON.stringify(notifications));
-    }
-  }, [notifications]);
+      toast.error("Failed to mark notification as read", {
+        description:
+          error instanceof Error ? error.message : "Please try again",
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey });
+    },
+  });
 
   // Handle connection status
-  useEffect(() => {
-    setIsConnected(notificationService.isConnected);
-    // Connection status updates are handled by the socket service
-  }, []);
+  const isConnected = notificationService.isConnected;
 
   // Listen for real-time notifications
   useEffect(() => {
     if (!user?.id) return;
 
-    const handleNewNotification = (data: NotificationData) => {
-      setNotifications((prev) => {
-        // Check if notification already exists
-        if (prev.some((n) => n.id === data.id)) {
-          return prev;
-        }
-        return [data, ...prev].slice(0, 100); // Keep last 100 notifications
-      });
+    const handleNewNotification = (notification: INotification) => {
+      // Update React Query cache
+      queryClient.setQueryData<IPaginatedResponse<INotification>>(
+        queryKey,
+        (old) => {
+          if (!old) return old;
 
-      // Show toast notification
-      toast.info(data.title, {
-        description: data.message,
+          // Check if notification already exists
+          if (old.data.some((n) => n.id === notification.id)) {
+            return old;
+          }
+
+          // Add new notification at the beginning (reverseOrder: true)
+          return {
+            ...old,
+            data: [notification, ...old.data],
+            total: (old.total ?? 0) + 1,
+          };
+        }
+      );
+
+      toast.info(notification.title, {
+        description: notification.message,
         duration: 5000,
       });
 
-      // Request browser notification if permission granted
       if ("Notification" in window && Notification.permission === "granted") {
-        new Notification(data.title, {
-          body: data.message,
+        new Notification(notification.title, {
+          body: notification.message,
           icon: "/favicon.ico",
-          tag: data.id,
+          tag: notification.id,
         });
       }
     };
 
-    const handleNotificationRead = (notificationId: string) => {
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n))
-      );
-    };
-
-    const unsubscribeNotification = notificationService.onNotification(handleNewNotification);
-    const unsubscribeRead = notificationService.onNotificationRead(handleNotificationRead);
+    const unsubscribeNotification = notificationService.onNotification(
+      handleNewNotification
+    );
 
     return () => {
       unsubscribeNotification();
-      unsubscribeRead();
     };
-  }, [user?.id]);
+  }, [user?.id, queryClient, queryKey]);
 
-  const markAsRead = useCallback((notificationId: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n))
-    );
-
-    // Notify server via service
-    notificationService.markAsRead(notificationId).catch((error) => {
-      console.error("Failed to mark notification as read:", error);
-    });
-  }, []);
+  const markAsRead = useCallback(
+    (notificationId: string) => {
+      markAsReadMutation.mutate(notificationId);
+    },
+    [markAsReadMutation]
+  );
 
   const markAllAsRead = useCallback(() => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    // Mark all on server
+    const notifications = data?.data ?? [];
     notifications.forEach((n) => {
-      if (!n.read) {
-        notificationService.markAsRead(n.id).catch(() => {
-          // Silently fail for bulk operations
-        });
+      if (!n.isRead) {
+        markAsReadMutation.mutate(n.id);
       }
     });
-  }, [notifications]);
+  }, [data?.data, markAsReadMutation]);
 
   const clearNotifications = useCallback(() => {
-    setNotifications([]);
-    localStorage.removeItem("notifications");
-  }, []);
+    queryClient.setQueryData<IPaginatedResponse<INotification>>(
+      queryKey,
+      (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          data: [],
+          total: 0,
+        };
+      }
+    );
+  }, [queryClient, queryKey]);
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const loadMore = useCallback(() => {
+    if (isLoading || !pagination.hasNextPage) return;
+    setPage((pagination.page ?? 1) + 1);
+  }, [isLoading, pagination.hasNextPage, pagination.page, setPage]);
+
+  const notifications = useMemo(() => data?.data ?? [], [data?.data]);
+  const unreadCount = useMemo(
+    () => notifications.filter((n) => !n.isRead).length,
+    [notifications]
+  );
 
   return {
     notifications,
@@ -125,5 +194,8 @@ export function useNotifications(): UseNotificationsReturn {
     markAllAsRead,
     clearNotifications,
     isConnected,
+    isLoading,
+    loadMore,
+    hasMore: pagination.hasNextPage,
   };
 }

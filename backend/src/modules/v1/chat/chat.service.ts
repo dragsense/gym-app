@@ -3,15 +3,18 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
-import { Repository } from 'typeorm';
 import { Conversation } from '@/common/base-chat/entities/conversation.entity';
 import { ChatMessage } from '@/common/base-chat/entities/chat-message.entity';
-import { SendMessageDto, CreateChatDto } from '@shared/dtos/chat-dtos/chat.dto';
+import { CreateChatDto } from '@shared/dtos/chat-dtos/chat.dto';
 import { BaseChatService } from '@/common/base-chat/base-chat.service';
+import { ChatNotificationService } from './services/chat-notification.service';
 
 @Injectable()
 export class ChatService {
-  constructor(private readonly baseChatService: BaseChatService) {}
+  constructor(
+    private readonly baseChatService: BaseChatService,
+    private readonly chatNotificationService: ChatNotificationService,
+  ) {}
 
   /**
    * Create or get existing conversation between two users
@@ -44,9 +47,7 @@ export class ChatService {
       participantTwoId: dto.participantId,
     });
 
-    return await this.baseChatService.conversationRepository.save(
-      conversation,
-    );
+    return await this.baseChatService.conversationRepository.save(conversation);
   }
 
   /**
@@ -56,21 +57,20 @@ export class ChatService {
     senderId: string,
     chatIdOrRecipientId: string,
     message: string,
-    recipientId?: string,
+    initialRecipientId?: string,
   ): Promise<ChatMessage> {
-    let conversation: Conversation;
+    let conversation: Conversation | null;
 
-    // If recipientId is provided, create or get conversation
-    if (recipientId) {
+    // If initialRecipientId is provided, create or get conversation
+    if (initialRecipientId) {
       conversation = await this.createOrGetConversation(senderId, {
-        participantId: recipientId,
+        participantId: initialRecipientId,
       });
     } else {
       // Get existing conversation
-      conversation =
-        await this.baseChatService.conversationRepository.findOne({
-          where: { id: chatIdOrRecipientId },
-        });
+      conversation = await this.baseChatService.conversationRepository.findOne({
+        where: { id: chatIdOrRecipientId },
+      });
 
       if (!conversation) {
         throw new NotFoundException('Chat not found');
@@ -83,6 +83,10 @@ export class ChatService {
       ) {
         throw new ForbiddenException('You are not a participant of this chat');
       }
+    }
+
+    if (!conversation) {
+      throw new NotFoundException('Conversation not found');
     }
 
     // Create message
@@ -101,10 +105,36 @@ export class ChatService {
     await this.baseChatService.conversationRepository.save(conversation);
 
     // Load relations for response
-    return await this.baseChatService.messageRepository.findOne({
-      where: { id: savedMessage.id },
-      relations: ['sender', 'sender.profile', 'sender.profile.image'],
-    });
+    const messageWithRelations =
+      await this.baseChatService.messageRepository.findOne({
+        where: { id: savedMessage.id },
+        relations: ['sender', 'sender.profile', 'sender.profile.image'],
+      });
+
+    if (!messageWithRelations) {
+      throw new NotFoundException('Message not found after creation');
+    }
+
+    // Send notification to recipient (the other participant)
+    const messageRecipientId =
+      conversation.participantOneId === senderId
+        ? conversation.participantTwoId
+        : conversation.participantOneId;
+
+    if (messageRecipientId) {
+      try {
+        await this.chatNotificationService.notifyNewMessage(
+          messageWithRelations,
+          conversation,
+          messageRecipientId,
+        );
+      } catch (error) {
+        // Log but don't fail message sending
+        console.error('Failed to send chat notification:', error);
+      }
+    }
+
+    return messageWithRelations;
   }
 
   /**
@@ -200,5 +230,3 @@ export class ChatService {
     }
   }
 }
-
-

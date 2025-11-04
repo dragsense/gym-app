@@ -1,5 +1,4 @@
 import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
 
 // Components
 import Calendar from "@/components/shared-ui/calendar";
@@ -15,6 +14,9 @@ import { fetchSessions } from "@/services/session.api";
 import { type ISession } from "@shared/interfaces/session.interface";
 import { ESessionStatus } from "@shared/enums/session.enum";
 
+// Hooks
+import { useApiPaginatedQuery } from "@/hooks/use-api-paginated-query";
+
 
 interface ISessionsCalendarProps {
   onCreateSession?: () => void;
@@ -24,13 +26,14 @@ interface ISessionsCalendarProps {
 export default function SessionsCalendar({ onCreateSession, onEventClick }: ISessionsCalendarProps) {
 
   // Fetch sessions
-  const { data: sessionsData, isLoading } = useQuery({
-    queryKey: ['sessions-calendar'],
-    queryFn: () => fetchSessions({
+  const { data: sessionsData, isLoading } = useApiPaginatedQuery<ISession>(
+    ['sessions-calendar'],
+    fetchSessions,
+    {
       _relations: '',
       _select: 'title, startDateTime, endDateTime, type, status, location, price',
-    }),
-  });
+    }
+  );
 
   // Transform sessions to calendar events
   const calendarEvents: CalendarEvent[] = useMemo(() => {

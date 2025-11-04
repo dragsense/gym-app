@@ -6,6 +6,7 @@ import { CrudService } from '@/common/crud/crud.service';
 import { ReferralLink } from './entities/referral-link.entity';
 import { CreateReferralLinkDto, UpdateReferralLinkDto } from '@shared/dtos';
 import { EReferralLinkStatus } from '@shared/enums/referral-link.enum';
+import { ReferralLinkNotificationService } from './services/referral-link-notification.service';
 
 @Injectable()
 export class ReferralLinksService extends CrudService<ReferralLink> {
@@ -13,6 +14,7 @@ export class ReferralLinksService extends CrudService<ReferralLink> {
     @InjectRepository(ReferralLink)
     private readonly referralLinkRepository: Repository<ReferralLink>,
     moduleRef: ModuleRef,
+    private readonly referralLinkNotificationService: ReferralLinkNotificationService,
   ) {
     super(referralLinkRepository, moduleRef);
   }
@@ -29,7 +31,7 @@ export class ReferralLinksService extends CrudService<ReferralLink> {
     const linkUrl = `${baseUrl}/signup?ref=${referralCode}`;
 
     // Create referral link
-    return this.create({
+    const referralLink = await this.create({
       ...createReferralLinkDto,
       referralCode,
       linkUrl,
@@ -37,6 +39,25 @@ export class ReferralLinksService extends CrudService<ReferralLink> {
       referralCount: 0,
       currentUses: 0,
     });
+
+    // Load relations for notification
+    const linkWithRelations = await this.referralLinkRepository.findOne({
+      where: { id: referralLink.id },
+      relations: ['createdBy'],
+    });
+
+    // Send notification
+    if (linkWithRelations) {
+      try {
+        await this.referralLinkNotificationService.notifyReferralLinkCreated(
+          linkWithRelations,
+        );
+      } catch (error) {
+        console.error('Failed to send referral link notification:', error);
+      }
+    }
+
+    return referralLink;
   }
 
   private async generateUniqueReferralCode(): Promise<string> {

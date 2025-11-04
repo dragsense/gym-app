@@ -7,7 +7,6 @@ import {
   Body,
   Query,
   Param,
-  UseGuards,
   Request,
 } from '@nestjs/common';
 import {
@@ -19,17 +18,25 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { NotificationService } from './notification.service';
+import { PushNotificationService } from './services/push-notification.service';
 import {
   NotificationListDto,
   NotificationDto,
   NotificationPaginatedDto,
+  CreatePushSubscriptionDto,
+  PushSubscriptionResponseDto,
+  PushSubscriptionsListDto,
+  UnsubscribePushResponseDto,
 } from '@shared/dtos/notification-dtos';
 
 @ApiTags('Notifications')
 @ApiBearerAuth()
 @Controller('notifications')
 export class NotificationController {
-  constructor(private readonly notificationService: NotificationService) {}
+  constructor(
+    private readonly notificationService: NotificationService,
+    private readonly pushNotificationService: PushNotificationService,
+  ) {}
 
   @Get()
   @ApiOperation({
@@ -83,8 +90,7 @@ export class NotificationController {
     type: NotificationDto,
   })
   @ApiResponse({ status: 404, description: 'Notification not found' })
-  async markAsRead(@Param('id') id: string, @Request() req: any) {
-    const userId = req.user?.id;
+  async markAsRead(@Param('id') id: string) {
     return await this.notificationService.update(id, { isRead: true });
   }
 
@@ -119,7 +125,7 @@ export class NotificationController {
     description: 'Notification deleted successfully',
   })
   @ApiResponse({ status: 404, description: 'Notification not found' })
-  async delete(@Param('id') id: string, @Request() req: any) {
+  async delete(@Param('id') id: string) {
     await this.notificationService.delete(id);
     return { message: 'Notification deleted successfully' };
   }
@@ -145,5 +151,94 @@ export class NotificationController {
       entityId: userId,
       entityType: 'user',
     });
+  }
+
+  @Post('push/subscribe')
+  @ApiOperation({ summary: 'Subscribe to push notifications' })
+  @ApiResponse({
+    status: 201,
+    description: 'Push subscription created successfully',
+    type: PushSubscriptionResponseDto,
+  })
+  async subscribeToPush(
+    @Body() subscriptionDto: CreatePushSubscriptionDto,
+    @Request() req: any,
+  ) {
+    const userId = req.user?.id;
+    const subscription = await this.pushNotificationService.saveSubscription(
+      userId,
+      {
+        endpoint: subscriptionDto.endpoint,
+        keys: subscriptionDto.keys,
+      },
+      subscriptionDto.userAgent || req.headers?.['user-agent'],
+      subscriptionDto.deviceId,
+    );
+
+    return {
+      message: 'Push subscription created successfully',
+      subscription: {
+        id: subscription.id,
+        userId: subscription.userId,
+        endpoint: subscription.endpoint,
+        keys: subscription.keys,
+        userAgent: subscription.userAgent,
+        deviceId: subscription.deviceId,
+        createdAt: subscription.createdAt,
+        updatedAt: subscription.updatedAt,
+      },
+    };
+  }
+
+  @Delete('push/unsubscribe')
+  @ApiOperation({ summary: 'Unsubscribe from push notifications' })
+  @ApiResponse({
+    status: 200,
+    description: 'Push subscription removed successfully',
+    type: UnsubscribePushResponseDto,
+  })
+  async unsubscribeFromPush(
+    @Request() req: any,
+    @Query('endpoint') endpoint: string,
+  ) {
+    const userId = req.user?.id;
+    const removed = await this.pushNotificationService.removeSubscription(
+      userId,
+      endpoint,
+    );
+
+    return {
+      message: removed
+        ? 'Push subscription removed successfully'
+        : 'Push subscription not found',
+      removed,
+    };
+  }
+
+  @Get('push/subscriptions')
+  @ApiOperation({ summary: 'Get all push subscriptions for current user' })
+  @ApiResponse({
+    status: 200,
+    description: 'Push subscriptions retrieved successfully',
+    type: PushSubscriptionsListDto,
+  })
+  async getPushSubscriptions(@Request() req: any) {
+    const userId = req.user?.id;
+    const subscriptions =
+      await this.pushNotificationService.getUserSubscriptions(userId);
+
+    return {
+      subscriptions: subscriptions.map((sub) => ({
+        id: sub.id,
+        userId: sub.userId,
+        endpoint: sub.endpoint,
+        keys: sub.keys,
+        userAgent: sub.userAgent,
+        deviceId: sub.deviceId,
+        createdAt: sub.createdAt,
+        updatedAt: sub.updatedAt,
+      })),
+      count: subscriptions.length,
+    };
   }
 }

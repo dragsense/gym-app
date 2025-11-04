@@ -29,6 +29,7 @@ import { type TListHandlerStore, type TSingleHandlerStore } from "@/stores";
 import { type TListHandlerComponentProps } from "@/@types/handler-types";
 import type { TSessionListData } from "@shared/types/session.type";
 import type { TSessionViewExtraProps } from "../view/session-view";
+import { ViewToggle } from "@/components/shared-ui/view-toggle";
 
 export interface ISessionListExtraProps {
   // Add any extra props if needed
@@ -92,34 +93,13 @@ export default function SessionList({
     handleView,
   });
 
-  // React 19: Memoized view toggle for better performance
-  const renderViewToggle = useMemo(() => (
-    <TabsList className="flex justify-center items-center w-auto border-gray-200" data-component-id={componentId}>
-      <TabsTrigger
-        value="table"
-        className="flex items-center gap-2 px-4 data-[state=active]:text-secondary data-[state=active]:font-semibold"
-      >
-        <Table className="h-4 w-4" />
-        <span className="hidden sm:inline">Table</span>
-      </TabsTrigger>
-
-      <TabsTrigger
-        value="list"
-        className="flex items-center gap-2 px-4 data-[state=active]:text-secondary data-[state=active]:font-semibold"
-      >
-        <List className="h-4 w-4" />
-        <span className="hidden sm:inline">List</span>
-      </TabsTrigger>
-    </TabsList>
-  ), [componentId]);
-
   return (
     <Tabs value={currentView} onValueChange={(value) => setCurrentView(value as ViewType)} data-component-id={componentId}>
       <div className="flex flex-1 justify-between items-start md:items-center gap-2 flex-wrap">
         <SessionFilters
           store={store}
         />
-        {renderViewToggle}
+        <ViewToggle componentId={componentId} />
         <Button
           onClick={handleCreate}
           data-component-id={componentId}

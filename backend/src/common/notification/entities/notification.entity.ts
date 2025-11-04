@@ -65,7 +65,7 @@ export class Notification extends GeneralBaseEntity {
     description: 'Additional metadata for the notification',
   })
   @Column({ type: 'jsonb', nullable: true })
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 
   @ApiPropertyOptional({
     example: false,
@@ -73,4 +73,19 @@ export class Notification extends GeneralBaseEntity {
   })
   @Column({ type: 'boolean', default: false })
   isRead?: boolean;
+
+  @ApiPropertyOptional({
+    example: 'Welcome to our platform!',
+    description: 'Email subject line',
+  })
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  emailSubject?: string;
+
+  @ApiPropertyOptional({
+    example:
+      '<html><body><h1>Welcome!</h1><p>Thank you for joining us.</p></body></html>',
+    description: 'HTML content for email notification',
+  })
+  @Column({ type: 'text', nullable: true })
+  htmlContent?: string;
 }

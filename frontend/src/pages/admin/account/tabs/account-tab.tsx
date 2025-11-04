@@ -1,5 +1,5 @@
 // External Libraries
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useMemo, useTransition } from "react";
 
 // Handlers
@@ -20,17 +20,20 @@ import { me } from "@/services/auth.api";
 import { strictDeepMerge } from "@/utils";
 import { UpdateUserDto } from "@shared/dtos";
 
+// Hooks
+import { useApiQuery } from "@/hooks/use-api-query";
+
 export default function AccountTab() {
     const [, startTransition] = useTransition();
     const queryClient = useQueryClient();
     const USER_STORE_KEY = "account-user";
 
     // Fetch user data
-    const { data: user } = useQuery({
-        queryKey: ["me"],
-        queryFn: () => me() as Promise<IAuthUser>,
-        enabled: true,
-    });
+    const { data: user } = useApiQuery<IAuthUser>(
+        ["me"],
+        me as () => Promise<IAuthUser>,
+        {}
+    );
 
     const userInitialValues = useMemo(() => {
         const INITIAL_USER_VALUES: TUpdateUserData = {

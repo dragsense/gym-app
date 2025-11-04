@@ -97,13 +97,15 @@ export function AppHeader() {
           <div className="flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
             Points: {!isLoadingRewards ? userPoints : "--"}
           </div>
-          {/* Notifications */}
-          <NotificationBell />
+
           {/* Chat */}
           {/* Language Switcher */}
           <LanguageSwitcher />
           {/* Theme Toggle */}
           <ThemeToggle />
+
+          {/* Notifications */}
+          <NotificationBell />
         </div>
 
         <div className="flex items-center gap-5 p-4 text-left text-sm bg-header rounded-full border-1 shadow-sm">

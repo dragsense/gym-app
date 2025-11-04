@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bell, CheckCheck } from 'lucide-react';
+import { Bell, CheckCheck, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     Popover,
@@ -20,6 +20,9 @@ export function NotificationBell() {
         markAsRead,
         markAllAsRead,
         isConnected,
+        isLoading,
+        loadMore,
+        hasMore,
     } = useNotifications();
 
     return (
@@ -80,14 +83,14 @@ export function NotificationBell() {
                                     key={notification.id}
                                     className={cn(
                                         'p-4 hover:bg-muted/50 transition-colors cursor-pointer',
-                                        !notification.read && 'bg-muted/30'
+                                        !notification.isRead && 'bg-muted/30'
                                     )}
                                     onClick={() => {
-                                        if (!notification.read) {
+                                        if (!notification.isRead) {
                                             markAsRead(notification.id);
                                         }
-                                        if (notification.actionUrl) {
-                                            window.location.href = notification.actionUrl;
+                                        if (notification.entityId && notification.entityType) {
+                                            window.location.href = `/${notification.entityType}s/${notification.entityId}`;
                                         }
                                         setOpen(false);
                                     }}
@@ -96,7 +99,7 @@ export function NotificationBell() {
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2 mb-1">
                                                 <p className="font-medium text-sm">{notification.title}</p>
-                                                {!notification.read && (
+                                                {!notification.isRead && (
                                                     <span className="h-2 w-2 bg-primary rounded-full flex-shrink-0" />
                                                 )}
                                             </div>
@@ -115,6 +118,26 @@ export function NotificationBell() {
                         </div>
                     )}
                 </ScrollArea>
+                {hasMore && (
+                    <div className="p-4 border-t">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={loadMore}
+                            disabled={isLoading}
+                            className="w-full"
+                        >
+                            {isLoading ? (
+                                <>
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    Loading...
+                                </>
+                            ) : (
+                                'Load More'
+                            )}
+                        </Button>
+                    </div>
+                )}
             </PopoverContent>
         </Popover>
     );

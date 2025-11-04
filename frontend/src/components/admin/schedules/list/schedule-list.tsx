@@ -92,7 +92,7 @@ export default function ScheduleList({
     <Tabs value={currentView} onValueChange={(value) => setCurrentView(value as ViewType)} data-component-id={componentId}>
       <div className="flex flex-1 justify-between items-start md:items-center gap-2 flex-wrap">
         <ScheduleFilters store={store} />
-        <ViewToggle componentId={componentId} className="border-gray-200" />
+        <ViewToggle componentId={componentId} />
         <div className="flex gap-2">
           <Button
             onClick={handleCreate}

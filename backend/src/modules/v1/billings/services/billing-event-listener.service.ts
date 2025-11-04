@@ -7,11 +7,13 @@ import { Billing } from '../entities/billing.entity';
 import { ScheduleService } from '@/common/schedule/schedule.service';
 import { EventPayload } from '@/common/helper/services/event.service';
 import { ActionRegistryService } from '@/common/helper/services/action-registry.service';
+import { EBillingStatus } from '@shared/enums/billing.enum';
 import {
   BillingEmailService,
   BillingReminderType,
 } from './billing-email.service';
 import { UsersService } from '@/modules/v1/users/users.service';
+import { BillingNotificationService } from './billing-notification.service';
 
 @Injectable()
 export class BillingEventListenerService implements OnModuleInit {
@@ -24,6 +26,7 @@ export class BillingEventListenerService implements OnModuleInit {
     private readonly actionRegistryService: ActionRegistryService,
     private readonly billingEmailService: BillingEmailService,
     private readonly usersService: UsersService,
+    private readonly billingNotificationService: BillingNotificationService,
   ) {}
 
   onModuleInit() {
@@ -47,9 +50,22 @@ export class BillingEventListenerService implements OnModuleInit {
     try {
       const billing = await this.billingsService.getSingle(payload.entityId, {
         _relations: ['recipientUser'],
-        _select: ['recipientUser.id'],
       });
       this.logger.log(`Billing created: ${billing.title} (ID: ${billing.id})`);
+
+      const data = payload.data as { createdBy?: string };
+
+      // Send notifications
+      await Promise.all([
+        this.billingNotificationService.notifyBillingCreated(
+          billing,
+          data?.createdBy,
+        ),
+        this.billingNotificationService.notifyAdminsBillingCreated(
+          billing,
+          data?.createdBy,
+        ),
+      ]);
 
       // Send confirmation to trainer
       await this.billingQueue.add(
@@ -85,9 +101,24 @@ export class BillingEventListenerService implements OnModuleInit {
     try {
       const billing = await this.billingsService.getSingle(payload.entityId, {
         _relations: ['recipientUser'],
-        _select: ['recipientUser.id'],
       });
       this.logger.log(`Billing updated: ${billing.title} (ID: ${billing.id})`);
+
+      const data = payload.data as { updatedBy?: string };
+      const oldBilling = payload.oldEntity as Billing | undefined;
+
+      // Send notification if billing was updated
+      if (oldBilling) {
+        await this.billingNotificationService.notifyBillingUpdated(
+          billing,
+          data?.updatedBy,
+        );
+      }
+
+      // Check if billing was paid
+      if (oldBilling && oldBilling.status !== EBillingStatus.PAID && billing.status === EBillingStatus.PAID) {
+        await this.billingNotificationService.notifyBillingPaid(billing);
+      }
 
       // Update reminders if billing details changed
       if (billing.enableReminder) {

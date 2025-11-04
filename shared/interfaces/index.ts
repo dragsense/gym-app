@@ -15,6 +15,7 @@ export * from "./schedule.interface";
 export * from "./queue.interface";
 export * from "./worker.interface";
 export * from "./notification.interface";
+export * from "./push-subscription.interface";
 export * from "./role";
 export * from "./session.interface";
 export * from "./billing.interface";

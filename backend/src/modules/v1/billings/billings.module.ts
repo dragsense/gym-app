@@ -16,16 +16,20 @@ import { JwtModule } from '@nestjs/jwt';
 import { getJwtConfig } from '@/config/jwt.config';
 import { StripeModule } from '../stripe/stripe.module';
 import { ProfilesModule } from '../users/profiles/profiles.module';
+import { NotificationModule } from '@/common/notification/notification.module';
+import { BillingNotificationService } from './services/billing-notification.service';
+import { User } from '@/common/base-user/entities/user.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Billing]),
+    TypeOrmModule.forFeature([Billing, User]),
     CrudModule,
     ScheduleModule,
     ProfilesModule,
     BullModule.registerQueue({ name: 'billing' }),
     UsersModule,
     StripeModule,
+    NotificationModule,
     JwtModule.registerAsync({
       useFactory: getJwtConfig,
       inject: [ConfigService],
@@ -37,6 +41,7 @@ import { ProfilesModule } from '../users/profiles/profiles.module';
     BillingsService,
     BillingEmailService,
     BillingEventListenerService,
+    BillingNotificationService,
     BillingProcessor,
   ],
 })

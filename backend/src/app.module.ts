@@ -27,48 +27,51 @@ import {
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
-// Feature modules
-import { UsersModule } from './modules/v1/users/users.module';
-import { BaseUserModule } from './common/base-user/base-users.module';
-import { AuthModule } from './modules/v1/auth/auth.module';
+// Feature modules - exported from modules index
+import {
+  UsersModule,
+  AuthModule,
+  ChatModule,
+  ClientsModule,
+  TrainersModule,
+  TrainerClientsModule,
+  SessionsModule,
+  BillingsModule,
+  ReferralLinksModule,
+  RewardsModule,
+  UserSettingsModule,
+  UserAvailabilityModule,
+  StripeModule,
+} from './modules';
+import { SeedsModule } from './seeds/seeds.module';
 
-import { FileUploadModule } from './common/file-upload/file-upload.module';
-import { ActivityLogsModule } from './common/activity-logs/activity-logs.module';
-import { WorkerModule } from './common/worker/worker.module';
-
-// Common modules
-import { LoggerModule } from './common/logger/logger.module';
-import { DatabaseModule } from './common/database/database.module';
-import { ServerGatewayModule } from './common/gateways/server-gateway.module';
-import { ChatModule } from './modules/v1/chat/chat.module';
+// Common modules - exported from index
+import {
+  BaseUserModule,
+  FileUploadModule,
+  ActivityLogsModule,
+  WorkerModule,
+  LoggerModule,
+  DatabaseModule,
+  ServerGatewayModule,
+  SettingsModule,
+  PaymentMethodsModule,
+  ActionModule,
+  CacheModule,
+  RolesModule,
+  HealthModule,
+  NotificationModule,
+  RequestContextMiddleware,
+  RequestContextInterceptor,
+  UserLevelGuard,
+} from './common';
 
 import { join } from 'path';
 import { ResponseEncryptionInterceptor } from './interceptors/response-encryption-interceptor';
-import { RequestContextMiddleware } from './common/context/request-context.middleware';
-import { RequestContextInterceptor } from './common/context/request-context.interceptor';
-
 import { EncryptionService } from './lib/encryption.service';
-import { ClientsModule } from './modules/v1/clients/clients.module';
-import { TrainersModule } from './modules/v1/trainers/trainers.module';
-import { TrainerClientsModule } from './modules/v1/trainer-clients/trainer-clients.module';
-import { SessionsModule } from './modules/v1/sessions/sessions.module';
-import { BillingsModule } from './modules/v1/billings/billings.module';
-import { ReferralLinksModule } from './modules/v1/referral-links/referral-links.module';
-import { RewardsModule } from './modules/v1/rewards/rewards.module';
-import { UserSettingsModule } from './modules/v1/user-settings/user-settings.module';
-import { SettingsModule } from './common/settings/settings.module';
-import { UserAvailabilityModule } from './modules/v1/user-availability/user-availability.module';
-import { PaymentMethodsModule } from './common/payment-methods/payment-methods.module';
-import { StripeModule } from './modules/v1/stripe/stripe.module';
-import { SeedsModule } from './seeds/seeds.module';
-import { ActionModule } from './common/helper/action.module';
 import { getBullQueueConfig } from './config/bull-queue.config';
-import { CacheModule } from './common/cache/cache.module';
-import { RolesModule } from './common/roles/roles.module';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtAuthGuard } from './guards/auth.gaurd';
-import { HealthModule } from './common/health/health.module';
-import { UserLevelGuard } from './common/gaurds/level.guard';
 
 @Module({
   imports: [
@@ -139,6 +142,7 @@ import { UserLevelGuard } from './common/gaurds/level.guard';
     BaseUserModule,
     LoggerModule,
     ServerGatewayModule,
+    NotificationModule,
     FileUploadModule,
     ActivityLogsModule,
     CacheModule,
