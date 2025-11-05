@@ -20,6 +20,8 @@ import { type FormInputs } from "@/hooks/use-input";
 import { useInput } from "@/hooks/use-input";
 import type { BillingSettingsDto, BusinessSettingsDto, LimitSettingsDto, CurrencySettingsDto, NotificationSettingsDto, TimeSettingsDto } from "@shared/dtos";
 import { FormErrors } from "@/components/shared-ui/form-errors";
+import { useAuthUser } from "@/hooks/use-auth-user";
+import { EUserLevels } from "@shared/enums/user.enum";
 
 interface IUserSettingsFormProps extends THandlerComponentProps<TFormHandlerStore<TUserSettingsData, any, any>> { }
 
@@ -27,7 +29,10 @@ export default function UserSettingsForm({
     storeKey,
     store,
 }: IUserSettingsFormProps) {
-    // React 19: Essential IDs and transitions
+
+    const { user } = useAuthUser();
+
+
     const componentId = useId();
     const [activeTab, setActiveTab] = useState("time");
 
@@ -43,6 +48,36 @@ export default function UserSettingsForm({
     // React 19: Memoized fields for better performance
     const fields = useMemo(() => ({
         ...originalFields,
+
+        ...(user?.level <= EUserLevels.ADMIN
+            ? [{
+                limits: {
+                    ...originalFields.limits,
+                    renderItem: (item: LimitSettingsDto) => {
+                        return <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {item.maxSessionsPerDay}
+                            {item.maxClientsPerTrainer}
+                            {item.sessionDurationDefault}
+                        </div>;
+                    },
+                },
+                business: {
+                    ...originalFields.business,
+                    renderItem: (item: BusinessSettingsDto) => {
+                        return <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {item.businessName}
+                            {item.businessEmail}
+                            {item.businessPhone}
+                            {item.businessAddress}
+                            {item.businessLogo}
+                        </div>;
+                    }
+                }
+            }]
+            : [
+                { limits: undefined },
+                { business: undefined }
+            ]),
         time: {
             ...originalFields.time,
             renderItem: (item: TimeSettingsDto) => {
@@ -53,47 +88,33 @@ export default function UserSettingsForm({
                 </div>;
             }
         },
-        currency: {
-            ...originalFields.currency,
-            renderItem: (item: CurrencySettingsDto) => {
-                return <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {item.defaultCurrency}
-                    {item.currencySymbol}
-
-                </div>;
+        // Only show currency and billing sections if user is at least TRAINER level
+        ...(user?.level <= EUserLevels.TRAINER
+            ? {
+                currency: {
+                    ...originalFields.currency,
+                    renderItem: (item: CurrencySettingsDto) => {
+                        return <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {item.defaultCurrency}
+                            {item.currencySymbol}
+                        </div>;
+                    }
+                },
+                billing: {
+                    ...originalFields.billing,
+                    renderItem: (item: BillingSettingsDto) => {
+                        return <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {item.taxRate}
+                            {item.invoicePrefix}
+                        </div>;
+                    }
+                }
             }
-        },
-        limits: {
-            ...originalFields.limits,
-            renderItem: (item: LimitSettingsDto) => {
-                return <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {item.maxSessionsPerDay}
-                    {item.maxClientsPerTrainer}
-                    {item.sessionDurationDefault}
-                </div>;
+            : {
+                currency: undefined,
+                billing: undefined,
             }
-        },
-        business: {
-            ...originalFields.business,
-            renderItem: (item: BusinessSettingsDto) => {
-                return <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {item.businessName}
-                    {item.businessEmail}
-                    {item.businessPhone}
-                    {item.businessAddress}
-                    {item.businessLogo}
-                </div>;
-            }
-        },
-        billing: {
-            ...originalFields.billing,
-            renderItem: (item: BillingSettingsDto) => {
-                return <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {item.taxRate}
-                    {item.invoicePrefix}
-                </div>;
-            }
-        },
+        ),
         notifications: {
             ...originalFields.notifications,
             renderItem: (item: NotificationSettingsDto) => {
@@ -113,19 +134,7 @@ export default function UserSettingsForm({
     }) as FormInputs<TUserSettingsData>;
 
     const settingsTabs = [
-        {
-            id: "time",
-            label: "Time",
-            icon: Clock,
-            description: "Time settings"
-        },
-        {
-            id: "currency",
-            label: "Currency",
-            icon: DollarSign,
-            description: "Currency and localization settings"
-        },
-        {
+        ...(user?.level <= EUserLevels.ADMIN ? [{
             id: "limits",
             label: "Limits",
             icon: Shield,
@@ -136,13 +145,26 @@ export default function UserSettingsForm({
             label: "Business",
             icon: Building,
             description: "Business information and branding"
+        }] : []),
+        {
+            id: "time",
+            label: "Time",
+            icon: Clock,
+            description: "Time settings"
         },
+        ...(user?.level <= EUserLevels.TRAINER ? [{
+            id: "currency",
+            label: "Currency",
+            icon: DollarSign,
+            description: "Currency and localization settings"
+        },
+
         {
             id: "billing",
             label: "Billing",
             icon: CreditCard,
             description: "Billing and commission settings"
-        },
+        }] : []),
         {
             id: "notifications",
             label: "Notifications",

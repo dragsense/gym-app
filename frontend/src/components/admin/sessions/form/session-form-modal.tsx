@@ -33,6 +33,7 @@ const SessionFormModal = React.memo(function SessionFormModal({
   storeKey,
   store,
 }: ISessionFormModalProps) {
+
   // React 19: Essential IDs and transitions
   const componentId = useId();
   const [, startTransition] = useTransition();
@@ -43,6 +44,7 @@ const SessionFormModal = React.memo(function SessionFormModal({
     return `Form store "${storeKey}" not found. Did you forget to register it?`;
   }
 
+  const isSubmitting = store((state) => state.isSubmitting)
   const isEditing = store((state) => state.isEditing)
 
   const open = store((state) => state.extra.open)
@@ -144,12 +146,12 @@ const SessionFormModal = React.memo(function SessionFormModal({
       >
         Cancel
       </Button>
-      <Button type="submit" disabled={false} data-component-id={componentId}>
-        {false && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+      <Button type="submit" disabled={isSubmitting} data-component-id={componentId}>
+        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         {isEditing ? "Update" : "Add"}
       </Button>
     </div>
-  ), [componentId, isEditing, onClose]);
+  ), [componentId, isEditing, onClose, isSubmitting]);
 
   return <>
     <ModalForm<TSessionData, ISessionResponse, ISessionFormModalExtraProps>

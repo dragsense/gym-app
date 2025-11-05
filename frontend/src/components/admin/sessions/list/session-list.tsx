@@ -30,6 +30,8 @@ import { type TListHandlerComponentProps } from "@/@types/handler-types";
 import type { TSessionListData } from "@shared/types/session.type";
 import type { TSessionViewExtraProps } from "../view/session-view";
 import { ViewToggle } from "@/components/shared-ui/view-toggle";
+import { useAuthUser } from "@/hooks/use-auth-user";
+import { EUserLevels } from "@shared/enums/user.enum";
 
 export interface ISessionListExtraProps {
   // Add any extra props if needed
@@ -46,7 +48,9 @@ export default function SessionList({
   store,
   singleStore
 }: ISessionListProps) {
-  // React 19: Essential IDs and transitions
+
+  const { user } = useAuthUser()
+
   const componentId = useId();
   const [, startTransition] = useTransition();
 
@@ -100,12 +104,12 @@ export default function SessionList({
           store={store}
         />
         <ViewToggle componentId={componentId} />
-        <Button
+        {user?.level <= EUserLevels.TRAINER ? <Button
           onClick={handleCreate}
           data-component-id={componentId}
         >
           <Plus /> <span className="hidden sm:inline capitalize">Add Session</span>
-        </Button>
+        </Button> : null}
       </div>
 
       <TabsContent value="table">
