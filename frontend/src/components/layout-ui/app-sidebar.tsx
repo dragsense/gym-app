@@ -105,7 +105,7 @@ export function AppSidebar({
             <SidebarMenuButton asChild className="hover:bg-transparent">
               <Link to={ROOT_ROUTE} className="h-13">
                 <img src={logo} className="h-full object-contain" />
-                <span className="text-900 text-xl uppercase">Web Template</span>
+                <span className="text-900 text-xl uppercase">Formance</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -142,12 +142,14 @@ export function AppSidebar({
                   >
                     <SidebarMenuItem>
                       <CollapsibleTrigger asChild>
+
                         <SidebarMenuButton
                           isActive={matchRoutePath(item.url, location.pathname)}
+
                           tooltip={item.title}
                           className="group cursor-pointer text-muted-foreground/50 p-6 rounded-xl hover:bg-muted/50 transition-all duration-200"
                         >
-                          {item.icon && <item.icon className="group-data-[active=true]:text-secondary hover:text-secondary h-6 w-6" />}
+                          {item.icon && <item.icon className="group-data-[active=true]:text-background h-6 w-6" />}
                           <span className="font-medium">{item.title}</span>
                         </SidebarMenuButton>
                       </CollapsibleTrigger>
@@ -162,11 +164,13 @@ export function AppSidebar({
                               >
                                 <Link to={child.url}>
                                   {child.icon && (
-                                    <child.icon className="group-data-[active=true]:text-secondary hover:text-secondary h-5 w-5" />
+                                    <child.icon className="group-data-[active=true]:text-background hover:text-background h-5 w-5" />
                                   )}
                                   <span className="font-medium">{child.title}</span>
                                 </Link>
                               </SidebarMenuSubButton>
+
+
                             </SidebarMenuSubItem>
                           ))}
                         </SidebarMenuSub>
@@ -179,12 +183,15 @@ export function AppSidebar({
               return (
                 <SidebarMenuItem key={item.title}>
                   <Link to={item.url}>
+
+
                     <SidebarMenuButton
                       isActive={matchRoutePath(item.url, location.pathname)}
+
                       tooltip={item.title}
                       className="group cursor-pointer text-muted-foreground/50 p-6 rounded-xl hover:bg-muted/50 transition-all duration-200"
                     >
-                      {item.icon && <item.icon className="group-data-[active=true]:text-secondary hover:text-secondary h-6 w-6" />}
+                      {item.icon && <item.icon className="group-data-[active=true]:text-background hover:text-background h-6 w-6" />}
                       <span className="font-medium">{item.title}</span>
                     </SidebarMenuButton>
                   </Link>

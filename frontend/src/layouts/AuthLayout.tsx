@@ -16,20 +16,23 @@ export default function AuthLayout() {
     >
 
       {/* Left Panel */}
-      <div className="flex flex-col items-center justify-center gap-1">
-        <img src={logo} alt="FORMANCE Logo" className="w-20 md:w-20" />
-        <h1 className="text-3xl font-bold text-center">Welcome to Web Template</h1>
-        <p className="text-center text-sm max-w-sm">
-          Empower coaches to manage clients, track progress, and deliver results — all in one simple, powerful tool.
-        </p>
-        <a
-          href="https://linkedin.com/company/formance"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-sm text-secondary underline underline-offset-4"
-        >
-          Visit our LinkedIn
-        </a>
+      <div className="flex flex-col items-center justify-center gap-4">
+        <img src={logo} alt="FORMANCE Logo" className="w-10 md:w-10" />
+
+        <div className="space-y-1 text-center">
+          <h1 className="text-3xl font-bold text-center">Welcome to FORMANCE</h1>
+          <p className="text-center text-sm max-w-sm">
+            Empower coaches to manage clients, track progress, and deliver results — all in one simple, powerful tool.
+          </p>
+          <a
+            href="https://linkedin.com/company/formance"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-muted-foreground underline underline-offset-4"
+          >
+            Visit our LinkedIn
+          </a>
+        </div>
       </div>
 
       {/* Right Panel */}

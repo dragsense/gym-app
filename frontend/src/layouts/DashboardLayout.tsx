@@ -14,6 +14,7 @@ import { AppHeader } from "@/components/layout-ui/app-header";
 
 // UI Components
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { FloatingChatButton } from "@/components/shared-ui/floating-chat-button";
 
 
 
@@ -60,6 +61,7 @@ export function DashboardLayoutWrapper() {
   return (
     <DashboardLayout>
       <Outlet />
+      <FloatingChatButton />
     </DashboardLayout>
   );
 }
