@@ -12,14 +12,17 @@ interface MainLayoutProps { }
 export default function MainLayout({ }: MainLayoutProps) {
   // React 19: Essential IDs
   const componentId = useId();
-  
+
   return (
-    <div 
+    <div
       className="bg-gradient-to-t from-primary/10 to-secondary/10"
       data-component-id={componentId}
     >
       <Outlet />
+
       <Toaster />
+
+
     </div>
   );
 }

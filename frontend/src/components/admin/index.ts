@@ -13,3 +13,4 @@ export * from "./schedules";
 export * from "./referral-links";
 export * from "./settings";
 export * from "./user-availability";
+export * from "./prodcuts";

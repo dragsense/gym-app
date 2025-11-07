@@ -16,6 +16,8 @@ import {
   Link,
   Home,
   User,
+  Box,
+  CardSim,
 } from "lucide-react";
 import {
   ADMIN_ROUTES,
@@ -113,6 +115,18 @@ const superAdminAndAdminShared: NavItem[] = [
     url: ADMIN_ROUTES.ROLES,
     icon: Shield,
   },
+  {
+    title: "Products",
+    url: ADMIN_ROUTES.PRODCUTS.INDEX,
+    icon: Box,
+    children: [
+      {
+        title: "Inventory",
+        url: ADMIN_ROUTES.PRODCUTS.INVENTORY,
+        icon: CardSim,
+      },
+    ],
+  },
 ];
 
 // Super Admin-only navigation items
@@ -166,21 +180,37 @@ export const navItemsByLevel = {
     superAdminNavItems.map((item) => ({
       ...item,
       url: SUPER_ADMIN_SEGMENT + "/" + item.url,
+      children: item.children?.map((child) => ({
+        ...child,
+        url: SUPER_ADMIN_SEGMENT + "/" + child.url,
+      })),
     })),
   [EUserLevels.ADMIN]: () =>
     adminNavItems.map((item) => ({
       ...item,
       url: ADMIN_SEGMENT + "/" + item.url,
+      children: item.children?.map((child) => ({
+        ...child,
+        url: ADMIN_SEGMENT + "/" + child.url,
+      })),
     })),
   [EUserLevels.TRAINER]: () =>
     trainerNavItems.map((item) => ({
       ...item,
       url: TRAINER_SEGMENT + "/" + item.url,
+      children: item.children?.map((child) => ({
+        ...child,
+        url: TRAINER_SEGMENT + "/" + child.url,
+      })),
     })),
   [EUserLevels.CLIENT]: () =>
     clientNavItems.map((item) => ({
       ...item,
       url: CLIENT_SEGMENT + "/" + item.url,
+      children: item.children?.map((child) => ({
+        ...child,
+        url: CLIENT_SEGMENT + "/" + child.url,
+      })),
     })),
 };
 

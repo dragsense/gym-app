@@ -69,9 +69,8 @@ export function AppSidebar({
         const isChildActive = item.children.some((child) =>
           matchRoutePath(child.url, location.pathname)
         );
-        const isParentActive = item.urls.some((url) =>
-          matchRoutePath(url, location.pathname)
-        );
+        const isParentActive = matchRoutePath(item.url, location.pathname)
+
         newExpandedItems[item.title] =
           isChildActive || isParentActive || item.title === "Dashboard";
       }

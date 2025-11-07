@@ -42,6 +42,7 @@ import {
   UserSettingsModule,
   UserAvailabilityModule,
   StripeModule,
+  InventoryModule,
 } from './modules';
 import { SeedsModule } from './seeds/seeds.module';
 
@@ -152,6 +153,7 @@ import { JwtAuthGuard } from './guards/auth.gaurd';
     ChatModule,
 
     // Feature modules
+    InventoryModule,
     TrainersModule,
     ClientsModule,
     TrainerClientsModule,

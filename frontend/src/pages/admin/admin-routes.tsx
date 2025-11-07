@@ -28,6 +28,7 @@ const SettingsPage = lazy(() => import("./settings"));
 const CachePage = lazy(() => import("./cache"));
 const UserAvailabilityPage = lazy(() => import("./user-availability"));
 const AccountPage = lazy(() => import("./account"));
+const InventoryPage = lazy(() => import("./prodcuts/inventory"));
 
 // Helper to create route with component and user level
 const createRoute = (
@@ -64,6 +65,7 @@ const superAdminAndAdminSharedRoutes = (userLevel: string): RouteDefinition[] =>
   createRoute(ADMIN_ROUTES.TRAINERS, TrainersPage, userLevel, "Loading trainers..."),
   createRoute(ADMIN_ROUTES.TRAINER_CLIENTS, TrainerClientsPage, userLevel, "Loading trainer clients..."),
   createRoute(ADMIN_ROUTES.ROLES, RolesPage, userLevel, "Loading roles..."),
+  createRoute(ADMIN_ROUTES.PRODCUTS.INVENTORY, InventoryPage, userLevel, "Loading Inventory..."),
 ];
 
 // Super Admin-only routes

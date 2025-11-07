@@ -31,7 +31,7 @@ import { Form } from "@/components/ui/form";
 
 interface IListHandlerProps<
   TData,
-  TUserListData,
+  TListData,
   TExtraProps extends Record<string, any> = {},
   TSingleData = never,
   TSingleExtraProps extends Record<string, any> = {},
@@ -40,18 +40,18 @@ interface IListHandlerProps<
   queryFn: (params: IListQueryParams) => Promise<IPaginatedResponse<TData>>;
   ListComponent: React.ComponentType<{
     storeKey: string,
-    store: TListHandlerStore<TData, TUserListData, TExtraProps>,
+    store: TListHandlerStore<TData, TListData, TExtraProps>,
     singleStore?: TSingleHandlerStore<TSingleData, TSingleExtraProps>
   }>;
   listProps?: TExtraProps;
   initialParams?: IListQueryParams;
-  actionComponents?: IListActionComponent<TListHandlerStore<TData, TUserListData, TExtraProps>, TSingleHandlerStore<TSingleData, TSingleExtraProps>>[];
+  actionComponents?: IListActionComponent<TListHandlerStore<TData, TListData, TExtraProps>, TSingleHandlerStore<TSingleData, TSingleExtraProps>>[];
   dto?: ClassConstructor<object>;
 };
 
 export function ListHandler<
   TData,
-  TUserListData,
+  TListData,
   TExtraProps extends Record<string, any> = {},
   TSingleData = never,
   TSingleExtraProps extends Record<string, any> = {},
@@ -65,7 +65,7 @@ export function ListHandler<
   dto
 }: IListHandlerProps<
   TData,
-  TUserListData,
+  TListData,
   TExtraProps,
   TSingleData,
   TSingleExtraProps
@@ -97,10 +97,10 @@ export function ListHandler<
   }, [deferredFields, initialParams.filters]);
 
 
-  let store = useRegisteredStore<TListHandlerStore<TData, TUserListData, TExtraProps>>(listStoreKey);
+  let store = useRegisteredStore<TListHandlerStore<TData, TListData, TExtraProps>>(listStoreKey);
   if (!store) {
-    store = useListHandlerStore<TData, TUserListData, TExtraProps>((initialParams.filters || {}), listProps, filteredFields as TFieldConfigObject<TUserListData>);
-    registerStore<TListHandlerStore<TData, TUserListData, TExtraProps>>(listStoreKey, store);
+    store = useListHandlerStore<TData, TListData, TExtraProps>((initialParams.filters || {}), listProps, filteredFields as TFieldConfigObject<TListData>);
+    registerStore<TListHandlerStore<TData, TListData, TExtraProps>>(listStoreKey, store);
   }
 
 

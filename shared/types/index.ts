@@ -17,3 +17,4 @@ export * from "./settings.type";
 export * from "./user-availability.type";
 export * from "./payment-methods.type";
 export * from "./notification.type";
+export * from "./products";

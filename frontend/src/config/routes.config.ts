@@ -41,6 +41,10 @@ export const ADMIN_ROUTES = {
   SETTINGS: "settings",
   USER_AVAILABILITY: "user-availability",
   ACCOUNT: "account",
+  PRODCUTS: {
+    INDEX: "products",
+    INVENTORY: "products/inventory",
+  },
 } as const;
 export type AdminRoute = keyof typeof ADMIN_ROUTES;
 
@@ -72,6 +76,8 @@ export const ROUTE_TITLES: Record<string, string> = {
   [ADMIN_ROUTES.ACCOUNT]: "Account",
   [ADMIN_ROUTES.CACHE]: "Cache",
   [ADMIN_ROUTES.SYSTEM_DASHBOARD]: "System Dashboard",
+  [ADMIN_ROUTES.PRODCUTS.INDEX]: "Products",
+  [ADMIN_ROUTES.PRODCUTS.INVENTORY]: "Inventory",
 };
 
 export const ROUTES_REDIRECTS = {

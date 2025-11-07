@@ -21,3 +21,4 @@ export * from "./session.interface";
 export * from "./billing.interface";
 export * from "./referral-link.interface";
 export * from "./chat.interface";
+export * from "./products";

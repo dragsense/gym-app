@@ -12,4 +12,4 @@ export { RewardsModule } from './rewards/rewards.module';
 export { UserSettingsModule } from './user-settings/user-settings.module';
 export { UserAvailabilityModule } from './user-availability/user-availability.module';
 export { StripeModule } from './stripe/stripe.module';
-
+export { InventoryModule } from './product/inventory/inventory.module';
