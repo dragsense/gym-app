@@ -20,3 +20,4 @@ export * from "./payment-methods-dtos";
 export * from "./stripe-dtos";
 export * from "./chat-dtos";
 export * from "./product-dtos";
+export * from "./dashboard-dtos";

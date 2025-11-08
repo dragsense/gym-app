@@ -13,3 +13,4 @@ export { UserSettingsModule } from './user-settings/user-settings.module';
 export { UserAvailabilityModule } from './user-availability/user-availability.module';
 export { StripeModule } from './stripe/stripe.module';
 export { InventoryModule } from './product/inventory/inventory.module';
+export { DashboardModule } from './dashboard/dashboard.module';

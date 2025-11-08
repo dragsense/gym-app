@@ -43,6 +43,7 @@ import {
   UserAvailabilityModule,
   StripeModule,
   InventoryModule,
+  DashboardModule,
 } from './modules';
 import { SeedsModule } from './seeds/seeds.module';
 
@@ -170,6 +171,7 @@ import { JwtAuthGuard } from './guards/auth.gaurd';
     UsersModule,
     AuthModule,
     ActionModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [

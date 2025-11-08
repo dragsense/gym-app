@@ -22,3 +22,4 @@ export * from "./billing.interface";
 export * from "./referral-link.interface";
 export * from "./chat.interface";
 export * from "./products";
+export * from "./dashboard.interface";

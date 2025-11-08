@@ -15,3 +15,4 @@ export * from "./payment-methods.enum";
 export * from "./user-availability.enum";
 export * from "./health.enum";
 export * from "./products";
+export * from "./dashboard-analytics.enum";

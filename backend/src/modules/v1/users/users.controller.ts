@@ -38,7 +38,6 @@ import { User } from '@/common/base-user/entities/user.entity';
 import { CacheService } from '@/common/cache/cache.service';
 import { EUserLevels } from '@shared/enums';
 import { MinUserLevel } from '@/common/decorators/level.decorator';
-import { Profile } from './profiles/entities/profile.entity';
 
 @ApiBearerAuth('access-token')
 @ApiTags('Users')

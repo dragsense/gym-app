@@ -20,7 +20,6 @@ const ReferralLinksPage = lazy(() => import("./referral-links"));
 const ActivityLogsPage = lazy(() => import("./activity-logs"));
 const FilesPage = lazy(() => import("./files"));
 const SchedulesPage = lazy(() => import("./schedules"));
-const SystemDashboardPage = lazy(() => import("./system-dashboard").then(module => ({ default: module.SystemDashboardPage })));
 const WorkersPage = lazy(() => import("./workers"));
 const RolesPage = lazy(() => import("./roles"));
 const QueuesPage = lazy(() => import("./queues"));
@@ -29,7 +28,8 @@ const CachePage = lazy(() => import("./cache"));
 const UserAvailabilityPage = lazy(() => import("./user-availability"));
 const AccountPage = lazy(() => import("./account"));
 const InventoryPage = lazy(() => import("./prodcuts/inventory"));
-
+const DashboardPage = lazy(() => import("./dashboards/dashboard"));
+const SystemDashboardPage = lazy(() => import("./dashboards/system-dashboard"));
 // Helper to create route with component and user level
 const createRoute = (
   path: string,
@@ -43,7 +43,7 @@ const createRoute = (
 
 // Common routes (shared across ALL user levels)
 const commonRoutes = (userLevel: string): RouteDefinition[] => [
-  createRoute(ADMIN_ROUTES.DASHBOARD, SystemDashboardPage, userLevel, "Loading dashboard..."),
+  createRoute(ADMIN_ROUTES.DASHBOARD, DashboardPage, userLevel, "Loading dashboard..."),
   createRoute(ADMIN_ROUTES.SESSIONS, SessionsPage, userLevel, "Loading sessions..."),
   createRoute(ADMIN_ROUTES.BILLINGS, BillingsPage, userLevel, "Loading billings..."),
   createRoute(ADMIN_ROUTES.REFERRAL_LINKS, ReferralLinksPage, userLevel, "Loading referral links..."),
