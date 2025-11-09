@@ -16,6 +16,10 @@ import { type IFileUpload } from "@shared/interfaces/file-upload.interface";
 import { type TSingleHandlerStore } from "@/stores";
 import { type THandlerComponentProps } from "@/@types/handler-types";
 
+// Hooks & Utils
+import { useUserSettings } from "@/hooks/use-user-settings";
+import { formatDateTime } from "@/lib/utils";
+
 export type TFileViewExtraProps = {}
 
 interface IFileViewProps extends THandlerComponentProps<TSingleHandlerStore<IFileUpload, TFileViewExtraProps>> {
@@ -65,6 +69,7 @@ interface IFileDetailContentProps {
 function FileDetailContent({ file }: IFileDetailContentProps) {
     // React 19: Essential IDs
     const componentId = useId();
+    const { settings } = useUserSettings();
     
     // React 19: Memoized file size for better performance
     const fileSize = useMemo(() => {
@@ -162,14 +167,14 @@ function FileDetailContent({ file }: IFileDetailContentProps) {
                             <div className="text-muted-foreground"><Calendar className="w-4 h-4" /></div>
                             <div className="flex-1">
                                 <span className="text-sm text-muted-foreground">Uploaded:</span>
-                                <p className="font-medium">{new Date(file.createdAt).toLocaleString()}</p>
+                                <p className="font-medium">{formatDateTime(file.createdAt, settings)}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
                             <div className="text-muted-foreground"><Calendar className="w-4 h-4" /></div>
                             <div className="flex-1">
                                 <span className="text-sm text-muted-foreground">Last Modified:</span>
-                                <p className="font-medium">{new Date(file.updatedAt).toLocaleString()}</p>
+                                <p className="font-medium">{formatDateTime(file.updatedAt, settings)}</p>
                             </div>
                         </div>
                     </div>

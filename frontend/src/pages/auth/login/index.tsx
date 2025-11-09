@@ -20,11 +20,14 @@ import { LoginDto } from "@shared/dtos";
 import { useNavigate } from "react-router-dom";
 import { buildRoutePath } from "@/lib/utils";
 import { PUBLIC_ROUTES } from "@/config/routes.config";
+import { useI18n } from "@/hooks/use-i18n";
+import { buildSentence } from "@/locales/translations";
 
 
 export default function LoginPage() {
   // React 19: Essential IDs and transitions
   const [, startTransition] = useTransition();
+  const { t } = useI18n();
 
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -47,14 +50,14 @@ export default function LoginPage() {
           if (result.requiredOtp)
             navigate(buildRoutePath(PUBLIC_ROUTES.VERIFY_OTP, undefined, { token: result.token || '' }));
           else {
-            toast.success('Login successful')
+            toast.success(buildSentence(t, 'login', 'successful'))
             queryClient.invalidateQueries({ queryKey: ["me"] });
             // Navigate to root - LevelBasedRedirect will handle routing based on user level
             navigate("/");
           }
         });
       }}
-      onError={(error) => toast.error('Login failed: ' + error?.message)}
+      onError={(error) => toast.error(buildSentence(t, 'login', 'failed') + ': ' + error?.message)}
       storeKey="login"
     />
   </>

@@ -1,6 +1,4 @@
-import { useId } from "react";
-import { format } from "date-fns";
-import { Calendar, Clock, DollarSign, User, Users, Edit, Trash2, Eye, AlertCircle } from "lucide-react";
+import { Calendar, Clock, DollarSign, User, Edit, Trash2, Eye, AlertCircle, CreditCard, Mail } from "lucide-react";
 
 // UI Components
 import { Button } from "@/components/ui/button";
@@ -9,24 +7,32 @@ import { AppCard } from "@/components/layout-ui/app-card";
 
 // Types
 import { type IBilling } from "@shared/interfaces/billing.interface";
-import { EBillingStatus, EBillingType } from "@shared/enums/billing.enum";
+import { EBillingStatus } from "@shared/enums/billing.enum";
 import type { ColumnDef } from "@tanstack/react-table";
-import { EScheduleFrequency } from "@shared/enums/schedule.enum";
+import type { IUserSettings } from "@shared/interfaces/settings.interface";
+
+// Utils
+import { formatDate, formatCurrency } from "@/lib/utils";
+import { buildSentence } from "@/locales/translations";
 
 interface IBillingItemViewsProps {
   handleEdit: (id: string) => void;
   handleDelete: (id: string) => void;
   handleView: (id: string) => void;
+  handlePayOnline?: (id: string) => void;
+  handleSendEmail?: (id: string) => void;
+  settings?: IUserSettings;
+  componentId?: string;
+  t: (key: string) => string;
 }
 
-export function billingItemViews({ handleEdit, handleDelete, handleView }: IBillingItemViewsProps) {
-  const componentId = useId();
+export function billingItemViews({ handleEdit, handleDelete, handleView, handlePayOnline, handleSendEmail, settings, componentId = "billing-item-views", t }: IBillingItemViewsProps) {
 
   // Table columns
   const columns: ColumnDef<IBilling>[] = [
     {
       accessorKey: 'title',
-      header: 'Title',
+      header: t('title'),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <span className="font-medium">{row.original.title}</span>
@@ -35,17 +41,17 @@ export function billingItemViews({ handleEdit, handleDelete, handleView }: IBill
     },
     {
       accessorKey: 'amount',
-      header: 'Amount',
+      header: t('amount'),
       cell: ({ row }) => (
         <div className="flex items-center gap-1">
           <DollarSign className="h-4 w-4 text-green-600" />
-          <span className="font-medium">{row.original.amount}</span>
+          <span className="font-medium">{formatCurrency(row.original.amount, undefined, undefined, 2, 2, settings)}</span>
         </div>
       ),
     },
     {
       id: 'type',
-      header: 'Type',
+      header: t('type'),
       cell: ({ row }) => (
         <Badge variant="outline" className="capitalize">
           {row.original.type.toLowerCase()}
@@ -54,7 +60,7 @@ export function billingItemViews({ handleEdit, handleDelete, handleView }: IBill
     },
     {
       id: 'status',
-      header: 'Status',
+      header: t('status'),
       cell: ({ row }) => {
         const billing = row.original;
         const statusColors = {
@@ -74,21 +80,21 @@ export function billingItemViews({ handleEdit, handleDelete, handleView }: IBill
     },
     {
       id: 'issueDate',
-      header: 'Issue Date',
+      header: buildSentence(t, 'issue', 'date'),
       cell: ({ row }) => {
         const billing = row.original;
 
         return (
           <div className="flex items-center gap-1">
             <Calendar className="h-4 w-4" />
-            <span>{format(new Date(billing.issueDate), 'MMM dd, yyyy')}</span>
+            <span>{formatDate(billing.issueDate, settings)}</span>
           </div>
         );
       },
     },
     {
       id: 'dueDate',
-      header: 'Due Date',
+      header: buildSentence(t, 'due', 'date'),
       cell: ({ row }) => {
         const billing = row.original;
         const isOverdue = new Date(billing.dueDate) < new Date() && billing.status === EBillingStatus.PENDING;
@@ -96,7 +102,7 @@ export function billingItemViews({ handleEdit, handleDelete, handleView }: IBill
         return (
           <div className={`flex items-center gap-1 ${isOverdue ? "text-red-600" : ""}`}>
             <Calendar className="h-4 w-4" />
-            <span>{format(new Date(billing.dueDate), 'MMM dd, yyyy')}</span>
+            <span>{formatDate(billing.dueDate, settings)}</span>
             {isOverdue && <AlertCircle className="h-4 w-4" />}
           </div>
         );
@@ -104,18 +110,18 @@ export function billingItemViews({ handleEdit, handleDelete, handleView }: IBill
     },
     {
       accessorKey: 'recipientUser',
-      header: 'Recipient',
+      header: t('recipient'),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <User className="h-4 w-4 text-muted-foreground" />
-          <span>{row.original.recipientUser?.profile?.firstName} {row.original.recipientUser?.profile?.lastName}</span>
+          <span>{row.original.recipientUser?.firstName} {row.original.recipientUser?.lastName}</span>
         </div>
       ),
     },
 
     {
       id: 'actions',
-      header: 'Actions',
+      header: t('actions'),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <Button
@@ -134,6 +140,28 @@ export function billingItemViews({ handleEdit, handleDelete, handleView }: IBill
           >
             <Edit className="h-4 w-4" />
           </Button>
+          {handlePayOnline && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handlePayOnline(row.original.id)}
+              data-component-id={componentId}
+              className="text-green-600 hover:text-green-700"
+            >
+              <CreditCard className="h-4 w-4" />
+            </Button>
+          )}
+          {handleSendEmail && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleSendEmail(row.original.id)}
+              data-component-id={componentId}
+              className="text-blue-600 hover:text-blue-700"
+            >
+              <Mail className="h-4 w-4" />
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="sm"
@@ -174,25 +202,25 @@ export function billingItemViews({ handleEdit, handleDelete, handleView }: IBill
             <div className="space-y-2 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <DollarSign className="h-4 w-4" />
-                <span><strong>Amount:</strong> ${billing.amount}</span>
+                <span><strong>{t('amount')}:</strong> {formatCurrency(billing.amount, undefined, undefined, 2, 2, settings)}</span>
               </div>
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4" />
-                <span><strong>Recipient:</strong> {billing.recipientUser?.firstName} {billing.recipientUser?.lastName}</span>
+                <span><strong>{t('recipient')}:</strong> {billing.recipientUser?.firstName} {billing.recipientUser?.lastName}</span>
               </div>
 
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
-                <span><strong>Issue Date:</strong> {format(new Date(billing.issueDate), 'MMM dd, yyyy')}</span>
+                <span><strong>{buildSentence(t, 'issue', 'date')}:</strong> {formatDate(billing.issueDate, settings)}</span>
               </div>
               <div className={`flex items-center gap-2 ${isOverdue ? "text-red-600" : ""}`}>
                 <Calendar className="h-4 w-4" />
-                <span><strong>Due Date:</strong> {format(new Date(billing.dueDate), 'MMM dd, yyyy')}</span>
+                <span><strong>{buildSentence(t, 'due', 'date')}:</strong> {formatDate(billing.dueDate, settings)}</span>
                 {isOverdue && <AlertCircle className="h-4 w-4" />}
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
-                <span><strong>Recurrence:</strong> {billing.recurrence}</span>
+                <span><strong>{t('recurrence')}:</strong> {billing.recurrence}</span>
               </div>
 
             </div>

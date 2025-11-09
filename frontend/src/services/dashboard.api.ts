@@ -3,7 +3,11 @@ import { apiRequest } from "@/utils/fetcher";
 import { generateQueryParams } from "@/utils";
 
 // Types
-import type { IDashboardStats } from "@shared/interfaces/dashboard.interface";
+import type {
+  IDashboardStats,
+  ISessionsAnalytics,
+  IBillingAnalytics,
+} from "@shared/interfaces/dashboard.interface";
 import type { DashboardAnalyticsDto } from "@shared/dtos";
 
 // Constants
@@ -63,7 +67,7 @@ export const fetchSessionsAnalytics = async (
     queryParams.toString() ? `?${queryParams.toString()}` : ""
   }`;
 
-  return apiRequest(url, "GET");
+  return apiRequest<ISessionsAnalytics>(url, "GET");
 };
 
 /**
@@ -82,5 +86,5 @@ export const fetchBillingAnalytics = async (
     queryParams.toString() ? `?${queryParams.toString()}` : ""
   }`;
 
-  return apiRequest(url, "GET");
+  return apiRequest<IBillingAnalytics>(url, "GET");
 };

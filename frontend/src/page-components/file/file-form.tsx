@@ -25,6 +25,8 @@ import { strictDeepMerge } from "@/utils";
 import { CreateFileUploadDto, UpdateFileUploadDto } from "@shared/dtos";
 import { EFileType } from "@shared/enums";
 import type { TFileUploadData } from '@shared/types';
+import { useI18n } from "@/hooks/use-i18n";
+import { buildSentence } from "@/locales/translations";
 
 export type TFileExtraProps = {};
 
@@ -39,9 +41,10 @@ export default function FileForm({
     const [, startTransition] = useTransition();
 
     const queryClient = useQueryClient();
+    const { t } = useI18n();
 
     if (!store) {
-        return <div>Single store "{storeKey}" not found. Did you forget to register it?</div>;
+        return <div>{buildSentence(t, 'single', 'store')} "{storeKey}" {buildSentence(t, 'not', 'found')}. {buildSentence(t, 'did', 'you', 'forget', 'to', 'register', 'it')}?</div>;
     }
 
     const { action, response, isLoading, setAction, reset } = store(useShallow(state => ({

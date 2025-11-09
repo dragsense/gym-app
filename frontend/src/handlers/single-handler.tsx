@@ -30,6 +30,8 @@ import { deregisterStore, registerStore, type TSingleHandlerStore, useRegistered
 import { useApiQuery } from "@/hooks/use-api-query";
 import { pickKeys } from "@/utils";
 import { useShallow } from "zustand/shallow";
+import { useI18n } from "@/hooks/use-i18n";
+import { buildSentence } from "@/locales/translations";
 
 
 export interface ISingleHandlerProps<
@@ -69,6 +71,7 @@ export function SingleHandler<
 >) {
 
   const { confirm, dialogProps } = useConfirm();
+  const { t } = useI18n();
   // React 19: Enhanced transitions for better UX
   const [, startTransition] = useTransition();
 
@@ -178,8 +181,8 @@ export function SingleHandler<
   const handleDeleteItem = useCallback(
     () =>
       confirm(
-        "Delete Item",
-        `Are you sure you want to delete this ${name}?`,
+        buildSentence(t, 'delete', 'item'),
+        buildSentence(t, 'are', 'you', 'sure', 'you', 'want', 'to', 'delete', 'this') + ` ${name}?`,
         () => {
           startTransition(() => {
             deleteItem(payload);

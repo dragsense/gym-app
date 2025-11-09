@@ -1,5 +1,9 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { format as dateFnsFormat } from "date-fns";
+import { EDateFormat, ETimeFormat } from "@shared/enums/user-settings.enum";
+import type { IUserSettings } from "@shared/interfaces/settings.interface";
+import { getCurrentLocale } from "@/config/locale.config";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -53,20 +57,27 @@ export function buildRoutePath(
 /**
  * Formats a number as currency with proper localization
  * @param amount The amount to format
- * @param currency The currency code (e.g., 'USD', 'EUR')
- * @param locale The locale to use (defaults to browser locale)
+ * @param currency The currency code (e.g., 'USD', 'AED', 'PKR')
+ * @param locale The locale to use (defaults to browser locale or 'en-US')
+ * @param settings Optional user settings to get currency from
  * @returns Formatted currency string
  */
 export function formatCurrency(
   amount: number,
-  currency: string = "USD",
-  locale: string = "en-US",
+  currency?: string,
+  locale?: string,
   minimumFractionDigits: number = 2,
-  maximumFractionDigits: number = 2
+  maximumFractionDigits: number = 2,
+  settings?: IUserSettings
 ): string {
-  return new Intl.NumberFormat(locale, {
+  const currencyCode = currency || settings?.currency?.defaultCurrency || "USD";
+
+  // Determine locale based on language if not provided
+  const finalLocale = locale || getCurrentLocale();
+
+  return new Intl.NumberFormat(finalLocale, {
     style: "currency",
-    currency,
+    currency: currencyCode,
     minimumFractionDigits,
     maximumFractionDigits,
   }).format(amount);
@@ -111,16 +122,8 @@ export function formatNumber(
 // Additional currency-related utilities
 export const CURRENCY_SYMBOLS: Record<string, string> = {
   USD: "$",
-  EUR: "€",
-  GBP: "£",
-  JPY: "¥",
-  CAD: "CA$",
-  AUD: "A$",
-  CHF: "CHF",
-  CNY: "CN¥",
-  HKD: "HK$",
-  SGD: "S$",
-  // Add more currencies as needed
+  AED: "د.إ",
+  PKR: "₨",
 };
 
 /**
@@ -148,4 +151,121 @@ export function toMinorUnits(amount: number): number {
  */
 export function fromMinorUnits(amount: number): number {
   return amount / 100;
+}
+
+// ==================== Date/Time Formatting with User Settings ====================
+
+/**
+ * Converts EDateFormat enum to date-fns format string
+ */
+function getDateFormatString(dateFormat?: EDateFormat): string {
+  switch (dateFormat) {
+    case EDateFormat.MM_DD_YYYY:
+      return "MM/dd/yyyy";
+    case EDateFormat.DD_MM_YYYY:
+      return "dd/MM/yyyy";
+    case EDateFormat.YYYY_MM_DD:
+      return "yyyy-MM-dd";
+    case EDateFormat.DD_MMM_YYYY:
+      return "dd MMM yyyy";
+    case EDateFormat.MMM_DD_YYYY:
+      return "MMM dd, yyyy";
+    default:
+      return "MMM dd, yyyy"; // Default format
+  }
+}
+
+/**
+ * Formats a date according to user settings
+ * @param date The date to format
+ * @param settings Optional user settings
+ * @returns Formatted date string
+ */
+export function formatDate(
+  date: Date | string,
+  settings?: IUserSettings
+): string {
+  const dateObj = typeof date === "string" ? new Date(date) : date;
+  const dateFormat = settings?.time?.dateFormat || EDateFormat.MMM_DD_YYYY;
+  const timezone = settings?.time?.timezone || "UTC";
+
+  const formatString = getDateFormatString(dateFormat);
+
+  // Use Intl.DateTimeFormat for timezone support
+  const timeZone = timezone === "UTC" ? "UTC" : timezone;
+
+  // Determine locale based on language
+  const locale = getCurrentLocale();
+
+  // For date-only formatting, use date-fns with timezone conversion
+  try {
+    return dateFnsFormat(dateObj, formatString);
+  } catch {
+    // Fallback to Intl if date-fns fails
+    return new Intl.DateTimeFormat(locale, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      timeZone: timeZone,
+    }).format(dateObj);
+  }
+}
+
+/**
+ * Formats a time according to user settings
+ * @param date The date/time to format
+ * @param settings Optional user settings
+ * @returns Formatted time string
+ */
+export function formatTime(
+  date: Date | string,
+  settings?: IUserSettings
+): string {
+  const dateObj = typeof date === "string" ? new Date(date) : date;
+  const timeFormat = settings?.time?.timeFormat || ETimeFormat.TWELVE_HOUR;
+  const timezone = settings?.time?.timezone || "UTC";
+
+  const timeZone = timezone === "UTC" ? "UTC" : timezone;
+  const hour12 = timeFormat === ETimeFormat.TWELVE_HOUR;
+
+  // Determine locale based on language
+  const locale = getCurrentLocale();
+
+  return new Intl.DateTimeFormat(locale, {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: hour12,
+    timeZone: timeZone,
+  }).format(dateObj);
+}
+
+/**
+ * Formats a date and time according to user settings
+ * @param date The date/time to format
+ * @param settings Optional user settings
+ * @returns Formatted date and time string
+ */
+export function formatDateTime(
+  date: Date | string,
+  settings?: IUserSettings
+): string {
+  const dateObj = typeof date === "string" ? new Date(date) : date;
+
+  const dateStr = formatDate(dateObj, settings);
+  const timeStr = formatTime(dateObj, settings);
+
+  return `${dateStr} ${timeStr}`;
+}
+
+/**
+ * Formats a timestamp (createdAt, updatedAt, etc.) according to user settings
+ * @param date The date to format
+ * @param settings Optional user settings
+ * @returns Formatted timestamp string
+ */
+export function formatTimestamp(
+  date: Date | string,
+  settings?: IUserSettings
+): string {
+  return formatDateTime(date, settings);
 }

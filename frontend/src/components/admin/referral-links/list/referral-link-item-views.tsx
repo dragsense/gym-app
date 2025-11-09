@@ -1,5 +1,4 @@
 import { useState, useId } from "react";
-import { format } from "date-fns";
 import { Clock, Users, Edit, Trash2, Eye, Link, Copy, ExternalLink, BarChart3, Check } from "lucide-react";
 
 // UI Components
@@ -11,11 +10,17 @@ import { AppCard } from "@/components/layout-ui/app-card";
 import { type IReferralLink } from "@shared/interfaces/referral-link.interface";
 import { EReferralLinkStatus, EReferralLinkType } from "@shared/enums/referral-link.enum";
 import type { ColumnDef } from "@tanstack/react-table";
+import type { IUserSettings } from "@shared/interfaces/settings.interface";
+
+// Utils
+import { formatDateTime, formatDate } from "@/lib/utils";
 
 interface IReferralItemViewsProps {
   handleEdit: (id: string) => void;
   handleDelete: (id: string) => void;
   handleView: (id: string) => void;
+  settings?: IUserSettings;
+  componentId?: string;
 }
 
 // Component for link cell with copy functionality
@@ -79,8 +84,7 @@ function LinkCell({ linkUrl }: { linkUrl: string }) {
   );
 }
 
-export function referralLinkItemViews({ handleEdit, handleDelete, handleView }: IReferralItemViewsProps) {
-  const componentId = useId();
+export function referralLinkItemViews({ handleEdit, handleDelete, handleView, settings, componentId = "referral-link-item-views" }: IReferralItemViewsProps) {
 
   // Table columns
   const columns: ColumnDef<IReferralLink>[] = [
@@ -104,7 +108,7 @@ export function referralLinkItemViews({ handleEdit, handleDelete, handleView }: 
       header: "Expired At",
       cell: ({ row }) => (
         <span className="text-sm">
-          {format(new Date(row.original.expiresAt), 'MMM dd, yyyy HH:mm')}
+          {formatDateTime(row.original.expiresAt, settings)}
         </span>
       )
     },
@@ -239,7 +243,7 @@ export function referralLinkItemViews({ handleEdit, handleDelete, handleView }: 
               {referralLink.expiresAt && (
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4" />
-                  <span><strong>Expires:</strong> {format(new Date(referralLink.expiresAt), 'MMM dd, yyyy')}</span>
+                  <span><strong>Expires:</strong> {formatDate(referralLink.expiresAt, settings)}</span>
                 </div>
               )}
               <div className="flex items-center gap-2">

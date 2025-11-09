@@ -1,0 +1,72 @@
+services:
+  # Full-Stack Service (Backend + Frontend in one container)
+  app:
+    build:
+      context: ..
+      dockerfile: shared/Dockerfile
+      target: prod
+    container_name: app-container-prod
+    ports:
+      - "3000:3000" # Backend port
+      - "5173:5173" # Frontend port
+    env_file:
+      - ../backend/.env.production
+    volumes:
+      - app_logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  # Redis Cache
+  redis:
+    image: redis:latest
+    container_name: app-redis-prod
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - app-network
+
+  # PostgreSQL 17 Database
+  postgres:
+    image: postgres:17
+    container_name: app-postgres-prod
+    restart: unless-stopped
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-formance_db}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  app_logs:
+
+networks:
+  app-network:
+    driver: bridge
+

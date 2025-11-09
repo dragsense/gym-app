@@ -1,41 +1,58 @@
 // React & Hooks
-import React, { createContext, useContext, useDeferredValue, useMemo, useTransition, useId } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { create } from "zustand";
+import { devtools } from "zustand/middleware";
+import { config } from "@/config";
+import { useEffect } from "react";
 
 // Types
-import { type IUserSettings } from '@shared/interfaces/user-settings.interface';
-import { type TUserSettingsData, type TUpdateUserSettingsData } from '@shared/types/settings.type';
+import { type IUserSettings } from '@shared/interfaces/settings.interface';
 
 // Services
-import {
-    getUserSettings,
-    createOrUpdateUserSettings,
-    updateCurrentUserSettings,
-    deleteCurrentUserSettings
-} from "@/services/settings.api";
+import { fetchMySettings, fetchUserSettingsById } from "@/services/settings.api";
 
-interface IUserSettingsContextType {
+// Stores
+import { registerStore } from "@/stores";
+
+interface IUserSettingsStore {
     settings?: IUserSettings;
     isLoading: boolean;
     error: Error | null;
-    componentId: string;
-    startTransition: (callback: () => void) => void;
-    createOrUpdateSettings: (data: TUserSettingsData) => Promise<void>;
-    updateSettings: (data: TUpdateUserSettingsData) => Promise<void>;
-    deleteSettings: () => Promise<void>;
-    isCreating: boolean;
-    isUpdating: boolean;
-    isDeleting: boolean;
 }
 
-const UserSettingsContext = createContext<IUserSettingsContextType | undefined>(undefined);
+const STORE_KEY = "user-settings-store";
 
-export function UserSettingsProvider({ children }: { children: React.ReactNode }) {
-    // React 19: Essential IDs and transitions
-    const componentId = useId();
-    const [, startTransition] = useTransition();
-    const queryClient = useQueryClient();
+// Create the store
+const createUserSettingsStore = () => {
+    return create<IUserSettingsStore>()(
+        devtools(
+            () => ({
+                settings: undefined,
+                isLoading: false,
+                error: null,
+            }),
+            {
+                name: STORE_KEY,
+                enabled: config.environment === 'development'
+            }
+        )
+    );
+};
+
+// Register the store globally
+let userSettingsStore: ReturnType<typeof createUserSettingsStore> | null = null;
+
+const getUserSettingsStore = () => {
+    if (!userSettingsStore) {
+        userSettingsStore = createUserSettingsStore();
+        registerStore(STORE_KEY, userSettingsStore);
+    }
+    return userSettingsStore;
+};
+
+// Hook that fetches settings
+export function useUserSettings() {
+    const store = getUserSettingsStore();
 
     const {
         data,
@@ -43,87 +60,42 @@ export function UserSettingsProvider({ children }: { children: React.ReactNode }
         error,
     } = useQuery<IUserSettings>({
         queryKey: ["user-settings"],
-        queryFn: getUserSettings,
+        queryFn: fetchMySettings,
         retry: false,
         staleTime: 1000 * 60 * 5, // 5 minutes
     });
 
-    // React 19: Deferred settings data for better performance
-    const deferredSettings = useDeferredValue(data);
+    // Sync React Query data with Zustand store
+    useEffect(() => {
+        if (data) {
+            store.setState({ settings: data });
+        }
+    }, [data, store]);
 
-    // Create or update settings mutation
-    const createOrUpdateMutation = useMutation({
-        mutationFn: createOrUpdateUserSettings,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["user-settings"] });
-            toast.success("Settings saved successfully");
-        },
-        onError: (error: Error) => {
-            toast.error(`Failed to save settings: ${error.message}`);
-        },
-    });
-
-    // Update settings mutation
-    const updateMutation = useMutation({
-        mutationFn: updateCurrentUserSettings,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["user-settings"] });
-            toast.success("Settings updated successfully");
-        },
-        onError: (error: Error) => {
-            toast.error(`Failed to update settings: ${error.message}`);
-        },
-    });
-
-    // Delete settings mutation
-    const deleteMutation = useMutation({
-        mutationFn: deleteCurrentUserSettings,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["user-settings"] });
-            toast.success("Settings deleted successfully");
-        },
-        onError: (error: Error) => {
-            toast.error(`Failed to delete settings: ${error.message}`);
-        },
-    });
-
-    // React 19: Memoized context value to prevent unnecessary re-renders
-    const value = useMemo(() => ({
-        settings: deferredSettings,
-        isLoading,
-        error,
-        componentId,
-        startTransition,
-        createOrUpdateSettings: async (data: TUserSettingsData) => {
-            await createOrUpdateMutation.mutateAsync(data);
-        },
-        updateSettings: async (data: TUpdateUserSettingsData) => {
-            await updateMutation.mutateAsync(data);
-        },
-        deleteSettings: async () => {
-            await deleteMutation.mutateAsync();
-        },
-        isCreating: createOrUpdateMutation.isPending,
-        isUpdating: updateMutation.isPending,
-        isDeleting: deleteMutation.isPending,
-    }), [
-        deferredSettings,
-        isLoading,
-        error,
-        componentId,
-        startTransition,
-        createOrUpdateMutation,
-        updateMutation,
-        deleteMutation
-    ]);
-
-    return <UserSettingsContext.Provider value={value}>{children}</UserSettingsContext.Provider>;
+    return {
+        settings: data || store.getState().settings,
+        isLoading: isLoading || store.getState().isLoading,
+        error: error || store.getState().error,
+    };
 }
 
-export function useUserSettings() {
-    const context = useContext(UserSettingsContext);
-    if (context === undefined) {
-        throw new Error("useUserSettings must be used within a UserSettingsProvider");
-    }
-    return context;
+// Hook to fetch user settings by user ID (Super Admin only)
+export function useUserSettingsById(userId: string | undefined, enabled: boolean = true) {
+    const {
+        data,
+        isLoading,
+        error,
+    } = useQuery<IUserSettings>({
+        queryKey: ['user-settings', userId],
+        queryFn: () => fetchUserSettingsById(userId!),
+        enabled: enabled && !!userId,
+        retry: false,
+        staleTime: 1000 * 60 * 5, // 5 minutes
+    });
+
+    return {
+        settings: data,
+        isLoading,
+        error,
+    };
 }

@@ -4,11 +4,11 @@ import LanguageDetector from "i18next-browser-languagedetector";
 
 // Import translation files
 import en from "../locales/en.json";
-import es from "../locales/es.json";
+import ar from "../locales/ar.json";
 
 export const supportedLanguages = [
   { code: "en", name: "English", flag: "🇺🇸" },
-  { code: "es", name: "Español", flag: "🇪🇸" },
+  { code: "ar", name: "العربية", flag: "🇦🇪" },
 ] as const;
 
 export type SupportedLanguage = (typeof supportedLanguages)[number]["code"];
@@ -17,7 +17,7 @@ export const defaultLanguage: SupportedLanguage = "en";
 
 const resources = {
   en: { translation: en },
-  es: { translation: es },
+  ar: { translation: ar },
 };
 
 i18n

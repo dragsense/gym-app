@@ -22,13 +22,19 @@ import {
 
 // Types
 import type { IPermission } from '@shared/interfaces';
+import type { IUserSettings } from '@shared/interfaces/settings.interface';
+
+// Utils
+import { formatDate } from '@/lib/utils';
 
 export const itemViews = ({
   editPermission,
   deletePermission,
+  settings,
 }: {
   editPermission: (permissionId: number) => void;
   deletePermission: (permissionId: number) => void;
+  settings?: IUserSettings;
 }) => {
   const columns: ColumnDef<IPermission>[] = [
     {
@@ -128,7 +134,7 @@ export const itemViews = ({
         const createdAt = row.getValue<string>("createdAt");
         return (
           <span className="text-sm text-muted-foreground">
-            {new Date(createdAt).toLocaleDateString()}
+            {formatDate(createdAt, settings)}
           </span>
         );
       },

@@ -24,13 +24,13 @@ import { Dialog } from "@/components/ui/dialog";
 
 // Utils
 import { 
-  formatDate, 
-  formatDateTime, 
   formatTimeOfDay, 
   formatInterval,
   getDayOfWeekName,
   getMonthName 
 } from "@/utils/date-format";
+import { formatDate, formatDateTime } from "@/lib/utils";
+import { useUserSettings } from "@/hooks/use-user-settings";
 
 export interface IScheduleViewExtraProps { }
 
@@ -56,6 +56,7 @@ function ScheduleView({ store, storeKey }: IScheduleViewProps) {
     // React 19: Essential IDs and transitions
     const componentId = useId();
     const [, startTransition] = useTransition();
+    const { settings } = useUserSettings();
 
     if (!store) {
         return <div>Single store "{storeKey}" not found. Did you forget to register it?</div>;
@@ -114,25 +115,25 @@ function ScheduleView({ store, storeKey }: IScheduleViewProps) {
             <Separator />
             <div className="flex justify-between">
               <span className="text-muted-foreground">Start Date:</span>
-              <span className="font-medium">{formatDate(item.startDate)}</span>
+              <span className="font-medium">{formatDate(item.startDate, settings)}</span>
             </div>
             {item.endDate && (
               <>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">End Date:</span>
-                  <span className="font-medium">{formatDate(item.endDate)}</span>
+                  <span className="font-medium">{formatDate(item.endDate, settings)}</span>
                 </div>
               </>
             )}
             <Separator />
             <div className="flex justify-between">
               <span className="text-muted-foreground">Next Run:</span>
-              <span className="font-medium">{formatDate(item.nextRunDate)}</span>
+              <span className="font-medium">{formatDate(item.nextRunDate, settings)}</span>
             </div>
             {item.lastRunAt && (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Last Run:</span>
-                <span className="font-medium">{formatDateTime(item.lastRunAt)}</span>
+                <span className="font-medium">{formatDateTime(item.lastRunAt, settings)}</span>
               </div>
             )}
           </div>
@@ -278,7 +279,7 @@ function ScheduleView({ store, storeKey }: IScheduleViewProps) {
                     <span className="font-medium capitalize">{execution.status}</span>
                   </div>
                   <span className="text-sm text-muted-foreground">
-                    {formatDateTime(execution.executedAt)}
+                    {formatDateTime(execution.executedAt, settings)}
                   </span>
                 </div>
                 {execution.errorMessage && (

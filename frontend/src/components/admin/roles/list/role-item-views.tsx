@@ -23,15 +23,21 @@ import {
 
 // Types
 import type { IRole } from '@shared/interfaces';
+import type { IUserSettings } from '@shared/interfaces/settings.interface';
+
+// Utils
+import { formatDate } from '@/lib/utils';
 
 export const itemViews = ({
   editRole,
   deleteRole,
   viewPermissions,
+  settings,
 }: {
   editRole: (roleId: number) => void;
   deleteRole: (roleId: number) => void;
   viewPermissions: (roleId: number) => void;
+  settings?: IUserSettings;
 }) => {
   const columns: ColumnDef<IRole>[] = [
     {
@@ -131,7 +137,7 @@ export const itemViews = ({
         const createdAt = row.getValue<string>("createdAt");
         return (
           <span className="text-sm text-muted-foreground">
-            {new Date(createdAt).toLocaleDateString()}
+            {formatDate(createdAt, settings)}
           </span>
         );
       },

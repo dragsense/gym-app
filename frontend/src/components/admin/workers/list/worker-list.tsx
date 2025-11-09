@@ -1,5 +1,8 @@
 // React & Hooks
 import { useId, useMemo, useTransition } from "react";
+import { useUserSettings } from '@/hooks/use-user-settings';
+import { useI18n } from "@/hooks/use-i18n";
+import { buildSentence } from "@/locales/translations";
 
 // Types
 import { type IWorker } from "@shared/interfaces/worker.interface";
@@ -30,13 +33,15 @@ export default function WorkerList({
   // React 19: Essential IDs and transitions
   const componentId = useId();
   const [, startTransition] = useTransition();
+  const { settings } = useUserSettings();
+  const { t } = useI18n();
 
   if (!store) {
-    return <div>List store "{storeKey}" not found. Did you forget to register it?</div>;
+    return <div>{buildSentence(t, 'list', 'store')} "{storeKey}" {buildSentence(t, 'not', 'found')}. {buildSentence(t, 'did', 'you', 'forget', 'to', 'register', 'it')}?</div>;
   }
 
   // React 19: Memoized columns for better performance
-  const { columns } = useMemo(() => itemViews({ store }), [store]);
+  const { columns } = useMemo(() => itemViews({ store, settings }), [store, settings]);
 
   return (
     <div className="space-y-4" data-component-id={componentId}>
@@ -45,7 +50,7 @@ export default function WorkerList({
         <TTable<IWorker>
           listStore={store}
           columns={columns}
-          emptyMessage="No workers found."
+          emptyMessage={buildSentence(t, 'no', 'workers', 'found')}
           showPagination={true}
         />
       </AppCard>

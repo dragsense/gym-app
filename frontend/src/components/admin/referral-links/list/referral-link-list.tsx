@@ -1,5 +1,8 @@
 // React & Hooks
 import { useEffect, useState, useId, useMemo, useTransition } from "react";
+import { useUserSettings } from "@/hooks/use-user-settings";
+import { useI18n } from "@/hooks/use-i18n";
+import { buildSentence } from "@/locales/translations";
 
 // External libraries
 import { List, Plus, Table } from "lucide-react";
@@ -47,13 +50,15 @@ export default function ReferralList({
   // React 19: Essential IDs and transitions
   const componentId = useId();
   const [, startTransition] = useTransition();
+  const { settings } = useUserSettings();
+  const { t } = useI18n();
 
   if (!store) {
-    return <div>List store "{storeKey}" not found. Did you forget to register it?</div>;
+    return <div>{buildSentence(t, 'list', 'store')} "{storeKey}" {buildSentence(t, 'not', 'found')}. {buildSentence(t, 'did', 'you', 'forget', 'to', 'register', 'it')}?</div>;
   }
 
   if (!singleStore) {
-    return `Single store "${singleStore}" not found. Did you forget to register it?`;
+    return `${buildSentence(t, 'single', 'store')} "${singleStore}" ${buildSentence(t, 'not', 'found')}. ${buildSentence(t, 'did', 'you', 'forget', 'to', 'register', 'it')}?`;
   }
 
   const setAction = singleStore(state => state.setAction);
@@ -87,6 +92,8 @@ export default function ReferralList({
     handleEdit,
     handleDelete,
     handleView,
+    settings,
+    componentId,
   });
 
 
@@ -102,7 +109,7 @@ export default function ReferralList({
           onClick={handleCreate}
           data-component-id={componentId}
         >
-          <Plus /> <span className="hidden sm:inline capitalize">Add Referral Link</span>
+          <Plus /> <span className="hidden sm:inline capitalize">{buildSentence(t, 'add', 'referral', 'link')}</span>
         </Button>
       </div>
 
@@ -110,7 +117,7 @@ export default function ReferralList({
         <TTable<IReferralLink>
           listStore={store}
           columns={columns}
-          emptyMessage="No referral links found."
+          emptyMessage={buildSentence(t, 'no', 'referral', 'links', 'found')}
           showPagination={true}
         />
       </TabsContent>
@@ -119,7 +126,7 @@ export default function ReferralList({
         <div>
           <TList<IReferralLink>
             listStore={store}
-            emptyMessage="No referral links found."
+            emptyMessage={buildSentence(t, 'no', 'referral', 'links', 'found')}
             showPagination={true}
             renderItem={listItem}
           />

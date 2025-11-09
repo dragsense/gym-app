@@ -16,6 +16,12 @@ import { type ITrainer } from "@shared/interfaces/trainer.interface";
 import { type TSingleHandlerStore } from "@/stores";
 import { type THandlerComponentProps } from "@/@types/handler-types";
 
+// Hooks & Utils
+import { useUserSettings } from "@/hooks/use-user-settings";
+import { formatDate } from "@/lib/utils";
+import { useI18n } from "@/hooks/use-i18n";
+import { buildSentence } from "@/locales/translations";
+
 export type TTrainerViewExtraProps = {
    level: number;
 }
@@ -27,9 +33,10 @@ export default function TrainerView({ storeKey, store }: ITrainerViewProps) {
     // React 19: Essential IDs and transitions
     const componentId = useId();
     const [, startTransition] = useTransition();
+    const { t } = useI18n();
 
     if (!store) {
-        return <div>Single store "{storeKey}" not found. Did you forget to register it?</div>;
+        return <div>{buildSentence(t, 'single', 'store')} "{storeKey}" {buildSentence(t, 'not', 'found')}. {buildSentence(t, 'did', 'you', 'forget', 'to', 'register', 'it')}?</div>;
     }
 
     const { response: trainer, action, reset } = store(useShallow(state => ({
@@ -50,8 +57,8 @@ export default function TrainerView({ storeKey, store }: ITrainerViewProps) {
         <Dialog open={action === 'view'} onOpenChange={handleCloseView} data-component-id={componentId}>
             <DialogContent className="min-w-2xl max-h-[90vh] overflow-y-auto">
                 <AppDialog
-                    title="Trainer Details"
-                    description="View detailed information about this trainer"
+                    title={buildSentence(t, 'trainer', 'details')}
+                    description={buildSentence(t, 'view', 'detailed', 'information', 'about', 'this', 'trainer')}
                 >
                     <TrainerDetailContent trainer={trainer} />
                 </AppDialog>
@@ -67,13 +74,15 @@ interface ITrainerDetailContentProps {
 function TrainerDetailContent({ trainer }: ITrainerDetailContentProps) {
     // React 19: Essential IDs
     const componentId = useId();
+    const { t } = useI18n();
     
     const profile = trainer.user?.profile;
 
     // React 19: Memoized trainer creation date for better performance
+    const { settings } = useUserSettings();
     const trainerCreationDate = useMemo(() => 
-        trainer.createdAt ? new Date(trainer.createdAt).toLocaleDateString() : '', 
-        [trainer.createdAt]
+        trainer.createdAt ? formatDate(trainer.createdAt, settings) : '', 
+        [trainer.createdAt, settings]
     );
 
     return (
@@ -91,10 +100,10 @@ function TrainerDetailContent({ trainer }: ITrainerDetailContentProps) {
                         <p className="text-green-600 font-medium">{trainer.user?.email}</p>
                         <div className="flex items-center gap-2 mt-1">
                             <Badge variant={trainer.isActive ? "default" : "secondary"}>
-                                {trainer.isActive ? "Active" : "Inactive"}
+                                {trainer.isActive ? t('active') : t('inactive')}
                             </Badge>
                             <span className="text-sm text-muted-foreground">
-                                Trainer since {trainerCreationDate}
+                                {buildSentence(t, 'trainer', 'since')} {trainerCreationDate}
                             </span>
                         </div>
                     </div>
@@ -108,8 +117,8 @@ function TrainerDetailContent({ trainer }: ITrainerDetailContentProps) {
                         <div className="flex items-center gap-2">
                             <Target className="w-5 h-5" />
                             <div>
-                                <span className="font-semibold">Trainer Information</span>
-                                <p className="text-sm text-muted-foreground">Professional details and expertise</p>
+                                <span className="font-semibold">{buildSentence(t, 'trainer', 'information')}</span>
+                                <p className="text-sm text-muted-foreground">{buildSentence(t, 'professional', 'details', 'and', 'expertise')}</p>
                             </div>
                         </div>
                     }
@@ -118,29 +127,29 @@ function TrainerDetailContent({ trainer }: ITrainerDetailContentProps) {
                         <div className="flex items-center gap-3">
                             <div className="text-muted-foreground"><Target className="w-4 h-4" /></div>
                             <div className="flex-1">
-                                <span className="text-sm text-muted-foreground">Specialization:</span>
-                                <p className="font-medium">{trainer.specialization || 'Not specified'}</p>
+                                <span className="text-sm text-muted-foreground">{t('specialization')}:</span>
+                                <p className="font-medium">{trainer.specialization || buildSentence(t, 'not', 'specified')}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
                             <div className="text-muted-foreground"><Clock className="w-4 h-4" /></div>
                             <div className="flex-1">
-                                <span className="text-sm text-muted-foreground">Experience:</span>
-                                <p className="font-medium">{trainer.experience ? `${trainer.experience} years` : 'Not specified'}</p>
+                                <span className="text-sm text-muted-foreground">{t('experience')}:</span>
+                                <p className="font-medium">{trainer.experience ? `${trainer.experience} ${t('years')}` : buildSentence(t, 'not', 'specified')}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
                             <div className="text-muted-foreground"><Award className="w-4 h-4" /></div>
                             <div className="flex-1">
-                                <span className="text-sm text-muted-foreground">Certification:</span>
-                                <p className="font-medium">{trainer.certification || 'Not specified'}</p>
+                                <span className="text-sm text-muted-foreground">{t('certification')}:</span>
+                                <p className="font-medium">{trainer.certification || buildSentence(t, 'not', 'specified')}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
                             <div className="text-muted-foreground"><DollarSign className="w-4 h-4" /></div>
                             <div className="flex-1">
-                                <span className="text-sm text-muted-foreground">Hourly Rate:</span>
-                                <p className="font-medium">{trainer.hourlyRate ? `$${trainer.hourlyRate}/hour` : 'Not specified'}</p>
+                                <span className="text-sm text-muted-foreground">{buildSentence(t, 'hourly', 'rate')}:</span>
+                                <p className="font-medium">{trainer.hourlyRate ? `$${trainer.hourlyRate}/${t('hour')}` : buildSentence(t, 'not', 'specified')}</p>
                             </div>
                         </div>
                     </div>
@@ -152,8 +161,8 @@ function TrainerDetailContent({ trainer }: ITrainerDetailContentProps) {
                         <div className="flex items-center gap-2">
                             <User className="w-5 h-5" />
                             <div>
-                                <span className="font-semibold">Personal Information</span>
-                                <p className="text-sm text-muted-foreground">Basic trainer details and contact information</p>
+                                <span className="font-semibold">{buildSentence(t, 'personal', 'information')}</span>
+                                <p className="text-sm text-muted-foreground">{buildSentence(t, 'basic', 'trainer', 'details', 'and', 'contact', 'information')}</p>
                             </div>
                         </div>
                     }
@@ -162,22 +171,22 @@ function TrainerDetailContent({ trainer }: ITrainerDetailContentProps) {
                     <div className="flex items-center gap-3">
                             <div className="text-muted-foreground"><Phone className="w-4 h-4" /></div>
                             <div className="flex-1">
-                                <span className="text-sm text-muted-foreground">Phone:</span>
-                                <p className="font-medium">{profile?.phoneNumber || 'Not specified'}</p>
+                                <span className="text-sm text-muted-foreground">{t('phone')}:</span>
+                                <p className="font-medium">{profile?.phoneNumber || buildSentence(t, 'not', 'specified')}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
                             <div className="text-muted-foreground"><MapPin className="w-4 h-4" /></div>
                             <div className="flex-1">
-                                <span className="text-sm text-muted-foreground">Address:</span>
-                                <p className="font-medium">{profile?.address || 'Not specified'}</p>
+                                <span className="text-sm text-muted-foreground">{t('address')}:</span>
+                                <p className="font-medium">{profile?.address || buildSentence(t, 'not', 'specified')}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
                             <div className="text-muted-foreground"><User className="w-4 h-4" /></div>
                             <div className="flex-1">
-                                <span className="text-sm text-muted-foreground">Gender:</span>
-                                <p className="font-medium">{profile?.gender || 'Not specified'}</p>
+                                <span className="text-sm text-muted-foreground">{t('gender')}:</span>
+                                <p className="font-medium">{profile?.gender || buildSentence(t, 'not', 'specified')}</p>
                             </div>
                         </div>
                     </div>

@@ -39,6 +39,7 @@ export type ICombinedDashboardData = IDashboardStats;
 
 // Sessions Analytics Types
 export interface ISessionsAnalytics {
+  period?: string;
   timeline: Array<{
     period: string;
     totalSessions: number;
@@ -58,19 +59,18 @@ export interface ISessionsAnalytics {
 
 // Billing Analytics Types
 export interface IBillingAnalytics {
+  period?: string;
   summary: {
     total_billings: number;
     paid_billings: number;
     pending_billings: number;
-    failed_billings: number;
     overdue_billings: number;
     total_paid: number;
     total_pending: number;
-    total_failed: number;
     total_overdue: number;
     average_billing_amount: number;
     average_paid_amount: number;
-  };
+  } | null;
   revenue: {
     total: number;
     paid: number;
@@ -80,9 +80,11 @@ export interface IBillingAnalytics {
     transactions: number;
   };
   timeline: Array<{
-    month: string;
+    bucket: string;
     total: number;
     paid: number;
+    platformFee: number;
+    trainerPayout: number;
   }>;
   typeDistribution: Array<{
     type: string;
@@ -90,15 +92,5 @@ export interface IBillingAnalytics {
     paid_amount: number;
     average_amount: number;
     count: number;
-  }>;
-  paymentMethods: Array<{
-    method: string;
-    amount: number;
-    percent: number;
-  }>;
-  currencyBreakdown: Array<{
-    currency: string;
-    total_amount: number;
-    percent: number;
   }>;
 }

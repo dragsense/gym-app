@@ -15,6 +15,8 @@ import { Calendar, Clock, Edit, Plus } from "lucide-react";
 
 // Utils
 import { useShallow } from "zustand/shallow";
+import { useUserSettings } from "@/hooks/use-user-settings";
+import { formatDate } from "@/lib/utils";
 
 export type TUserAvailabilityViewExtraProps = {};
 
@@ -27,6 +29,7 @@ export default function UserAvailabilityView({
     // React 19: Essential IDs and transitions
     const componentId = useId();
     const [, startTransition] = useTransition();
+    const { settings } = useUserSettings();
 
     if (!store) {
         return <div>Single store "{storeKey}" not found. Did you forget to register it?</div>;
@@ -172,7 +175,7 @@ export default function UserAvailabilityView({
                                                     </Badge>
                                                 </div>
                                                 <div className="text-sm text-red-600 mt-1">
-                                                    {new Date(period.startDate).toLocaleDateString()} - {new Date(period.endDate).toLocaleDateString()}
+                                                    {formatDate(period.startDate, settings)} - {formatDate(period.endDate, settings)}
                                                 </div>
                                             </div>
                                         ))}
@@ -185,7 +188,7 @@ export default function UserAvailabilityView({
 
                     <div className="flex items-center justify-between pt-4 border-t">
                         <div className="text-sm text-muted-foreground">
-                            Last updated: {response.updatedAt ? new Date(response.updatedAt).toLocaleDateString() : 'Never'}
+                            Last updated: {response.updatedAt ? formatDate(response.updatedAt, settings) : 'Never'}
                         </div>
                         <Button onClick={handleUpdateAvailability} variant="outline" size="sm">
                             <Edit className="h-4 w-4 mr-2" />

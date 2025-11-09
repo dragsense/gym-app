@@ -99,6 +99,12 @@ export class UsersService {
   async createUser(
     createUserDto: CreateUserDto,
   ): Promise<IMessageResponse & { user: User }> {
+    // Prevent creating users with level 0 (SUPER_ADMIN)
+    // Level 0 can only be assigned by the seeder
+    if (createUserDto.level === EUserLevels.SUPER_ADMIN) {
+      throw new ConflictException('Cannot create user with THIS level.');
+    }
+
     // Check if email exists
 
     let tempPassword: string | undefined;
@@ -140,6 +146,33 @@ export class UsersService {
     id: string,
     updateUserDto: UpdateUserDto,
   ): Promise<IMessageResponse> {
+    // Get existing user to check current level
+    const existingUser = await this.baseUsersService.getSingle({ id });
+
+    if (!existingUser) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Prevent updating any user to level 0 (SUPER_ADMIN)
+    // Only the seeded super admin can have level 0
+    if (
+      updateUserDto.level === EUserLevels.SUPER_ADMIN &&
+      existingUser.level !== EUserLevels.SUPER_ADMIN
+    ) {
+      throw new ConflictException('Cannot update user to THIS level.');
+    }
+
+    // Prevent changing the seeded super admin's level from 0
+    if (
+      existingUser.level === EUserLevels.SUPER_ADMIN &&
+      updateUserDto.level !== undefined &&
+      updateUserDto.level !== EUserLevels.SUPER_ADMIN
+    ) {
+      throw new ConflictException(
+        'Cannot change the seeded super admin level. The super admin must remain at level 0.',
+      );
+    }
+
     // Update user data with callbacks
 
     await this.baseUsersService.update(id, updateUserDto, {

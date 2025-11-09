@@ -1,5 +1,7 @@
 // React & Hooks
 import { useState, useId, useTransition } from "react";
+import { useI18n } from "@/hooks/use-i18n";
+import { buildSentence } from "@/locales/translations";
 
 // External libraries
 import { Plus } from "lucide-react";
@@ -52,13 +54,14 @@ export default function UserList({
   const componentId = useId();
   const [, startTransition] = useTransition();
   const [currentView, setCurrentView] = useState<ViewType>("table");
+  const { t } = useI18n();
 
   if (!store) {
-    return (`List store "${storeKey}" not found. Did you forget to register it?`);
+    return (`${buildSentence(t, 'list', 'store')} "${storeKey}" ${buildSentence(t, 'not', 'found')}. ${buildSentence(t, 'did', 'you', 'forget', 'to', 'register', 'it')}?`);
   }
 
   if (!singleStore) {
-    return `Single store "${singleStore}" not found. Did you forget to register it?`;
+    return `${buildSentence(t, 'single', 'store')} "${singleStore}" ${buildSentence(t, 'not', 'found')}. ${buildSentence(t, 'did', 'you', 'forget', 'to', 'register', 'it')}?`;
   }
 
   const setListAction = store(state => state.setAction);
@@ -111,7 +114,7 @@ export default function UserList({
           onClick={handleCreate}
           data-component-id={componentId}
         >
-          <Plus /> <span className="hidden sm:inline capitalize">Add User</span>
+          <Plus /> <span className="hidden sm:inline capitalize">{buildSentence(t, 'add', 'user')}</span>
         </Button>
       </div>
 
@@ -119,7 +122,7 @@ export default function UserList({
         <TTable<IUser>
           listStore={store}
           columns={columns}
-          emptyMessage="No users found."
+          emptyMessage={buildSentence(t, 'no', 'users', 'found')}
           showPagination={true}
         />
       </TabsContent>
@@ -128,7 +131,7 @@ export default function UserList({
         <div>
           <TList<IUser>
             listStore={store}
-            emptyMessage="No users found."
+            emptyMessage={buildSentence(t, 'no', 'users', 'found')}
             showPagination={true}
             renderItem={listItem}
           />

@@ -7,7 +7,7 @@ import { Form } from "@/components/form-ui/form";
 import { AppCard } from "@/components/layout-ui/app-card";
 
 // Icons
-import { DollarSign, Shield, Building, CreditCard, Bell, Loader2, Clock } from "lucide-react";
+import { DollarSign, Shield, Building, CreditCard, Bell, Loader2, Clock, Palette } from "lucide-react";
 
 // Types
 import { type TUserSettingsData } from "@shared/types/settings.type";
@@ -18,10 +18,12 @@ import { type FormInputs } from "@/hooks/use-input";
 
 // Hooks
 import { useInput } from "@/hooks/use-input";
-import type { BillingSettingsDto, BusinessSettingsDto, LimitSettingsDto, CurrencySettingsDto, NotificationSettingsDto, TimeSettingsDto } from "@shared/dtos";
+import type { BillingSettingsDto, BusinessSettingsDto, LimitSettingsDto, CurrencySettingsDto, NotificationSettingsDto, TimeSettingsDto, ThemeSettingsDto } from "@shared/dtos";
 import { FormErrors } from "@/components/shared-ui/form-errors";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import { EUserLevels } from "@shared/enums/user.enum";
+import { useI18n } from "@/hooks/use-i18n";
+import { buildSentence } from "@/locales/translations";
 
 interface IUserSettingsFormProps extends THandlerComponentProps<TFormHandlerStore<TUserSettingsData, any, any>> { }
 
@@ -31,13 +33,13 @@ export default function UserSettingsForm({
 }: IUserSettingsFormProps) {
 
     const { user } = useAuthUser();
-
+    const { t } = useI18n();
 
     const componentId = useId();
     const [activeTab, setActiveTab] = useState("time");
 
     if (!store) {
-        return <div>Form store "{storeKey}" not found. Did you forget to register it?</div>;
+        return <div>{buildSentence(t, 'form', 'store')} "{storeKey}" {buildSentence(t, 'not', 'found')}. {buildSentence(t, 'did', 'you', 'forget', 'to', 'register', 'it')}?</div>;
     }
 
     const isSubmitting = store(state => state.isSubmitting);
@@ -106,6 +108,7 @@ export default function UserSettingsForm({
                         return <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             {item.taxRate}
                             {item.invoicePrefix}
+                            {user?.level === EUserLevels.SUPER_ADMIN && item.commissionRate}
                         </div>;
                     }
                 }
@@ -125,8 +128,16 @@ export default function UserSettingsForm({
                     {item.inAppEnabled}
                 </div>;
             }
+        },
+        theme: {
+            ...originalFields.theme,
+            renderItem: (item: ThemeSettingsDto) => {
+                return <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {item.theme}
+                </div>;
+            }
         }
-    }), [originalFields]);
+    }), [originalFields, user]);
 
     const inputs = useInput<TUserSettingsData>({
         fields: fields as TFieldConfigObject<TUserSettingsData>,
@@ -136,40 +147,46 @@ export default function UserSettingsForm({
     const settingsTabs = [
         ...(user?.level <= EUserLevels.ADMIN ? [{
             id: "limits",
-            label: "Limits",
+            label: t('limits'),
             icon: Shield,
-            description: "Session and client limits"
+            description: buildSentence(t, 'session', 'and', 'client', 'limits')
         },
         {
             id: "business",
-            label: "Business",
+            label: t('business'),
             icon: Building,
-            description: "Business information and branding"
+            description: buildSentence(t, 'business', 'information', 'and', 'branding')
         }] : []),
         {
             id: "time",
-            label: "Time",
+            label: t('time'),
             icon: Clock,
-            description: "Time settings"
+            description: buildSentence(t, 'time', 'settings')
         },
         ...(user?.level <= EUserLevels.TRAINER ? [{
             id: "currency",
-            label: "Currency",
+            label: t('currency'),
             icon: DollarSign,
-            description: "Currency and localization settings"
+            description: buildSentence(t, 'currency', 'and', 'localization', 'settings')
         },
 
         {
             id: "billing",
-            label: "Billing",
+            label: t('billing'),
             icon: CreditCard,
-            description: "Billing and commission settings"
+            description: buildSentence(t, 'billing', 'and', 'commission', 'settings')
         }] : []),
         {
             id: "notifications",
-            label: "Notifications",
+            label: t('notification'),
             icon: Bell,
-            description: "Notification preferences"
+            description: buildSentence(t, 'notification', 'preferences')
+        },
+        {
+            id: "theme",
+            label: t('theme'),
+            icon: Palette,
+            description: buildSentence(t, 'theme', 'preferences')
         }
     ];
 
@@ -180,14 +197,14 @@ export default function UserSettingsForm({
             <AppCard
                 header={
                     <>
-                        <p className="text-sm text-muted-foreground">Configure your application settings and preferences</p>
+                        <p className="text-sm text-muted-foreground">{buildSentence(t, 'configure', 'your', 'application', 'settings', 'and', 'preferences')}</p>
                     </>
                 }
                 footer={
                     <div className="flex justify-end">
                         <Button type="submit" disabled={isSubmitting} data-component-id={componentId}>
                             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Save Settings
+                            {buildSentence(t, 'save', 'settings')}
                         </Button>
                     </div>
                 }
@@ -240,6 +257,10 @@ export default function UserSettingsForm({
                                     {tab.id === "notifications" && (
                                         inputs.notifications
 
+                                    )}
+
+                                    {tab.id === "theme" && (
+                                        inputs.theme
                                     )}
                                 </div>
                             </TabsContent>

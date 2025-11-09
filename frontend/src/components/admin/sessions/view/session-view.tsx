@@ -1,7 +1,6 @@
 // External Libraries
 import { useShallow } from 'zustand/shallow';
 import { useId, useMemo, useTransition } from 'react';
-import { format } from 'date-fns';
 
 // Components
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +17,12 @@ import { ESessionStatus, ESessionType } from "@shared/enums/session.enum";
 import { type TSingleHandlerStore } from "@/stores";
 import { type THandlerComponentProps } from "@/@types/handler-types";
 
+// Hooks & Utils
+import { useUserSettings } from "@/hooks/use-user-settings";
+import { formatDate, formatTime, formatDateTime } from "@/lib/utils";
+import { useI18n } from "@/hooks/use-i18n";
+import { buildSentence } from "@/locales/translations";
+
 export type TSessionViewExtraProps = {
     // Add any extra props if needed
 }
@@ -29,9 +34,10 @@ export default function SessionView({ storeKey, store }: ISessionViewProps) {
     // React 19: Essential IDs and transitions
     const componentId = useId();
     const [, startTransition] = useTransition();
+    const { t } = useI18n();
 
     if (!store) {
-        return <div>Single store "{storeKey}" not found. Did you forget to register it?</div>;
+        return <div>{buildSentence(t, 'single', 'store')} "{storeKey}" {buildSentence(t, 'not', 'found')}. {buildSentence(t, 'did', 'you', 'forget', 'to', 'register', 'it')}?</div>;
     }
 
     const { response: session, action, reset } = store(useShallow(state => ({
@@ -56,8 +62,8 @@ export default function SessionView({ storeKey, store }: ISessionViewProps) {
         <Dialog open={action === 'view'} onOpenChange={handleCloseView} data-component-id={componentId}>
             <DialogContent className="min-w-2xl max-h-[90vh] overflow-y-auto">
                 <AppDialog
-                    title="Session Details"
-                    description="View detailed information about this session"
+                    title={buildSentence(t, 'session', 'details')}
+                    description={buildSentence(t, 'view', 'detailed', 'information', 'about', 'this', 'session')}
                 >
                     <SessionDetailContent session={session} />
                 </AppDialog>
@@ -73,31 +79,33 @@ interface ISessionDetailContentProps {
 function SessionDetailContent({ session }: ISessionDetailContentProps) {
     // React 19: Essential IDs
     const componentId = useId();
+    const { settings } = useUserSettings();
+    const { t } = useI18n();
 
     const trainer = session.trainer?.user;
     const clients = session.clients?.map((c) => c.user);
 
     // React 19: Memoized session dates for better performance
     const sessionStartDate = useMemo(() =>
-        session.startDateTime ? format(new Date(session.startDateTime), 'EEEE, MMMM dd, yyyy') : '',
-        [session.startDateTime]
+        session.startDateTime ? formatDate(session.startDateTime, settings) : '',
+        [session.startDateTime, settings]
     );
 
     const sessionStartTime = useMemo(() =>
-        session.startDateTime ? format(new Date(session.startDateTime), 'HH:mm') : '',
-        [session.startDateTime]
+        session.startDateTime ? formatTime(session.startDateTime, settings) : '',
+        [session.startDateTime, settings]
     );
 
 
     const sessionEndStartDate = useMemo(() =>
-        session.endDateTime ? format(new Date(session.endDateTime), 'EEEE, MMMM dd, yyyy') : '',
-        [session.endDateTime]
+        session.endDateTime ? formatDate(session.endDateTime, settings) : '',
+        [session.endDateTime, settings]
     );
 
 
     const sessionEndTime = useMemo(() =>
-        session.endDateTime ? format(new Date(session.endDateTime), 'HH:mm') : '',
-        [session.endDateTime]
+        session.endDateTime ? formatTime(session.endDateTime, settings) : '',
+        [session.endDateTime, settings]
     );
 
 
@@ -121,7 +129,7 @@ function SessionDetailContent({ session }: ISessionDetailContentProps) {
                         <h2 className="text-2xl font-bold text-gray-900">
                             {session.title}
                         </h2>
-                        <p className="text-blue-600 font-medium">{session.type} Session</p>
+                        <p className="text-blue-600 font-medium">{session.type} {t('session')}</p>
                         <div className="flex items-center gap-2 mt-1">
                             <Badge className={statusColors[session.status] || 'bg-gray-100 text-gray-800'}>
                                 {session.status.replace('_', ' ')}
@@ -141,8 +149,8 @@ function SessionDetailContent({ session }: ISessionDetailContentProps) {
                         <div className="flex items-center gap-2">
                             <Target className="w-5 h-5" />
                             <div>
-                                <span className="font-semibold">Session Information</span>
-                                <p className="text-sm text-muted-foreground">Details about this training session</p>
+                                <span className="font-semibold">{buildSentence(t, 'session', 'information')}</span>
+                                <p className="text-sm text-muted-foreground">{buildSentence(t, 'details', 'about', 'this', 'training', 'session')}</p>
                             </div>
                         </div>
                     }
@@ -151,29 +159,29 @@ function SessionDetailContent({ session }: ISessionDetailContentProps) {
                         <div className="flex items-center gap-3">
                             <div className="text-muted-foreground"><Clock className="w-4 h-4" /></div>
                             <div className="flex-1">
-                                <span className="text-sm text-muted-foreground">Start Time:</span>
+                                <span className="text-sm text-muted-foreground">{buildSentence(t, 'start', 'time')}:</span>
                                 <p className="font-medium">{sessionStartDate} at {sessionStartTime}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
                             <div className="text-muted-foreground"><Clock className="w-4 h-4" /></div>
                             <div className="flex-1">
-                                <span className="text-sm text-muted-foreground">End Time:</span>
+                                <span className="text-sm text-muted-foreground">{buildSentence(t, 'end', 'time')}:</span>
                                 <p className="font-medium">{sessionEndStartDate} at {sessionEndTime}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
                             <div className="text-muted-foreground"><Clock className="w-4 h-4" /></div>
                             <div className="flex-1">
-                                <span className="text-sm text-muted-foreground">Duration:</span>
-                                <p className="font-medium">{session.duration} minutes</p>
+                                <span className="text-sm text-muted-foreground">{t('duration')}:</span>
+                                <p className="font-medium">{session.duration} {t('minutes')}</p>
                             </div>
                         </div>
                         {session.location && (
                             <div className="flex items-center gap-3">
                                 <div className="text-muted-foreground"><MapPin className="w-4 h-4" /></div>
                                 <div className="flex-1">
-                                    <span className="text-sm text-muted-foreground">Location:</span>
+                                    <span className="text-sm text-muted-foreground">{t('location')}:</span>
                                     <p className="font-medium">{session.location}</p>
                                 </div>
                             </div>
@@ -182,7 +190,7 @@ function SessionDetailContent({ session }: ISessionDetailContentProps) {
                             <div className="flex items-center gap-3">
                                 <div className="text-muted-foreground"><DollarSign className="w-4 h-4" /></div>
                                 <div className="flex-1">
-                                    <span className="text-sm text-muted-foreground">Price:</span>
+                                    <span className="text-sm text-muted-foreground">{t('price')}:</span>
                                     <p className="font-medium">${session.price}</p>
                                 </div>
                             </div>
@@ -191,7 +199,7 @@ function SessionDetailContent({ session }: ISessionDetailContentProps) {
                             <div className="flex items-start gap-3">
                                 <div className="text-muted-foreground mt-1"><FileText className="w-4 h-4" /></div>
                                 <div className="flex-1">
-                                    <span className="text-sm text-muted-foreground">Description:</span>
+                                    <span className="text-sm text-muted-foreground">{t('description')}:</span>
                                     <p className="font-medium mt-1">{session.description}</p>
                                 </div>
                             </div>
@@ -205,8 +213,8 @@ function SessionDetailContent({ session }: ISessionDetailContentProps) {
                         <div className="flex items-center gap-2">
                             <User className="w-5 h-5" />
                             <div>
-                                <span className="font-semibold">Trainer</span>
-                                <p className="text-sm text-muted-foreground">Session trainer details</p>
+                                <span className="font-semibold">{t('trainer')}</span>
+                                <p className="text-sm text-muted-foreground">{buildSentence(t, 'session', 'trainer', 'details')}</p>
                             </div>
                         </div>
                     }
@@ -215,7 +223,7 @@ function SessionDetailContent({ session }: ISessionDetailContentProps) {
                         <div className="flex items-center gap-3">
                             <div className="text-muted-foreground"><User className="w-4 h-4" /></div>
                             <div className="flex-1">
-                                <span className="text-sm text-muted-foreground">Name:</span>
+                                <span className="text-sm text-muted-foreground">{t('name')}:</span>
                                 <p className="font-medium">
                                     {trainer?.firstName} {trainer?.lastName}
                                 </p>
@@ -224,15 +232,15 @@ function SessionDetailContent({ session }: ISessionDetailContentProps) {
                         <div className="flex items-center gap-3">
                             <div className="text-muted-foreground"><User className="w-4 h-4" /></div>
                             <div className="flex-1">
-                                <span className="text-sm text-muted-foreground">Email:</span>
+                                <span className="text-sm text-muted-foreground">{t('email')}:</span>
                                 <p className="font-medium">{trainer?.email}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
                             <div className="text-muted-foreground"><Target className="w-4 h-4" /></div>
                             <div className="flex-1">
-                                <span className="text-sm text-muted-foreground">Specialization:</span>
-                                <p className="font-medium">{trainer?.specialization || 'Not specified'}</p>
+                                <span className="text-sm text-muted-foreground">{t('specialization')}:</span>
+                                <p className="font-medium">{trainer?.specialization || buildSentence(t, 'not', 'specified')}</p>
                             </div>
                         </div>
                     </div>

@@ -16,6 +16,7 @@ import { UsersModule } from '../users/users.module';
 import { NotificationModule } from '@/common/notification/notification.module';
 import { SessionNotificationService } from './services/session-notification.service';
 import { User } from '@/common/base-user/entities/user.entity';
+import { UserSettingsModule } from '../user-settings/user-settings.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { User } from '@/common/base-user/entities/user.entity';
     ClientsModule,
     UsersModule,
     NotificationModule,
+    UserSettingsModule,
   ],
   exports: [SessionsService, SessionEmailService],
   controllers: [SessionsController],

@@ -296,4 +296,13 @@ export class BillingsController {
   async handleCheckoutCancel() {
     return this.billingsService.handleCheckoutCancel();
   }
+
+  @Post(':id/send-email')
+  @ApiOperation({ summary: 'Send billing email to recipient' })
+  @ApiParam({ name: 'id', description: 'Billing ID' })
+  @ApiResponse({ status: 200, description: 'Email sent successfully' })
+  @ApiResponse({ status: 404, description: 'Billing not found' })
+  async sendBillingEmail(@Param('id') id: string) {
+    return this.billingsService.sendBillingEmail(id);
+  }
 }

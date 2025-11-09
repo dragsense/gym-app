@@ -56,8 +56,8 @@ export class User extends GeneralBaseEntity {
     example: 0,
     description: 'User level',
   })
-  @Column({ type: 'int', default: 0 })
-  level?: number;
+  @Column({ type: 'int', nullable: false })
+  level: number;
 
   @Column({ type: 'timestamp', nullable: true })
   lastPasswordChange: Date;

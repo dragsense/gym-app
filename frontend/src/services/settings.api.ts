@@ -19,3 +19,5 @@ const userSettingsService = new BaseService<
 export const fetchMySettings = () => userSettingsService.getSingle();
 export const createOrUpdateMySettings = (data: TUserSettingsData) =>
   userSettingsService.post(data);
+export const fetchUserSettingsById = (userId: string) =>
+  userSettingsService.getSingle(undefined, undefined, `/${userId}`);

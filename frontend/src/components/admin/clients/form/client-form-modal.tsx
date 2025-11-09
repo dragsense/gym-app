@@ -3,6 +3,8 @@ import React, { useMemo, useId, useTransition, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 // Custom Hooks
 import { type FormInputs, useInput } from "@/hooks/use-input";
+import { useI18n } from "@/hooks/use-i18n";
+import { buildSentence } from "@/locales/translations";
 
 // Types
 import type { TFormHandlerStore } from "@/stores";
@@ -32,9 +34,10 @@ export const ClientFormModal = React.memo(function ClientFormModal({
   // React 19: Essential IDs and transitions
   const componentId = useId();
   const [, startTransition] = useTransition();
+  const { t } = useI18n();
 
   if (!store) {
-    return `Form store "${storeKey}" not found. Did you forget to register it?`;
+    return `${buildSentence(t, 'form', 'store')} "${storeKey}" ${buildSentence(t, 'not', 'found')}. ${buildSentence(t, 'did', 'you', 'forget', 'to', 'register', 'it')}?`;
   }
 
   const isEditing = store((state) => state.isEditing)
@@ -95,11 +98,11 @@ export const ClientFormModal = React.memo(function ClientFormModal({
         }}
         data-component-id={componentId}
       >
-        Cancel
+        {t('cancel')}
       </Button>
       <Button type="submit" disabled={false} data-component-id={componentId}>
         {false && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        {isEditing ? "Update" : "Add"}
+        {isEditing ? t('update') : t('add')}
       </Button>
     </div>
   ), [componentId, isEditing, onClose]);
@@ -109,8 +112,8 @@ export const ClientFormModal = React.memo(function ClientFormModal({
 
   return <>
     <ModalForm<TClientData, TClientResponse, IClientFormModalExtraProps>
-      title={`${isEditing ? "Edit" : "Add"} Client`}
-      description={`${isEditing ? "Edit" : "Add a new"} Client`}
+      title={buildSentence(t, isEditing ? 'edit' : 'add', 'client')}
+      description={buildSentence(t, isEditing ? 'edit' : 'add', 'a', 'new', 'client')}
       open={open}
       onOpenChange={onOpenChange}
       formStore={store}
@@ -120,12 +123,12 @@ export const ClientFormModal = React.memo(function ClientFormModal({
       <div className="space-y-8">
         {/* Basic Info */}
         <div>
-          <h3 className="text-sm font-semibold mb-3">Basic Info</h3>
+          <h3 className="text-sm font-semibold mb-3">{buildSentence(t, 'basic', 'info')}</h3>
           {userInputs as ReactNode}
         </div>
         {/* Trainer Details */}
         <div>
-          <h3 className="text-sm font-semibold  mb-3">Trainer Details</h3>
+          <h3 className="text-sm font-semibold  mb-3">{buildSentence(t, 'client', 'details')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
             {inputs.goal}
             {inputs.fitnessLevel}

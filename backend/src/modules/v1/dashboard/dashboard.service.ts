@@ -481,19 +481,23 @@ export class DashboardService {
       overview: {
         ...(isSuperAdmin && { totalAdmins }),
         ...((isSuperAdmin || isAdmin) && { totalUsers }),
-        ...((isSuperAdmin || isAdmin || isTrainer) && {
+        // Trainers: Only show trainer stats to Super Admin and Admin, not to trainers themselves
+        ...((isSuperAdmin || isAdmin) && {
           totalTrainers,
           totalActiveTrainers,
         }),
+        // Clients: Show to Super Admin, Admin, and Trainers (their clients)
         ...((isSuperAdmin || isAdmin || isTrainer) && {
           totalClients,
           totalActiveClients,
         }),
+        // Sessions: Show to all roles
         ...((isSuperAdmin || isAdmin || isTrainer || isClient) && {
           totalSessions,
           activeSessions,
           completedSessions,
         }),
+        // Billings: Show to Super Admin, Admin, and Clients (their billings)
         ...((isSuperAdmin || isAdmin || isClient) && {
           totalBillings,
           pendingBillings,
@@ -507,6 +511,7 @@ export class DashboardService {
         ...((isSuperAdmin || isAdmin || isClient) && {
           paymentSuccessRate: Math.round(paymentSuccessRate * 100) / 100,
         }),
+        // Average sessions per client: Only for Super Admin, Admin, and Trainers
         ...((isSuperAdmin || isAdmin || isTrainer) &&
           totalClients > 0 && {
             averageSessionsPerClient:
@@ -529,8 +534,11 @@ export class DashboardService {
       : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const end = to ? new Date(to) : new Date();
 
-    const isAdmin = user.level === EUserLevels.SUPER_ADMIN;
-    const userCondition = isAdmin ? '' : `AND s."trainerUserId" = '${user.id}'`;
+    const isSuperAdmin = user.level === EUserLevels.SUPER_ADMIN;
+    const userJoin = isSuperAdmin
+      ? ''
+      : `LEFT JOIN trainers t ON s."trainerUserId" = t.id`;
+    const userCondition = isSuperAdmin ? '' : `AND t."userId" = $3`;
 
     let groupBy = `DATE_TRUNC('month', s."startDateTime")`;
     if (period === EAnalyticsPeriod.DAY)
@@ -550,37 +558,43 @@ export class DashboardService {
     COUNT(DISTINCT CASE WHEN s.status = 'COMPLETED' THEN s.id END) as completed_sessions,
     COUNT(DISTINCT CASE WHEN s.status = 'SCHEDULED' THEN s.id END) as scheduled_sessions,
     COUNT(DISTINCT CASE WHEN s.status = 'CANCELLED' THEN s.id END) as cancelled_sessions,
-    AVG(s."pricePerClient") as average_price,
-    SUM(s."pricePerClient" * COALESCE(client_counts.client_count, 1)) as total_potential_revenue
+    AVG(s.price) as average_price,
+    SUM(s.price * COALESCE(client_counts.client_count, 1)) as total_potential_revenue
   FROM sessions s
+  ${userJoin}
   LEFT JOIN (
-    SELECT "sessionId", COUNT(*) as client_count 
-    FROM sessions_clients 
-    GROUP BY "sessionId"
-  ) client_counts ON s.id = client_counts."sessionId"
+    SELECT "sessionsId", COUNT(*) as client_count 
+    FROM session_clients_users 
+    GROUP BY "sessionsId"
+  ) client_counts ON s.id = client_counts."sessionsId"
   WHERE s."startDateTime" BETWEEN $1 AND $2 ${userCondition}
   GROUP BY ${groupBy}
   ORDER BY period DESC
 `;
 
-    const sessionStats = await this.sessionRepository.query(sessionStatsQuery, [
-      start,
-      end,
-    ]);
+    const sessionStats = await this.sessionRepository.query(
+      sessionStatsQuery,
+      queryParams,
+    );
 
     // Get session type distribution
     const sessionTypeQuery = `
       SELECT 
         s.type,
         COUNT(*) as count,
-        AVG(s."pricePerClient") as average_price
+        AVG(s.price) as average_price
       FROM sessions s
+      ${userJoin}
       WHERE s."startDateTime" >= NOW() - INTERVAL '12 months' ${userCondition}
       GROUP BY s.type
       ORDER BY count DESC
     `;
 
-    const sessionTypes = await this.sessionRepository.query(sessionTypeQuery);
+    const sessionTypeParams = isSuperAdmin ? [] : [user.id];
+    const sessionTypes = await this.sessionRepository.query(
+      sessionTypeQuery,
+      sessionTypeParams,
+    );
 
     return {
       period,
@@ -612,9 +626,27 @@ export class DashboardService {
       : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const end = to ? new Date(to) : new Date();
 
-    const isAdmin = user.level === EUserLevels.SUPER_ADMIN;
+    const isSuperAdmin = user.level === EUserLevels.SUPER_ADMIN;
+    const isAdmin = user.level === EUserLevels.ADMIN;
+    const isClient = user.level === EUserLevels.CLIENT;
     const PLATFORM_FEE_PERCENTAGE = 0.02;
-    const userCondition = isAdmin ? '' : `AND "createdByUserId" = '${user.id}'`;
+    
+    // Build user condition based on role
+    let userCondition = '';
+    let queryParams: any[] = [start, end];
+    
+    if (isSuperAdmin) {
+      // Super Admin sees all billings
+      userCondition = '';
+    } else if (isAdmin) {
+      // Admin sees billings they created
+      userCondition = `AND "createdByUserId" = $3`;
+      queryParams.push(user.id);
+    } else if (isClient) {
+      // Client sees only their own billings
+      userCondition = `AND "recipientUserId" = $3`;
+      queryParams.push(user.id);
+    }
 
     /** 2. Revenue Stats */
     const revenueStats = await this.billingRepository.query(
@@ -628,7 +660,7 @@ export class DashboardService {
     FROM billings
     WHERE "createdAt" BETWEEN $1 AND $2 ${userCondition}
     `,
-      [start, end],
+      queryParams,
     );
 
     /** 3. Timeline (dynamic based on period) */
@@ -653,21 +685,7 @@ export class DashboardService {
     GROUP BY bucket
     ORDER BY bucket ASC
     `,
-      [start, end],
-    );
-
-    /** 4. Payment Methods */
-    const paymentMethods = await this.billingRepository.query(
-      `
-    SELECT 
-      CASE WHEN "stripeInvoiceId" IS NOT NULL THEN 'stripe' ELSE 'cash' END as method,
-      COUNT(*) as count,
-      SUM("amount") as amount
-    FROM billings
-    WHERE "createdAt" BETWEEN $1 AND $2 ${userCondition}
-    GROUP BY method
-    `,
-      [start, end],
+      queryParams,
     );
 
     /** 5. Detailed Summary */
@@ -677,18 +695,16 @@ export class DashboardService {
       COUNT(*) as total_billings,
       SUM(CASE WHEN status = 'PAID' THEN 1 ELSE 0 END) as paid_billings,
       SUM(CASE WHEN status = 'PENDING' THEN 1 ELSE 0 END) as pending_billings,
-      SUM(CASE WHEN status = 'FAILED' THEN 1 ELSE 0 END) as failed_billings,
       SUM(CASE WHEN status = 'OVERDUE' THEN 1 ELSE 0 END) as overdue_billings,
       SUM(CASE WHEN status = 'PAID' THEN "amount" ELSE 0 END) as total_paid,
       SUM(CASE WHEN status = 'PENDING' THEN "amount" ELSE 0 END) as total_pending,
-      SUM(CASE WHEN status = 'FAILED' THEN "amount" ELSE 0 END) as total_failed,
       SUM(CASE WHEN status = 'OVERDUE' THEN "amount" ELSE 0 END) as total_overdue,
       AVG("amount") as average_billing_amount,
       AVG(CASE WHEN status = 'PAID' THEN "amount" END) as average_paid_amount
     FROM billings
     WHERE "createdAt" BETWEEN $1 AND $2 ${userCondition}
     `,
-      [start, end],
+      queryParams,
     );
 
     /** 6. Type Distribution */
@@ -704,24 +720,7 @@ export class DashboardService {
     WHERE "createdAt" BETWEEN $1 AND $2 ${userCondition}
     GROUP BY type
     `,
-      [start, end],
-    );
-
-    /** 7. Currency Breakdown */
-    const currencyBreakdown = await this.billingRepository.query(
-      `
-    SELECT
-      currency,
-      COUNT(*) as total_billings,
-      SUM(CASE WHEN status = 'PAID' THEN 1 ELSE 0 END) as paid_count,
-      SUM(CASE WHEN status = 'PAID' THEN "amount" ELSE 0 END) as paid_amount,
-      SUM("amount") as total_amount,
-      AVG("amount") as average_amount
-    FROM billings
-    WHERE "createdAt" BETWEEN $1 AND $2 ${userCondition}
-    GROUP BY currency
-    `,
-      [start, end],
+      queryParams,
     );
 
     return {
@@ -743,10 +742,8 @@ export class DashboardService {
         platformFee: Number(item.platform_fee),
         trainerPayout: Number(item.paid) - Number(item.platform_fee),
       })),
-      paymentMethods,
       summary: summary[0] || null,
       typeDistribution,
-      currencyBreakdown,
     };
   }
 }

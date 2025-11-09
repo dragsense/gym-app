@@ -21,13 +21,19 @@ import {
 
 // Types
 import type { IResource } from '@shared/interfaces';
+import type { IUserSettings } from '@shared/interfaces/settings.interface';
+
+// Utils
+import { formatDate } from '@/lib/utils';
 
 export const itemViews = ({
   editResource,
   deleteResource,
+  settings,
 }: {  
   editResource: (resourceId: number) => void;
   deleteResource: (resourceId: number) => void;
+  settings?: IUserSettings;
 }) => {
   const columns: ColumnDef<IResource>[] = [
     {
@@ -106,7 +112,7 @@ export const itemViews = ({
         const createdAt = row.getValue<string>("createdAt");
         return (
           <span className="text-sm text-muted-foreground">
-            {new Date(createdAt).toLocaleDateString()}
+            {formatDate(createdAt, settings)}
           </span>
         );
       },

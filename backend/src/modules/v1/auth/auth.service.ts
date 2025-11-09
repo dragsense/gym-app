@@ -27,7 +27,7 @@ import {
 } from '@shared/enums/activity-log.enum';
 import { RewardsService } from '@/modules/v1/rewards/rewards.service';
 import { TrainersService } from '../trainers/trainers.service';
-import { SignupUserLevel } from '@shared/enums/user.enum';
+import { EUserLevels, SignupUserLevel } from '@shared/enums/user.enum';
 import { User } from '@/common/base-user/entities/user.entity';
 
 @Injectable()
@@ -60,6 +60,7 @@ export class AuthService {
           specialization: trainer.specialization || '',
           experience: trainer.experience || 0,
           user: {
+            level: EUserLevels.TRAINER,
             email: userData.email,
             password: userData.password,
             isActive: true,
@@ -74,6 +75,7 @@ export class AuthService {
         const res = await this.userService.createUser({
           ...userData,
           isActive: true,
+          level: EUserLevels.ADMIN,
         });
         user = res.user;
       }

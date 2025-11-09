@@ -1,5 +1,4 @@
 import { useId } from "react";
-import { format } from "date-fns";
 import { Calendar, Clock, MapPin, DollarSign, User, Edit, Trash2, Eye } from "lucide-react";
 
 // UI Components
@@ -11,21 +10,28 @@ import { AppCard } from "@/components/layout-ui/app-card";
 import { type ISession } from "@shared/interfaces/session.interface";
 import { ESessionStatus } from "@shared/enums/session.enum";
 import type { ColumnDef } from "@tanstack/react-table";
+import type { IUserSettings } from "@shared/interfaces/settings.interface";
+
+// Utils
+import { formatDateTime, formatCurrency } from "@/lib/utils";
+import { buildSentence } from "@/locales/translations";
 
 interface ISessionItemViewsProps {
   handleEdit: (id: string) => void;
   handleDelete: (id: string) => void;
   handleView: (id: string) => void;
+  settings?: IUserSettings;
+  componentId?: string;
+  t: (key: string) => string;
 }
 
-export function sessionItemViews({ handleEdit, handleDelete, handleView }: ISessionItemViewsProps) {
-  const componentId = useId();
+export function sessionItemViews({ handleEdit, handleDelete, handleView, settings, componentId = "session-item-views", t }: ISessionItemViewsProps) {
 
   // Table columns
   const columns: ColumnDef<ISession>[] = [
     {
       accessorKey: 'title',
-      header: 'Title',
+      header: t('title'),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -35,7 +41,7 @@ export function sessionItemViews({ handleEdit, handleDelete, handleView }: ISess
     },
     {
       accessorKey: 'trainer',
-      header: 'Trainer',
+      header: t('trainer'),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <User className="h-4 w-4 text-muted-foreground" />
@@ -45,32 +51,32 @@ export function sessionItemViews({ handleEdit, handleDelete, handleView }: ISess
     },
     {
       id: 'clientsCount',
-      header: 'Clients',
+      header: t('clients'),
       cell: ({ row }) => <span>{row.original.clientsCount}</span>,
     },
     {
       id: 'startDateTime',
-      header: 'Start Time',
+      header: buildSentence(t, 'start', 'time'),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <Clock className="h-4 w-4 text-muted-foreground" />
-          <span>{format(new Date(row.original.startDateTime), 'MMM dd, yyyy HH:mm')}</span>
+          <span>{formatDateTime(row.original.startDateTime, settings)}</span>
         </div>
       ),
     },
     {
       id: 'duration',
-      header: 'Duration',
+      header: t('duration'),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <Clock className="h-4 w-4 text-muted-foreground" />
-          <span>{row.original.duration} minutes</span>
+          <span>{row.original.duration} {t('minutes')}</span>
         </div>
       ),
     },
     {
       id: 'type',
-      header: 'Type',
+      header: t('type'),
       cell: ({ row }) => (
         <Badge variant="outline">
           {row.original.type}
@@ -79,7 +85,7 @@ export function sessionItemViews({ handleEdit, handleDelete, handleView }: ISess
     },
     {
       id: 'status',
-      header: 'Status',
+      header: t('status'),
       cell: ({ row }) => {
         const session = row.original;
         const statusColors = {
@@ -99,17 +105,17 @@ export function sessionItemViews({ handleEdit, handleDelete, handleView }: ISess
     },
     {
       id: 'price',
-      header: 'Price',
+      header: t('price'),
       cell: ({ row }) => (
         <div className="flex items-center gap-1">
           <DollarSign className="h-4 w-4 text-muted-foreground" />
-          <span>{row.original.price ? `${row.original.price}` : 'Free'}</span>
+          <span>{row.original.price ? formatCurrency(row.original.price, undefined, undefined, 2, 2, settings) : t('free')}</span>
         </div>
       ),
     },
     {
       id: 'actions',
-      header: 'Actions',
+      header: t('actions'),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <Button
@@ -164,34 +170,34 @@ export function sessionItemViews({ handleEdit, handleDelete, handleView }: ISess
           <div className="space-y-2 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <User className="h-4 w-4" />
-              <span><strong>Trainer:</strong> {session.trainerUser?.firstName} {session.trainerUser?.lastName}</span>
+              <span><strong>{t('trainer')}:</strong> {session.trainerUser?.firstName} {session.trainerUser?.lastName}</span>
             </div>
             <div className="flex items-center gap-2">
               <User className="h-4 w-4" />
-              <span><strong>Clients:</strong> {session.clientsCount} client(s)</span>
+              <span><strong>{t('clients')}:</strong> {session.clientsCount} {t('clients')}</span>
             </div>
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4" />
-              <span><strong>Start:</strong> {format(new Date(session.startDateTime), 'MMM dd, yyyy HH:mm')}</span>
+              <span><strong>{t('start')}:</strong> {formatDateTime(session.startDateTime, settings)}</span>
             </div>
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4" />
-              <span><strong>Duration:</strong> {session.duration} minutes</span>
+              <span><strong>{t('duration')}:</strong> {session.duration} {t('minutes')}</span>
             </div>
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4" />
-              <span><strong>End:</strong> {format(new Date(session.endDateTime), 'MMM dd, yyyy HH:mm')}</span>
+              <span><strong>{t('end')}:</strong> {formatDateTime(session.endDateTime, settings)}</span>
             </div>
             {session.location && (
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4" />
-                <span><strong>Location:</strong> {session.location}</span>
+                <span><strong>{t('location')}:</strong> {session.location}</span>
               </div>
             )}
             {session.price && (
               <div className="flex items-center gap-2">
                 <DollarSign className="h-4 w-4" />
-                <span><strong>Price:</strong> ${session.price}</span>
+                <span><strong>{t('price')}:</strong> {formatCurrency(session.price, undefined, undefined, 2, 2, settings)}</span>
               </div>
             )}
           </div>

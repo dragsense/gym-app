@@ -13,12 +13,16 @@ import { Badge } from "@/components/ui/badge";
 import { EScheduleStatus, EScheduleFrequency } from "@shared/enums";
 
 // Utils
-import { formatDate, formatTimeOfDay, formatInterval } from "@/utils/date-format";
+import { formatTimeOfDay, formatInterval } from "@/utils/date-format";
+import { formatDate, formatTime } from "@/lib/utils";
+import type { IUserSettings } from "@shared/interfaces/settings.interface";
 
 interface IItemViewArgs {
   handleEdit: (id: string) => void;
   handleDelete: (id: string) => void;
   handleView: (id: string) => void;
+  settings?: IUserSettings;
+  componentId?: string;
 }
 
 const getStatusColor = (status: EScheduleStatus) => {
@@ -55,9 +59,10 @@ export const scheduleItemViews = ({
   handleEdit,
   handleDelete,
   handleView,
+  settings,
+  componentId = "schedule-item-views",
 }: IItemViewArgs) => {
   // React 19: Essential IDs and transitions
-  const componentId = useId();
   const [, startTransition] = useTransition();
   const columns: ColumnDef<ISchedule>[] = [
     {
@@ -91,7 +96,7 @@ export const scheduleItemViews = ({
       cell: ({ row }) => (
         <div className="flex flex-col">
           <span className="text-sm font-medium">
-            {formatDate(row.original.nextRunDate)}
+            {formatDate(row.original.nextRunDate, settings)}
           </span>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             {row.original.timeOfDay && (
@@ -163,7 +168,7 @@ export const scheduleItemViews = ({
 
   const listItem = (item: ISchedule) => {
     // React 19: Memoized formatted date for better performance
-    const nextRunDate = useMemo(() => formatDate(item.nextRunDate), [item.nextRunDate]);
+    const nextRunDate = useMemo(() => formatDate(item.nextRunDate, settings), [item.nextRunDate, settings]);
     
     return (
       <div className="flex items-center justify-between p-4 bg-white rounded-lg border hover:shadow-md transition-shadow" data-component-id={componentId}>

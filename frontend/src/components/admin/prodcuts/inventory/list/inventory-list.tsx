@@ -1,6 +1,8 @@
 // React & Hooks
 import { useEffect, useState, useId, useMemo, useTransition } from "react";
 import { useNavigate } from "react-router-dom";
+import { useI18n } from "@/hooks/use-i18n";
+import { buildSentence } from "@/locales/translations";
 
 // External libraries
 import { List, Plus, Table } from "lucide-react";
@@ -53,13 +55,14 @@ export default function InventoryList({
 
   const componentId = useId();
   const [, startTransition] = useTransition();
+  const { t } = useI18n();
 
   if (!store) {
-    return (`List store "${storeKey}" not found. Did you forget to register it?`);
+    return (`${buildSentence(t, 'list', 'store')} "${storeKey}" ${buildSentence(t, 'not', 'found')}. ${buildSentence(t, 'did', 'you', 'forget', 'to', 'register', 'it')}?`);
   }
 
   if (!singleStore) {
-    return `Single store "${singleStore}" not found. Did you forget to register it?`;
+    return `${buildSentence(t, 'single', 'store')} "${singleStore}" ${buildSentence(t, 'not', 'found')}. ${buildSentence(t, 'did', 'you', 'forget', 'to', 'register', 'it')}?`;
   }
 
   const setAction = singleStore(state => state.setAction);
@@ -108,7 +111,7 @@ export default function InventoryList({
           onClick={handleCreate}
           data-component-id={componentId}
         >
-          <Plus /> <span className="hidden sm:inline capitalize">Add Inventory</span>
+          <Plus /> <span className="hidden sm:inline capitalize">{buildSentence(t, 'add', 'inventory')}</span>
         </Button> : null}
       </div>
 
@@ -116,7 +119,7 @@ export default function InventoryList({
         <TTable<IInventory>
           listStore={store}
           columns={columns}
-          emptyMessage="No inventorys found."
+          emptyMessage={buildSentence(t, 'no', 'inventory', 'found')}
           showPagination={true}
         />
       </TabsContent>
@@ -125,7 +128,7 @@ export default function InventoryList({
         <div>
           <TList<IInventory>
             listStore={store}
-            emptyMessage="No inventorys found."
+            emptyMessage={buildSentence(t, 'no', 'inventory', 'found')}
             showPagination={true}
             renderItem={listItem}
           />

@@ -27,3 +27,16 @@ export const fetchBilling = (id: string, params: IListQueryParams) =>
 export const createBilling = (data: TBillingData) => billingService.post(data);
 export const updateBilling = (id: string) => billingService.patch(id);
 export const deleteBilling = (id: string) => billingService.delete(id);
+
+// Custom endpoints
+export const createCheckoutSession = (id: string, data: { paymentSuccessUrl: string; paymentCancelUrl: string }) =>
+  billingService.post(data, undefined, `/${id}/checkout-url`);
+
+export const handleCheckoutSuccess = (token: string, sessionId: string) =>
+  billingService.getSingle(undefined, { token, session_id: sessionId }, '/checkout/success');
+
+export const handleCheckoutCancel = () =>
+  billingService.getSingle(undefined, undefined, '/checkout/cancel');
+
+export const sendBillingEmail = (id: string) =>
+  billingService.post({}, undefined, `/${id}/send-email`);

@@ -91,8 +91,11 @@ RUN pnpm run build
 FROM node:22 AS prod
 WORKDIR /app
 
-# Install pnpm
-RUN npm install -g pnpm
+# Install pnpm and PM2
+RUN npm install -g pnpm pm2 serve
+
+# Create logs directory
+RUN mkdir -p /app/logs
 
 # Copy built backend
 COPY --from=build /app/backend/dist ./backend/dist
@@ -106,6 +109,11 @@ RUN pnpm install --prod
 # Copy built frontend
 COPY --from=build /app/frontend/dist ./frontend/dist
 
-EXPOSE 3000
-CMD ["npm", "run", "start"]
+# Copy ecosystem.js for PM2
+COPY ecosystem.js ./ecosystem.js
+
+EXPOSE 3000 5173
+
+# Use PM2 to manage both backend and frontend
+CMD ["pm2-runtime", "start", "ecosystem.js"]
 

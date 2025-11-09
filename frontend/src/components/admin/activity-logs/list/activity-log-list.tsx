@@ -1,5 +1,7 @@
 // React & Hooks
 import { useId, useMemo, useTransition } from "react";
+import { useI18n } from "@/hooks/use-i18n";
+import { buildSentence } from "@/locales/translations";
 
 // Types
 import { type IActivityLog } from "@shared/interfaces/activity-log.interface";
@@ -36,9 +38,10 @@ export default function ActivityLogList({
 }: IActivityLogListProps) {
   // React 19: Essential IDs and transitions
   const componentId = useId();
+  const { t } = useI18n();
 
   if (!store) {
-    return (`List store "${storeKey}" not found. Did you forget to register it?`);
+    return (`${buildSentence(t, 'list', 'store')} "${storeKey}" ${buildSentence(t, 'not', 'found')}. ${buildSentence(t, 'did', 'you', 'forget', 'to', 'register', 'it')}?`);
   }
 
   // React 19: Memoized columns for better performance
@@ -54,7 +57,7 @@ export default function ActivityLogList({
         <TTable<IActivityLog>
           listStore={store}
           columns={columns}
-          emptyMessage="No activity logs found."
+          emptyMessage={buildSentence(t, 'no', 'activity', 'logs', 'found')}
           showPagination={true}
         />
       </AppCard>

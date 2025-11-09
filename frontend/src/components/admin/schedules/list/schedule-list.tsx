@@ -1,5 +1,8 @@
 // React & Hooks
 import { useState, useId, useMemo, useTransition } from "react";
+import { useUserSettings } from "@/hooks/use-user-settings";
+import { useI18n } from "@/hooks/use-i18n";
+import { buildSentence } from "@/locales/translations";
 
 // External libraries
 import { Plus } from "lucide-react";
@@ -44,13 +47,15 @@ export default function ScheduleList({
   // React 19: Essential IDs and transitions
   const componentId = useId();
   const [, startTransition] = useTransition();
+  const { settings } = useUserSettings();
+  const { t } = useI18n();
 
   if (!store) {
-    return (`List store "${storeKey}" not found. Did you forget to register it?`);
+    return (`${buildSentence(t, 'list', 'store')} "${storeKey}" ${buildSentence(t, 'not', 'found')}. ${buildSentence(t, 'did', 'you', 'forget', 'to', 'register', 'it')}?`);
   }
 
   if (!singleStore) {
-    return `Single store "${singleStore}" not found. Did you forget to register it?`;
+    return `${buildSentence(t, 'single', 'store')} "${singleStore}" ${buildSentence(t, 'not', 'found')}. ${buildSentence(t, 'did', 'you', 'forget', 'to', 'register', 'it')}?`;
   }
 
   const setAction = singleStore(state => state.setAction);
@@ -85,7 +90,9 @@ export default function ScheduleList({
   const { columns, listItem } = itemViews({
     handleEdit,
     handleDelete,
-    handleView
+    handleView,
+    settings,
+    componentId,
   });
 
   return (
@@ -99,7 +106,7 @@ export default function ScheduleList({
             variant="default"
             data-component-id={componentId}
           >
-            <Plus /> <span className="hidden sm:inline">Create Schedule</span>
+            <Plus /> <span className="hidden sm:inline">{buildSentence(t, 'create', 'schedule')}</span>
           </Button>
 
         </div>
@@ -110,7 +117,7 @@ export default function ScheduleList({
           <TTable<ISchedule>
             listStore={store}
             columns={columns}
-            emptyMessage="No schedules found."
+            emptyMessage={buildSentence(t, 'no', 'schedules', 'found')}
             showPagination={true}
           /></AppCard>
       </TabsContent>
@@ -119,7 +126,7 @@ export default function ScheduleList({
         <div>
           <TList<ISchedule>
             listStore={store}
-            emptyMessage="No schedules found."
+            emptyMessage={buildSentence(t, 'no', 'schedules', 'found')}
             showPagination={true}
             renderItem={listItem}
           />

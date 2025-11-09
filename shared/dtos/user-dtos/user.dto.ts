@@ -12,6 +12,11 @@ import {
   IsDateString,
   IsArray,
   IsEnum,
+  isNotEmpty,
+  Validate,
+  ValidatorConstraint,
+  ValidatorConstraintInterface,
+  ValidationArguments,
 } from "class-validator";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { PartialType } from "../../lib/dto-type-adapter";
@@ -40,7 +45,19 @@ import {
   TransformToDate,
   RelationFilter,
 } from "../../decorators/crud.dto.decorators";
-import { EUserGender } from "../../enums/user.enum";
+import { EUserGender, EUserLevels } from "../../enums/user.enum";
+
+@ValidatorConstraint({ name: "notSuperAdminLevel", async: false })
+class NotSuperAdminLevelConstraint implements ValidatorConstraintInterface {
+  validate(level: number, args: ValidationArguments) {
+    // Level 0 (SUPER_ADMIN) can only be assigned by the seeder
+    return level !== EUserLevels.SUPER_ADMIN;
+  }
+
+  defaultMessage(args: ValidationArguments) {
+    return "Cannot create user with SUPER_ADMIN level. This level is reserved for the seeded super admin only.";
+  }
+}
 
 export class CreateUserDto {
   @ApiProperty({ example: "email@example.com", description: "User email" })
@@ -92,13 +109,15 @@ export class CreateUserDto {
   password?: string;
 
   @ApiProperty({
-    example: 0,
-    description: "User level (0=ADMIN, 1=TRAINER, 2=CLIENT, 3=USER)",
+    example: EUserLevels.ADMIN,
+    description:
+      "User level (1=ADMIN, 2=TRAINER, 3=CLIENT, 4=USER). Level 0 (SUPER_ADMIN) is reserved for the seeded super admin only.",
   })
   @IsNumber()
-  @IsOptional()
+  @IsNotEmpty()
+  @Validate(NotSuperAdminLevelConstraint)
   @FieldType("number")
-  level?: number;
+  level: number;
 
   @ApiProperty({ example: true, required: false })
   @IsOptional()
@@ -185,22 +204,31 @@ export class UserDto {
   @FieldType("number")
   level?: number;
 
-  @ApiProperty({ type: () => ProfileDto })
-  @Type(() => ProfileDto)
-  @IsOptional()
-  profile?: ProfileDto;
-
-  @ApiPropertyOptional({
-    example: "securePass123",
-    description: "User password",
-  })
+  @ApiProperty({ example: "John", description: "User first name" })
   @IsOptional()
   @IsString()
-  password?: string;
+  @FieldType("text", false)
+  firstName?: string;
 
+  @ApiProperty({ example: "Doe", description: "User last name" })
   @IsOptional()
-  createdAt?: Date;
+  @IsString()
+  @FieldType("text", false)
+  lastName?: string;
 
+  @ApiPropertyOptional({
+    example: "2024-01-01T00:00:00.000Z",
+    description: "Creation date",
+  })
   @IsOptional()
-  updatedAt?: Date;
+  @IsDateString()
+  createdAt?: string;
+
+  @ApiProperty({
+    example: "2024-01-01T00:00:00.000Z",
+    description: "Last update date",
+  })
+  @IsOptional()
+  @IsDateString()
+  updatedAt?: string;
 }

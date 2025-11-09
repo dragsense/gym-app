@@ -1,24 +1,18 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Delete,
-  UseGuards,
-  Request,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiParam,
 } from '@nestjs/swagger';
 import { UserSettingsService } from './user-settings.service';
 import { CreateOrUpdateUserSettingsDto } from '@shared/dtos/settings-dtos';
 import { IUserSettings } from '@shared/interfaces/settings.interface';
 import { AuthUser } from '@/decorators/user.decorator';
 import { User } from '@/common/base-user/entities/user.entity';
+import { EUserLevels } from '@shared/enums/user.enum';
+import { MinUserLevel } from '@/common/decorators/level.decorator';
 
 @ApiTags('User Settings')
 @ApiBearerAuth('access-token')
@@ -51,7 +45,26 @@ export class UserSettingsController {
     status: 200,
     description: 'User settings retrieved successfully',
   })
-  async findOne(@Request() req: any): Promise<IUserSettings> {
-    return this.userSettingsService.getUserSettings(req.user.id);
+  async findOne(@AuthUser() currentUser: User): Promise<IUserSettings> {
+    return this.userSettingsService.getUserSettings(currentUser.id);
+  }
+
+  @Get(':userId')
+  @ApiOperation({ summary: 'Get user settings by user ID (Super Admin only)' })
+  @ApiParam({ name: 'userId', description: 'User ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'User settings retrieved successfully',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Super Admin access required',
+  })
+  @ApiResponse({ status: 404, description: 'User settings not found' })
+  @MinUserLevel(EUserLevels.SUPER_ADMIN)
+  async findOneByUserId(
+    @Param('userId') userId: string,
+  ): Promise<IUserSettings> {
+    return this.userSettingsService.getUserSettings(userId);
   }
 }

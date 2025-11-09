@@ -19,7 +19,12 @@ import type { ClientDto, TrainerDto } from "@shared/dtos";
 import type { ReminderDto } from "@shared/dtos/reminder-dtos";
 import { useSearchableClients, useSearchableTrainers } from "@/hooks/use-searchable";
 import { useAuthUser } from "@/hooks/use-auth-user";
+import { useUserSettings } from "@/hooks/use-user-settings";
 import { EUserLevels } from "@shared/enums";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
+import { useI18n } from "@/hooks/use-i18n";
+import { buildSentence } from "@/locales/translations";
 
 export interface ISessionFormModalExtraProps {
   open: boolean;
@@ -38,10 +43,16 @@ const SessionFormModal = React.memo(function SessionFormModal({
   const componentId = useId();
   const [, startTransition] = useTransition();
 
-  const { user } = useAuthUser()
+  const { user } = useAuthUser();
+  const { settings } = useUserSettings();
+  const { t } = useI18n();
+  
+  // Get form values for validation
+  const formValues = store((state) => state.values);
+  const limits = settings?.limits;
 
   if (!store) {
-    return `Form store "${storeKey}" not found. Did you forget to register it?`;
+    return `${buildSentence(t, 'form', 'store')} "${storeKey}" ${buildSentence(t, 'not', 'found')}. ${buildSentence(t, 'did', 'you', 'forget', 'to', 'register', 'it')}?`;
   }
 
   const isSubmitting = store((state) => state.isSubmitting)
@@ -60,7 +71,7 @@ const SessionFormModal = React.memo(function SessionFormModal({
         modal={true}
         useSearchable={() => useSearchableTrainers({})}
         getLabel={(item) => {
-          if (!item?.user?.firstName) return 'Select Trainer'
+          if (!item?.user?.firstName) return t('trainer')
           return `${item.user?.firstName} ${item.user?.lastName} (${item.user?.email})`
         }}
         getKey={(item) => item.id.toString()}
@@ -77,7 +88,7 @@ const SessionFormModal = React.memo(function SessionFormModal({
         modal={true}
         useSearchable={() => useSearchableClients({})}
         getLabel={(item) => {
-          if (!item?.user?.firstName) return 'Select Clients'
+          if (!item?.user?.firstName) return t('clients')
 
           return `${item.user?.firstName} ${item.user?.lastName} (${item.user?.email})`
         }}
@@ -144,19 +155,19 @@ const SessionFormModal = React.memo(function SessionFormModal({
         }}
         data-component-id={componentId}
       >
-        Cancel
+        {t('cancel')}
       </Button>
       <Button type="submit" disabled={isSubmitting} data-component-id={componentId}>
         {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        {isEditing ? "Update" : "Add"}
+        {isEditing ? t('update') : t('add')}
       </Button>
     </div>
-  ), [componentId, isEditing, onClose, isSubmitting]);
+  ), [componentId, isEditing, onClose, isSubmitting, t]);
 
   return <>
     <ModalForm<TSessionData, ISessionResponse, ISessionFormModalExtraProps>
-      title={`${isEditing ? "Edit" : "Add"} Session`}
-      description={`${isEditing ? "Edit" : "Add a new"} training session`}
+      title={buildSentence(t, isEditing ? 'edit' : 'add', 'session')}
+      description={buildSentence(t, isEditing ? 'edit' : 'add', 'session')}
       open={open}
       onOpenChange={onOpenChange}
       formStore={store}
@@ -166,7 +177,7 @@ const SessionFormModal = React.memo(function SessionFormModal({
       <div className="space-y-8">
         {/* Session Information */}
         <div>
-          <h3 className="text-sm font-semibold mb-3">Session Information</h3>
+          <h3 className="text-sm font-semibold mb-3">{buildSentence(t, 'session', 'information')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
             {inputs.title}
             {inputs.type}
@@ -178,7 +189,7 @@ const SessionFormModal = React.memo(function SessionFormModal({
 
         {/* Schedule */}
         <div>
-          <h3 className="text-sm font-semibold mb-3">Schedule</h3>
+          <h3 className="text-sm font-semibold mb-3">{t('date')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
             {inputs.startDateTime}
             {inputs.duration}
@@ -187,16 +198,32 @@ const SessionFormModal = React.memo(function SessionFormModal({
 
         {/* Participants */}
         <div>
-          <h3 className="text-sm font-semibold mb-3">Participants</h3>
+          <h3 className="text-sm font-semibold mb-3">{t('participants')}</h3>
           <div className="grid grid-cols-2 gap-6 items-start">
             {inputs.trainer as ReactNode}
             {inputs.clients as ReactNode}
           </div>
+          {limits?.maxClientsPerSession && formValues?.clients && (
+            <Alert className={`mt-4 ${formValues.clients.length > limits.maxClientsPerSession ? 'border-red-500' : 'border-blue-500'}`}>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                {formValues.clients.length > limits.maxClientsPerSession ? (
+                  <span className="text-red-600">
+                    {buildSentence(t, 'maximum', limits.maxClientsPerSession.toString(), 'clients', 'allowed', 'per', 'session')} {buildSentence(t, 'you', 'selected', formValues.clients.length.toString(), 'clients')}
+                  </span>
+                ) : (
+                  <span className="text-blue-600">
+                    {buildSentence(t, formValues.clients.length.toString(), 'of', limits.maxClientsPerSession.toString(), 'clients', 'selected')}
+                  </span>
+                )}
+              </AlertDescription>
+            </Alert>
+          )}
         </div>
 
         {/* Additional Details */}
         <div>
-          <h3 className="text-sm font-semibold mb-3">Additional Details</h3>
+          <h3 className="text-sm font-semibold mb-3">{t('details')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
             {inputs.location}
             {inputs.price}

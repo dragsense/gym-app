@@ -1,6 +1,9 @@
 // React & Hooks
 import { useEffect, useState, useId, useMemo, useTransition } from "react";
 import { useNavigate } from "react-router-dom";
+import { useUserSettings } from "@/hooks/use-user-settings";
+import { useI18n } from "@/hooks/use-i18n";
+import { buildSentence } from "@/locales/translations";
 
 // External libraries
 import { List, Plus, Table } from "lucide-react";
@@ -53,13 +56,15 @@ export default function SessionList({
 
   const componentId = useId();
   const [, startTransition] = useTransition();
+  const { settings } = useUserSettings();
+  const { t } = useI18n();
 
   if (!store) {
-    return (`List store "${storeKey}" not found. Did you forget to register it?`);
+    return (`${buildSentence(t, 'list', 'store')} "${storeKey}" ${buildSentence(t, 'not', 'found')}. ${buildSentence(t, 'did', 'you', 'forget', 'to', 'register', 'it')}?`);
   }
 
   if (!singleStore) {
-    return `Single store "${singleStore}" not found. Did you forget to register it?`;
+    return `${buildSentence(t, 'single', 'store')} "${singleStore}" ${buildSentence(t, 'not', 'found')}. ${buildSentence(t, 'did', 'you', 'forget', 'to', 'register', 'it')}?`;
   }
 
   const setAction = singleStore(state => state.setAction);
@@ -95,6 +100,9 @@ export default function SessionList({
     handleEdit,
     handleDelete,
     handleView,
+    settings,
+    componentId,
+    t,
   });
 
   return (
@@ -108,7 +116,7 @@ export default function SessionList({
           onClick={handleCreate}
           data-component-id={componentId}
         >
-          <Plus /> <span className="hidden sm:inline capitalize">Add Session</span>
+          <Plus /> <span className="hidden sm:inline capitalize">{buildSentence(t, 'add', 'session')}</span>
         </Button> : null}
       </div>
 
@@ -116,7 +124,7 @@ export default function SessionList({
         <TTable<ISession>
           listStore={store}
           columns={columns}
-          emptyMessage="No sessions found."
+          emptyMessage={buildSentence(t, 'no', 'sessions', 'found')}
           showPagination={true}
         />
       </TabsContent>
@@ -125,7 +133,7 @@ export default function SessionList({
         <div>
           <TList<ISession>
             listStore={store}
-            emptyMessage="No sessions found."
+            emptyMessage={buildSentence(t, 'no', 'sessions', 'found')}
             showPagination={true}
             renderItem={listItem}
           />

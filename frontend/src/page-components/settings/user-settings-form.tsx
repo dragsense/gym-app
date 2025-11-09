@@ -73,6 +73,9 @@ export default function UserSettingsFormHandler({
             pushEnabled: undefined,
             inAppEnabled: undefined
         },
+        theme: {
+            theme: undefined,
+        },
     };
 
     // React 19: Memoized initial values with deferred processing

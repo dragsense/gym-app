@@ -1,5 +1,8 @@
 // External Libraries
 import { useId, useMemo, useTransition } from "react";
+import { useUserSettings } from '@/hooks/use-user-settings';
+import { useI18n } from "@/hooks/use-i18n";
+import { buildSentence } from "@/locales/translations";
 
 // Types
 import type { TListHandlerComponentProps } from "@/@types/handler-types";
@@ -30,9 +33,11 @@ export const PermissionList = ({
   // React 19: Essential IDs and transitions
   const componentId = useId();
   const [, startTransition] = useTransition();
+  const { settings } = useUserSettings();
+  const { t } = useI18n();
 
   if (!store || !singleStore) {
-    return <div>List store "{storeKey}" not found. Did you forget to register it?</div>;
+    return <div>{buildSentence(t, 'list', 'store')} "{storeKey}" {buildSentence(t, 'not', 'found')}. {buildSentence(t, 'did', 'you', 'forget', 'to', 'register', 'it')}?</div>;
   }
 
   const setAction = singleStore(state => state.setAction);
@@ -58,7 +63,7 @@ export const PermissionList = ({
   };
 
   // React 19: Memoized columns for better performance
-  const { columns } = itemViews({ editPermission, deletePermission });
+  const { columns } = useMemo(() => itemViews({ editPermission, deletePermission, settings }), [editPermission, deletePermission, settings]);
 
 
   return (
@@ -71,7 +76,7 @@ export const PermissionList = ({
             variant="default"
             data-component-id={componentId}
           >
-            <Plus /> <span className="hidden sm:inline">Create Permission</span>
+            <Plus /> <span className="hidden sm:inline">{buildSentence(t, 'create', 'permission')}</span>
           </Button>
         </div>
       </div>
@@ -80,7 +85,7 @@ export const PermissionList = ({
         <TTable<IPermission>
           listStore={store}
           columns={columns}
-          emptyMessage="No permissions found."
+          emptyMessage={buildSentence(t, 'no', 'permissions', 'found')}
           showPagination={true}
         />
       </AppCard>

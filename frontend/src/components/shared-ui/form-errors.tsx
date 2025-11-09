@@ -1,9 +1,12 @@
 import { useFormContext, useFormState } from "react-hook-form";
 import { useId, useMemo } from "react";
+import { useI18n } from "@/hooks/use-i18n";
+import { buildSentence } from "@/locales/translations";
 
 export function FormErrors() {
     // React 19: Essential IDs
     const componentId = useId();
+    const { t } = useI18n();
 
     const { control } = useFormContext();
     const { errors } = useFormState({ control });
@@ -28,7 +31,7 @@ export function FormErrors() {
 
     return (
         <div className="bg-red-100 text-red-700 text-sm p-2 mt-2 rounded" data-component-id={componentId}>
-            <strong>Please fix the following errors:</strong>
+            <strong>{buildSentence(t, 'please', 'fix', 'the', 'following', 'errors')}:</strong>
             <ul style={{ marginLeft: "1.25rem", listStyleType: "disc" }}>
                 {errorMessages.map((msg, idx) => (
                     <li key={idx}>{msg}</li>

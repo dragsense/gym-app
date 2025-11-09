@@ -23,6 +23,8 @@ import { JwtService } from '@nestjs/jwt';
 import { StripeService } from '../stripe/stripe.service';
 import { StripeBillingService } from '../stripe/services/stripe-billing.service';
 import { EBillingStatus } from '@shared/enums/billing.enum';
+import { BillingNotificationService } from './services/billing-notification.service';
+import { UserSettingsService } from '../user-settings/user-settings.service';
 
 @Injectable()
 export class BillingsService extends CrudService<Billing> {
@@ -35,6 +37,8 @@ export class BillingsService extends CrudService<Billing> {
     private readonly jwtService: JwtService,
     private readonly stripeBillingService: StripeBillingService,
     private readonly stripeService: StripeService,
+    private readonly billingNotificationService: BillingNotificationService,
+    private readonly userSettingsService: UserSettingsService,
     moduleRef: ModuleRef,
   ) {
     const crudOptions: CrudOptions = {
@@ -58,8 +62,23 @@ export class BillingsService extends CrudService<Billing> {
       );
     }
 
+    // Get billing settings for tax rate
+    const billingSettings = await this.userSettingsService.getUserSettings(
+      recipientUser.id,
+    );
+
+    // Apply tax rate if configured
+    let finalAmount = createBillingDto.amount;
+    if (billingSettings?.billing?.taxRate) {
+      const taxAmount =
+        (createBillingDto.amount * billingSettings.billing.taxRate) / 100;
+      finalAmount = createBillingDto.amount + taxAmount;
+    }
+
     // Use CRUD service create method
-    const billing = await this.create(createBillingDto, {
+    const billing = await this.create(
+      { ...createBillingDto, amount: finalAmount },
+      {
       beforeCreate: async (
         processedData: CreateBillingDto,
         manager: EntityManager,
@@ -80,6 +99,8 @@ export class BillingsService extends CrudService<Billing> {
     id: string,
     updateBillingDto: UpdateBillingDto,
   ): Promise<IMessageResponse> {
+    let recipientUserId: string | undefined;
+
     if (updateBillingDto.recipientUser && updateBillingDto.recipientUser.id) {
       // Check if trainer exists and is actually a trainer
       const recipientUser = await this.usersService.getUser(
@@ -90,7 +111,31 @@ export class BillingsService extends CrudService<Billing> {
           'Recipient user not found or invalid recipient level',
         );
       }
+      recipientUserId = recipientUser.id;
+    } else {
+      // Get existing billing to get recipient user
+      const existingBilling = await this.getSingle(id, {
+        _relations: ['recipientUser'],
+      });
+      if (existingBilling?.recipientUser) {
+        recipientUserId = existingBilling.recipientUser.id;
+      }
     }
+
+    // Get billing settings for tax rate if amount is being updated
+    if (updateBillingDto.amount !== undefined && recipientUserId) {
+      const billingSettings = await this.userSettingsService.getUserSettings(
+        recipientUserId,
+      );
+
+      // Apply tax rate if configured
+      if (billingSettings?.billing?.taxRate) {
+        const taxAmount =
+          (updateBillingDto.amount * billingSettings.billing.taxRate) / 100;
+        updateBillingDto.amount = updateBillingDto.amount + taxAmount;
+      }
+    }
+
     // Update billing data
     await this.update(id, updateBillingDto);
 
@@ -164,5 +209,22 @@ export class BillingsService extends CrudService<Billing> {
         `Failed to handle checkout cancellation: ${error.message}`,
       );
     }
+  }
+
+  async sendBillingEmail(id: string): Promise<IMessageResponse> {
+    const billing = await this.getSingle(id, {
+      _relations: ['recipientUser'],
+    });
+
+    if (!billing) {
+      throw new NotFoundException('Billing not found');
+    }
+
+    // Send email notification using the notification service
+    await this.billingNotificationService.notifyBillingCreated(billing);
+
+    return {
+      message: 'Billing email sent successfully to recipient',
+    };
   }
 }

@@ -19,9 +19,10 @@ import {
   ECurrency,
   EDateFormat,
   ETimeFormat,
-  ETimezone,
   ENotificationFrequency,
+  ETheme,
 } from "../../enums/user-settings.enum";
+import { getTimezoneOptionsWithSystem } from "../../constants/timezone.constants";
 
 // Currency Settings
 export class CurrencySettingsDto {
@@ -68,14 +69,18 @@ export class TimeSettingsDto {
 
   @ApiProperty({
     example: "America/New_York",
-    description: "Timezone",
-    enum: ETimezone,
+    description: "Timezone (IANA timezone identifier)",
   })
-  @IsEnum(ETimezone)
+  @IsString()
   @IsOptional()
   @FieldType("select", false)
-  @FieldOptions(Object.values(ETimezone).map((v) => ({ value: v, label: v })))
-  timezone?: ETimezone;
+  @FieldOptions(
+    getTimezoneOptionsWithSystem().map((tz) => ({
+      value: tz.value,
+      label: tz.label,
+    }))
+  )
+  timezone?: string;
 }
 
 // Limits Settings
@@ -179,6 +184,15 @@ export class BillingSettingsDto {
   @IsOptional()
   @FieldType("text", false)
   invoicePrefix?: string;
+
+  @ApiProperty({ example: 2.5, description: "Platform commission rate (%)" })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  @FieldType("number", false)
+  @Type(() => Number)
+  commissionRate?: number;
 }
 
 // Notification Settings
@@ -206,6 +220,20 @@ export class NotificationSettingsDto {
   @IsBoolean()
   @FieldType("switch", false)
   inAppEnabled?: boolean;
+}
+
+// Theme Settings
+export class ThemeSettingsDto {
+  @ApiProperty({
+    example: "system",
+    description: "Theme preference",
+    enum: ETheme,
+  })
+  @IsEnum(ETheme)
+  @IsOptional()
+  @FieldType("select", false)
+  @FieldOptions(Object.values(ETheme).map((v) => ({ value: v, label: v.charAt(0).toUpperCase() + v.slice(1) })))
+  theme?: ETheme;
 }
 
 // Main User Settings DTO
@@ -251,12 +279,23 @@ export class CreateOrUpdateUserSettingsDto {
   @Type(() => NotificationSettingsDto)
   @FieldType("nested", false, NotificationSettingsDto)
   notifications?: NotificationSettingsDto;
+
+  @ApiProperty({ type: ThemeSettingsDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => ThemeSettingsDto)
+  @FieldType("nested", false, ThemeSettingsDto)
+  theme?: ThemeSettingsDto;
 }
 
 export class UserSettingsDto {
   @ApiProperty({ type: CurrencySettingsDto })
   @IsOptional()
   currency?: CurrencySettingsDto;
+
+  @ApiProperty({ type: TimeSettingsDto })
+  @IsOptional()
+  time?: TimeSettingsDto;
 
   @ApiProperty({ type: LimitSettingsDto })
   @IsOptional()
@@ -273,6 +312,10 @@ export class UserSettingsDto {
   @ApiProperty({ type: NotificationSettingsDto })
   @IsOptional()
   notifications?: NotificationSettingsDto;
+
+  @ApiProperty({ type: ThemeSettingsDto })
+  @IsOptional()
+  theme?: ThemeSettingsDto;
 
   @IsOptional()
   createdAt?: Date;

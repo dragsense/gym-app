@@ -4,6 +4,8 @@ import React, { useMemo, useId, useTransition } from "react";
 import { Loader2 } from "lucide-react";
 // Custom Hooks
 import { type FormInputs, useInput } from "@/hooks/use-input";
+import { useI18n } from "@/hooks/use-i18n";
+import { buildSentence } from "@/locales/translations";
 
 // Types
 import type { TFormHandlerStore } from "@/stores";
@@ -33,9 +35,10 @@ const UserFormModal = React.memo(function UserFormModal({
   // React 19: Essential IDs and transitions
   const componentId = useId();
   const [, startTransition] = useTransition();
+  const { t } = useI18n();
 
   if (!store) {
-    return `Form store "${storeKey}" not found. Did you forget to register it?`;
+    return `${buildSentence(t, 'form', 'store')} "${storeKey}" ${buildSentence(t, 'not', 'found')}. ${buildSentence(t, 'did', 'you', 'forget', 'to', 'register', 'it')}?`;
   }
 
   const isEditing = store((state) => state.isEditing)
@@ -80,11 +83,11 @@ const UserFormModal = React.memo(function UserFormModal({
         }}
         data-component-id={componentId}
       >
-        Cancel
+        {t('cancel')}
       </Button>
       <Button type="submit" disabled={false} data-component-id={componentId}>
         {false && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        {isEditing ? "Update" : "Add"}
+        {isEditing ? t('update') : t('add')}
       </Button>
     </div>
   ), [componentId, isEditing, onClose]);
@@ -92,8 +95,8 @@ const UserFormModal = React.memo(function UserFormModal({
 
   return <>
     <ModalForm<TUserData, TUserResponse, IUserFormModalExtraProps>
-      title={`${isEditing ? "Edit" : "Add"} User`}
-      description={`${isEditing ? "Edit" : "Add a new"} User`}
+      title={buildSentence(t, isEditing ? 'edit' : 'add', 'user')}
+      description={buildSentence(t, isEditing ? 'edit' : 'add', 'a', 'new', 'user')}
       open={open}
       onOpenChange={onOpenChange}
       formStore={store}

@@ -19,6 +19,7 @@ import { ProfilesModule } from '../users/profiles/profiles.module';
 import { NotificationModule } from '@/common/notification/notification.module';
 import { BillingNotificationService } from './services/billing-notification.service';
 import { User } from '@/common/base-user/entities/user.entity';
+import { UserSettingsModule } from '../user-settings/user-settings.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { User } from '@/common/base-user/entities/user.entity';
     UsersModule,
     StripeModule,
     NotificationModule,
+    UserSettingsModule,
     JwtModule.registerAsync({
       useFactory: getJwtConfig,
       inject: [ConfigService],

@@ -1,5 +1,8 @@
 // React & Hooks
 import { useState, useId, useMemo, useTransition } from "react";
+import { useUserSettings } from "@/hooks/use-user-settings";
+import { useI18n } from "@/hooks/use-i18n";
+import { buildSentence } from "@/locales/translations";
 
 // External libraries
 import { List, Plus, Table } from "lucide-react";
@@ -44,13 +47,15 @@ export default function FileList({
   // React 19: Essential IDs and transitions
   const componentId = useId();
   const [, startTransition] = useTransition();
+  const { settings } = useUserSettings();
+  const { t } = useI18n();
 
   if (!store) {
-    return (`List store "${storeKey}" not found. Did you forget to register it?`);
+    return (`${buildSentence(t, 'list', 'store')} "${storeKey}" ${buildSentence(t, 'not', 'found')}. ${buildSentence(t, 'did', 'you', 'forget', 'to', 'register', 'it')}?`);
   }
 
   if (!singleStore) {
-    return `Single store "${singleStore}" not found. Did you forget to register it?`;
+    return `${buildSentence(t, 'single', 'store')} "${singleStore}" ${buildSentence(t, 'not', 'found')}. ${buildSentence(t, 'did', 'you', 'forget', 'to', 'register', 'it')}?`;
   }
 
   const setAction = singleStore(state => state.setAction);
@@ -85,7 +90,9 @@ export default function FileList({
   const { columns, listItem } = itemViews({
     handleEdit,
     handleDelete,
-    handleView
+    handleView,
+    settings,
+    componentId,
   });
 
 
@@ -102,7 +109,7 @@ export default function FileList({
             variant="default"
             data-component-id={componentId}
           >
-            <Plus /> <span className="hidden sm:inline">Create</span>
+            <Plus /> <span className="hidden sm:inline">{t('create')}</span>
           </Button>
 
         </div>
@@ -113,7 +120,7 @@ export default function FileList({
           <TTable<IFileUpload>
             listStore={store}
             columns={columns}
-            emptyMessage="No files found."
+            emptyMessage={buildSentence(t, 'no', 'files', 'found')}
             showPagination={true}
           /></AppCard>
       </TabsContent>
@@ -122,7 +129,7 @@ export default function FileList({
         <div>
           <TList<IFileUpload>
             listStore={store}
-            emptyMessage="No files found."
+            emptyMessage={buildSentence(t, 'no', 'files', 'found')}
             showPagination={true}
             renderItem={listItem}
           />

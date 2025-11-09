@@ -1,4 +1,7 @@
 import { createContext, useContext, useEffect, useState, useDeferredValue, useMemo, type ReactNode } from 'react';
+import { useUserSettings } from './use-user-settings';
+import { createOrUpdateMySettings } from '@/services/settings.api';
+import { ETheme } from '@shared/enums/user-settings.enum';
 
 type Theme = 'light' | 'dark' | 'system';
 
@@ -21,14 +24,30 @@ export function ThemeProvider({
   defaultTheme = 'system',
   storageKey = 'theme',
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(() => {
+  const { settings } = useUserSettings();
+  
+  // Get theme from user settings or localStorage
+  const getInitialTheme = (): Theme => {
     if (typeof window !== 'undefined') {
+      // Priority: user settings > localStorage > default
+      if (settings?.theme?.theme) {
+        return settings.theme.theme as Theme;
+      }
       return (localStorage.getItem(storageKey) as Theme) || defaultTheme;
     }
     return defaultTheme;
-  });
+  };
+
+  const [theme, setTheme] = useState<Theme>(getInitialTheme);
 
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light');
+
+  // Sync theme when user settings change
+  useEffect(() => {
+    if (settings?.theme?.theme) {
+      setTheme(settings.theme.theme as Theme);
+    }
+  }, [settings?.theme?.theme]);
 
   // React 19: Deferred theme for better performance
   const deferredTheme = useDeferredValue(theme);
@@ -53,7 +72,18 @@ export function ThemeProvider({
     
     // Store in localStorage
     localStorage.setItem(storageKey, deferredTheme);
-  }, [deferredTheme, storageKey]);
+    
+    // Update user settings if theme changed
+    if (settings && deferredTheme !== settings.theme?.theme) {
+      createOrUpdateMySettings({
+        theme: {
+          theme: deferredTheme as ETheme,
+        },
+      }).catch((error) => {
+        console.error('Failed to update theme in settings:', error);
+      });
+    }
+  }, [deferredTheme, storageKey, settings]);
 
   // Listen for system theme changes
   useEffect(() => {
@@ -71,10 +101,16 @@ export function ThemeProvider({
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, [theme]);
 
+  // Custom setTheme that also updates user settings
+  const setThemeWithSync = (newTheme: Theme) => {
+    setTheme(newTheme);
+    // Update will happen in the useEffect above
+  };
+
   // React 19: Memoized context value to prevent unnecessary re-renders
   const value = useMemo(() => ({
     theme,
-    setTheme,
+    setTheme: setThemeWithSync,
     resolvedTheme,
   }), [theme, resolvedTheme]);
 

@@ -32,6 +32,31 @@ export class ScheduleService extends CrudService<Schedule> {
     timezone?: string,
     manager?: EntityManager,
   ): Promise<Schedule> {
+    // Check for existing schedule to prevent duplicates
+    // For reminders, check if a schedule with the same entityId and action already exists
+    if (createDto.entityId && createDto.action) {
+      const existingSchedule = await this.scheduleRepo.findOne({
+        where: {
+          entityId: createDto.entityId,
+          action: createDto.action,
+          status: EScheduleStatus.ACTIVE,
+        },
+      });
+
+      if (existingSchedule) {
+        // Update existing schedule instead of creating duplicate
+        existingSchedule.nextRunDate = createDto.nextRunDate || existingSchedule.nextRunDate;
+        existingSchedule.title = createDto.title || existingSchedule.title;
+        existingSchedule.description = createDto.description || existingSchedule.description;
+        if (createDto.data) {
+          existingSchedule.data = { ...existingSchedule.data, ...createDto.data };
+        }
+        return manager
+          ? await manager.save(existingSchedule)
+          : await this.scheduleRepo.save(existingSchedule);
+      }
+    }
+
     // Validate frequency-specific fields
     this.validateScheduleConfig(createDto);
 

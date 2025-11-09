@@ -29,6 +29,9 @@ import { EReminderType } from '@shared/enums';
 import type { TUserData } from '@shared/types/user.type';
 import type { ClientDto, UserDto } from '@shared/dtos';
 import type { ReminderDto } from '@shared/dtos/reminder-dtos';
+import { useUserSettings } from "@/hooks/use-user-settings";
+import { useI18n } from "@/hooks/use-i18n";
+import { buildSentence } from "@/locales/translations";
 
 export type TSessionExtraProps = {
     // Add any extra props if needed
@@ -46,10 +49,11 @@ export default function SessionForm({
     const [, startTransition] = useTransition();
 
     const queryClient = useQueryClient();
-
+    const { settings } = useUserSettings();
+    const { t } = useI18n();
 
     if (!store) {
-        return <div>Single store "{storeKey}" not found. Did you forget to register it?</div>;
+        return <div>{buildSentence(t, 'single', 'store')} "{storeKey}" {buildSentence(t, 'not', 'found')}. {buildSentence(t, 'did', 'you', 'forget', 'to', 'register', 'it')}?</div>;
     }
 
     const { action, response, isLoading, setAction, reset } = store(useShallow(state => ({
@@ -60,11 +64,14 @@ export default function SessionForm({
         reset: state.reset
     })));
 
+    // Use default duration from settings if available
+    const defaultDuration = settings?.limits?.sessionDurationDefault || 60;
+
     const INITIAL_VALUES: TSessionData = {
         title: "",
         description: "",
         startDateTime: new Date().toISOString(),
-        duration: 60,
+        duration: defaultDuration,
         trainer: null,
         clients: [] as ClientDto[], // Will be validated to require at least one
         type: ESessionType.PERSONAL,
@@ -77,8 +84,13 @@ export default function SessionForm({
 
     // React 19: Memoized initial values with deferred processing
     const initialValues = useMemo(() => {
-        return strictDeepMerge<TSessionData>(INITIAL_VALUES, response ?? {});
-    }, [INITIAL_VALUES, response?.id]);
+        const merged = strictDeepMerge<TSessionData>(INITIAL_VALUES, response ?? {});
+        // If no duration in response, use default from settings
+        if (!merged.duration) {
+            merged.duration = defaultDuration;
+        }
+        return merged;
+    }, [INITIAL_VALUES, response?.id, defaultDuration]);
 
 
 

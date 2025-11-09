@@ -19,7 +19,18 @@ export class UserSettingsService {
   ): Promise<void> {
     const settings = createUserSettingsDto;
 
+    // Remove commissionRate for non-SUPER_ADMIN users
+    if (currentUser.level !== EUserLevels.SUPER_ADMIN) {
+      if (settings.billing?.commissionRate !== undefined) {
+        settings.billing = { ...settings.billing, commissionRate: undefined };
+      }
+    }
+
     switch (currentUser.level) {
+      case EUserLevels.SUPER_ADMIN:
+        break;
+      case EUserLevels.ADMIN:
+        break;
       case EUserLevels.TRAINER:
         settings.business = undefined;
         settings.limits = undefined;

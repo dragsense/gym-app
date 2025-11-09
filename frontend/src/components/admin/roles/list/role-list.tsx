@@ -1,6 +1,9 @@
 // External Libraries
 import { useId, useMemo, useTransition } from "react";
 import { useShallow } from 'zustand/shallow';
+import { useUserSettings } from '@/hooks/use-user-settings';
+import { useI18n } from "@/hooks/use-i18n";
+import { buildSentence } from "@/locales/translations";
 
 // Types
 import type { TListHandlerComponentProps } from "@/@types/handler-types";
@@ -31,13 +34,15 @@ export const RoleList = ({
   // React 19: Essential IDs and transitions
   const componentId = useId();
   const [, startTransition] = useTransition();
+  const { settings } = useUserSettings();
+  const { t } = useI18n();
 
   if (!store) {
-    return <div>List store "{storeKey}" not found. Did you forget to register it?</div>;
+    return <div>{buildSentence(t, 'list', 'store')} "{storeKey}" {buildSentence(t, 'not', 'found')}. {buildSentence(t, 'did', 'you', 'forget', 'to', 'register', 'it')}?</div>;
   }
 
   if (!singleStore) {
-    return <div>Single store "{singleStore}" not found. Did you forget to register it?</div>;
+    return <div>{buildSentence(t, 'single', 'store')} "{singleStore}" {buildSentence(t, 'not', 'found')}. {buildSentence(t, 'did', 'you', 'forget', 'to', 'register', 'it')}?</div>;
   }
 
   const setAction = singleStore(state => state.setAction);
@@ -68,7 +73,7 @@ export const RoleList = ({
   };
 
   // React 19: Memoized columns for better performance
-  const { columns } = useMemo(() => itemViews({ editRole, deleteRole, viewPermissions }), [editRole, deleteRole, viewPermissions]);
+  const { columns } = useMemo(() => itemViews({ editRole, deleteRole, viewPermissions, settings }), [editRole, deleteRole, viewPermissions, settings]);
 
   return (
     <div className="space-y-4" data-component-id={componentId}>
@@ -81,7 +86,7 @@ export const RoleList = ({
             variant="default"
             data-component-id={componentId}
           >
-            <Plus /> <span className="hidden sm:inline">Create Role</span>
+            <Plus /> <span className="hidden sm:inline">{buildSentence(t, 'create', 'role')}</span>
           </Button>
         </div>
       </div>
@@ -90,7 +95,7 @@ export const RoleList = ({
         <TTable<IRole>
           listStore={store}
           columns={columns}
-          emptyMessage="No roles found."
+          emptyMessage={buildSentence(t, 'no', 'roles', 'found')}
           showPagination={true}
         />
       </AppCard>

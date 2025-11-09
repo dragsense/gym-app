@@ -4,24 +4,31 @@ import { useId, useMemo, useTransition } from "react";
 
 // Types
 import { type IFileUpload } from "@shared/interfaces/file-upload.interface";
+import type { IUserSettings } from "@shared/interfaces/settings.interface";
 
 // Components
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
+// Utils
+import { formatDate } from "@/lib/utils";
+
 interface IItemViewArgs {
   handleEdit: (id: string) => void;
   handleDelete: (id: string) => void;
   handleView: (id: string) => void;
+  settings?: IUserSettings;
+  componentId?: string;
 }
 
 export const itemViews = ({
   handleEdit,
   handleDelete,
   handleView,
+  settings,
+  componentId = "file-item-views",
 }: IItemViewArgs) => {
   // React 19: Essential IDs and transitions
-  const componentId = useId();
   const [, startTransition] = useTransition();
   const columns: ColumnDef<IFileUpload>[] = [
     {
@@ -57,7 +64,7 @@ export const itemViews = ({
       header: "Uploaded",
       cell: ({ row }) => (
         <span className="text-sm">
-          {new Date(row.original.createdAt).toLocaleDateString()}
+          {formatDate(row.original.createdAt, settings)}
         </span>
       ),
     },
@@ -110,7 +117,7 @@ export const itemViews = ({
         </div>
         <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
           <span>Size: {fileSize}</span>
-          <span>Uploaded: {new Date(item.createdAt).toLocaleDateString()}</span>
+          <span>Uploaded: {formatDate(item.createdAt, settings)}</span>
         </div>
       </div>
       <div className="flex items-center gap-2">

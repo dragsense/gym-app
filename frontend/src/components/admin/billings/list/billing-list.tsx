@@ -1,21 +1,23 @@
 // React & Hooks
-import { useEffect, useState, useId, useMemo, useTransition } from "react";
+import { useState, useId, useTransition } from "react";
+import { useUserSettings } from "@/hooks/use-user-settings";
+import { useI18n } from "@/hooks/use-i18n";
+import { buildSentence } from "@/locales/translations";
 
 // External libraries
-import { List, Plus, Table } from "lucide-react";
+import { Plus } from "lucide-react";
 
 // Types
 import { type IBilling } from "@shared/interfaces/billing.interface";
 
 // UI Components
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 
 // Custom UI Components
 import { Table as TTable } from "@/components/table-ui/table";
 import { List as TList } from "@/components/list-ui/list";
 
-import { AppCard } from "@/components/layout-ui/app-card";
 
 // Local
 import { BillingFilters } from "./billing-filters";
@@ -30,7 +32,7 @@ import type { TBillingListData } from "@shared/types/billing.type";
 import type { TBillingViewExtraProps } from "../view/billing-view";
 import { ViewToggle } from "@/components/shared-ui/view-toggle";
 
-export interface IBillingListExtraProps {
+export interface IBillingListExtraProps extends Record<string, any> {
   // Add any extra props if needed
 }
 
@@ -48,48 +50,67 @@ export default function BillingList({
   // React 19: Essential IDs and transitions
   const componentId = useId();
   const [, startTransition] = useTransition();
+  const { settings } = useUserSettings();
+  const { t } = useI18n();
+  const [currentView, setCurrentView] = useState<ViewType>("table");
 
   if (!store) {
-    return <div>List store "{storeKey}" not found. Did you forget to register it?</div>;
+    return <div>{buildSentence(t, 'list', 'store')} "{storeKey}" {buildSentence(t, 'not', 'found')}. {buildSentence(t, 'did', 'you', 'forget', 'to', 'register', 'it')}?</div>;
   }
 
   if (!singleStore) {
-    return `Single store "${singleStore}" not found. Did you forget to register it?`;
+    return `${buildSentence(t, 'single', 'store')} "${singleStore}" ${buildSentence(t, 'not', 'found')}. ${buildSentence(t, 'did', 'you', 'forget', 'to', 'register', 'it')}?`;
   }
 
-  const setAction = singleStore(state => state.setAction);
-
-  const [currentView, setCurrentView] = useState<ViewType>("table");
+  const setSingleAction = singleStore(state => state.setAction);
+  const setListAction = store(state => state.setAction);
 
   // React 19: Smooth action transitions
   const handleCreate = () => {
     startTransition(() => {
-      setAction('createOrUpdate');
+      setSingleAction('createOrUpdate');
     });
   };
 
   const handleEdit = (id: string) => {
     startTransition(() => {
-      setAction('createOrUpdate', id);
+      setSingleAction('createOrUpdate', id);
     });
   }
 
   const handleDelete = (id: string) => {
     startTransition(() => {
-      setAction('delete', id);
+      setSingleAction('delete', id);
     });
   }
 
   const handleView = (id: string) => {
     startTransition(() => {
-      setAction('view', id);
+      setSingleAction('view', id);
     });
   }
+
+  const handlePayOnline = (id: string) => {
+    startTransition(() => {
+      setListAction('pay-online', id);
+    });
+  };
+
+  const handleSendEmail = (id: string) => {
+    startTransition(() => {
+      setListAction('sendEmail', id);
+    });
+  };
 
   const { columns, listItem } = itemViews({
     handleEdit,
     handleDelete,
     handleView,
+    handlePayOnline,
+    handleSendEmail,
+    settings,
+    componentId,
+    t,
   });
 
 
@@ -104,7 +125,7 @@ export default function BillingList({
           onClick={handleCreate}
           data-component-id={componentId}
         >
-          <Plus /> <span className="hidden sm:inline capitalize">Add Billing</span>
+          <Plus /> <span className="hidden sm:inline capitalize">{buildSentence(t, 'add', 'billing')}</span>
         </Button>
       </div>
 
@@ -112,7 +133,7 @@ export default function BillingList({
         <TTable<IBilling>
           listStore={store}
           columns={columns}
-          emptyMessage="No billings found."
+          emptyMessage={buildSentence(t, 'no', 'billings', 'found')}
           showPagination={true}
         />
       </TabsContent>
@@ -121,7 +142,7 @@ export default function BillingList({
         <div>
           <TList<IBilling>
             listStore={store}
-            emptyMessage="No billings found."
+            emptyMessage={buildSentence(t, 'no', 'billings', 'found')}
             showPagination={true}
             renderItem={listItem}
           />

@@ -23,8 +23,10 @@ import { CredentialModal } from "@/components/shared-ui/credential-modal";
 // Services
 import { createClient, updateClient } from "@/services/client.api";
 import { strictDeepMerge } from "@/utils";
-import { EUserGender } from "@shared/enums";
+import { EUserGender, EUserLevels } from "@shared/enums";
 import { CreateClientDto, UpdateClientDto } from "@shared/dtos";
+import { useI18n } from "@/hooks/use-i18n";
+import { buildSentence } from "@/locales/translations";
 
 export type TClientExtraProps = {
     level: number;
@@ -48,8 +50,10 @@ export function ClientForm({
         password: ""
     });
 
+    const { t } = useI18n();
+    
     if (!store) {
-        return <div>Single store "{storeKey}" not found. Did you forget to register it?</div>;
+        return <div>{buildSentence(t, 'single', 'store')} "{storeKey}" {buildSentence(t, 'not', 'found')}. {buildSentence(t, 'did', 'you', 'forget', 'to', 'register', 'it')}?</div>;
     }
 
     const { action, response, isLoading, setAction, reset } = store(useShallow(state => ({
@@ -70,7 +74,7 @@ export function ClientForm({
             dateOfBirth: new Date(
                 new Date().setFullYear(new Date().getFullYear() - 12)
             ).toISOString(),
-
+            level: EUserLevels.CLIENT,
         },
         fitnessLevel: '',
         goal: '',

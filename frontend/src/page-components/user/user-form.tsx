@@ -25,8 +25,10 @@ import { CredentialModal } from "@/components/shared-ui/credential-modal";
 // Services
 import { createUser, updateUser } from "@/services/user.api";
 import { strictDeepMerge } from "@/utils";
-import { EUserGender } from "@shared/enums";
+import { EUserGender, EUserLevels } from "@shared/enums";
 import { CreateUserDto, UpdateUserDto } from "@shared/dtos";
+import { useI18n } from "@/hooks/use-i18n";
+import { buildSentence } from "@/locales/translations";
 
 
 export type TUserExtraProps = {
@@ -51,8 +53,10 @@ export default function UserForm({
         password: ""
     });
 
+    const { t } = useI18n();
+    
     if (!store) {
-        return <div>Single store "{storeKey}" not found. Did you forget to register it?</div>;
+        return <div>{buildSentence(t, 'single', 'store')} "{storeKey}" {buildSentence(t, 'not', 'found')}. {buildSentence(t, 'did', 'you', 'forget', 'to', 'register', 'it')}?</div>;
     }
 
     const { action, response, isLoading, setAction, reset } = store(useShallow(state => ({
@@ -72,7 +76,8 @@ export default function UserForm({
         dateOfBirth: new Date(
             new Date().setFullYear(new Date().getFullYear() - 12)
         ).toISOString(),
-        gender: EUserGender.MALE
+        gender: EUserGender.MALE,
+        level: EUserLevels.USER
     };
 
     // React 19: Memoized initial values with deferred processing

@@ -521,7 +521,7 @@ export function ChatWindow() {
                                                             isOwn ? 'text-primary-foreground/70' : 'text-muted-foreground'
                                                         )}
                                                     >
-                                                        {format(new Date(message.timestamp || message.createdAt), 'HH:mm')}
+                                                        {formatTime(message.timestamp || message.createdAt, settings)}
                                                     </p>
                                                 </div>
                                                 {isOwn && (

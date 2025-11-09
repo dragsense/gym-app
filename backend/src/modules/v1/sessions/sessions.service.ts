@@ -22,6 +22,8 @@ import { TrainersService } from '../trainers/trainers.service';
 import { ClientsService } from '../clients/clients.service';
 import { User } from '@/common/base-user/entities/user.entity';
 import { Client } from '../clients/entities/client.entity';
+import { UserSettingsService } from '../user-settings/user-settings.service';
+import { Between } from 'typeorm';
 
 @Injectable()
 export class SessionsService extends CrudService<Session> {
@@ -32,6 +34,7 @@ export class SessionsService extends CrudService<Session> {
     private readonly sessionRepo: Repository<Session>,
     private readonly trainersService: TrainersService,
     private readonly clientsService: ClientsService,
+    private readonly userSettingsService: UserSettingsService,
     moduleRef: ModuleRef,
   ) {
     const crudOptions: CrudOptions = {
@@ -81,6 +84,98 @@ export class SessionsService extends CrudService<Session> {
       }
 
       trainerId = trainer.id;
+    }
+
+    // Get trainer entity for user ID
+    const trainerEntity = await this.trainersService.getSingle({
+      id: trainerId,
+      _relations: ['user'],
+    });
+    const trainerUserId = trainerEntity?.user?.id;
+    const trainerSettings = trainerUserId
+      ? await this.userSettingsService.getUserSettings(trainerUserId)
+      : null;
+
+    // Validate session limits
+    if (trainerSettings?.limits) {
+      const limits = trainerSettings.limits;
+
+      // Check maxClientsPerSession
+      if (
+        limits.maxClientsPerSession &&
+        createSessionDto.clients.length > limits.maxClientsPerSession
+      ) {
+        throw new BadRequestException(
+          `Maximum ${limits.maxClientsPerSession} clients allowed per session. You selected ${createSessionDto.clients.length} clients.`,
+        );
+      }
+
+      // Check maxSessionsPerDay
+      if (limits.maxSessionsPerDay) {
+        const sessionDate = new Date(createSessionDto.startDateTime);
+        const startOfDay = new Date(
+          sessionDate.getFullYear(),
+          sessionDate.getMonth(),
+          sessionDate.getDate(),
+        );
+        const endOfDay = new Date(startOfDay);
+        endOfDay.setDate(endOfDay.getDate() + 1);
+
+        const sessionsToday = await this.sessionRepo.count({
+          where: {
+            trainer: { id: trainerId },
+            startDateTime: Between(startOfDay, endOfDay),
+          },
+        });
+
+        if (sessionsToday >= limits.maxSessionsPerDay) {
+          throw new BadRequestException(
+            `Maximum ${limits.maxSessionsPerDay} sessions allowed per day. You already have ${sessionsToday} sessions scheduled for this day.`,
+          );
+        }
+      }
+
+      // Check maxClientsPerTrainer
+      if (limits.maxClientsPerTrainer) {
+        const trainerClientsCount = await this.clientsService.get(
+          {},
+          ClientListDto,
+          {
+            beforeQuery: (query: SelectQueryBuilder<Client>) => {
+              query
+                .leftJoin(
+                  'trainer_clients',
+                  'trainerClients',
+                  'trainerClients.clientId = entity.id',
+                )
+                .where('trainerClients.trainerId = :trainerId', {
+                  trainerId,
+                })
+                .distinct(true);
+              return query;
+            },
+          },
+        );
+
+        if (trainerClientsCount.data.length >= limits.maxClientsPerTrainer) {
+          // Check if any new clients are being added
+          const existingClientIds = trainerClientsCount.data.map((c) => c.id);
+          const newClients = createSessionDto.clients.filter(
+            (c) => !existingClientIds.includes(c.id),
+          );
+
+          if (newClients.length > 0) {
+            throw new BadRequestException(
+              `Maximum ${limits.maxClientsPerTrainer} clients allowed per trainer. You currently have ${trainerClientsCount.data.length} clients.`,
+            );
+          }
+        }
+      }
+
+      // Use sessionDurationDefault if duration not provided
+      if (!createSessionDto.duration && limits.sessionDurationDefault) {
+        createSessionDto.duration = limits.sessionDurationDefault;
+      }
     }
 
     const clientIds = createSessionDto.clients.map((c) => c.id);
@@ -137,6 +232,17 @@ export class SessionsService extends CrudService<Session> {
   ): Promise<IMessageResponse> {
     const isSuperAdmin = currentUser.level === EUserLevels.SUPER_ADMIN;
 
+    // Get existing session to determine trainer
+    const existingSession = await this.getSingle(id, {
+      _relations: ['trainer'],
+    });
+
+    if (!existingSession) {
+      throw new NotFoundException('Session not found');
+    }
+
+    let trainerId = existingSession.trainer?.id;
+
     if (updateSessionDto.trainer && currentUser.level !== EUserLevels.TRAINER) {
       const trainer = await this.trainersService.getSingle({
         id: updateSessionDto.trainer.id,
@@ -147,6 +253,66 @@ export class SessionsService extends CrudService<Session> {
         throw new NotFoundException(
           'Trainer not found or invalid trainer level',
         );
+      }
+
+      trainerId = trainer.id;
+    }
+
+    // Get trainer user settings for limits validation
+    if (trainerId) {
+      const trainerEntity = await this.trainersService.getSingle({
+        id: trainerId,
+        _relations: ['user'],
+      });
+      const trainerUserId = trainerEntity?.user?.id;
+      const trainerSettings = trainerUserId
+        ? await this.userSettingsService.getUserSettings(trainerUserId)
+        : null;
+
+      // Validate session limits if clients are being updated
+      if (trainerSettings?.limits && updateSessionDto.clients) {
+        const limits = trainerSettings.limits;
+
+        // Check maxClientsPerSession
+        if (
+          limits.maxClientsPerSession &&
+          updateSessionDto.clients.length > limits.maxClientsPerSession
+        ) {
+          throw new BadRequestException(
+            `Maximum ${limits.maxClientsPerSession} clients allowed per session. You selected ${updateSessionDto.clients.length} clients.`,
+          );
+        }
+
+        // Check maxSessionsPerDay if startDateTime is being updated
+        if (limits.maxSessionsPerDay && updateSessionDto.startDateTime) {
+          const sessionDate = new Date(updateSessionDto.startDateTime);
+          const startOfDay = new Date(
+            sessionDate.getFullYear(),
+            sessionDate.getMonth(),
+            sessionDate.getDate(),
+          );
+          const endOfDay = new Date(startOfDay);
+          endOfDay.setDate(endOfDay.getDate() + 1);
+
+          const sessionsToday = await this.sessionRepo.count({
+            where: {
+              trainer: { id: trainerId },
+              startDateTime: Between(startOfDay, endOfDay),
+            },
+          });
+
+          // Don't count the current session being updated
+          if (sessionsToday > limits.maxSessionsPerDay) {
+            throw new BadRequestException(
+              `Maximum ${limits.maxSessionsPerDay} sessions allowed per day. You already have ${sessionsToday} sessions scheduled for this day.`,
+            );
+          }
+        }
+      }
+
+      // Use sessionDurationDefault if duration not provided
+      if (!updateSessionDto.duration && trainerSettings?.limits?.sessionDurationDefault) {
+        updateSessionDto.duration = trainerSettings.limits.sessionDurationDefault;
       }
     }
 

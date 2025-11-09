@@ -21,11 +21,17 @@ import {
 
 import { type IWorker } from "@shared/interfaces/worker.interface";
 import { type TListHandlerStore } from "@/stores";
+import type { IUserSettings } from '@shared/interfaces/settings.interface';
+
+// Utils
+import { formatDateTime } from '@/lib/utils';
 
 export const itemViews = ({
   store,
+  settings,
 }: {  
   store: TListHandlerStore<IWorker, any, any>;
+  settings?: IUserSettings;
 }): {
   columns: ColumnDef<IWorker>[];
 } => {
@@ -107,7 +113,7 @@ export const itemViews = ({
         const startTime = row.getValue<string>("startTime");
         return (
           <span className="text-sm">
-            {new Date(startTime).toLocaleString()}
+            {formatDateTime(startTime, settings)}
           </span>
         );
       },
@@ -119,7 +125,7 @@ export const itemViews = ({
         const lastUpdate = row.getValue<string>("lastUpdate");
         return (
           <span className="text-sm">
-            {new Date(lastUpdate).toLocaleString()}
+            {formatDateTime(lastUpdate, settings)}
           </span>
         );
       },
