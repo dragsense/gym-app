@@ -33,15 +33,24 @@ export class ScheduleService extends CrudService<Schedule> {
     manager?: EntityManager,
   ): Promise<Schedule> {
     // Check for existing schedule to prevent duplicates
-    // For reminders, check if a schedule with the same entityId and action already exists
+    // For reminders, check if a schedule with the same entityId, action, and recipientId already exists
     if (createDto.entityId && createDto.action) {
-      const existingSchedule = await this.scheduleRepo.findOne({
-        where: {
-          entityId: createDto.entityId,
-          action: createDto.action,
-          status: EScheduleStatus.ACTIVE,
-        },
-      });
+      // Build query to check for existing schedule
+      const queryBuilder = this.scheduleRepo
+        .createQueryBuilder('schedule')
+        .where('schedule.entityId = :entityId', { entityId: createDto.entityId })
+        .andWhere('schedule.action = :action', { action: createDto.action })
+        .andWhere('schedule.status = :status', { status: EScheduleStatus.ACTIVE });
+
+      // Also check recipientId in data if present to prevent duplicate reminders for same recipient
+      if (createDto.data?.recipientId) {
+        queryBuilder.andWhere(
+          "schedule.data->>'recipientId' = :recipientId",
+          { recipientId: createDto.data.recipientId }
+        );
+      }
+
+      const existingSchedule = await queryBuilder.getOne();
 
       if (existingSchedule) {
         // Update existing schedule instead of creating duplicate

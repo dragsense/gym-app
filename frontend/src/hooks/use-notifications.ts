@@ -30,12 +30,13 @@ export function useNotifications(): UseNotificationsReturn {
   const queryKey = useMemo(() => ["notifications", user?.id], [user?.id]);
 
   // Use infinite mode for load more functionality
+  // reverseOrder: false means newest notifications come last (ASC order)
   const { data, isLoading, pagination, setPage, error } =
     useApiPaginatedQuery<INotification>(
       queryKey,
       fetchNotifications,
       { page: 1, limit: 20 },
-      { mode: "infinite", reverseOrder: true }
+      { mode: "infinite", reverseOrder: false }
     );
 
   // Show error toast for fetch failures
@@ -116,10 +117,10 @@ export function useNotifications(): UseNotificationsReturn {
             return old;
           }
 
-          // Add new notification at the beginning (reverseOrder: true)
+          // Add new notification at the end (reverseOrder: false - newest last)
           return {
             ...old,
-            data: [notification, ...old.data],
+            data: [...old.data, notification],
             total: (old.total ?? 0) + 1,
           };
         }

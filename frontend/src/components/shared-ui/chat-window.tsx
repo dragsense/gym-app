@@ -17,6 +17,10 @@ import { cn } from '@/lib/utils';
 import { chatService } from '@/services/socket-services/chat.service';
 import { useSearchableUsers } from '@/hooks/use-searchable';
 import type { IUser } from '@shared/interfaces/user.interface';
+import { useI18n } from '@/hooks/use-i18n';
+import { buildSentence } from '@/locales/translations';
+import { useUserSettings } from '@/hooks/use-user-settings';
+import { formatTime } from '@/lib/utils';
 
 export function ChatWindow() {
     const [open, setOpen] = useState(false);
@@ -28,6 +32,8 @@ export function ChatWindow() {
     const inputRef = useRef<HTMLInputElement>(null);
     const userClosedRef = useRef(false);
     const { user } = useAuthUser();
+    const { t } = useI18n();
+    const { settings } = useUserSettings();
     const {
         chats,
         currentChat,
@@ -207,7 +213,7 @@ export function ChatWindow() {
                     variant="ghost"
                     size="icon"
                     className="relative h-14 w-14 rounded-full shadow-lg"
-                    aria-label="Chat"
+                    aria-label={t('chat')}
                     onClick={(e) => {
                         // Toggle open state
                         if (open) {
@@ -245,7 +251,7 @@ export function ChatWindow() {
                         <div className="flex items-center justify-between p-4 border-b">
                             <h3 className="font-semibold flex items-center gap-2">
                                 <UserPlus className="h-4 w-4" />
-                                Start New Chat
+                                {buildSentence(t, 'start', 'new', 'chat')}
                             </h3>
                             <Button
                                 variant="ghost"
@@ -264,7 +270,7 @@ export function ChatWindow() {
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input
-                                    placeholder="Search users..."
+                                    placeholder={buildSentence(t, 'search', 'users')}
                                     value={searchQuery}
                                     onChange={(e) => handleSearchUsers(e.target.value)}
                                     className="pl-9"
@@ -276,14 +282,14 @@ export function ChatWindow() {
                             <div className="pr-4">
                                 {isLoadingUsers ? (
                                     <div className="flex items-center justify-center py-8">
-                                        <p className="text-sm text-muted-foreground">Loading users...</p>
+                                        <p className="text-sm text-muted-foreground">{buildSentence(t, 'loading', 'users')}</p>
                                     </div>
                                 ) : filteredUsers.length === 0 ? (
                                     <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
                                         <UserPlus className="h-12 w-12 mb-4 opacity-50" />
-                                        <p className="text-sm">No users found</p>
+                                        <p className="text-sm">{buildSentence(t, 'no', 'users', 'found')}</p>
                                         {searchQuery && (
-                                            <p className="text-xs mt-1">Try a different search term</p>
+                                            <p className="text-xs mt-1">{buildSentence(t, 'try', 'a', 'different', 'search', 'term')}</p>
                                         )}
                                     </div>
                                 ) : (
@@ -326,14 +332,14 @@ export function ChatWindow() {
                         <div className="flex items-center justify-between p-4 border-b">
                             <h3 className="font-semibold flex items-center gap-2">
                                 <Users className="h-4 w-4" />
-                                Chats
+                                {t('chat')}
                             </h3>
                             <Button
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8"
                                 onClick={() => setShowUserSearch(true)}
-                                title="Start new chat"
+                                title={buildSentence(t, 'start', 'new', 'chat')}
                             >
                                 <UserPlus className="h-4 w-4" />
                             </Button>
@@ -343,7 +349,7 @@ export function ChatWindow() {
                                 {chats.length === 0 ? (
                                     <div className="flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
                                         <MessageSquare className="h-12 w-12 mb-4 opacity-50" />
-                                        <p className="text-sm">No chats yet</p>
+                                        <p className="text-sm">{buildSentence(t, 'no', 'chats', 'yet')}</p>
                                     </div>
                                 ) : (
                                     <div className="divide-y">
@@ -418,7 +424,7 @@ export function ChatWindow() {
                                             setCurrentChat(null);
                                             setShowChats(true);
                                         }}
-                                        title="Back to chats"
+                                        title={buildSentence(t, 'back', 'to', 'chats')}
                                     >
                                         <X className="h-4 w-4" />
                                     </Button>
@@ -427,7 +433,7 @@ export function ChatWindow() {
                                         size="icon"
                                         className="h-8 w-8"
                                         onClick={() => setShowUserSearch(true)}
-                                        title="Start new chat"
+                                        title={buildSentence(t, 'start', 'new', 'chat')}
                                     >
                                         <UserPlus className="h-4 w-4" />
                                     </Button>
@@ -448,7 +454,7 @@ export function ChatWindow() {
                                         {currentChat.participantName}
                                     </p>
                                     {isTyping[currentChat.participantId] && (
-                                        <p className="text-xs text-muted-foreground">typing...</p>
+                                        <p className="text-xs text-muted-foreground">{buildSentence(t, 'typing')}</p>
                                     )}
                                 </div>
                             </div>
@@ -469,13 +475,13 @@ export function ChatWindow() {
                             >
                                 {isLoadingMore && (
                                     <div className="flex justify-center py-2">
-                                        <p className="text-xs text-muted-foreground">Loading older messages...</p>
+                                        <p className="text-xs text-muted-foreground">{buildSentence(t, 'loading', 'older', 'messages')}</p>
                                     </div>
                                 )}
                                 {messages.length === 0 ? (
                                     <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
-                                        <p className="text-sm">No messages yet</p>
-                                        <p className="text-xs mt-1">Start the chat!</p>
+                                        <p className="text-sm">{buildSentence(t, 'no', 'messages', 'yet')}</p>
+                                        <p className="text-xs mt-1">{buildSentence(t, 'start', 'the', 'chat')}</p>
                                     </div>
                                 ) : (
                                     messages.map((message) => {
@@ -547,7 +553,7 @@ export function ChatWindow() {
                                     value={messageInput}
                                     onChange={(e) => handleInputChange(e.target.value)}
                                     onKeyPress={handleKeyPress}
-                                    placeholder="Type a message..."
+                                    placeholder={buildSentence(t, 'type', 'a', 'message')}
                                     className="flex-1"
                                 />
                                 <Button

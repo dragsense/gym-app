@@ -11,9 +11,12 @@ import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 import { useNotifications } from '@/hooks/use-notifications';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/hooks/use-i18n';
+import { buildSentence } from '@/locales/translations';
 
 export function NotificationBell() {
     const [open, setOpen] = useState(false);
+    const { t } = useI18n();
     const {
         notifications,
         unreadCount,
@@ -51,10 +54,10 @@ export function NotificationBell() {
             <PopoverContent className="w-80 p-0" align="end">
                 <div className="flex items-center justify-between p-4 border-b">
                     <div className="flex items-center gap-2">
-                        <h3 className="font-semibold">Notifications</h3>
+                        <h3 className="font-semibold">{t('notification')}</h3>
                         {unreadCount > 0 && (
                             <Badge variant="secondary" className="text-xs">
-                                {unreadCount} new
+                                {unreadCount} {t('new')}
                             </Badge>
                         )}
                     </div>
@@ -66,7 +69,7 @@ export function NotificationBell() {
                             className="h-8 text-xs"
                         >
                             <CheckCheck className="h-3 w-3 mr-1" />
-                            Mark all read
+                            {buildSentence(t, 'mark', 'all', 'read')}
                         </Button>
                     )}
                 </div>
@@ -74,7 +77,7 @@ export function NotificationBell() {
                     {notifications.length === 0 ? (
                         <div className="flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
                             <Bell className="h-12 w-12 mb-4 opacity-50" />
-                            <p className="text-sm">No notifications yet</p>
+                            <p className="text-sm">{buildSentence(t, 'no', 'notifications', 'yet')}</p>
                         </div>
                     ) : (
                         <div className="divide-y">
@@ -130,10 +133,10 @@ export function NotificationBell() {
                             {isLoading ? (
                                 <>
                                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                    Loading...
+                                    {t('loading')}
                                 </>
                             ) : (
-                                'Load More'
+                                buildSentence(t, 'load', 'more')
                             )}
                         </Button>
                     </div>

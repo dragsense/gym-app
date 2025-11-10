@@ -55,7 +55,9 @@ export class NotificationController {
     const entityId = req.user.id as string;
     return await this.notificationService.get(queryDto, NotificationListDto, {
       beforeQuery: (query: SelectQueryBuilder<Notification>) => {
-        query.andWhere('entity.entityId = :entityId', { entityId });
+        query
+          .andWhere('entity.entityId = :entityId', { entityId })
+          .orderBy('entity.createdAt', 'ASC'); // Newest notifications come last (ASC order)
       },
     });
   }
