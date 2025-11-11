@@ -14,7 +14,6 @@ cp -f ../shared/.env ./backend/.env
 cp -f ../shared/.env.prod ./frontend/.env.prod
 
 # Build and start Docker
-cd ..
 make setup-prod
 
 # Restart with PM2 inside Docker container
