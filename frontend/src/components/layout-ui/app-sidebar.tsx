@@ -32,6 +32,8 @@ import { matchRoutePath } from "@/lib/utils";
 // Hooks
 import { useLogout } from "@/hooks/use-logout";
 import { useAuthUser } from "@/hooks/use-auth-user";
+import { useI18n } from "@/hooks/use-i18n";
+import { buildSentence } from "@/locales/translations";
 
 // Assets
 import logo from "@/assets/logos/logo.png";
@@ -53,6 +55,7 @@ export function AppSidebar({
   const { logout, isLoading } = useLogout();
   const { setOpenMobile, isMobile } = useSidebar();
   const { user } = useAuthUser();
+  const { t, direction } = useI18n();
 
   // Get navigation items based on user level
   const navItems = React.useMemo(() => {
@@ -72,11 +75,11 @@ export function AppSidebar({
         const isParentActive = matchRoutePath(item.url, location.pathname)
 
         newExpandedItems[item.title] =
-          isChildActive || isParentActive || item.title === "Dashboard";
+          isChildActive || isParentActive || item.title === t('dashboard');
       }
     });
     setExpandedItems(newExpandedItems);
-  }, [location.pathname, navItems]);
+  }, [location.pathname, navItems, t]);
 
   // Auto-close mobile sidebar on route change
   React.useEffect(() => {
@@ -98,13 +101,13 @@ export function AppSidebar({
   // React 19: Memoized sidebar header for better performance
   const renderSidebarHeader = React.useMemo(() => (showCloseButton: boolean = false) => (
     <SidebarHeader className="mt-5" data-component-id={componentId}>
-      <div className={showCloseButton ? "flex items-center justify-between p-4" : ""}>
+      <div className={showCloseButton ? `flex items-center justify-between p-4 ${direction === 'rtl' ? 'flex-row-reverse' : ''}` : ""}>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild className="hover:bg-transparent">
-              <Link to={ROOT_ROUTE} className="h-13">
-                <img src={logo} className="h-full object-contain" />
-                <span className="text-900 text-xl uppercase">Formance</span>
+              <Link to={ROOT_ROUTE} className={`h-13 flex items-center gap-2`}>
+                <img src={logo} className="h-full object-contain" alt={t('appName')} />
+                <span className="text-900 text-xl uppercase">{t('appName')}</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -115,13 +118,14 @@ export function AppSidebar({
             size="sm"
             onClick={() => startTransition(() => setOpenMobile(false))}
             className="h-8 w-8 p-0 hover:bg-muted/50"
+            aria-label={buildSentence(t, 'close', 'menu')}
           >
             <X className="h-4 w-4" />
           </Button>
         )}
       </div>
     </SidebarHeader>
-  ), [componentId, setOpenMobile, startTransition]);
+  ), [componentId, setOpenMobile, startTransition, t, direction]);
 
   const renderNavItems = () => (
     <SidebarContent className="mt-2">
@@ -145,15 +149,15 @@ export function AppSidebar({
                         <SidebarMenuButton
                           isActive={matchRoutePath(item.url, location.pathname)}
 
-                          tooltip={item.title}
+                          tooltip={t(item.title)}
                           className="group cursor-pointer text-muted-foreground/50 p-6 rounded-xl hover:bg-muted/50 transition-all duration-200"
                         >
                           {item.icon && <item.icon className="group-data-[active=true]:text-background h-6 w-6" />}
-                          <span className="font-medium">{item.title}</span>
+                          <span className="font-medium">{t(item.title)}</span>
                         </SidebarMenuButton>
                       </CollapsibleTrigger>
                       <CollapsibleContent>
-                        <SidebarMenuSub className="ml-4 border-l border-sidebar-border pl-4">
+                        <SidebarMenuSub className={`${direction === 'rtl' ? 'mr-4 border-r pr-4' : 'ml-4 border-l pl-4'} border-sidebar-border`}>
                           {item.children?.map((child) => (
                             <SidebarMenuSubItem key={child.title}>
                               <SidebarMenuSubButton
@@ -165,7 +169,7 @@ export function AppSidebar({
                                   {child.icon && (
                                     <child.icon className="group-data-[active=true]:text-background hover:text-background h-5 w-5" />
                                   )}
-                                  <span className="font-medium">{child.title}</span>
+                                  <span className="font-medium">{t(child.title)}</span>
                                 </Link>
                               </SidebarMenuSubButton>
 
@@ -187,11 +191,11 @@ export function AppSidebar({
                     <SidebarMenuButton
                       isActive={matchRoutePath(item.url, location.pathname)}
 
-                      tooltip={item.title}
+                      tooltip={t(item.title)}
                       className="group cursor-pointer text-muted-foreground/50 p-6 rounded-xl hover:bg-muted/50 transition-all duration-200"
                     >
                       {item.icon && <item.icon className="group-data-[active=true]:text-background hover:text-background h-6 w-6" />}
-                      <span className="font-medium">{item.title}</span>
+                      <span className="font-medium">{t(item.title)}</span>
                     </SidebarMenuButton>
                   </Link>
                 </SidebarMenuItem>
@@ -205,11 +209,10 @@ export function AppSidebar({
 
   const renderSidebarFooter = () => (
     <SidebarFooter>
-
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
-            className="justify-start gap-2 mb-2"
+            className={`${direction === 'rtl' ? 'justify-end' : 'justify-start'} gap-2 mb-2 w-full`}
             disabled={isLoading}
           >
             {isLoading ? (
@@ -217,31 +220,33 @@ export function AppSidebar({
             ) : (
               <LogOutIcon className="h-4 w-4" />
             )}
-            {isLoading ? "Logging out..." : "Log out"}
+            <span>{isLoading ? buildSentence(t, 'logging', 'out') : buildSentence(t, 'log', 'out')}</span>
           </Button>
         </DropdownMenuTrigger>
 
-        <DropdownMenuContent align="start" className="w-56">
-          <DropdownMenuLabel>Logout Options</DropdownMenuLabel>
+        <DropdownMenuContent align={direction === 'rtl' ? 'end' : 'start'} className="w-56">
+          <DropdownMenuLabel>{buildSentence(t, 'logout', 'options')}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={() => startTransition(() => logout(false))}
             disabled={isLoading}
             className="cursor-pointer"
           >
-            Log out (this device)
+            {buildSentence(t, 'log', 'out', 'this', 'device')}
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => startTransition(() => logout(true))}
             disabled={isLoading}
             className="cursor-pointer"
           >
-            Log out from all devices
+            {buildSentence(t, 'log', 'out', 'from', 'all', 'devices')}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </SidebarFooter>
   );
+
+  const sidebarSide = direction === 'rtl' ? 'right' : 'left';
 
   return (
     <>
@@ -250,6 +255,8 @@ export function AppSidebar({
         <Sidebar
           collapsible="offcanvas"
           themeClass={themeClass}
+          dir={direction}
+          side={sidebarSide}
           {...props}
         >
           {renderSidebarHeader()}
@@ -263,6 +270,8 @@ export function AppSidebar({
         <Sidebar
           collapsible="offcanvas"
           themeClass={themeClass}
+          dir={direction}
+          side={sidebarSide}
           {...props}
         >
           {renderSidebarHeader(true)}

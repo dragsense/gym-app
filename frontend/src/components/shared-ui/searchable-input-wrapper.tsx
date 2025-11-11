@@ -10,6 +10,8 @@ import { AppComboBox } from "@/components/layout-ui/app-combo-box";
 
 // Hooks
 import { useSearchableResource } from "@/hooks/use-searchable";
+import { useI18n } from "@/hooks/use-i18n";
+import { buildSentence } from "@/locales/translations";
 
 
 export interface UserInputPropsWrapperProps<T> extends TCustomInputWrapper {
@@ -18,7 +20,7 @@ export interface UserInputPropsWrapperProps<T> extends TCustomInputWrapper {
     useSearchable: () => ReturnType<typeof useSearchableResource<T>>;
     getLabel: (item: T) => string;
     getKey: (item: T) => string;
-    getValue: (item: T) => any;
+    getValue: (item: T) => T;
     shouldFilter?: boolean
 }
 
@@ -37,6 +39,7 @@ export const SearchableInputWrapper = <T,>({
     // React 19: Essential IDs and transitions
     const componentId = useId();
     const [, startTransition] = useTransition();
+    const { t } = useI18n();
 
     const { response, isLoading, error, setFilters } = useSearchable();
     const [search, setSearch] = useState("");
@@ -71,7 +74,7 @@ export const SearchableInputWrapper = <T,>({
                 getLabel={getLabel}
                 search={search}
                 onSearchChange={handleSearchChange}
-                placeholder={"Select..."}
+                placeholder={buildSentence(t, 'select')}
                 multiple={multiple}
                 modal={modal}
                 disabled={disabled}

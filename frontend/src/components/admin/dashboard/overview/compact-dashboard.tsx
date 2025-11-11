@@ -255,16 +255,16 @@ export default function CompactDashboard({ store }: CompactDashboardProps) {
                             {/* Super Admin: Total Admins */}
                             {overview.totalAdmins !== undefined && (
                                 <AppCard
-                                    className="flex-1 gap-2 bg-primary/30 dark:bg-[#20232a] shadow-2xl"
+                                    className="flex-1 gap-2 bg-[#EEFFB3] text-black/80 shadow-2xl"
                                     header={
-                                        <span className="text-sm font-medium dark:text-[#A3BFFD]">
+                                        <span className="text-sm font-medium">
                                             {buildSentence(t, 'total', 'admins')}
                                         </span>
                                     }
                                 >
                                     <div className="space-y-2">
-                                        <Users className="h-8 w-8 dark:text-[#A3BFFD]" />
-                                        <div className="text-2xl font-bold dark:text-white">{overview.totalAdmins}</div>
+                                        <Users className="h-8 w-8 " />
+                                        <div className="text-2xl font-bold">{overview.totalAdmins}</div>
                                     </div>
                                 </AppCard>
                             )}
@@ -272,16 +272,16 @@ export default function CompactDashboard({ store }: CompactDashboardProps) {
                             {/* Admin/Super Admin: Total Users */}
                             {overview.totalUsers !== undefined && (
                                 <AppCard
-                                    className="flex-1 gap-2 bg-[#FFE2E5] dark:bg-[#2f2232] shadow-2xl"
+                                    className="flex-1 gap-2 bg-[#FFE2E5] text-black/80 shadow-2xl"
                                     header={
-                                        <span className="text-sm font-medium dark:text-[#FFAEBC]">
+                                        <span className="text-sm font-medium ">
                                             {buildSentence(t, 'total', 'users')}
                                         </span>
                                     }
                                 >
                                     <div className="space-y-2">
-                                        <Users className="h-8 w-8 dark:text-[#FFAEBC]" />
-                                        <div className="text-2xl font-bold dark:text-white">{overview.totalUsers}</div>
+                                        <Users className="h-8 w-8 " />
+                                        <div className="text-2xl font-bold">{overview.totalUsers}</div>
                                     </div>
                                 </AppCard>
                             )}
@@ -289,21 +289,21 @@ export default function CompactDashboard({ store }: CompactDashboardProps) {
                             {/* Super Admin/Admin/Trainer: Total Trainers */}
                             {overview.totalTrainers !== undefined && (
                                 <AppCard
-                                    className="flex-1 gap-2 bg-secondary/30 dark:bg-[#213842] shadow-2xl"
+                                    className="flex-1 gap-2 bg-[#B3EDFF] text-black/80 shadow-2xl"
                                     header={
-                                        <span className="text-sm font-medium dark:text-[#51E1ED]">
+                                        <span className="text-sm font-medium">
                                             {buildSentence(t, 'total', 'trainers')}
                                         </span>
                                     }
                                     footer={
-                                        <p className="text-xs text-muted-foreground dark:text-[#88E1F2]">
+                                        <p className="text-xs text-muted-foreground">
                                             {buildSentence(t, 'active')} {activeTrainerRate}%
                                         </p>
                                     }
                                 >
                                     <div className="space-y-2">
-                                        <img src={TrainersIcon} alt="Trainers" className="h-8 w-8 dark:brightness-110" />
-                                        <div className="text-2xl font-bold dark:text-white">{overview.totalTrainers}</div>
+                                        <img src={TrainersIcon} alt="Trainers" className="h-8 w-8" />
+                                        <div className="text-2xl font-bold">{overview.totalTrainers}</div>
                                     </div>
                                 </AppCard>
                             )}
@@ -311,21 +311,21 @@ export default function CompactDashboard({ store }: CompactDashboardProps) {
                             {/* Super Admin/Admin/Trainer: Total Clients */}
                             {overview.totalClients !== undefined && (
                                 <AppCard
-                                    className="flex-1 gap-2 bg-[#DCFCE7] dark:bg-[#204038] shadow-2xl"
+                                    className="flex-1 gap-2 bg-[#DCFCE7] text-black/80 shadow-2xl"
                                     header={
-                                        <span className="text-sm font-medium dark:text-[#6DFFB0]">
+                                        <span className="text-sm font-medium">
                                             {buildSentence(t, 'total', 'clients')}
                                         </span>
                                     }
                                     footer={
-                                        <p className="text-xs text-muted-foreground dark:text-[#ABF1C8]">
+                                        <p className="text-xs text-muted-foreground">
                                             {buildSentence(t, 'active')} {overview.totalActiveClients || 0}/{overview.totalClients}
                                         </p>
                                     }
                                 >
                                     <div className="space-y-2">
-                                        <img src={ClientsIcon} alt="Clients" className="h-8 w-8 dark:brightness-110" />
-                                        <div className="text-2xl font-bold dark:text-white">{overview.totalClients}</div>
+                                        <img src={ClientsIcon} alt="Clients" className="h-8 w-8" />
+                                        <div className="text-2xl font-bold">{overview.totalClients}</div>
                                     </div>
                                 </AppCard>
                             )}
@@ -333,21 +333,21 @@ export default function CompactDashboard({ store }: CompactDashboardProps) {
                             {/* All roles: Total Sessions */}
                             {overview.totalSessions !== undefined && (
                                 <AppCard
-                                    className="flex-1 gap-2 bg-blue-50 dark:bg-[#202c3b] shadow-2xl"
+                                    className="flex-1 gap-2 bg-yellow-50 text-black/80 shadow-2xl"
                                     header={
-                                        <span className="text-sm font-medium dark:text-[#9AD0EC]">
+                                        <span className="text-sm font-medium">
                                             {buildSentence(t, 'total', 'sessions')}
                                         </span>
                                     }
                                     footer={
-                                        <p className="text-xs text-muted-foreground dark:text-[#9AD0EC]">
+                                        <p className="text-xs text-muted-foreground">
                                             {overview.activeSessions || 0} {t('active')}, {overview.completedSessions || 0} {t('completed')}
                                         </p>
                                     }
                                 >
                                     <div className="space-y-2">
-                                        <Calendar className="h-8 w-8 dark:text-[#9AD0EC]" />
-                                        <div className="text-2xl font-bold dark:text-white">{overview.totalSessions}</div>
+                                        <Calendar className="h-8 w-8" />
+                                        <div className="text-2xl font-bold">{overview.totalSessions}</div>
                                     </div>
                                 </AppCard>
                             )}
@@ -355,21 +355,21 @@ export default function CompactDashboard({ store }: CompactDashboardProps) {
                             {/* Super Admin/Admin/Client: Total Billings */}
                             {overview.totalBillings !== undefined && (
                                 <AppCard
-                                    className="flex-1 gap-2 bg-green-50 dark:bg-[#17321E] shadow-2xl"
+                                    className="flex-1 gap-2 bg-red-50 text-black/80 shadow-2xl"
                                     header={
-                                        <span className="text-sm font-medium dark:text-[#72F8BA]">
+                                        <span className="text-sm font-medium">
                                             {buildSentence(t, 'total', 'billings')}
                                         </span>
                                     }
                                     footer={
-                                        <p className="text-xs text-muted-foreground dark:text-[#AFE6D2]">
+                                        <p className="text-xs text-muted-foreground">
                                             {overview.paidBillings || 0} {t('paid')}, {overview.pendingBillings || 0} {t('pending')}
                                         </p>
                                     }
                                 >
                                     <div className="space-y-2">
-                                        <Calendar className="h-8 w-8 dark:text-[#72F8BA]" />
-                                        <div className="text-2xl font-bold dark:text-white">{overview.totalBillings}</div>
+                                        <Calendar className="h-8 w-8" />
+                                        <div className="text-2xl font-bold">{overview.totalBillings}</div>
                                     </div>
                                 </AppCard>
                             )}
@@ -377,21 +377,21 @@ export default function CompactDashboard({ store }: CompactDashboardProps) {
                             {/* Super Admin/Admin/Client: Paid Billings / Revenue */}
                             {overview.paidBillings !== undefined && billingData && (
                                 <AppCard
-                                    className="flex-1 gap-2 bg-primary/30 dark:bg-[#372A49] shadow-2xl"
+                                    className="flex-1 gap-2  bg-blue-50 text-black/80 shadow-2xl"
                                     header={
-                                        <span className="text-sm font-medium dark:text-[#D7B3F5]">
+                                        <span className="text-sm font-medium">
                                             {buildSentence(t, 'total', 'revenue')}
                                         </span>
                                     }
                                     footer={
-                                        <p className="text-xs text-muted-foreground dark:text-[#B9A6DA]">
+                                        <p className="text-xs text-muted-foreground">
                                             {billingData.revenue?.transactions || overview.paidBillings} {t('transactions')}
                                         </p>
                                     }
                                 >
                                     <div className="space-y-2">
-                                        <img src={RevenueIcon} alt="Revenue" className="h-8 w-8 dark:brightness-110" />
-                                        <div className="text-2xl font-bold dark:text-white">
+                                        <img src={RevenueIcon} alt="Revenue" className="h-8 w-8" />
+                                        <div className="text-2xl font-bold">
                                             {formatCurrency((billingData.revenue?.total || (overview.paidBillings || 0) * 100) / 100, undefined, undefined, 2, 2, settings)}
                                         </div>
                                     </div>
@@ -401,21 +401,21 @@ export default function CompactDashboard({ store }: CompactDashboardProps) {
                             {/* Super Admin/Admin/Client: Pending Billings */}
                             {overview.pendingBillings !== undefined && billingData && (
                                 <AppCard
-                                    className="flex-1 gap-2 bg-[#FFE2E5] dark:bg-[#442733] shadow-2xl"
+                                    className="flex-1 gap-2 bg-green-50  text-black/80 shadow-2xl"
                                     header={
-                                        <span className="text-sm font-medium dark:text-[#FFB2C9]">
+                                        <span className="text-sm font-medium">
                                             {buildSentence(t, 'pending', 'billings')}
                                         </span>
                                     }
                                     footer={
-                                        <p className="text-xs text-muted-foreground dark:text-[#FFDDE9]">
+                                        <p className="text-xs text-muted-foreground">
                                             {billingData.summary?.pending_billings || overview.pendingBillings} {t('awaiting')}
                                         </p>
                                     }
                                 >
                                     <div className="space-y-2">
-                                        <img src={PendingPymentsIcon} alt="Pending Payments" className="h-8 w-8 dark:brightness-110" />
-                                        <div className="text-2xl font-bold dark:text-white">
+                                        <img src={PendingPymentsIcon} alt="Pending Payments" className="h-8 w-8" />
+                                        <div className="text-2xl font-bold">
                                             {formatCurrency((billingData.summary?.total_pending || (overview.pendingBillings || 0) * 100) / 100, undefined, undefined, 2, 2, settings)}
                                         </div>
                                     </div>

@@ -3,13 +3,14 @@ import { Link, useLocation } from "react-router-dom";
 import { useMemo } from "react";
 
 // External Libraries
-import { ChevronRight, Home } from "lucide-react";
+import { ChevronRight, Home, ChevronLeft } from "lucide-react";
 
 // Config
 import { ROUTE_TITLES, SEGMENTS, ROOT_ROUTE } from "@/config/routes.config";
 
 // Hooks
 import { useAuthUser } from "@/hooks/use-auth-user";
+import { useI18n } from "@/hooks/use-i18n";
 
 interface BreadcrumbItem {
     label: string;
@@ -19,6 +20,7 @@ interface BreadcrumbItem {
 export function AppBreadcrumb() {
     const location = useLocation();
     const { user } = useAuthUser();
+    const { t, direction } = useI18n();
 
     const breadcrumbs = useMemo(() => {
         if (!user) return [];
@@ -30,7 +32,7 @@ export function AppBreadcrumb() {
         const segmentPart = segment.replace(/^\//, "");
 
         const items: BreadcrumbItem[] = [
-            { label: "Home", path: ROOT_ROUTE },
+            { label: t('home'), path: ROOT_ROUTE },
         ];
 
         let currentPath = "";
@@ -43,7 +45,8 @@ export function AppBreadcrumb() {
             }
 
             const relativePath = currentPath.replace(segment, "").replace(/^\//, "");
-            const label = ROUTE_TITLES[relativePath] || part.charAt(0).toUpperCase() + part.slice(1).replace(/-/g, " ");
+            const titleKey = ROUTE_TITLES[relativePath];
+            const label = titleKey ? t(titleKey) : part.charAt(0).toUpperCase() + part.slice(1).replace(/-/g, " ");
 
             items.push({
                 label,
@@ -52,12 +55,14 @@ export function AppBreadcrumb() {
         });
 
         return items;
-    }, [location.pathname, user]);
+    }, [location.pathname, user, t]);
 
     if (breadcrumbs.length <= 1) return null;
 
+    const ChevronIcon = direction === 'rtl' ? ChevronLeft : ChevronRight;
+
     return (
-        <nav className="flex items-center gap-2 text-sm text-muted-foreground" aria-label="Breadcrumb">
+        <nav className="flex items-center gap-2 text-sm text-muted-foreground" aria-label="Breadcrumb" dir={direction}>
             {breadcrumbs.map((crumb, index) => {
                 const isLast = index === breadcrumbs.length - 1;
                 return (
@@ -68,7 +73,7 @@ export function AppBreadcrumb() {
                             </Link>
                         ) : (
                             <>
-                                <ChevronRight className="h-4 w-4" />
+                                <ChevronIcon className="h-4 w-4" />
                                 {isLast ? (
                                     <span className="text-foreground font-medium">{crumb.label}</span>
                                 ) : (

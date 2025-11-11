@@ -14,9 +14,15 @@ help: ## Show available commands
 # --- Setup ---
 setup: clean build dev ## Clean, build, and start all containers
 
+setup-prod: clean build-prod prod ## Clean, build production image, and start production containers
+
+
 # --- Development ---
 dev: ## Start all dev containers
 	cd shared && docker-compose up -d
+
+prod: ## Start production containers
+	cd shared && docker-compose -f docker-compose.prod.yml up -d
 
 dev-backend: ## Start only backend dev container
 	cd shared && docker-compose -f docker-compose.backend.yml up -d
@@ -41,6 +47,9 @@ restart: ## Restart all containers
 # --- Build ---
 build: ## Build all services
 	cd shared && docker-compose build
+
+build-prod: ## Build production image
+	cd shared && docker-compose -f docker-compose.prod.yml build
 
 build-backend: ## Build backend image
 	cd shared && docker-compose -f docker-compose.backend.yml build

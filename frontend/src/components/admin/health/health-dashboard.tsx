@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useId, useMemo, useTransition } from 'react';
 import { useI18n } from '@/hooks/use-i18n';
+import { buildSentence } from '@/locales/translations';
 import { useShallow } from 'zustand/shallow';
 import type { IHealthStatus } from '@shared/interfaces/health.interface';
 import { type TSingleHandlerStore } from '@/stores';
@@ -58,15 +59,15 @@ export const HealthDashboard = ({ storeKey, store }: IHealthDashboardProps) => {
   if (isLoading) {
     return <div className="flex items-center justify-center h-64">
       <Activity className="h-8 w-8 animate-spin" />
-      <span className="ml-2">{t('health.loading')}</span>
+      <span className="ml-2">{buildSentence(t, 'loading', 'health', 'status')}</span>
     </div>;
   }
 
   if (error) {
     return <div className="text-center py-8">
-      <p className="text-red-500 mb-4">{t('health.error')} : {error.message}</p>
+      <p className="text-red-500 mb-4">{buildSentence(t, 'error', 'loading', 'health', 'status')} : {error.message}</p>
       <Button onClick={() => refetch()} variant="outline">
-        {t('health.tryAgain')}
+        {buildSentence(t, 'try', 'again')}
       </Button>
     </div>;
   }
@@ -74,7 +75,7 @@ export const HealthDashboard = ({ storeKey, store }: IHealthDashboardProps) => {
 
   if (!data) {
     return <div className="flex items-center justify-center h-64">
-      <p className="text-gray-500">{t('health.noData')}</p>
+      <p className="text-gray-500">{buildSentence(t, 'no', 'health', 'data', 'available')}</p>
     </div>;
   }
 
@@ -118,19 +119,19 @@ export const HealthDashboard = ({ storeKey, store }: IHealthDashboardProps) => {
           <div className="flex items-center space-x-3">
             {getStatusIcon(status)}
             <div>
-              <h3 className="text-lg font-semibold">{t('health.title')}</h3>
+              <h3 className="text-lg font-semibold">{buildSentence(t, 'system', 'health')}</h3>
               <p className={`text-sm font-medium ${getStatusColor(status)}`}>
-                {t(`health.status.${status}`)}
+                {status === 'healthy' ? t('healthy') : status === 'degraded' ? t('degraded') : t('unhealthy')}
               </p>
             </div>
           </div>
           <div className="text-right">
-            <p className="text-sm text-gray-600">{t('health.uptime')}: {Math.floor(uptime / 1000 / 60 / 60)}h</p>
+            <p className="text-sm text-gray-600">{buildSentence(t, 'uptime')}: {Math.floor(uptime / 1000 / 60 / 60)}h</p>
             <p className="text-sm text-gray-600">v{version} ({environment})</p>
           </div>
           <Button onClick={handleRefresh} variant="outline" size="sm">
             <RefreshCw className="h-4 w-4 mr-2" />
-            {t('health.refresh')}
+            {t('refresh')}
           </Button>
         </div>
       </AppCard>
@@ -142,21 +143,21 @@ export const HealthDashboard = ({ storeKey, store }: IHealthDashboardProps) => {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center">
               <Database className="h-5 w-5 mr-2" />
-              <span className="font-medium">{t('health.database.title')}</span>
+              <span className="font-medium">{t('database')}</span>
             </div>
             {getStatusIcon(database.status)}
           </div>
           <div className="space-y-2">
             <div className="text-sm">
-              <span className="text-gray-600">{t('health.database.mode')}:</span>
+              <span className="text-gray-600">{buildSentence(t, 'mode')}:</span>
               <span className="ml-2 font-medium">{database.mode}</span>
             </div>
             <div className="text-sm">
-              <span className="text-gray-600">{t('health.database.response')}:</span>
+              <span className="text-gray-600">{buildSentence(t, 'response')}:</span>
               <span className="ml-2 font-medium">{database.responseTime}ms</span>
             </div>
             <div className="text-sm">
-              <span className="text-gray-600">{t('health.database.connections')}:</span>
+              <span className="text-gray-600">{buildSentence(t, 'connections')}:</span>
               <span className="ml-2 font-medium">{database.connections.length}</span>
             </div>
           </div>
@@ -167,21 +168,21 @@ export const HealthDashboard = ({ storeKey, store }: IHealthDashboardProps) => {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center">
               <Server className="h-5 w-5 mr-2" />
-              <span className="font-medium">{t('health.memory.title')}</span>
+              <span className="font-medium">{t('memory')}</span>
             </div>
             {getStatusIcon(memory.status)}
           </div>
           <div className="space-y-2">
             <div className="text-sm">
-              <span className="text-gray-600">{t('health.memory.usage')}:</span>
+              <span className="text-gray-600">{buildSentence(t, 'usage')}:</span>
               <span className="ml-2 font-medium">{memory.percentage.toFixed(1)}%</span>
             </div>
             <div className="text-sm">
-              <span className="text-gray-600">{t('health.memory.used')}:</span>
+              <span className="text-gray-600">{buildSentence(t, 'used')}:</span>
               <span className="ml-2 font-medium">{(memory.used / 1024 / 1024).toFixed(1)}MB</span>
             </div>
             <div className="text-sm">
-              <span className="text-gray-600">{t('health.memory.free')}:</span>
+              <span className="text-gray-600">{buildSentence(t, 'free')}:</span>
               <span className="ml-2 font-medium">{(memory.free / 1024 / 1024).toFixed(1)}MB</span>
             </div>
           </div>
@@ -193,21 +194,21 @@ export const HealthDashboard = ({ storeKey, store }: IHealthDashboardProps) => {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center">
               <Wifi className="h-5 w-5 mr-2" />
-              <span className="font-medium">{t('health.network.title')}</span>
+              <span className="font-medium">{t('network')}</span>
             </div>
             {getStatusIcon(network.status)}
           </div>
           <div className="space-y-2">
             <div className="text-sm">
-              <span className="text-gray-600">{t('health.network.latency')}:</span>
+              <span className="text-gray-600">{buildSentence(t, 'latency')}:</span>
               <span className="ml-2 font-medium">{network.latency}ms</span>
             </div>
             <div className="text-sm">
-              <span className="text-gray-600">{t('health.network.throughput')}:</span>
+              <span className="text-gray-600">{buildSentence(t, 'throughput')}:</span>
               <span className="ml-2 font-medium">{network.throughput}Mbps</span>
             </div>
             <div className="text-sm">
-              <span className="text-gray-600">{t('health.network.connections')}:</span>
+              <span className="text-gray-600">{buildSentence(t, 'connections')}:</span>
               <span className="ml-2 font-medium">{network.connections}</span>
             </div>
           </div>
@@ -220,7 +221,7 @@ export const HealthDashboard = ({ storeKey, store }: IHealthDashboardProps) => {
         header={
           <div className="flex items-center">
             <Database className="h-5 w-5 mr-2" />
-            {t('health.database.connectionsTitle')}
+            {buildSentence(t, 'database', 'connections')}
           </div>
         }
       >
@@ -234,7 +235,7 @@ export const HealthDashboard = ({ storeKey, store }: IHealthDashboardProps) => {
               <div className="flex items-center">
                 {getStatusIcon(connection.status)}
                 <span className={`ml-2 text-sm font-medium ${getStatusColor(connection.status)}`}>
-                  {connection.status}
+                  {connection.status === 'healthy' ? t('healthy') : connection.status === 'degraded' ? t('degraded') : t('unhealthy')}
                 </span>
               </div>
             </div>

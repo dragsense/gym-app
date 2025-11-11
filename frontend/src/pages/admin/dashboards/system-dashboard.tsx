@@ -6,6 +6,8 @@ import { getHealthStatus } from "@/services/health.api";
 import type { IHealthStatus } from "@shared/interfaces/health.interface";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/hooks/use-i18n";
+import { buildSentence } from "@/locales/translations";
 
 export default function SystemDashboardPage() {
   const componentId = useId();
@@ -40,11 +42,12 @@ export default function SystemDashboardPage() {
 }
 
 const Header = ({ handleRefreshAll }: { handleRefreshAll: () => void }) => {
+  const { t } = useI18n();
   return (
     <Button
       onClick={handleRefreshAll}
     >
-      Refresh All
+      {buildSentence(t, 'refresh', 'all')}
     </Button>
   );
 };

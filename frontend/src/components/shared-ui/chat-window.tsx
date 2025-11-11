@@ -32,7 +32,7 @@ export function ChatWindow() {
     const inputRef = useRef<HTMLInputElement>(null);
     const userClosedRef = useRef(false);
     const { user } = useAuthUser();
-    const { t } = useI18n();
+    const { t, direction } = useI18n();
     const { settings } = useUserSettings();
     const {
         chats,
@@ -238,7 +238,7 @@ export function ChatWindow() {
             </PopoverTrigger>
             <PopoverContent
                 className="w-96 h-[600px] p-0 flex flex-col"
-                align="end"
+                align={direction === 'rtl' ? 'start' : 'end'}
                 onEscapeKeyDown={() => handleOpenChange(false)}
                 onPointerDownOutside={() => {
                     // Allow closing on outside click

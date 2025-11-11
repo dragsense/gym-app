@@ -14,23 +14,23 @@ const VerifyOtpPage = lazy(() => import("./otp"));
 const authRoutes = [
   {
     path: PUBLIC_ROUTES.LOGIN,
-    element: createRouteElement(LoginPage, "Authentication", "Preparing secure login experience..."),
+    element: createRouteElement(LoginPage, "Authentication", ["preparing", "secure", "login", "experience"]),
   },
   {
     path: PUBLIC_ROUTES.SIGNUP,
-    element: createRouteElement(SignupPage, "Authentication", "Preparing signup form..."),
+    element: createRouteElement(SignupPage, "Authentication", ["preparing", "signup", "form"]),
   },
   {
     path: PUBLIC_ROUTES.FORGOT_PASSWORD,
-    element: createRouteElement(ForgotPasswordPage, "Authentication", "Loading password recovery..."),
+    element: createRouteElement(ForgotPasswordPage, "Authentication", ["loading", "password", "recovery"]),
   },
   {
     path: PUBLIC_ROUTES.RESET_PASSWORD,
-    element: createRouteElement(ResetPasswordPage, "Authentication", "Loading password reset form..."),
+    element: createRouteElement(ResetPasswordPage, "Authentication", ["loading", "password", "reset", "form"]),
   },
   {
     path: PUBLIC_ROUTES.VERIFY_OTP,
-    element: createRouteElement(VerifyOtpPage, "Authentication", "Loading OTP verification..."),
+    element: createRouteElement(VerifyOtpPage, "Authentication", ["loading", "otp", "verification"]),
   }
 ];
 

@@ -67,31 +67,3 @@ WORKDIR /app/backend
 
 EXPOSE 3000
 CMD ["tail", "-f", "/dev/null"]
-
-# Production build stage
-FROM base AS build
-WORKDIR /app/backend
-RUN pnpm run build
-
-# Production stage
-FROM node:22 AS prod
-WORKDIR /app
-
-# Install pnpm
-RUN npm install -g pnpm
-
-# Copy package files
-COPY backend/package.json backend/pnpm-lock.yaml ./
-
-# Install production dependencies only
-RUN pnpm install --prod
-
-# Copy built application
-COPY --from=build /app/backend/dist ./dist
-COPY --from=build /app/shared ./shared
-
-# Copy environment files
-COPY backend/.env* ./
-
-EXPOSE 3000
-CMD ["pnpm", "run", "start"]

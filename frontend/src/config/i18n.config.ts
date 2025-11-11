@@ -7,9 +7,18 @@ import en from "../locales/en.json";
 import ar from "../locales/ar.json";
 
 export const supportedLanguages = [
-  { code: "en", name: "English", flag: "🇺🇸" },
-  { code: "ar", name: "العربية", flag: "🇦🇪" },
+  { code: "en", name: "English", flag: "🇺🇸", dir: "ltr" as const },
+  { code: "ar", name: "العربية", flag: "🇦🇪", dir: "rtl" as const },
 ] as const;
+
+export type LanguageDirection = "ltr" | "rtl";
+
+export const getLanguageDirection = (
+  language: SupportedLanguage
+): LanguageDirection => {
+  const lang = supportedLanguages.find((l) => l.code === language);
+  return lang?.dir || "ltr";
+};
 
 export type SupportedLanguage = (typeof supportedLanguages)[number]["code"];
 

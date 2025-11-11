@@ -4,6 +4,8 @@ import { useId, useDeferredValue, useMemo } from "react";
 import { matchRoutePath } from "@/lib/utils";
 import { ROUTE_TITLES, SEGMENTS } from "@/config/routes.config";
 import { useAuthUser } from "@/hooks/use-auth-user";
+import { useI18n } from "@/hooks/use-i18n";
+import { buildSentence } from "@/locales/translations";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -17,6 +19,7 @@ export default function PageInnerLayout({ Header, children }: MainLayoutProps) {
 
   const location = useLocation();
   const { user } = useAuthUser();
+  const { t } = useI18n();
 
   const title = useMemo(() => {
 
@@ -25,17 +28,17 @@ export default function PageInnerLayout({ Header, children }: MainLayoutProps) {
     const locationPath = location.pathname.replace(segment, "").replace(/^\//, "");
 
     if (ROUTE_TITLES[locationPath]) {
-      return ROUTE_TITLES[locationPath];
+      return t(ROUTE_TITLES[locationPath]);
     }
 
-    for (const [pattern, title] of Object.entries(ROUTE_TITLES)) {
+    for (const [pattern, titleKey] of Object.entries(ROUTE_TITLES)) {
       if (pattern.includes(":") && matchRoutePath(pattern, locationPath)) {
-        return title;
+        return t(titleKey);
       }
     }
 
-    return "Unknown Page";
-  }, [location.pathname, user]);
+    return buildSentence(t, 'unknown', 'page');
+  }, [location.pathname, user, t]);
 
   // React 19: Deferred title for better performance during navigation
   const deferredTitle = useDeferredValue(title);

@@ -41,39 +41,40 @@ export type NavItem = {
 };
 
 // Common navigation items (shared across ALL user levels)
+// Note: titles are translation keys, will be translated in sidebar component
 const commonNavItems: NavItem[] = [
   {
-    title: "Dashboard",
+    title: "dashboard",
     url: ADMIN_ROUTES.DASHBOARD,
     icon: Home,
   },
   {
-    title: "Sessions",
+    title: "sessions",
     url: ADMIN_ROUTES.SESSIONS,
     icon: Calendar,
   },
   {
-    title: "Billings",
+    title: "billings",
     url: ADMIN_ROUTES.BILLINGS,
     icon: DollarSign,
   },
   {
-    title: "Referral Links",
+    title: "referralLinks",
     url: ADMIN_ROUTES.REFERRAL_LINKS,
     icon: Link,
   },
   {
-    title: "Settings",
+    title: "settings",
     url: ADMIN_ROUTES.SETTINGS,
     icon: Settings,
   },
   {
-    title: "User Availability",
+    title: "userAvailability",
     url: ADMIN_ROUTES.USER_AVAILABILITY,
     icon: Calendar,
   },
   {
-    title: "Account",
+    title: "account",
     url: ADMIN_ROUTES.ACCOUNT,
     icon: User,
   },
@@ -81,12 +82,12 @@ const commonNavItems: NavItem[] = [
 
 const adminAndTrainerSharedNavItems: NavItem[] = [
   {
-    title: "Clients",
+    title: "clients",
     url: ADMIN_ROUTES.CLIENTS,
     icon: UserPlus,
   },
   {
-    title: "Activity Logs",
+    title: "activityLogs",
     url: ADMIN_ROUTES.ACTIVITY_LOGS,
     icon: Activity,
   },
@@ -96,32 +97,32 @@ const adminAndTrainerSharedNavItems: NavItem[] = [
 const superAdminAndAdminShared: NavItem[] = [
   ...adminAndTrainerSharedNavItems,
   {
-    title: "Users",
+    title: "users",
     url: ADMIN_ROUTES.USERS,
     icon: UserCheck,
   },
   {
-    title: "Trainers",
+    title: "trainers",
     url: ADMIN_ROUTES.TRAINERS,
     icon: Users,
   },
   {
-    title: "Trainer-Clients",
+    title: "trainerClients",
     url: ADMIN_ROUTES.TRAINER_CLIENTS,
     icon: UserCog,
   },
   {
-    title: "Roles",
+    title: "roles",
     url: ADMIN_ROUTES.ROLES,
     icon: Shield,
   },
   {
-    title: "Products",
+    title: "products",
     url: ADMIN_ROUTES.PRODCUTS.INDEX,
     icon: Box,
     children: [
       {
-        title: "Inventory",
+        title: "inventory",
         url: ADMIN_ROUTES.PRODCUTS.INVENTORY,
         icon: CardSim,
       },
@@ -132,29 +133,29 @@ const superAdminAndAdminShared: NavItem[] = [
 // Super Admin-only navigation items
 const superAdminNavItems: NavItem[] = [
   {
-    title: "System Dashboard",
+    title: "systemDashboard",
     url: ADMIN_ROUTES.SYSTEM_DASHBOARD,
     icon: Home,
   },
   ...commonNavItems,
   ...superAdminAndAdminShared,
   {
-    title: "Files",
+    title: "files",
     url: ADMIN_ROUTES.FILES,
     icon: FileText,
   },
   {
-    title: "Schedules",
+    title: "schedules",
     url: ADMIN_ROUTES.SCHEDULES,
     icon: CalendarClock,
   },
   {
-    title: "Queue Board",
+    title: "queueBoard",
     url: ADMIN_ROUTES.QUEUE_BOARD,
     icon: BarChart3,
   },
   {
-    title: "Cache",
+    title: "cache",
     url: ADMIN_ROUTES.CACHE,
     icon: Database,
   },

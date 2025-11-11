@@ -27,7 +27,7 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   // React 19: Essential IDs
   const componentId = useId();
-  const { t } = useI18n();
+  const { t, direction } = useI18n();
 
   return (
     <SidebarProvider>
@@ -35,6 +35,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <SidebarInset
         className="w-100"
         data-component-id={componentId}
+        dir={direction}
       >
         <AppHeader />
 

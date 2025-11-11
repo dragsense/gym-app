@@ -35,7 +35,7 @@ const createRoute = (
   path: string,
   Component: React.LazyExoticComponent<React.ComponentType<Record<string, never>>>,
   userLevel: string,
-  message?: string
+  message?: string | string[]
 ): RouteDefinition => ({
   path,
   element: createRouteElement(Component, userLevel, message),
@@ -43,40 +43,40 @@ const createRoute = (
 
 // Common routes (shared across ALL user levels)
 const commonRoutes = (userLevel: string): RouteDefinition[] => [
-  createRoute(ADMIN_ROUTES.DASHBOARD, DashboardPage, userLevel, "Loading dashboard..."),
-  createRoute(ADMIN_ROUTES.SESSIONS, SessionsPage, userLevel, "Loading sessions..."),
-  createRoute(ADMIN_ROUTES.BILLINGS, BillingsPage, userLevel, "Loading billings..."),
-  createRoute(ADMIN_ROUTES.REFERRAL_LINKS, ReferralLinksPage, userLevel, "Loading referral links..."),
-  createRoute(ADMIN_ROUTES.SETTINGS, SettingsPage, userLevel, "Loading settings..."),
-  createRoute(ADMIN_ROUTES.USER_AVAILABILITY, UserAvailabilityPage, userLevel, "Loading user availability..."),
-  createRoute(ADMIN_ROUTES.ACCOUNT, AccountPage, userLevel, "Loading account..."),
+  createRoute(ADMIN_ROUTES.DASHBOARD, DashboardPage, userLevel, ["loading", "dashboard"]),
+  createRoute(ADMIN_ROUTES.SESSIONS, SessionsPage, userLevel, ["loading", "sessions"]),
+  createRoute(ADMIN_ROUTES.BILLINGS, BillingsPage, userLevel, ["loading", "billings"]),
+  createRoute(ADMIN_ROUTES.REFERRAL_LINKS, ReferralLinksPage, userLevel, ["loading", "referral", "links"]),
+  createRoute(ADMIN_ROUTES.SETTINGS, SettingsPage, userLevel, ["loading", "settings"]),
+  createRoute(ADMIN_ROUTES.USER_AVAILABILITY, UserAvailabilityPage, userLevel, ["loading", "user", "availability"]),
+  createRoute(ADMIN_ROUTES.ACCOUNT, AccountPage, userLevel, ["loading", "account"]),
 ];
 
 // Routes shared by Admin and Trainer
 const adminAndTrainerSharedRoutes = (userLevel: string): RouteDefinition[] => [
-  createRoute(ADMIN_ROUTES.CLIENTS, ClientsPage, userLevel, "Loading clients..."),
-  createRoute(ADMIN_ROUTES.ACTIVITY_LOGS, ActivityLogsPage, userLevel, "Loading activity logs..."),
+  createRoute(ADMIN_ROUTES.CLIENTS, ClientsPage, userLevel, ["loading", "clients"]),
+  createRoute(ADMIN_ROUTES.ACTIVITY_LOGS, ActivityLogsPage, userLevel, ["loading", "activity", "logs"]),
 ];
 
 // Routes shared by Super Admin and Admin
 const superAdminAndAdminSharedRoutes = (userLevel: string): RouteDefinition[] => [
   ...adminAndTrainerSharedRoutes(userLevel),
-  createRoute(ADMIN_ROUTES.USERS, UsersPage, userLevel, "Loading users..."),
-  createRoute(ADMIN_ROUTES.TRAINERS, TrainersPage, userLevel, "Loading trainers..."),
-  createRoute(ADMIN_ROUTES.TRAINER_CLIENTS, TrainerClientsPage, userLevel, "Loading trainer clients..."),
-  createRoute(ADMIN_ROUTES.ROLES, RolesPage, userLevel, "Loading roles..."),
-  createRoute(ADMIN_ROUTES.PRODCUTS.INVENTORY, InventoryPage, userLevel, "Loading Inventory..."),
+  createRoute(ADMIN_ROUTES.USERS, UsersPage, userLevel, ["loading", "users"]),
+  createRoute(ADMIN_ROUTES.TRAINERS, TrainersPage, userLevel, ["loading", "trainers"]),
+  createRoute(ADMIN_ROUTES.TRAINER_CLIENTS, TrainerClientsPage, userLevel, ["loading", "trainer", "clients"]),
+  createRoute(ADMIN_ROUTES.ROLES, RolesPage, userLevel, ["loading", "roles"]),
+  createRoute(ADMIN_ROUTES.PRODCUTS.INVENTORY, InventoryPage, userLevel, ["loading", "inventory"]),
 ];
 
 // Super Admin-only routes
 const superAdminOnlyRoutes: RouteDefinition[] = [
-  createRoute(ADMIN_ROUTES.SYSTEM_DASHBOARD, SystemDashboardPage, "Super Admin", "Loading system dashboard..."),
-  createRoute(ADMIN_ROUTES.FILES, FilesPage, "Super Admin", "Loading files..."),
-  createRoute(ADMIN_ROUTES.SCHEDULES, SchedulesPage, "Super Admin", "Loading schedules..."),
-  createRoute(ADMIN_ROUTES.QUEUES, QueuesPage, "Super Admin", "Loading queues..."),
-  createRoute(ADMIN_ROUTES.WORKERS, WorkersPage, "Super Admin", "Loading workers..."),
-  createRoute(ADMIN_ROUTES.QUEUE_BOARD, QueuesPage, "Super Admin", "Loading queue board..."),
-  createRoute(ADMIN_ROUTES.CACHE, CachePage, "Super Admin", "Loading cache..."),
+  createRoute(ADMIN_ROUTES.SYSTEM_DASHBOARD, SystemDashboardPage, "Super Admin", ["loading", "system", "dashboard"]),
+  createRoute(ADMIN_ROUTES.FILES, FilesPage, "Super Admin", ["loading", "files"]),
+  createRoute(ADMIN_ROUTES.SCHEDULES, SchedulesPage, "Super Admin", ["loading", "schedules"]),
+  createRoute(ADMIN_ROUTES.QUEUES, QueuesPage, "Super Admin", ["loading", "queues"]),
+  createRoute(ADMIN_ROUTES.WORKERS, WorkersPage, "Super Admin", ["loading", "workers"]),
+  createRoute(ADMIN_ROUTES.QUEUE_BOARD, QueuesPage, "Super Admin", ["loading", "queue", "board"]),
+  createRoute(ADMIN_ROUTES.CACHE, CachePage, "Super Admin", ["loading", "cache"]),
 ];
 
 // Build routes by user level

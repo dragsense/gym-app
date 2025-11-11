@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { supportedLanguages, type SupportedLanguage } from '@/config/i18n.config';
+import { supportedLanguages, type SupportedLanguage, getLanguageDirection } from '@/config/i18n.config';
 import { type I18nContextType, type I18nProviderProps } from '@/@types/i18n.types';
 
 const I18nContext = createContext<I18nContextType | undefined>(undefined);
@@ -14,17 +14,26 @@ export function I18nProvider({ children }: I18nProviderProps) {
         return 'en';
     });
 
+    const direction = useMemo(() => getLanguageDirection(language), [language]);
+
     useEffect(() => {
         i18n.changeLanguage(language);
         localStorage.setItem('i18nextLng', language);
-    }, [language, i18n]);
+
+        // Set document direction
+        if (typeof document !== 'undefined') {
+            document.documentElement.setAttribute('dir', direction);
+            document.documentElement.setAttribute('lang', language);
+        }
+    }, [language, direction, i18n]);
 
     const value = useMemo(() => ({
         language,
+        direction,
         setLanguage,
         t,
         supportedLanguages,
-    }), [language, t]);
+    }), [language, direction, t]);
 
     return (
         <I18nContext.Provider value={value}>

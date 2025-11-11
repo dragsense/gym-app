@@ -20,19 +20,19 @@ const PublicRoute = lazy(() => import("@/routes/public-route"));
 const appRouter = createBrowserRouter([
   {
     path: ROOT_ROUTE,
-    element: createRouteElement(MainLayout, "App", "Initializing application..."),
+    element: createRouteElement(MainLayout, "App", ["initializing", "application"]),
     children: [
       {
-        element: createRouteElement(PublicRoute, "App", "Loading public routes..."),
+        element: createRouteElement(PublicRoute, "App", ["loading", "public", "routes"]),
         children: [
           {
-            element: createRouteElement(AuthLayout, "App", "Loading authentication..."),
+            element: createRouteElement(AuthLayout, "App", ["loading", "authentication"]),
             children: authRoutes,
           },
         ],
       },
       {
-        element: createRouteElement(PrivateRoute, "App", "Loading private routes..."),
+        element: createRouteElement(PrivateRoute, "App", ["loading", "private", "routes"]),
         children: [
           {
             index: true,
@@ -42,7 +42,7 @@ const appRouter = createBrowserRouter([
             element: <LevelBasedRedirect />,
             children: [
               {
-                element: createRouteElement(DashboardLayoutWrapper, "App", "Loading dashboard..."),
+                element: createRouteElement(DashboardLayoutWrapper, "App", ["loading", "dashboard"]),
                 children: [
                   {
                     path: SUPER_ADMIN_SEGMENT,

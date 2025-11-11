@@ -10,7 +10,7 @@ services:
     environment:
       NODE_ENV: production
     env_file:
-      - ../backend/.env.production
+      - ../backend/.env
     depends_on:
       - redis
       - dragonfly
@@ -50,7 +50,7 @@ services:
     ports:
       - "5433:5432"
     environment:
-      POSTGRES_DB: web_template_db
+      POSTGRES_DB: formance_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_HOST_AUTH_METHOD: trust

@@ -10,7 +10,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import appRouter from "./AppRoutes";
 import { AuthUserProvider } from "./hooks/use-auth-user";
 import { ThemeProvider } from "./hooks/use-theme";
-import { I18nProvider } from "./hooks/use-i18n";
+import { I18nProvider, useI18n } from "./hooks/use-i18n";
 import "./config/i18n.config";
 
 const queryClient = new QueryClient({
@@ -23,6 +23,16 @@ const queryClient = new QueryClient({
   },
 });
 
+function DevToolsWrapper() {
+  const { direction } = useI18n();
+  return (
+    <ReactQueryDevtools 
+      initialIsOpen={false} 
+      buttonPosition={direction === 'rtl' ? 'bottom-right' : 'bottom-left'} 
+    />
+  );
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -30,11 +40,10 @@ function App() {
         <ThemeProvider defaultTheme="system" storageKey="app-theme">
           <AuthUserProvider>
             <RouterProvider router={appRouter} />
-
           </AuthUserProvider>
         </ThemeProvider>
+        <DevToolsWrapper />
       </I18nProvider>
-      <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
     </QueryClientProvider>
   );
 }

@@ -20,6 +20,8 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import { useLogout } from "@/hooks/use-logout";
 import { useUserRewardPoints } from "@/hooks/use-user-rewards";
+import { useI18n } from "@/hooks/use-i18n";
+import { buildSentence } from "@/locales/translations";
 
 // Components
 import { NotificationBell } from "@/components/shared-ui/notification-bell";
@@ -41,6 +43,7 @@ export function AppHeader() {
 
   const { user } = useAuthUser();
   const { logout, isLoading } = useLogout();
+  const { t, direction } = useI18n();
 
   // React 19: Deferred user data for better performance
   const deferredUser = useDeferredValue(user);
@@ -95,7 +98,7 @@ export function AppHeader() {
         <div className="flex items-center gap-3">
           {/* Rewards points badge */}
           <div className="flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
-            Points: {!isLoadingRewards ? userPoints : "--"}
+            {buildSentence(t, 'points')}: {!isLoadingRewards ? userPoints : "--"}
           </div>
 
           {/* Chat */}
@@ -108,7 +111,7 @@ export function AppHeader() {
           <NotificationBell />
         </div>
 
-        <div className="flex items-center gap-5 p-4 text-left text-sm bg-header rounded-full border-1 shadow-sm">
+        <div className={`flex items-center gap-5 p-4 text-sm bg-header rounded-full border-1 shadow-sm ${direction === 'rtl' ? 'text-right' : 'text-left'}`}>
           {/* Profile Dropdown Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -129,7 +132,7 @@ export function AppHeader() {
                     )}
                   </AvatarFallback>
                 </Avatar>
-                <div className="hidden md:block text-left">
+                <div className={`hidden md:block ${direction === 'rtl' ? 'text-right' : 'text-left'}`}>
                   <div className="font-semibold text-sm">{memoizedUserData.fullName}</div>
                   <div className="text-xs text-muted-foreground">{memoizedUserData.email}</div>
                 </div>
@@ -137,7 +140,7 @@ export function AppHeader() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
-              align="end"
+              align={direction === 'rtl' ? 'start' : 'end'}
               className="w-64 animate-in slide-in-from-top-2 fade-in duration-200 shadow-lg border border-border/50"
               sideOffset={8}
             >
@@ -176,7 +179,7 @@ export function AppHeader() {
                     <LogOut className="h-4 w-4" />
                   )}
 
-                  <span>Log out</span>
+                  <span>{buildSentence(t, 'log', 'out')}</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleLogout(true)}>
                   {isLoading ? (
@@ -185,7 +188,7 @@ export function AppHeader() {
                     <LogOut className="h-4 w-4" />
                   )}
 
-                  <span>Log out from all devices</span>
+                  <span>{buildSentence(t, 'log', 'out', 'from', 'all', 'devices')}</span>
                 </DropdownMenuItem>
               </div>
             </DropdownMenuContent>

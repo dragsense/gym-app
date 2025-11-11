@@ -33,8 +33,8 @@ RUN mkdir -p /app && chown -R node:node /app
 
 WORKDIR /app
 
-# Install pnpm, NestJS CLI, and Git
-RUN npm install -g pnpm @nestjs/cli
+# Install pnpm, NestJS CLI, PM2, and Git
+RUN npm install -g pnpm @nestjs/cli pm2
 
 # 6️⃣ Optional: set pnpm mirror + persistent cache
 RUN pnpm config set registry https://registry.npmmirror.com \
@@ -87,33 +87,41 @@ RUN pnpm run build
 WORKDIR /app/frontend
 RUN pnpm run build
 
+# Copy frontend build to the correct location for NestJS to serve
+# NestJS expects it at backend/dist/backend/client/dist
+RUN mkdir -p /app/backend/dist/backend/client && \
+    cp -r /app/frontend/dist /app/backend/dist/backend/client/dist
+
 # Production stage
 FROM node:22 AS prod
 WORKDIR /app
 
 # Install pnpm and PM2
-RUN npm install -g pnpm pm2 serve
+RUN npm install -g pnpm pm2
 
-# Create logs directory
-RUN mkdir -p /app/logs
-
-# Copy built backend
-COPY --from=build /app/backend/dist ./backend/dist
-COPY --from=build /app/backend/package.json ./backend/package.json
-COPY --from=build /app/shared ./shared
+# Copy package files for production dependencies
+COPY backend/package.json backend/pnpm-lock.yaml ./backend/
+COPY shared/package.json shared/pnpm-lock.yaml ./shared/
 
 # Install production dependencies
+WORKDIR /app/shared
+RUN pnpm install --prod
 WORKDIR /app/backend
 RUN pnpm install --prod
+WORKDIR /app
 
-# Copy built frontend
-COPY --from=build /app/frontend/dist ./frontend/dist
+# Copy built backend (frontend is already inside dist/backend/client/dist)
+COPY --from=build /app/backend/dist ./backend/dist
+COPY --from=build /app/shared ./shared
 
-# Copy ecosystem.js for PM2
-COPY ecosystem.js ./ecosystem.js
+# Copy environment files
+COPY backend/.env* ./backend/
 
-EXPOSE 3000 5173
+# Create logs directory
+RUN mkdir -p ./backend/logs
 
-# Use PM2 to manage both backend and frontend
-CMD ["pm2-runtime", "start", "ecosystem.js"]
+EXPOSE 3001
+
+# Start with PM2 (can be restarted via deploy script)
+CMD ["pm2", "start", "ecosystem.config.js", "--only", "trainer-prod", "--no-daemon"]
 

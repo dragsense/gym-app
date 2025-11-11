@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { List, Table } from "lucide-react";
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useI18n } from "@/hooks/use-i18n";
 
 interface IViewToggleProps {
     componentId: string;
@@ -9,6 +10,8 @@ interface IViewToggleProps {
 }
 
 export function ViewToggle({ componentId, className = "" }: IViewToggleProps) {
+    const { t } = useI18n();
+    
     const renderViewToggle = useMemo(() => (
         <TabsList className={`flex justify-center items-center w-auto ${className}`} data-component-id={componentId}>
             <TabsTrigger
@@ -16,7 +19,7 @@ export function ViewToggle({ componentId, className = "" }: IViewToggleProps) {
                 className="flex items-center gap-2 px-4 data-[state=active]:text-foreground data-[state=active]:font-semibold"
             >
                 <Table className="h-4 w-4" />
-                <span className="hidden sm:inline">Table</span>
+                <span className="hidden sm:inline">{t('table')}</span>
             </TabsTrigger>
 
             <TabsTrigger
@@ -24,10 +27,10 @@ export function ViewToggle({ componentId, className = "" }: IViewToggleProps) {
                 className="flex items-center gap-2 px-4 data-[state=active]:text-foreground data-[state=active]:font-semibold"
             >
                 <List className="h-4 w-4" />
-                <span className="hidden sm:inline">List</span>
+                <span className="hidden sm:inline">{t('list')}</span>
             </TabsTrigger>
         </TabsList>
-    ), [componentId, className]);
+    ), [componentId, className, t]);
 
     return renderViewToggle;
 }
