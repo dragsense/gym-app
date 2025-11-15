@@ -25,7 +25,7 @@ module.exports = {
           path: "/var/www/trainer_usr/data/www/trainer.digital.st/prod",
           key: "C:/Users/ranaa/.ssh/trainer-server",
           "post-setup": "touch ../shared/.env ../shared/.env.prod",
-          "post-deploy": "sh ./deploy.sh",
+          "post-deploy": "sh ./shared/deploy.sh",
       },
 
       dev: {
@@ -36,7 +36,7 @@ module.exports = {
           path: "/var/www/trainer_usr/data/www/trainer.digital.st/dev",
           key: "C:/Users/ranaa/.ssh/trainer-server",
           "post-setup": "touch ../shared/.env  ../shared/.env.prod",
-          "post-deploy": "sh ./deploy.sh"
+          "post-deploy": "sh ./shared/deploy.sh"
       },
   },
 };
