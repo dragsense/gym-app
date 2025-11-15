@@ -23,7 +23,7 @@ module.exports = {
           ref: "origin/main",
           repo: "git@github.com:dragsense/gym-app.git",
           path: "/var/www/trainer_usr/data/www/trainer.digital.st/prod",
-          key: "/mnt/c/Users/ranaa/.ssh/trainer-server",
+          key: "/home/ranaa/.ssh/trainer-server",
           "post-setup": "touch ../shared/.env ../shared/.env.prod",
           "post-deploy": "sh ./shared/deploy.sh",
       },
@@ -34,7 +34,7 @@ module.exports = {
           ref: "origin/dev",
           repo: "git@github.com:dragsense/gym-app.git",
           path: "/var/www/trainer_usr/data/www/trainer.digital.st/dev",
-          key: "/mnt/c/Users/ranaa/.ssh/trainer-server",
+          key: "/home/ranaa/.ssh/trainer-server",
           "post-setup": "touch ../shared/.env  ../shared/.env.prod",
           "post-deploy": "sh ./shared/deploy.sh"
       },
