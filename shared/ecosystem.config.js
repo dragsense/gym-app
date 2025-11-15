@@ -11,7 +11,7 @@ module.exports = {
           name: "trainer-dev",
           script: "./backend/dist/backend/src/main.js",
           env: {
-              NODE_ENV: "development",
+              NODE_ENV: "production",
           },
       },
   ],

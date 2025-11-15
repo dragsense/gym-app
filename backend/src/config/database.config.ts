@@ -77,10 +77,10 @@ export default registerAs('database', (): DatabaseConfig => {
     username: process.env.DB_USER || 'postgres',
     password: process.env.DB_PASS || 'postgres',
     database: process.env.DB_NAME || 'Customer_app',
-    ssl:
-      process.env.NODE_ENV === 'production'
+    ssl: false
+      /* process.env.NODE_ENV === 'production'
         ? { rejectUnauthorized: false }
-        : false,
+        : false */,
     pool: {
       max: parseInt(process.env.DB_POOL_MAX || '20', 10),
       min: parseInt(process.env.DB_POOL_MIN || '5', 10),
