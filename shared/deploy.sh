@@ -14,6 +14,6 @@ cp -f ../shared/.env ./backend/.env
 cp -f ../shared/.env.prod ./frontend/.env.prod
 
 # Build and start Docker
-#make setup-prod
+make setup-prod
 
 echo "✅ Server deployed successfully!"
