@@ -6,11 +6,11 @@ services:
       target: prod
     container_name: app-container-prod
     ports:
-      - "3000:3000"   # only backend (frontend served statically)
+      - "3000:3000" # only backend (frontend served statically)
     env_file:
       - ../backend/.env
     volumes:
-      - app_logs:/app/backend/logs 
+      - app_logs:/app/backend/logs
     depends_on:
       postgres:
         condition: service_healthy
@@ -29,7 +29,7 @@ services:
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -50,10 +50,42 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - app-network
+
+  dragonfly:
+    image: docker.dragonflydb.io/dragonflydb/dragonfly:latest
+    container_name: app-dragonfly-prod
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    networks:
+      - app-network
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: app-redis-commander-prod
+    environment:
+      - REDIS_HOSTS=local:dragonfly:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - dragonfly
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: app-mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025" # SMTP
+      - "8025:8025" # Web UI
     networks:
       - app-network
 
@@ -61,6 +93,7 @@ volumes:
   postgres_data:
   redis_data:
   app_logs:
+
 
 networks:
   app-network:

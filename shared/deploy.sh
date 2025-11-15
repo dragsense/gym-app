@@ -14,9 +14,6 @@ cp -f ../shared/.env ./backend/.env
 cp -f ../shared/.env.prod ./frontend/.env.prod
 
 # Build and start Docker
-make setup-prod
+#make setup-prod
 
-# Restart with PM2 inside Docker container
-docker exec app-build-prod pm2 start ecosystem.config.js --only trainer-dev
-
-echo "✅ Backend server started!"
+echo "✅ Server deployed successfully!"

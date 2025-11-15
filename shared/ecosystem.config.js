@@ -2,16 +2,16 @@ module.exports = {
   apps: [
       {
           name: "trainer-prod",
-          script: "dist/src/main.js",
+          script: "./backend/dist/backend/src/main.js",
           env: {
               NODE_ENV: "production",
           },
       },
       {
           name: "trainer-dev",
-          script: "dist/src/main.js",
+          script: "./backend/dist/backend/src/main.js",
           env: {
-              NODE_ENV: "production",
+              NODE_ENV: "development",
           },
       },
   ],
@@ -24,7 +24,7 @@ module.exports = {
           repo: "git@github.com:dragsense/gym-app.git",
           path: "/var/www/trainer_usr/data/www/trainer.digital.st/prod",
           key: "C:/Users/ranaa/.ssh/trainer-server",
-          "post-setup": "touch ../shared/.env ../shared/.env.production ../shared/.env.prod",
+          "post-setup": "touch ../shared/.env ../shared/.env.prod",
           "post-deploy": "sh ./deploy.sh",
       },
 
@@ -35,7 +35,7 @@ module.exports = {
           repo: "git@github.com:dragsense/gym-app.git",
           path: "/var/www/trainer_usr/data/www/trainer.digital.st/dev",
           key: "C:/Users/ranaa/.ssh/trainer-server",
-          "post-setup": "touch ../shared/.env ../shared/.env.development ../shared/.env.prod",
+          "post-setup": "touch ../shared/.env  ../shared/.env.prod",
           "post-deploy": "sh ./deploy.sh"
       },
   },

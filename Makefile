@@ -83,3 +83,12 @@ clean: ## Remove containers and volumes
 
 clean-prod: ## Remove containers and volumes
 	cd shared && docker-compose -f docker-compose.prod.yml down -v
+
+
+
+
+deploy: ## Deploy production containers
+	cd shared && pm2 deploy ecosystem.config.js dev
+
+deploy-prod: ## Deploy production containers
+	cd shared && pm2 deploy ecosystem.config.js prod
