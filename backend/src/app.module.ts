@@ -103,8 +103,8 @@ import { JwtAuthGuard } from './guards/auth.gaurd';
 
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'client', 'dist'),
-      serveRoot: '/',
-      exclude: ['/api*'],
+      exclude: ['/api*', '/socket.io*'],
+      serveStaticOptions: { index: false },
     }),
 
     // Database - Unified System
