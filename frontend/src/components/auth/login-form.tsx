@@ -19,6 +19,8 @@ import { Form } from '@/components/form-ui/form';
 import { type FormInputs, useInput } from '@/hooks/use-input';
 import { AppCard } from '../layout-ui/app-card';
 import { type TFieldConfigObject } from '@/@types/form/field-config.type';
+import { useI18n } from '@/hooks/use-i18n';
+import { buildSentence } from '@/locales/translations';
 
 // Stores
 
@@ -32,6 +34,7 @@ const LoginForm = React.memo(function LoginForm({
   // React 19: Essential IDs and transitions
   const componentId = useId();
   const [, startTransition] = useTransition();
+  const { t } = useI18n();
 
   if (!store) {
     return `Form store "${storeKey}" not found. Did you forget to register it?`;
@@ -59,14 +62,14 @@ const LoginForm = React.memo(function LoginForm({
       ),
       bottomAdornment: (
         <p className="text-sm text-muted-foreground">
-          Forgot your password?{' '}
+          {buildSentence(t, 'forgot', 'your', 'password')}?{' '}
           <Link to="/forgot-password" className="hover:underline">
-            Reset Password
+            {buildSentence(t, 'reset', 'password')}
           </Link>
         </p>
       )
     }
-  }), [originalFields, showPassword]);
+  }), [originalFields, showPassword, t]);
 
 
 
@@ -82,21 +85,21 @@ const LoginForm = React.memo(function LoginForm({
       <AppCard
         header={
           <>
-            <h2 className="text-md font-semibold">Login</h2>
-            <p className="text-sm text-muted-foreground">Enter your email and password to login to your account</p>
+            <h2 className="text-md font-semibold">{buildSentence(t, 'login')}</h2>
+            <p className="text-sm text-muted-foreground">{buildSentence(t, 'enter', 'your', 'email', 'and', 'password', 'to', 'login', 'to', 'your', 'account')}</p>
           </>
         }
         footer={
           <div className="flex flex-col gap-4 w-full">
             <Button type="submit" className="w-full" disabled={isSubmitting} data-component-id={componentId}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Login
+              {buildSentence(t, 'login')}
             </Button>
             <div className="text-center">
               <p className="text-sm text-muted-foreground">
-                Don't have an account?{' '}
+                {buildSentence(t, 'dont', 'have', 'an', 'account')}?{' '}
                 <Link to="/signup" className="hover:underline">
-                  Sign up
+                  {buildSentence(t, 'signup')}
                 </Link>
               </p>
             </div>

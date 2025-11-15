@@ -1,0 +1,63 @@
+# -----------------------------
+# Base
+# -----------------------------
+FROM node:22 AS base
+WORKDIR /app
+RUN npm install -g pnpm pm2
+
+# -----------------------------
+# Deps
+# -----------------------------
+FROM base AS deps
+
+COPY backend/package.json backend/pnpm-lock.yaml ./backend/
+COPY frontend/package.json frontend/pnpm-lock.yaml ./frontend/
+COPY shared/package.json shared/pnpm-lock.yaml ./shared/
+
+WORKDIR /app/shared
+RUN pnpm install
+
+WORKDIR /app/backend
+RUN pnpm install
+
+WORKDIR /app/frontend
+RUN pnpm install
+
+# -----------------------------
+# Build
+# -----------------------------
+FROM deps AS build
+WORKDIR /app
+
+COPY shared ./shared
+COPY backend ./backend
+COPY frontend ./frontend
+
+WORKDIR /app/backend
+RUN pnpm run build
+
+WORKDIR /app/frontend
+RUN pnpm run build
+
+# copy frontend build into backend
+RUN mkdir -p /app/backend/dist/backend/client \
+    && cp -r /app/frontend/dist /app/backend/dist/backend/client
+
+# -----------------------------
+# Prod Production Image
+# -----------------------------
+FROM node:22 AS prod
+WORKDIR /app
+RUN npm install -g pnpm pm2
+
+# copy only build output
+COPY --from=build /app/backend/dist ./backend/dist
+COPY --from=build /app/shared ./shared
+COPY backend/package.json backend/pnpm-lock.yaml ./backend/
+
+WORKDIR /app/backend
+RUN pnpm install --prod
+
+WORKDIR /app
+EXPOSE 3001
+CMD ["pm2", "start", "shared/ecosystem.config.js", "--no-daemon"]

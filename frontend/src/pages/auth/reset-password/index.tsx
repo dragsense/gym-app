@@ -20,6 +20,8 @@ import { ResetPasswordWithTokenDto } from "@shared/dtos";
 
 // Config
 import { PUBLIC_ROUTES } from "@/config/routes.config";
+import { useI18n } from "@/hooks/use-i18n";
+import { buildSentence } from "@/locales/translations";
 
 
 
@@ -27,6 +29,7 @@ export default function ResetPasswordPage() {
   // React 19: Essential IDs and transitions
   const componentId = useId();
   const [, startTransition] = useTransition();
+  const { t } = useI18n();
   
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -52,11 +55,11 @@ export default function ResetPasswordPage() {
       dto={ResetPasswordWithTokenDto}
       onSuccess={() => {
         startTransition(() => {
-          toast.success('Password reset successfully');
+          toast.success(buildSentence(t, 'password', 'reset', 'successfully'));
           navigate(PUBLIC_ROUTES.LOGIN);
         });
       }}
-      onError={(error) => toast.error('Failed to reset password: ' + error?.message)}
+      onError={(error) => toast.error(buildSentence(t, 'failed', 'to', 'reset', 'password') + ': ' + error?.message)}
       storeKey="reset-password"
     />
   );

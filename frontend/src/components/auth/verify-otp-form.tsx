@@ -13,6 +13,8 @@ import { toast } from "sonner";
 import { type THandlerComponentProps } from "@/@types/handler-types";
 import { AppCard } from "../layout-ui/app-card";
 import { Form } from "../form-ui/form";
+import { useI18n } from "@/hooks/use-i18n";
+import { buildSentence } from "@/locales/translations";
 
 export type TVerifyOtpExtraProps = {
     resendOtp: () => Promise<IMessageResponse>;
@@ -25,6 +27,7 @@ export default function VerifyOtpForm({ storeKey, store }: IVerifyOtpFormProps) 
     // React 19: Essential IDs and transitions
     const componentId = useId();
     const [, startTransition] = useTransition();
+    const { t } = useI18n();
 
     const length = 6;
 
@@ -101,9 +104,9 @@ export default function VerifyOtpForm({ storeKey, store }: IVerifyOtpFormProps) 
             startTransition(() => {
                 setTimeLeft(5 * 60);
             });
-            toast.success("OTP resent successfully!");
+            toast.success(buildSentence(t, 'otp', 'resent', 'successfully'));
         } catch (err: any) {
-            toast.error("Failed to resend OTP: " + err.message);
+            toast.error(buildSentence(t, 'failed', 'to', 'resent', 'otp') + ": " + err.message);
         } finally {
             startTransition(() => {
                 setResending(false);
@@ -118,15 +121,15 @@ export default function VerifyOtpForm({ storeKey, store }: IVerifyOtpFormProps) 
             <AppCard
                 header={
                     <>
-                        <h2 className="text-md font-semibold">Verify OTP</h2>
-                        <p className="text-sm text-muted-foreground">Enter the OTP sent to your email</p>
+                        <h2 className="text-md font-semibold">{buildSentence(t, 'verify', 'otp')}</h2>
+                        <p className="text-sm text-muted-foreground">{buildSentence(t, 'enter', 'the', 'otp', 'sent', 'to', 'your', 'email')}</p>
                     </>
                 }
                 footer={
                     <div className="flex flex-col gap-4 w-full">
 
                         <p className="text-center text-sm text-muted-foreground">
-                            Your OTP will expire in{" "}
+                            {buildSentence(t, 'your', 'otp', 'will', 'expire', 'in')}{" "}
                             <span className="font-medium text-primary">
                                 {timeDisplay.minutes}:{timeDisplay.seconds.toString().padStart(2, "0")}
                             </span>
@@ -142,7 +145,7 @@ export default function VerifyOtpForm({ storeKey, store }: IVerifyOtpFormProps) 
                                         htmlFor="rememberDevice"
                                         className="text-sm text-muted-foreground cursor-pointer"
                                     >
-                                        Remember this device
+                                        {buildSentence(t, 'remember', 'this', 'device')}
                                     </label>
                                 </div>
                             )}
@@ -150,7 +153,7 @@ export default function VerifyOtpForm({ storeKey, store }: IVerifyOtpFormProps) 
 
                         <Button type="submit" className="w-full" disabled={isSubmitting || resending} data-component-id={componentId}>
                             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Verify OTP
+                            {buildSentence(t, 'verify', 'otp')}
                         </Button>
                         <Button
                             type="button"
@@ -161,13 +164,13 @@ export default function VerifyOtpForm({ storeKey, store }: IVerifyOtpFormProps) 
                             data-component-id={componentId}
                         >
                             {resending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            {resending ? "Resending..." : "Resend OTP"}
+                            {resending ? buildSentence(t, 'resending') : buildSentence(t, 'resent', 'otp')}
                         </Button>
 
                         <div className="text-center">
                             <p className="text-sm text-muted-foreground">
                                 <Link to={PUBLIC_ROUTES.LOGIN} className="text-primary hover:underline">
-                                    Login
+                                    {buildSentence(t, 'login')}
                                 </Link>
                             </p>
                         </div>

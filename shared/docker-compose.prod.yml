@@ -1,18 +1,16 @@
 services:
-  # Full-Stack Service (Backend + Frontend in one container)
   app:
     build:
       context: ..
-      dockerfile: shared/Dockerfile
+      dockerfile: shared/Dockerfile.prod
       target: prod
     container_name: app-container-prod
     ports:
-      - "3000:3000" # Backend port
-      - "5173:5173" # Frontend port
+      - "3000:3000"   # only backend (frontend served statically)
     env_file:
-      - ../backend/.env.production
+      - ../backend/.env
     volumes:
-      - app_logs:/app/logs
+      - app_logs:/app/backend/logs 
     depends_on:
       postgres:
         condition: service_healthy
@@ -22,7 +20,6 @@ services:
     networks:
       - app-network
 
-  # Redis Cache
   redis:
     image: redis:latest
     container_name: app-redis-prod
@@ -39,7 +36,6 @@ services:
     networks:
       - app-network
 
-  # PostgreSQL 17 Database
   postgres:
     image: postgres:17
     container_name: app-postgres-prod
@@ -69,4 +65,3 @@ volumes:
 networks:
   app-network:
     driver: bridge
-

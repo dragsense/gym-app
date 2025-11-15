@@ -17,6 +17,8 @@ import { Form } from '@/components/form-ui/form';
 
 // Hooks
 import { type FormInputs, useInput } from '@/hooks/use-input';
+import { useI18n } from '@/hooks/use-i18n';
+import { buildSentence } from '@/locales/translations';
 
 // Stores
 import { AppCard } from '../layout-ui/app-card';
@@ -31,6 +33,7 @@ const ResetPasswordForm = React.memo(function ResetPasswordForm({
   // React 19: Essential IDs and transitions
   const componentId = useId();
   const [, startTransition] = useTransition();
+  const { t } = useI18n();
 
   if (!store) {
     return `Form store "${storeKey}" not found. Did you forget to register it?`;
@@ -85,21 +88,21 @@ const ResetPasswordForm = React.memo(function ResetPasswordForm({
       <AppCard
         header={
           <>
-            <h2 className="text-md font-semibold">Reset Password</h2>
-            <p className="text-sm text-muted-foreground">Enter your new password to reset your account</p>
+            <h2 className="text-md font-semibold">{buildSentence(t, 'reset', 'password')}</h2>
+            <p className="text-sm text-muted-foreground">{buildSentence(t, 'enter', 'your', 'new', 'password', 'to', 'reset', 'your', 'account')}</p>
           </>
         }
         footer={
           <div className="flex flex-col gap-4 w-full">
             <Button type="submit" className="w-full" disabled={isSubmitting} data-component-id={componentId}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Reset Password
+              {buildSentence(t, 'reset', 'password')}
             </Button>
             <div className="text-center">
               <p className="text-sm text-muted-foreground">
-                Remember your password?{' '}
+                {buildSentence(t, 'remember', 'your', 'password')}?{' '}
                 <Link to="/login" className="hover:underline">
-                  Login
+                  {buildSentence(t, 'login')}
                 </Link>
               </p>
             </div>

@@ -21,11 +21,14 @@ import { SignupDto } from "@shared/dtos";
 // Config
 import { PUBLIC_ROUTES } from "@/config/routes.config";
 import { SignupUserLevel } from "@shared/enums/user.enum";
+import { useI18n } from "@/hooks/use-i18n";
+import { buildSentence } from "@/locales/translations";
 
 
 export default function SignupPage() {
   // React 19: Essential IDs and transitions
   const [, startTransition] = useTransition();
+  const { t } = useI18n();
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -52,11 +55,11 @@ export default function SignupPage() {
       dto={SignupDto}
       onSuccess={() => {
         startTransition(() => {
-          toast.success('Signup successful');
+          toast.success(buildSentence(t, 'signup', 'successful'));
           navigate(PUBLIC_ROUTES.LOGIN);
         });
       }}
-      onError={(error) => toast.error('Signup failed: ' + error?.message)}
+      onError={(error) => toast.error(buildSentence(t, 'signup', 'failed') + ': ' + error?.message)}
       storeKey="signup"
     />
   );

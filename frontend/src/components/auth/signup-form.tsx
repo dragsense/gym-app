@@ -18,6 +18,8 @@ import { Form } from '@/components/form-ui/form';
 // Hooks
 import { type FormInputs, useInput } from '@/hooks/use-input';
 import { useAuthUser } from '@/hooks/use-auth-user';
+import { useI18n } from '@/hooks/use-i18n';
+import { buildSentence } from '@/locales/translations';
 
 // Stores
 import { AppCard } from '../layout-ui/app-card';
@@ -34,6 +36,7 @@ const SignupForm = React.memo(function SignupForm({
   // React 19: Essential IDs and transitions
   const componentId = useId();
   const [, startTransition] = useTransition();
+  const { t } = useI18n();
 
   const { user } = useAuthUser();
 
@@ -117,21 +120,21 @@ const SignupForm = React.memo(function SignupForm({
       <AppCard
         header={
           <>
-            <h2 className="text-md font-semibold">Sign Up</h2>
-            <p className="text-sm text-muted-foreground">Create your account with your email and password</p>
+            <h2 className="text-md font-semibold">{buildSentence(t, 'signup')}</h2>
+            <p className="text-sm text-muted-foreground">{buildSentence(t, 'create', 'your', 'account', 'with', 'your', 'email', 'and', 'password')}</p>
           </>
         }
         footer={
           <div className="flex flex-col gap-4 w-full">
             <Button type="submit" className="w-full" disabled={isSubmitting} data-component-id={componentId}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Sign Up
+              {buildSentence(t, 'signup')}
             </Button>
             <div className="text-center">
               <p className="text-sm text-muted-foreground">
-                Already have an account?{' '}
+                {buildSentence(t, 'already', 'have', 'an', 'account')}?{' '}
                 <Link to="/login" className="hover:underline">
-                  Login
+                  {buildSentence(t, 'login')}
                 </Link>
               </p>
             </div>
@@ -142,7 +145,7 @@ const SignupForm = React.memo(function SignupForm({
 
 
           <div>
-            <h3 className="text-sm font-medium text-muted-foreground mb-3">Join As</h3>
+            <h3 className="text-sm font-medium text-muted-foreground mb-3">{buildSentence(t, 'join', 'as')}</h3>
             <div className="space-y-4">
               {inputs.level}
             </div>
@@ -151,7 +154,7 @@ const SignupForm = React.memo(function SignupForm({
 
           {/* Account Information Section */}
           <div>
-            <h3 className="text-sm font-medium text-muted-foreground mb-3">Account Information</h3>
+            <h3 className="text-sm font-medium text-muted-foreground mb-3">{buildSentence(t, 'account', 'information')}</h3>
             <div className="space-y-4">
               {inputs.email}
               {inputs.password}
@@ -161,7 +164,7 @@ const SignupForm = React.memo(function SignupForm({
 
           {/* Profile Information Section */}
           <div>
-            <h3 className="text-sm font-medium text-muted-foreground mb-3">Profile Information</h3>
+            <h3 className="text-sm font-medium text-muted-foreground mb-3">{buildSentence(t, 'profile', 'information')}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {inputs.firstName}
               {inputs.lastName}

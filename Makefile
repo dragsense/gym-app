@@ -14,7 +14,7 @@ help: ## Show available commands
 # --- Setup ---
 setup: clean build dev ## Clean, build, and start all containers
 
-setup-prod: clean build-prod prod ## Clean, build production image, and start production containers
+setup-prod: clean-prod build-prod prod ## Clean, build production image, and start production containers
 
 
 # --- Development ---
@@ -29,6 +29,16 @@ dev-backend: ## Start only backend dev container
 
 dev-frontend: ## Start only frontend dev container
 	cd shared && docker-compose -f docker-compose.frontend.yml up -d
+
+prod-backend: ## Start backend in production mode
+	cd shared && docker-compose -f docker-compose.backend.prod.yml up -d
+
+prod-frontend: ## Start frontend in production mode
+	cd shared && docker-compose -f docker-compose.frontend.prod.yml up -d
+
+prod-frontend-nginx: ## Start frontend with nginx
+	cd shared && docker-compose -f docker-compose.frontend.nginx.yml up -d
+
 
 # --- Stop ---
 stop: ## Stop all containers
@@ -71,12 +81,5 @@ logs-frontend: ## Follow logs for frontend
 clean: ## Remove containers and volumes
 	cd shared && docker-compose down -v
 
-# --- Production ---
-prod-backend: ## Start backend in production mode
-	cd shared && docker-compose -f docker-compose.backend.prod.yml up -d
-
-prod-frontend: ## Start frontend in production mode
-	cd shared && docker-compose -f docker-compose.frontend.prod.yml up -d
-
-prod-frontend-nginx: ## Start frontend with nginx
-	cd shared && docker-compose -f docker-compose.frontend.nginx.yml up -d
+clean-prod: ## Remove containers and volumes
+	cd shared && docker-compose -f docker-compose.prod.yml down -v

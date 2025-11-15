@@ -19,6 +19,8 @@ import { VerifyOtpForm } from "@/components/auth";
 import { resendOtp, verifyOtp } from "@/services/auth.api";
 import { type IMessageResponse } from "@shared/interfaces/api/response.interface";
 import { VerifyOtpDto } from "@shared/dtos";
+import { useI18n } from "@/hooks/use-i18n";
+import { buildSentence } from "@/locales/translations";
 
 
 
@@ -27,6 +29,7 @@ export default function VerifyOtpPage() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const [, startTransition] = useTransition();
+    const { t } = useI18n();
 
 
     const token = searchParams.get("token");
@@ -48,13 +51,13 @@ export default function VerifyOtpPage() {
             dto={VerifyOtpDto}
             onSuccess={() => {
                 startTransition(() => {
-                    toast.success('Login successful')
+                    toast.success(buildSentence(t, 'login', 'successful'));
                     queryClient.invalidateQueries({ queryKey: ["me"] });
                     // Navigate to root - LevelBasedRedirect will handle routing based on user level
                     navigate("/");
                 });
             }}
-            onError={(error) => toast.error("OTP verification failed: " + error?.message)}
+            onError={(error) => toast.error(buildSentence(t, 'otp', 'verification', 'failed') + ": " + error?.message)}
             storeKey="verify-otp"
             formProps={{
                 resendOtp: () => resendOtp({ token: token || "" }),

@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, Inject } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository, MoreThanOrEqual } from 'typeorm';
 import { ModuleRef } from '@nestjs/core';
@@ -38,27 +38,31 @@ export class ScheduleService extends CrudService<Schedule> {
       // Build query to check for existing schedule
       const queryBuilder = this.scheduleRepo
         .createQueryBuilder('schedule')
-        .where('schedule.entityId = :entityId', { entityId: createDto.entityId })
+        .where('schedule.entityId = :entityId', {
+          entityId: createDto.entityId,
+        })
         .andWhere('schedule.action = :action', { action: createDto.action })
-        .andWhere('schedule.status = :status', { status: EScheduleStatus.ACTIVE });
+        .andWhere('schedule.status = :status', {
+          status: EScheduleStatus.ACTIVE,
+        });
 
       // Also check recipientId in data if present to prevent duplicate reminders for same recipient
       if (createDto.data?.recipientId) {
-        queryBuilder.andWhere(
-          "schedule.data->>'recipientId' = :recipientId",
-          { recipientId: createDto.data.recipientId }
-        );
+        queryBuilder.andWhere("schedule.data->>'recipientId' = :recipientId", {
+          recipientId: createDto.data.recipientId,
+        });
       }
 
       const existingSchedule = await queryBuilder.getOne();
 
       if (existingSchedule) {
         // Update existing schedule instead of creating duplicate
-        existingSchedule.nextRunDate = createDto.nextRunDate || existingSchedule.nextRunDate;
         existingSchedule.title = createDto.title || existingSchedule.title;
-        existingSchedule.description = createDto.description || existingSchedule.description;
         if (createDto.data) {
-          existingSchedule.data = { ...existingSchedule.data, ...createDto.data };
+          existingSchedule.data = {
+            ...existingSchedule.data,
+            ...createDto.data,
+          };
         }
         return manager
           ? await manager.save(existingSchedule)

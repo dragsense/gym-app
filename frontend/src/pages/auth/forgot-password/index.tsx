@@ -15,9 +15,12 @@ import { ForgotPasswordForm } from "@/components/auth";
 // Services
 import { forgotPassword } from "@/services/auth.api";
 import { ForgotPasswordDto } from "@shared/dtos";
+import { useI18n } from "@/hooks/use-i18n";
+import { buildSentence } from "@/locales/translations";
 
 
 export default function ForgotPasswordPage() {
+  const { t } = useI18n();
 
   const FORGOT_PASSWORD_INITIAL_VALUES: TForgotPasswordData = {
     email: ""
@@ -31,10 +34,9 @@ export default function ForgotPasswordPage() {
       validationMode={EVALIDATION_MODES.OnChange}
       dto={ForgotPasswordDto}
       onSuccess={() => {
-        toast.success('Password reset instructions sent to your email');
-
+        toast.success(buildSentence(t, 'password', 'reset', 'instructions', 'sent', 'to', 'your', 'email'));
       }}
-      onError={(error) => toast.error('Failed to send reset instructions: ' + error?.message)}
+      onError={(error) => toast.error(buildSentence(t, 'failed', 'to', 'send', 'reset', 'instructions') + ': ' + error?.message)}
       storeKey="forgot-password"
     />
   );

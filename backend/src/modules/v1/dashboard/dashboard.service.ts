@@ -572,6 +572,7 @@ export class DashboardService {
   ORDER BY period DESC
 `;
 
+    const queryParams = isSuperAdmin ? [start, end] : [start, end, user.id];
     const sessionStats = await this.sessionRepository.query(
       sessionStatsQuery,
       queryParams,
