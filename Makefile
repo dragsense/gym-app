@@ -95,4 +95,7 @@ deploy-prod: ## Deploy production containers
 
 
 git-deploy: ## Deploy all files to git
-	git add . && git commit -m 'deploy dev' && git push && cd shared && pm2 deploy ecosystem.config.js dev
+	git add . && git commit -m 'deploy dev' || true && git push && cd shared && pm2 deploy ecosystem.config.js dev
+
+git-deploy-prod: ## Deploy all files to git
+	git add . && git commit -m 'deploy prod' || true && git push && cd shared && pm2 deploy ecosystem.config.js prod
